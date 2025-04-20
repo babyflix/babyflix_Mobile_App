@@ -87,7 +87,7 @@ const ProfileSettingsScreen = () => {
 
       setFormattedCountries(formatted);
     } else {
-      console.error("contries not array")
+      console.log("contries not array")
     }
   }, [countries]);
 
@@ -396,7 +396,7 @@ const ProfileSettingsScreen = () => {
               onPress={() => setEditProfileModalVisible(true)}
             >
               <Ionicons name="create" size={16} color={Colors.white} />
-              <Text style={GlobalStyles.buttonText}> Edit Profile</Text>
+              <Text style={[GlobalStyles.buttonText]}> Edit Profile</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -436,7 +436,7 @@ const ProfileSettingsScreen = () => {
           onPress={handleLogout}
         >
           <Ionicons name="log-out" size={20} color={Colors.white} />
-          <Text style={[GlobalStyles.buttonText, styles.logoutText]}> Logout</Text>
+          <Text style={[GlobalStyles.buttonText]}> Logout</Text>
         </TouchableOpacity>
 
         <Modal visible={isResetPasswordModalVisible} transparent>
@@ -490,7 +490,7 @@ const ProfileSettingsScreen = () => {
 
                 <TouchableOpacity
                   onPress={handleResetPassword}
-                  style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft, { marginBottom: 15 }]}
+                  style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft, { marginBottom: 15, padding: 12 }]}
                 >
                   <Ionicons name="refresh" size={20} color={Colors.white} style={{ marginRight: 5 }} />
                   <Text style={GlobalStyles.buttonText}>Reset</Text>
@@ -705,7 +705,7 @@ const ProfileSettingsScreen = () => {
                   style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft, { marginBottom: 15 }]}
                 >
                   <Ionicons name="checkmark" size={20} color={Colors.white} style={{ marginRight: 5 }} />
-                  <Text style={GlobalStyles.buttonText}>Save Changes</Text>
+                  <Text style={GlobalStyles.buttonText}>Save</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -762,7 +762,8 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 20,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
+    fontFamily: 'Poppins_500Medium',
     color: Colors.textPrimary,
     marginBottom: 10,
   },
@@ -774,6 +775,7 @@ const styles = StyleSheet.create({
   },
   resetButton: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 5,
     padding: 10,
@@ -807,20 +809,22 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    //fontWeight: '600',
+    fontFamily:'Poppins_600SemiBold',
     color: Colors.profileText,
-    marginBottom: 15,
+    marginBottom: 10,
   },
   infoText: {
     fontSize: 14,
+    fontFamily:'Poppins_400Regular',
     color: Colors.textSecondary,
-    marginBottom: 15,
+    marginBottom: 10,
   },
   insideInfoText: {
     fontSize: 14,
-    fontWeight: '700',
+    //fontWeight: '700',
+    fontFamily:'Poppins_600SemiBold',
     color: Colors.textPrimary,
-    marginBottom: 15,
   },
   logoutButton: {
     backgroundColor: Colors.primary,
@@ -840,7 +844,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 1,
     backgroundColor: Colors.lightGray,
-    marginBottom: 10,
+    marginBottom: 12,
     marginLeft: -10,
     marginRight: -10,
   },
@@ -856,11 +860,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '80%',
     overflow: 'scroll',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
   },
   input: {
     height: 85,
@@ -885,6 +884,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     marginBottom: 10,
+    fontFamily:'Poppins_400Regular',
   },
   closeText: {
     marginTop: 10,
@@ -893,7 +893,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
+    fontFamily: 'Poppins_600SemiBold',
     marginBottom: 20,
     textAlign: 'center',
   },

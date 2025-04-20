@@ -17,8 +17,10 @@ export default StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 15,
+    //paddingTop: 14,
     backgroundColor: Colors.white,
     paddingLeft: 40,
+    fontFamily: 'Poppins_400Regular',
     ...Platform.select({
       ios: {
         shadowColor: Colors.black,
@@ -53,8 +55,10 @@ export default StyleSheet.create({
   },
   buttonText: {
     color: Colors.white,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    //fontWeight: '600',
+    fontFamily: 'Poppins_500Medium',
+    marginTop:3,
   },
   resetButtonText: {
     color: Colors.error,
@@ -96,6 +100,7 @@ export default StyleSheet.create({
   link: {
     color: Colors.primary,
     fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     textDecorationLine: 'underline',
   },
   screenPadding: {
@@ -133,7 +138,9 @@ export default StyleSheet.create({
   textInputIcon: {
     paddingLeft: '24%',
     color: Colors.textSecondary,
-    height: 55
+    height: 55,
+    fontFamily: 'Poppins_400Regular',
+    //paddingTop:15,
   },
   container: {
     flex: 1,
@@ -169,7 +176,7 @@ export default StyleSheet.create({
   },
   registerButton: {
     flex: 1,
-    padding: 15,
+    padding: 10,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
@@ -181,7 +188,7 @@ export default StyleSheet.create({
   },
   resetButton: {
     flex: 1,
-    padding: 15,
+    padding: 10,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,

@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react';
 export default function AppLayout() {
   const { isStreamStarted,streamState } = useSelector((state) => state.stream);
 
+  console.log(isStreamStarted,streamState)
+
     const [blinkColor, setBlinkColor] = useState("red");
     const [isBlinking, setIsBlinking] = useState(false); 
   

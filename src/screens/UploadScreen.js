@@ -20,9 +20,9 @@ import axios from 'axios';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import { useSelector } from 'react-redux';
 import { Video } from 'expo-av';
+import { closeDropdown } from '../state/slices/headerSlice';
+import * as FileSystem from 'expo-file-system';
 
-
-const CHUNK_SIZE = 2 * 1024 * 1024;
 
 const UploadScreen = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -42,46 +42,16 @@ const UploadScreen = () => {
       if (!result.canceled) {
         setSelectedMedia(result.assets[0]);
       } else {
-        dispatch(
-          showSnackbar({
-            message: 'No media selected',
-            type: 'info',
-          })
-        );
+        dispatch(showSnackbar({ message: 'No media selected', type: 'info' }));
       }
     } catch (error) {
-      dispatch(
-        showSnackbar({
-          message: 'Failed to pick media',
-          type: 'error',
-        })
-      );
+      dispatch(showSnackbar({ message: 'Failed to pick media', type: 'error' }));
     }
-  };
-
-
-  const createChunks = (file) => {
-    const chunks = [];
-    let start = 0;
-    while (start < file.size) {
-      const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
-      chunks.push({
-        chunk,
-        fileName: file.name,
-      });
-      start += CHUNK_SIZE;
-    }
-    return chunks;
   };
 
   const handleUpload = async () => {
     if (!selectedMedia) {
-      dispatch(
-        showSnackbar({
-          message: 'Please select media to upload',
-          type: 'error',
-        })
-      );
+      dispatch(showSnackbar({ message: 'Please select media to upload', type: 'error' }));
       return;
     }
 
@@ -89,54 +59,16 @@ const UploadScreen = () => {
     try {
       const isImage = selectedMedia.type.startsWith('image');
       const isVideo = selectedMedia.type.startsWith('video');
-      const file = selectedMedia.uri;
-
-      const fileInfo = await fetch(file);
-      const blob = await fileInfo.blob();
-      const fileSize = blob.size;
-
-      let chunks = [];
-      if (fileSize > CHUNK_SIZE) {
-        chunks = createChunks(blob);
-      } else {
-        chunks.push({ chunk: blob, fileName: selectedMedia.fileName });
-      }
-
-      const totalChunks = chunks.length;
-      let uploadedChunks = 0;
-
-      const updateProgress = (progress) => {
-        setUploadProgress(Math.round((progress / totalChunks) * 100));
-      };
-
-      const formDataToObject = (formData) => {
-        const parts = formData._parts;
-        const result = {};
-
-        for (const [key, value] of parts) {
-          if (["chunkIndex", "totalChunks"].includes(key)) {
-            result[key] = parseInt(value, 10);
-          } else if (key === "files") {
-            result[key] = value;
-          } else {
-            result[key] = value;
-          }
-        }
-
-        return result;
-      };
-
-      const finalObject = {};
-      for (let i = 0; i < totalChunks; i++) {
-        const { chunk, fileName } = chunks[i];
+      const fileUri = selectedMedia.uri;
+      const totalChunks = 1;
         const formData = new FormData();
+        const file = {  uri: selectedMedia.uri,
+          name: selectedMedia.fileName || "upload.jpg", 
+          type: selectedMedia.type || "image/jpeg", };
+        console.log('file',file)
 
-        const file = new Blob([chunk], { type: 'image/jpeg' });
-        file.name = fileName;
-
-        formData.append('files', file, fileName);
-
-        formData.append('chunkIndex', Number(i + 1));
+        formData.append('file', file,selectedMedia.fileName);
+        formData.append('chunkIndex', Number(1));
         formData.append('totalChunks', Number(totalChunks));
         formData.append('title', selectedMedia.fileName.split('.')[0]);
         formData.append('object_type', isImage ? 'image' : isVideo ? 'video' : 'unknown');
@@ -144,69 +76,35 @@ const UploadScreen = () => {
         formData.append("user_id", user.role === "user" ? user.uuid : '');
         formData.append("uploaded_by", user.role === "user" ? "By Me" : "By Clinic");
 
-        const convertedData = formDataToObject(formData);
+        console.log('formData',formData)
 
         try {
-          const response = await axios.post(
-            `${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`,
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                accept: 'application/json',
-              },
-            }
-          );
-
-          uploadedChunks++;
-          updateProgress(uploadedChunks);
+          const response = await axios.post(`${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              accept: 'application/json',
+            },
+          });
 
           if (response.data && response.data.message) {
-            console.error(`Chunk ${i + 1} uploaded successfully`);
+            console.log(`Chunk ${1} uploaded successfully`);
           } else {
             throw new Error('Chunk upload failed');
           }
         } catch (error) {
-          console.error(`Error uploading chunk ${i + 1}:`, error);
-
-          if (error.response) {
-            console.error('Response:', error.response);
-            console.error('Response data:', error.response.data);
-            console.error('Response status:', error.response.status);
-          } else if (error.request) {
-            console.error('Request:', error.request);
-          } else {
-            console.error('Error message:', error.message);
-          }
-
-          dispatch(
-            showSnackbar({
-              message: `Error in uploading chunk ${i + 1}`,
-              type: 'error',
-            })
-          );
+          console.error(`Error uploading chunk ${1}:`, error.toJSON());
+          dispatch(showSnackbar({ message: `Error uploading chunk ${1}`, type: 'error' }));
           setLoadingState(false);
           return;
         }
-      }
+      //}
 
-      dispatch(
-        showSnackbar({
-          message: 'Upload successful',
-          type: 'success',
-        })
-      );
+      dispatch(showSnackbar({ message: 'Upload successful', type: 'success' }));
       setSelectedMedia(null);
       setUploadProgress(0);
     } catch (error) {
       console.error('Error during upload:', error);
-      dispatch(
-        showSnackbar({
-          message: 'Error uploading media. Please try again.',
-          type: 'error',
-        })
-      );
-      setLoadingState(false);
+      dispatch(showSnackbar({ message: 'Error uploading media. Please try again.', type: 'error' }));
     } finally {
       setLoadingState(false);
     }
@@ -225,7 +123,7 @@ const UploadScreen = () => {
     <View style={GlobalStyles.container}>
       <Header title="Upload" />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={{ fontSize: 16, fontWeight: '600', textAlign: 'center' }}>Pick and upload image or video .</Text>
+        <Text style={{ fontSize: 16, fontFamily:'Poppins_600SemiBold', textAlign: 'center' }}>Pick and upload image or video .</Text>
 
         <View style={styles.uploadOptions}>
           <TouchableOpacity
@@ -377,7 +275,8 @@ const styles = StyleSheet.create({
   uploadButtonText: {
     marginTop: 20,
     color: Colors.textPrimary,
-    fontWeight: '500',
+    //fontWeight: '500',
+    fontFamily:'Poppins_600SemiBold',
   },
   preview: {
     backgroundColor: Colors.white,

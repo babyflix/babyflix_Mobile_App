@@ -106,7 +106,7 @@ const LoginScreen = () => {
 
         setTimeout(() => {
           router.replace('gallery');
-        }, 2000);
+        }, 1000);
       } else {
         setSnackbarMessage(res.data.error || 'Login failed');
         setSnackbarType('error');
@@ -120,7 +120,6 @@ const LoginScreen = () => {
       setIsLoading(false);
     }
   };
-
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);

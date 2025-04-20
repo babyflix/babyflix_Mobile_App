@@ -15,7 +15,7 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import Header from '../components/Header';
 import Colors from '../constants/Colors';
 import GlobalStyles from '../styles/GlobalStyles';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import axios from 'axios';
 import { Video } from 'expo-av';
@@ -27,13 +27,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loader from '../components/Loader';
 import LiveStreamStatus from './LiveStreamStatus.js';
 import { useRouter } from 'expo-router';
+import moment from 'moment-timezone';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import { setUnreadMessagesData, setUnreadMessagesCount } from '../state/slices/headerSlice';
+
 
 const Tab = createMaterialTopTabNavigator();
 
-const MediaGrid = ({ data, type = 'all', onPreview }) => {
-  const filteredData = type === 'all'
-    ? data
-    : data.filter(item => item.object_type === type);
+const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh }) => {
+  const filteredData = type === 'all' ? data : data.filter(item => item.object_type === type);
+
+  const formatCreatedAtToIST = (created_at) => {
+    const istDate = moment.utc(created_at).tz('Asia/Kolkata');
+    const date = istDate.format('DD/MM/YYYY');   // Like 13/04/2025
+    const time = istDate.format('HH:mm');        // Like 18:03
+    return `${date} | ${time}`;
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -56,7 +65,7 @@ const MediaGrid = ({ data, type = 'all', onPreview }) => {
 
       {item.object_type === 'video' && (
         <View style={styles.videoBadge}>
-          <Text style={styles.videoDuration}>{item.created_at}</Text>
+          <Text style={styles.videoDuration}>{formatCreatedAtToIST(item.created_at)}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -70,13 +79,15 @@ const MediaGrid = ({ data, type = 'all', onPreview }) => {
       keyExtractor={item => item.id}
       contentContainerStyle={styles.gridContainer}
       ListEmptyComponent={<Text>No media available</Text>}
+      refreshing={refreshing} 
+      onRefresh={onRefresh}
     />
   );
 };
 
-const AllTab = ({ data, onPreview }) => <MediaGrid data={data} type="all" onPreview={onPreview} />;
-const ImagesTab = ({ data, onPreview }) => <MediaGrid data={data} type="image" onPreview={onPreview} />;
-const VideosTab = ({ data, onPreview }) => <MediaGrid data={data} type="video" onPreview={onPreview} />;
+const AllTab = ({ data, onPreview, refreshing, onRefresh }) => <MediaGrid data={data} type="all" onPreview={onPreview} refreshing={refreshing} onRefresh={onRefresh}/>;
+const ImagesTab = ({ data, onPreview, refreshing, onRefresh }) => <MediaGrid data={data} type="image" onPreview={onPreview} refreshing={refreshing} onRefresh={onRefresh}/>;
+const VideosTab = ({ data, onPreview,refreshing, onRefresh }) => <MediaGrid data={data} type="video" onPreview={onPreview} refreshing={refreshing} onRefresh={onRefresh}/>;
 
 const GalleryScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -86,9 +97,20 @@ const GalleryScreen = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isMaximized, setIsMaximized]= useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const user = useSelector(state => state.auth);
+  const stream = useSelector(state => state.stream);
+  const dispatch = useDispatch();
 
+const onRefresh = async () => {
+  setRefreshing(true);
+  await fetchMediaData();
+  setRefreshing(false);
+};
+
+  
   const fetchMediaData = async () => {
     setIsLoading(true);
     try {
@@ -113,7 +135,6 @@ const GalleryScreen = () => {
             {
               headers: {
                 'Content-Type': 'application/json',
-                'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
               }
             }
           );
@@ -152,11 +173,37 @@ const GalleryScreen = () => {
     if (user) {
       fetchMediaData();
     }
-  }, [user]);
+  }, [user,stream]);
 
   useEffect(() => {
 
+  }, []);  
+
+  useEffect(() => {
+    const fetchUnreadChats = async () => {
+      try {
+        const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-unread-chat-members`);
+  
+        //console.log('Unread chat members:', response.data);
+        //console.log(response.data.unread_messages?.[0]?.unread_count);
+  
+        dispatch(setUnreadMessagesData(response.data));
+        dispatch(setUnreadMessagesCount(response.data.unread_messages?.[0]?.unread_count || 0));
+      } catch (error) {
+        console.error('Error fetching unread chats:', error);
+      }
+    };
+  
+    // Initial fetch
+    fetchUnreadChats();
+  
+    // Set interval
+    const intervalId = setInterval(fetchUnreadChats, 3000); // 3 seconds
+  
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
+  
 
   const handlePreview = (item) => {
     if (!item.object_url) {
@@ -166,11 +213,20 @@ const GalleryScreen = () => {
     setModalVisible(true);
   };
 
-  const closeModal = () => {
+  const closeModal = async () => {
+    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     setModalVisible(false);
     setPreviewItem(null);
+    setIsFullScreen(false);
+    setIsMaximized(false);
   };
 
+  useEffect(() => {
+    if (!modalVisible) {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    }
+  }, [modalVisible]);
+  
   const togglePlayPause = () => {
     setIsPaused(!isPaused);
   };
@@ -180,7 +236,17 @@ const GalleryScreen = () => {
   };
 
   const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
+    setIsMaximized(!isMaximized);
+  };
+
+  const enterFullScreen = async () => {
+    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+    setIsFullScreen(true);
+  };
+  
+  const exitFullScreen = async () => {
+    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    setIsFullScreen(false);
   };
 
   return (
@@ -197,9 +263,10 @@ const GalleryScreen = () => {
             tabBarIndicatorStyle: styles.tabIndicator,
           }}
         >
-          <Tab.Screen name="All" children={() => <AllTab data={mediaData.images.concat(mediaData.videos)} onPreview={handlePreview} />} />
-          <Tab.Screen name="Images" children={() => <ImagesTab data={mediaData.images} onPreview={handlePreview} />} />
-          <Tab.Screen name="Videos" children={() => <VideosTab data={mediaData.videos} onPreview={handlePreview} />} />
+          <Tab.Screen name="All" children={() => <AllTab data={[...mediaData.images, ...mediaData.videos].sort((a, b) =>
+            new Date(b.created_at) - new Date(a.created_at))} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh}/>} />
+          <Tab.Screen name="Images" children={() => <ImagesTab data={mediaData.images} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh}/>} />
+          <Tab.Screen name="Videos" children={() => <VideosTab data={mediaData.videos} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh}/>} />
         </Tab.Navigator>
       )}
 
@@ -207,7 +274,7 @@ const GalleryScreen = () => {
         <Modal transparent={true} visible={modalVisible} onRequestClose={closeModal}>
           <TouchableWithoutFeedback >
             <View style={styles.modalOverlay}>
-              <View style={[styles.modalContent, isFullScreen && { width: '100%', height: '100%', margin: 0 }]}>
+              <View style={[styles.modalContent, isFullScreen && styles.maxRotateModelContent,isMaximized && styles.maxModalContent]}>
                 {previewItem.object_type === 'video' ? (
                   <Video
                     source={{ uri: previewItem.object_url }}
@@ -221,22 +288,60 @@ const GalleryScreen = () => {
                 ) : (
                   <Image
                     source={{ uri: previewItem.object_url }}
-                    style={styles.modalImage}
+                    style={[styles.modalImage,
+                      isMaximized && {
+                        width: "100%",
+                        height: "100%",
+                      }
+                    ]}
                     resizeMode="contain"
                   />
                 )}
 
-                {previewItem.object_type === 'video' && (
+                {previewItem.object_type === 'video'? (
+                  <View style={styles.muteButton}>
                   <TouchableOpacity onPress={toggleMute} style={styles.muteButton}>
                     <View style={styles.muteButtonText}>
                       <MaterialIcons
                         name={isMuted ? "volume-off" : "volume-up"}
-                        size={30}
+                        size={20}
                         color="white"
                       />
                     </View>
                   </TouchableOpacity>
-                )}
+                  
+                  <TouchableOpacity onPress={isFullScreen ? exitFullScreen : enterFullScreen} style={styles.rotateButton}>
+                    <View style={styles.muteButtonText}>
+                     <MaterialIcons
+                        name={isFullScreen ? "stay-current-landscape" : "stay-current-portrait"}
+                        size={20}
+                        color="white"
+                      />
+                    </View>
+                  </TouchableOpacity>
+                  </View>
+                ):(
+                <View style={styles.muteButton}>
+                  <TouchableOpacity onPress={toggleFullScreen} style={styles.muteButton}>
+                    <View style={styles.muteButtonText}>
+                      <MaterialIcons
+                        name={isFullScreen?isMaximized ? "fullscreen" : "fullscreen-exit":isMaximized ? "fullscreen-exit" : "fullscreen"}
+                        size={20}
+                        color="white"
+                      />
+                    </View>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity onPress={isFullScreen ? exitFullScreen : enterFullScreen} style={styles.rotateButton}>
+                    <View style={styles.muteButtonText}>
+                     <MaterialIcons
+                        name={isFullScreen ? "stay-current-landscape" : "stay-current-portrait"}
+                        size={20}
+                        color="white"
+                      />
+                    </View>
+                  </TouchableOpacity>
+                  </View>)}
 
                 <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
                   <MaterialIcons name="close" size={30} color="red" />
@@ -252,7 +357,7 @@ const GalleryScreen = () => {
   );
 };
 
-const { width } = Dimensions.get('window');
+const { width,height } = Dimensions.get('window');
 const itemSize = (width - 45) / 3;
 
 const styles = StyleSheet.create({
@@ -275,7 +380,7 @@ const styles = StyleSheet.create({
   },
   videoBadge: {
     position: 'absolute',
-    bottom: 5,
+    bottom: 0,
     right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: 8,
@@ -295,7 +400,8 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     textTransform: 'none',
-    fontWeight: '600',
+    //fontWeight: '600',
+    fontFamily:'Poppins_400Regular'
   },
   tabIndicator: {
     backgroundColor: Colors.primary,
@@ -309,19 +415,38 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '90%',
-    maxWidth: 600,
-    maxHeight: 400,
-    backgroundColor: 'white',
-    borderRadius: 5,
+    height: '50%',
+    maxWidth: Dimensions.get('window').width,
+    maxHeight: Dimensions.get('window').height,
+    backgroundColor: 'black',
+    // borderRadius: 5,
+    // borderWidth:1,
+    // borderColor:'white',
     padding: 10,
   },
+  maxModalContent: {
+    width: '100%',
+    height: '100%',
+    maxWidth: Dimensions.get('window').width,
+    maxHeight: Dimensions.get('window').height,
+    backgroundColor: 'black',
+    padding: 10,
+  },
+  maxRotateModelContent: { 
+    width: '100%',
+    height: '100%',
+    maxWidth: Dimensions.get('window').height,
+    maxHeight: Dimensions.get('window').width,
+    backgroundColor: 'black',
+    padding: 10,
+    },
   modalImage: {
     width: '100%',
     height: '100%',
   },
   modalVideo: {
     width: '100%',
-    height: 300,
+    height: '100%',
   },
   controls: {
     position: 'absolute',
@@ -342,9 +467,9 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: -37,
+    top: 0,
     right: 0,
-    backgroundColor: 'rgba(248, 245, 245, 0.7)',
+    backgroundColor: 'black',
     padding: 5,
     borderRadius: 5,
   },
@@ -354,15 +479,23 @@ const styles = StyleSheet.create({
   },
   muteButton: {
     position: 'absolute',
-    top: 10,
-    left: 10,
+    top: 5,
+    left: 7,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 5,
+    borderRadius: 5,
+  },
+  rotateButton: {
+    position: 'absolute',
+    top: 5,
+    left: 43,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,
     borderRadius: 5,
   },
   muteButtonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 10,
   },
 });
 

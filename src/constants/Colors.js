@@ -14,6 +14,7 @@ export default {
   profileText: '#c1c1c1',
   logout: '#FF4D4D',
   messagePrimary: "#D56FB2",
-  messageGray: '#D6D6D6',
+  //messageGray: '#D6D6D6',
+  messageGray: '#f0f0f0',
   messageBlack: '#363535',
 };

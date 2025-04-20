@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -11,11 +11,13 @@ import babyflixLogo from '../../assets/BBF_logo.jpg';
 import { toggleDropdown, closeDropdown } from '../state/slices/headerSlice';
 
 const Header = ({ title, showMenu = true, showProfile = true }) => {
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const router = useRouter();
   const user = useSelector((state) => state.auth);
   const showDropdown = useSelector((state) => state.header.showDropdown);
+  const unreadMessagesCount = useSelector((state) => state.header.unreadMessagesCount);
 
   const handleLogout = async () => {
     try {
@@ -49,9 +51,21 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
       {showProfile && (
         <View style={styles.profileContainer}>
-          <TouchableOpacity onPress={toggleDropdownHandler} style={styles.profileButton}>
-            <Ionicons name="person-circle" size={30} color={Colors.textPrimary} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Message Icon with Badge */}
+            <TouchableOpacity style={styles.messageButton} onPress={() => router.push('/messages')}>
+              <Ionicons name="chatbubble-ellipses-outline" size={28} color={Colors.textPrimary} />
+              <View style={styles.messageBadge}>
+                <Text style={styles.badgeText}>{unreadMessagesCount}</Text>
+              </View>
+            </TouchableOpacity>
+
+
+            {/* Profile Icon */}
+            <TouchableOpacity onPress={toggleDropdownHandler} style={styles.profileButton}>
+              <Ionicons name="person-circle" size={30} color={Colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
 
           {showDropdown && (
             <View style={styles.dropdown}>
@@ -65,7 +79,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 }}
               >
                 <Ionicons name="settings-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
-                <Text>Profile Settings</Text>
+                <Text style={{fontFamily:'Poppins_400Regular',marginTop:4}}>Profile Settings</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -94,17 +108,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    zIndex: 999,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    //fontWeight: '600',
+    fontFamily:'Poppins_700Bold',
     color: Colors.textPrimary,
+    paddingLeft:45
   },
   profileContainer: {
     position: 'relative',
+    overflow: 'visible', 
+    zIndex: 100,
   },
   profileButton: {
-    padding: 5,
+    padding: 0,
   },
   dropdown: {
     position: 'absolute',
@@ -129,13 +148,39 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.lightGray,
     flexDirection: 'row',
     alignItems: 'center',
+    fontFamily:'Poppins_400Regular',
   },
   icon: {
     marginRight: 10,
   },
   logoutText: {
     color: Colors.error,
+    fontFamily:'Poppins_400Regular',
+    marginTop:4
   },
+  messageButton: {
+    marginRight: 10,
+    padding: 5,
+    position: 'relative',
+  },
+  messageBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },  
 });
 
 export default Header;

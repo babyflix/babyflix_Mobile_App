@@ -7,6 +7,7 @@ import {
   Platform,
   Modal,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import Header from '../components/Header';
@@ -16,29 +17,47 @@ import { useSelector, useDispatch } from 'react-redux';
 import { liveStreamUpdate } from '../state/slices/streamSlice';
 import { router } from 'expo-router';
 import moment from 'moment';
+import { Ionicons } from '@expo/vector-icons';
 
 const LiveStreamingScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
+
   const videoRef = useRef(null);
   const dispatch = useDispatch();
   const streamState = useSelector(state => state.stream);
 
   const streamingUrl = streamState.streamUrl || '';
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.loadAsync({ uri: streamingUrl }, {}, false);
-      videoRef.current.playAsync();
-    }
-
+    console.log('useEffect 3');
+  
+    const playVideo = async () => {
+      if (videoRef.current) {
+        try {
+          await videoRef.current.unloadAsync(); 
+          await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
+        } catch (err) {
+          console.log('Video playback error:', err);
+        }
+      }
+    };
+  
+    playVideo();
+  
     const id = setInterval(() => {
       checkUrlStatus(streamingUrl, dispatch);
     }, 3000);
-
+  
     setIntervalId(id);
-
-    return () => clearInterval(id);
+  
+    return () => {
+      clearInterval(id);
+    };
   }, [streamState.streamState]);
+  
 
   const checkUrlStatus = async (url, dispatch) => {
     if (streamState.streamState != 'live') {
@@ -66,6 +85,13 @@ const LiveStreamingScreen = () => {
     }
   };
 
+  const handleMinimize = () => {
+    setIsMinimized(true);
+  };
+
+  const handleMaximize = () => {
+    setIsMinimized(false);
+  };
 
   const handleModalClose = () => {
     setModalVisible(false);
@@ -89,20 +115,42 @@ const LiveStreamingScreen = () => {
     <View style={GlobalStyles.container}>
       <Header title="Live Streaming" />
 
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.liveTitle}>Video Streaming is Live</Text>
+<ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.liveTitle}>Video Streaming is Live</Text>
 
-        <View style={styles.previewContainer}>
-          <Video
-            ref={videoRef}
-            style={styles.video}
-            source={{ uri: streamingUrl }}
-            useNativeControls={true}
-            resizeMode={ResizeMode.CONTAIN}
-            isLooping={false}
+      <View style={[styles.previewContainer, isMinimized ? styles.maximized : styles.minimized ]}>
+      <Video
+        ref={videoRef}
+        style={styles.video}
+        useNativeControls={false}
+        resizeMode={ResizeMode.CONTAIN}
+        isLooping={false}
+        isMuted={isMuted}
+      />
+      <View style={styles.overlay}>
+          <Text style={styles.liveLabel}>LIVE</Text>
+
+          <View style={styles.controls}>
+            {isMinimized ? (
+              <TouchableOpacity onPress={handleMaximize}>
+                <Ionicons name="expand-outline" size={24} color="white" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={handleMinimize}>
+                <Ionicons name="contract-outline" size={24} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <TouchableOpacity style={styles.muteButton} onPress={() => setIsMuted(!isMuted)}>
+          <Ionicons
+            name={isMuted ? 'volume-mute' : 'volume-high'}
+            size={24}
+            color="white"
           />
+        </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
+    </ScrollView>
 
       <Modal
         animationType="slide"
@@ -124,9 +172,11 @@ const LiveStreamingScreen = () => {
   );
 };
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
+    padding: 16,
   },
   liveTitle: {
     fontSize: 24,
@@ -134,27 +184,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 20,
     color: Colors.primary,
-  },
-  previewContainer: {
-    aspectRatio: 16 / 9,
-    backgroundColor: Colors.black,
-    borderRadius: 12,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  video: {
-    width: '100%',
-    height: '100%',
   },
   modalBackground: {
     flex: 1,
@@ -190,6 +219,64 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
   },
+  liveTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  previewContainer: {
+    position: 'relative',
+    width: '100%',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  minimized: {
+    height: 220,
+    width: '100%',
+  },
+  maximized: {
+    height: screenHeight,
+    width: screenWidth,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 999, 
+    backgroundColor: 'black', 
+  },
+  overlay: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  liveLabel: {
+    backgroundColor: 'red',
+    color: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    fontWeight: 'bold',
+    fontSize: 12,
+    marginTop : 10
+  },
+  controls: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  muteButton: {
+    position: 'absolute',
+    top: 0,
+    right: 30,
+    padding: 6,
+    borderRadius: 20,
+  }  
 });
 
 export default LiveStreamingScreen;

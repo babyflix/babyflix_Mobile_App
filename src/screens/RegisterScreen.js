@@ -53,7 +53,6 @@ const RegisterScreen = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarType, setSnackbarType] = useState('success');
 
-
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -180,6 +179,7 @@ const RegisterScreen = () => {
 
       const timezone = await AsyncStorage.getItem('timezone');
       const token = await AsyncStorage.getItem('token');
+      console.log('termsAccepted',termsAccepted)
 
       const response = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/register`,
@@ -319,7 +319,7 @@ const RegisterScreen = () => {
             <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
               <View style={[styles.textInputIconView, styles.allMarginRight, { position: 'relative', justifyContent: 'center' }]}>
                 <TextInput
-                  style={[{ paddingLeft: 40 }]}
+                  style={[{ paddingLeft: 40,fontFamily: 'Poppins_400Regular' }]}
                   placeholder="First Name"
                   value={formData.firstName}
                   onChangeText={(text) => setFormData({ ...formData, firstName: text })}
@@ -334,7 +334,7 @@ const RegisterScreen = () => {
 
               <View style={[styles.textInputIconView, styles.allMarginLeft, { position: 'relative', justifyContent: 'center' }]}>
                 <TextInput
-                  style={[{ paddingLeft: 40 }]}
+                  style={[{ paddingLeft: 40,fontFamily: 'Poppins_400Regular'  }]}
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChangeText={(text) => setFormData({ ...formData, lastName: text })}
@@ -386,7 +386,7 @@ const RegisterScreen = () => {
 
                 <RNPickerSelect
                   placeholder={{
-                    label: 'Account Type...',
+                    label: 'Account Type',
                     value: null,
                   }}
                   items={accountType}
@@ -397,21 +397,26 @@ const RegisterScreen = () => {
                       paddingRight: 30,
                       paddingLeft: 18,
                       fontSize: 14.5,
-                      fontWeight: '400',
+                      //fontWeight: '400',
+                      fontFamily: 'Poppins_400Regular',
                       paddingVertical: 12,
                       textAlign: 'left',
+                      paddingBottom: 10,
                     },
                     inputAndroid: {
                       paddingRight: 30,
                       paddingLeft: 18,
                       fontSize: 14.5,
-                      fontWeight: '400',
+                      //fontWeight: '400',
+                      fontFamily: 'Poppins_400Regular',
                       paddingVertical: 12,
                       textAlign: 'left',
+                      paddingBottom: 10,
                     },
                     placeholder: {
                       fontSize: 14.5,
-                      fontWeight: '350',
+                     // fontWeight: '350',
+                      fontFamily: 'Poppins_400Regular',
                       color: 'gray',
                     },
                   }}
@@ -494,7 +499,7 @@ const RegisterScreen = () => {
             <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
               <View style={[styles.textInputIconView, styles.allMarginRight, { justifyContent: 'center' }]}>
                 <TextInput
-                  style={[{ paddingLeft: 40 }]}
+                  style={[{ paddingLeft: 40,fontFamily: 'Poppins_400Regular' }]}
                   placeholder="Password"
                   value={formData.password}
                   onChangeText={(text) => setFormData({ ...formData, password: text })}
@@ -510,7 +515,7 @@ const RegisterScreen = () => {
 
               <View style={[styles.textInputIconView, styles.allMarginLeft, { justifyContent: 'center' }]}>
                 <TextInput
-                  style={[{ paddingLeft: 38 }]}
+                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular' }]}
                   placeholder="Confirm Password"
                   value={formData.confirmPassword}
                   onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
@@ -555,21 +560,26 @@ const RegisterScreen = () => {
                       paddingRight: 30,
                       paddingLeft: 38,
                       fontSize: 14.5,
-                      fontWeight: '400',
+                      //fontWeight: '400',
+                      fontFamily: 'Poppins_400Regular',
                       paddingVertical: 12,
                       textAlign: 'left',
+                      paddingBottom: 14,
                     },
                     inputAndroid: {
                       paddingRight: 30,
                       paddingLeft: 38,
                       fontSize: 14.5,
-                      fontWeight: '400',
+                      //fontWeight: '400',
+                      fontFamily: 'Poppins_400Regular',
                       paddingVertical: 18,
                       textAlign: 'left',
+                      paddingBottom: 14,
                     },
                     placeholder: {
                       fontSize: 14.5,
-                      fontWeight: '350',
+                      //fontWeight: '350',
+                      fontFamily: 'Poppins_400Regular',
                       color: 'gray',
                     },
                   }}
@@ -612,7 +622,7 @@ const RegisterScreen = () => {
               <View style={[styles.checkbox]}>
                 <Checkbox
                   status={termsAccepted ? 'checked' : 'unchecked'}
-                  onPress={() => setTermsAccepted(!termsAccepted)}
+                  onPress={() => setTermsAccepted(prevState => !prevState)}
                   color={Colors.primary}
                 />
                 <Text style={styles.termsText}>

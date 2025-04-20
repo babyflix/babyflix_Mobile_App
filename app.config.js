@@ -77,7 +77,12 @@ export default ({ config }) => ({
       backgroundColor: "#ffffff"
     },
     package: "com.babyflix.app",
-    jsEngine: "hermes" // Correctly added Hermes JS engine
+    jsEngine: "hermes",
+    permissions: [
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE",
+      "CAMERA"
+    ] 
   },
   plugins: [
     "expo-router",
@@ -89,6 +94,7 @@ export default ({ config }) => ({
       }
     ],
     "expo-video",
-    "expo-build-properties"
+    "expo-build-properties",
+    "expo-font"
   ]
 });
