@@ -18,7 +18,7 @@ npm run dev
 
 ### Open the App on Mobile
 
-1. Install the **Expo Go** app from the 
+1. Install the **Expo Go** app from the play store 
 2. After running `npm run dev`, a QR code will appear in your terminal.
 3. Open **Expo Go** on your mobile.
 4. Scan the QR code to launch the app.
