@@ -61,23 +61,30 @@ const UploadScreen = () => {
       const isVideo = selectedMedia.type.startsWith('video');
       const fileUri = selectedMedia.uri;
       const totalChunks = 1;
+
         const formData = new FormData();
+
         const file = {  uri: selectedMedia.uri,
           name: selectedMedia.fileName || "upload.jpg", 
           type: selectedMedia.type || "image/jpeg", };
+          
         console.log('file',file)
 
-        formData.append('file', file,selectedMedia.fileName);
+        formData.append('file', file);
         formData.append('chunkIndex', Number(1));
         formData.append('totalChunks', Number(totalChunks));
         formData.append('title', selectedMedia.fileName.split('.')[0]);
-        formData.append('object_type', isImage ? 'image' : isVideo ? 'video' : 'unknown');
+        formData.append('object_type', isImage ? 'image/jpeg' : isVideo ? 'video' : 'unknown');
         formData.append("machine_id", user.role === "user" ? user.machineId : machineId || '');
         formData.append("user_id", user.role === "user" ? user.uuid : '');
         formData.append("uploaded_by", user.role === "user" ? "By Me" : "By Clinic");
 
-        console.log('formData',formData)
-
+        //console.log('formData',formData)
+        for (const pair of formData.entries()) {
+          console.log(`${pair[0]}: ${JSON.stringify(pair[1])}`);
+        }        
+        
+        console.log(`${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`)
         try {
           const response = await axios.post(`${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`, formData, {
             headers: {
@@ -86,13 +93,24 @@ const UploadScreen = () => {
             },
           });
 
+    //       const response = await fetch(`${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`, {
+    //   method: 'POST',
+    //   body: formData,
+    //   headers: {
+    //     Accept: 'application/json',
+    //   },
+    // });
+
+    // const data = await response.json();
+    // console.log('Response:', data);
+
           if (response.data && response.data.message) {
             console.log(`Chunk ${1} uploaded successfully`);
           } else {
             throw new Error('Chunk upload failed');
           }
         } catch (error) {
-          console.error(`Error uploading chunk ${1}:`, error.toJSON());
+          console.error(`Error uploading chunk ${1}:`, error?.message, error?.response?.data);
           dispatch(showSnackbar({ message: `Error uploading chunk ${1}`, type: 'error' }));
           setLoadingState(false);
           return;
