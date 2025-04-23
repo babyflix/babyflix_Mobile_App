@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily:'Poppins_400Regular',
     color: Colors.messageBlack,
-    textAlign: 'right'
+    textAlign: 'right',
   },
   messageBox: {
     flexDirection: 'row',

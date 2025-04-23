@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.primary,
     flexDirection: 'row',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   resetButton: {
     flex: 1,

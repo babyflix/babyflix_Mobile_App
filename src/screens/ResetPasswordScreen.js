@@ -100,4 +100,3 @@ const ResetPasswordScreen = ({ navigation, route }) => {
 };
 
 export default ResetPasswordScreen;
-

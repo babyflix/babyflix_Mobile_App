@@ -21,4 +21,3 @@ export const connectSocket = (userUuid) => {
 };
 
 export const getSocket = () => socket;
-

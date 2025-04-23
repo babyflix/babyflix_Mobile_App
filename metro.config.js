@@ -8,4 +8,3 @@ defaultConfig.resolver.extraNodeModules = {
 };
 
 module.exports = defaultConfig;
-

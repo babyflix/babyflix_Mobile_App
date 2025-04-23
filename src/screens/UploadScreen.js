@@ -24,6 +24,7 @@ import { useRouter } from 'expo-router';
 const EXPO_PUBLIC_CLOUD_API_URL = 'https://dev-apis.babyflix.net/upload-files/';
 const CHUNK_SIZE = 2 * 1024 * 1024;
 
+
 const imageExtensions = [
   "jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif", "jfif", "heic", "heif"
 ];
@@ -38,6 +39,7 @@ const isValidMediaFile = (file) => {
   return imageExtensions.includes(extension) || videoExtensions.includes(extension);
 };
 
+
 const UploadScreen = () => {
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -51,6 +53,7 @@ const UploadScreen = () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       Alert.alert('Permission Required', 'We need access to your media.');
+
       return;
     }
 
@@ -75,6 +78,7 @@ const UploadScreen = () => {
     } catch (error) {
       console.error('Picker error:', error);
       Alert.alert('Error', 'Could not select media.');
+
     }
   };
 
@@ -108,6 +112,7 @@ const UploadScreen = () => {
 
     setLoading(true);
     setUploadProgress(0);
+
 
     try {
       const chunks = await chunkFile(media.uri);
@@ -147,6 +152,7 @@ const UploadScreen = () => {
     } catch (error) {
       console.error('Upload error:', error.message);
       Alert.alert('Upload Failed', 'There was a problem uploading the file.');
+
     } finally {
       setLoading(false);
     }
@@ -453,8 +459,9 @@ const styles = StyleSheet.create({
     fontFamily:'Poppins_400Regular',
     color: '#155724',
     marginBottom: 20,
-    textAlign: 'center'
+    textAlign: 'center',
   },
 });
 
 export default UploadScreen;
+
