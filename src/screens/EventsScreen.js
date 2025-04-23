@@ -52,62 +52,6 @@ const sortEvents = (events) => {
 const EventsTab = ({ data, onPreview, onLoadMore }) => {
   const onEndReachedCalledDuringMomentum = useRef(false);
 
-  // const renderItem = ({ item }) => {
-  //   const isUpcoming = (item.isActive == true && item.isEventScheduleOnToday == true && item.isEventStarted == true);
-
-  //   const eventDateConverted = item.eventDateConverted;
-  //   const [month, day, year] = eventDateConverted.split("/");
-  //   const eventDate = new Date(`${year}-${month}-${day}`);
-
-  //   const monthName = eventDate.toLocaleString('default', { month: 'short' });
-  //   const dayFormatted = String(eventDate.getDate()).padStart(2, '0');
-  //   const yearFormatted = eventDate.getFullYear();
-
-  //   return (
-  //     <ScrollView contentContainerStyle={styles.eventCard}>
-  //       <View
-  //         style={[
-  //           styles.eventImageContainer,
-  //           { backgroundColor: isUpcoming ? 'lightgreen' : 'lightgray' }
-  //         ]}
-  //       >
-  //         <View style={styles.eventDateText}>
-  //           <View style={{ backgroundColor: 'white', color: "black", alignItems: 'center', paddingVertical: 5, paddingHorizontal: 10 }}><Text style={{ fontWeight: 'bold' }}>{monthName}</Text></View>
-  //           <View style={{ alignItems: 'center', marginTop: 3 }} ><Text style={{ fontSize: 25 }}>{dayFormatted}</Text></View>
-  //           <View style={{ alignItems: 'center' }}><Text style={{ fontSize: 10 }}>{yearFormatted}</Text></View>
-  //         </View>
-  //       </View>
-
-  //       <View style={styles.eventContent}>
-  //         <Text style={styles.eventTitle}>{item.eventName}</Text>
-  //         <View style={styles.eventDetail}>
-  //           <Icon name="access-time" size={20} color={Colors.textSecondary} />
-  //           <Text style={styles.eventDetailText}>{item.eventTime}</Text>
-  //         </View>
-  //         <View style={styles.iconContainer}>
-  //           <View style={styles.iconWithCount}>
-  //             <Icon name="email" size={20} color={Colors.textSecondary} />
-  //             <Text style={styles.countText}>{item.emailInvites?.length || 0}</Text>
-  //           </View>
-
-  //           <View style={styles.iconWithCount}>
-  //             <Icon name="phone-iphone" size={20} color={Colors.textSecondary} />
-  //             <Text style={styles.countText}>{item.mobileInvites?.length || 0}</Text>
-  //           </View>
-  //         </View>
-  //       </View>
-
-  //       <TouchableOpacity
-  //         style={[styles.shareButton, isUpcoming ? {} : styles.disabledShareButton]}
-  //         onPress={() => isUpcoming && onPreview(item)}
-  //         disabled={!isUpcoming}
-  //       >
-  //         <Icon name="share" size={20} color="#fff" />
-  //       </TouchableOpacity>
-  //     </ScrollView>
-  //   );
-  // };
-
   const renderItem = ({ item, index }) => {
     const isUpcoming = (item.isActive == true && item.isEventScheduleOnToday == true && item.isEventStarted == true);
   
@@ -283,8 +227,6 @@ const EventsScreen = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
-
-        console.log('Error sent successfully:', response.data);
       } catch (err) {
         console.error('Failed to send error:', err);
       }
@@ -726,15 +668,6 @@ const styles = StyleSheet.create({
         elevation: 3,
       },
     }),
-    // backgroundColor: '#fff',
-    // borderRadius: 16,
-    // padding: 16,
-    // marginBottom: 16,
-    // shadowColor: '#000',
-    // shadowOpacity: 0.1,
-    // shadowOffset: { width: 0, height: 4 },
-    // shadowRadius: 10,
-    // elevation: 5,
   },
 
   eventContent: {
@@ -745,7 +678,6 @@ const styles = StyleSheet.create({
 
   eventTitle: {
    fontSize: 16,
-    //fontWeight: 'bold',
     color: '#333',
     fontFamily: 'Poppins_600SemiBold',
   },
@@ -762,10 +694,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
   },
   shareButton: {
-    // position: 'absolute',
-    // top: 40,
-    // right: 15,
-    // padding: 5,
     position: 'absolute',
     bottom: 38,
     right: 20,
@@ -960,7 +888,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginTop:3,
     fontSize: 12,
-    //fontWeight: "bold",
     fontFamily:'Poppins_500Medium',
     color: Colors.black,
   },
@@ -992,7 +919,6 @@ const styles = StyleSheet.create({
     },
     tabLabel: {
       textTransform: 'none',
-      //fontWeight: '600',
       fontFamily:'Poppins_400Regular'
     },
 });

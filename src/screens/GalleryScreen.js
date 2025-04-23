@@ -30,6 +30,7 @@ import { useRouter } from 'expo-router';
 import moment from 'moment-timezone';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { setUnreadMessagesData, setUnreadMessagesCount } from '../state/slices/headerSlice';
+import { connectSocket, getSocket } from '../services/socket';
 
 
 const Tab = createMaterialTopTabNavigator();
@@ -39,8 +40,8 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh }) => 
 
   const formatCreatedAtToIST = (created_at) => {
     const istDate = moment.utc(created_at).tz('Asia/Kolkata');
-    const date = istDate.format('DD/MM/YYYY');   // Like 13/04/2025
-    const time = istDate.format('HH:mm');        // Like 18:03
+    const date = istDate.format('DD/MM/YYYY');  
+    const time = istDate.format('HH:mm');
     return `${date} | ${time}`;
   };
 
@@ -184,9 +185,6 @@ const onRefresh = async () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-unread-chat-members`);
   
-        //console.log('Unread chat members:', response.data);
-        //console.log(response.data.unread_messages?.[0]?.unread_count);
-  
         dispatch(setUnreadMessagesData(response.data));
         dispatch(setUnreadMessagesCount(response.data.unread_messages?.[0]?.unread_count || 0));
       } catch (error) {
@@ -194,16 +192,12 @@ const onRefresh = async () => {
       }
     };
   
-    // Initial fetch
     fetchUnreadChats();
+
+    const intervalId = setInterval(fetchUnreadChats, 3000); 
   
-    // Set interval
-    const intervalId = setInterval(fetchUnreadChats, 3000); // 3 seconds
-  
-    // Clear interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
-  
+  }, []);  
 
   const handlePreview = (item) => {
     if (!item.object_url) {
@@ -400,7 +394,6 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     textTransform: 'none',
-    //fontWeight: '600',
     fontFamily:'Poppins_400Regular'
   },
   tabIndicator: {
@@ -419,9 +412,6 @@ const styles = StyleSheet.create({
     maxWidth: Dimensions.get('window').width,
     maxHeight: Dimensions.get('window').height,
     backgroundColor: 'black',
-    // borderRadius: 5,
-    // borderWidth:1,
-    // borderColor:'white',
     padding: 10,
   },
   maxModalContent: {

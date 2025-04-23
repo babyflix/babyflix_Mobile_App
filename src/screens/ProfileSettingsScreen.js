@@ -762,7 +762,6 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 20,
-    //fontWeight: 'bold',
     fontFamily: 'Poppins_500Medium',
     color: Colors.textPrimary,
     marginBottom: 10,
@@ -809,7 +808,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    //fontWeight: '600',
     fontFamily:'Poppins_600SemiBold',
     color: Colors.profileText,
     marginBottom: 10,
@@ -822,7 +820,6 @@ const styles = StyleSheet.create({
   },
   insideInfoText: {
     fontSize: 14,
-    //fontWeight: '700',
     fontFamily:'Poppins_600SemiBold',
     color: Colors.textPrimary,
   },
@@ -893,7 +890,6 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    //fontWeight: 'bold',
     fontFamily: 'Poppins_600SemiBold',
     marginBottom: 20,
     textAlign: 'center',
