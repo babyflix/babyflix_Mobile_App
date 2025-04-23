@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
     left: 7,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,
-    borderRadius: 5,
+    borderRadius: 5
   },
   rotateButton: {
     position: 'absolute',

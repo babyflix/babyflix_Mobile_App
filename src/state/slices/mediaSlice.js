@@ -20,3 +20,4 @@ const mediaSlice = createSlice({
 export const { setMediaData } = mediaSlice.actions;
 
 export default mediaSlice.reducer;
+

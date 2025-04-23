@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
   showAdditionalInfoText: {
     color: Colors.primary,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 20
   },
   buttonRow2: {
     flexDirection: 'row',

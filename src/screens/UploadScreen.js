@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     fontFamily:'Poppins_400Regular',
     color: '#155724',
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: 'center'
   },
 });
 
