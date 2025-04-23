@@ -179,7 +179,6 @@ const RegisterScreen = () => {
 
       const timezone = await AsyncStorage.getItem('timezone');
       const token = await AsyncStorage.getItem('token');
-      console.log('termsAccepted',termsAccepted)
 
       const response = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/register`,
@@ -397,7 +396,6 @@ const RegisterScreen = () => {
                       paddingRight: 30,
                       paddingLeft: 18,
                       fontSize: 14.5,
-                      //fontWeight: '400',
                       fontFamily: 'Poppins_400Regular',
                       paddingVertical: 12,
                       textAlign: 'left',
@@ -407,7 +405,6 @@ const RegisterScreen = () => {
                       paddingRight: 30,
                       paddingLeft: 18,
                       fontSize: 14.5,
-                      //fontWeight: '400',
                       fontFamily: 'Poppins_400Regular',
                       paddingVertical: 12,
                       textAlign: 'left',
@@ -415,7 +412,6 @@ const RegisterScreen = () => {
                     },
                     placeholder: {
                       fontSize: 14.5,
-                     // fontWeight: '350',
                       fontFamily: 'Poppins_400Regular',
                       color: 'gray',
                     },
@@ -560,7 +556,6 @@ const RegisterScreen = () => {
                       paddingRight: 30,
                       paddingLeft: 38,
                       fontSize: 14.5,
-                      //fontWeight: '400',
                       fontFamily: 'Poppins_400Regular',
                       paddingVertical: 12,
                       textAlign: 'left',
@@ -570,7 +565,6 @@ const RegisterScreen = () => {
                       paddingRight: 30,
                       paddingLeft: 38,
                       fontSize: 14.5,
-                      //fontWeight: '400',
                       fontFamily: 'Poppins_400Regular',
                       paddingVertical: 18,
                       textAlign: 'left',
@@ -578,7 +572,6 @@ const RegisterScreen = () => {
                     },
                     placeholder: {
                       fontSize: 14.5,
-                      //fontWeight: '350',
                       fontFamily: 'Poppins_400Regular',
                       color: 'gray',
                     },

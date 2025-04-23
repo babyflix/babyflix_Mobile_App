@@ -40,7 +40,7 @@ const LiveStreamingScreen = () => {
           await videoRef.current.unloadAsync(); 
           await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
         } catch (err) {
-          console.log('Video playback error:', err);
+          console.error('Video playback error:', err);
         }
       }
     };

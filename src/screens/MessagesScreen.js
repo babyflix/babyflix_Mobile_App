@@ -1,314 +1,3 @@
-// import React, { useEffect, useRef, useState } from 'react';
-// import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl } from 'react-native';
-// import { Ionicons } from '@expo/vector-icons';
-// import Colors from '../constants/Colors';
-// import Header from '../components/Header';
-// import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
-// import axios from 'axios';
-// import { useFocusEffect } from '@react-navigation/native';
-// import { BackHandler } from 'react-native';
-// import { useNavigation } from 'expo-router';
-// import { useDispatch, useSelector } from 'react-redux';
-// import Loader from '../components/Loader';
-// import { connectSocket, getSocket } from '../services/socket';
-
-
-// const MessagesScreen = () => {
-//   const [selectedMessageId, setSelectedMessageId] = useState();
-//   const [message, setMessage] = useState('');
-//   const [messages, setMessages] = useState([]);
-//   const [chatMembers, setChatMembers] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [chatHistory, setChatHistory] = useState([]);
-//   const [chatHistories, setChatHistories] = useState([])
-//   const [count, setCount] = useState(0);
-//   const [messageLimit, setMessageLimit] = useState(10);
-//   const [isFetchingMore, setIsFetchingMore] = useState(false);
-//   const [refreshing, setRefreshing] = useState(false);
-//   const [allowKeyboard, setAllowKeyboard] = useState(false);
-//   const [isTyping, setIsTyping] = useState(false); 
-//   const [onlineUsers, setOnlineUsers] = useState([]);
-//   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
-
-
-//   const chatMembersRef = useRef();
-//   const scrollViewRef = useRef();
-//   const inputRef = useRef(null);
-//   const navigation = useNavigation();
-//   const dispatch = useDispatch();
-//   const Loading = useSelector((state) => state.ui.loading);
-//   const unreadMessagesCount = useSelector((state) => state.header.unreadMessagesCount);
-//   const unreadMessages = useSelector((state) => state.header.unreadMessages);
-//   const user = useSelector((state) => state.auth);
-
-//   useEffect(() => {
-//     getChatMembers();
-//   }, [unreadMessagesCount]);
-
-//   useEffect(() => {
-//     // Connect only once you have user data
-//     const userUuid = user.uuid; // You can fetch from Redux/store
-//     const socket = connectSocket(userUuid);
-
-//     if (socket.connected) {
-//       console.log('✅ Socket is connected');
-//     } else {
-//       console.log('❌ Socket is NOT connected');
-//     }
-
-//     socket.on('online-users', (users) => {
-//       setOnlineUsers(users);
-//       console.log('users',users)
-//     });
-  
-//     return () => {
-//       socket.disconnect();
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     const socket = getSocket();
-  
-//     if (!socket) return;
-  
-//     socket.on('receive-message', (msg) => {
-//       const shouldAdd = msg.sender_uuid === selectedMessageId || msg.recipient_uuid === selectedMessageId;
-//       if (shouldAdd) {
-//         setMessages(prev => [...prev, msg]);
-//         setTimeout(() => {
-//           scrollViewRef.current?.scrollToEnd({ animated: true });
-//         }, 100);
-//       }
-//       socket.on('typing', ({ from, to }) => {
-//         if (from === selectedMessageId && to === user.uuid) {
-//           setIsReceiverTyping(true);
-//           clearTimeout(socket.typingTimeout);
-//           socket.typingTimeout = setTimeout(() => {
-//             setIsReceiverTyping(false);
-//           }, 2000);
-//         }
-//       });
-  
-//       // Update unread message list globally if needed
-//     });
-  
-//     return () => {
-//       socket.off('receive-message');
-//       socket.off('typing');
-//     };
-//   }, [selectedMessageId]);
-  
-  
-
-//   useEffect(() => {
-//     const backAction = () => {
-//       if (selectedMessageId !== null) {
-//         setSelectedMessageId(null);
-//         getChatMembers();
-//         return true;
-//       }
-//       return false;
-//     };
-//     const backHandler = BackHandler.addEventListener(
-//       'hardwareBackPress',
-//       backAction
-//     );
-
-//     return () => backHandler.remove();
-//   }, [selectedMessageId]);
-
-//   const getChatMembers = async () => {
-//     setLoading(true);
-//     try {
-//       const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-chat-members`);
-//       if (response.data) {
-//         setChatMembers(response.data);
-//         chatMembersRef.current = response.data;
-//         setLoading(false);
-//       } else {
-//         console.error("Error : Data not Comming");
-//       }
-//     } catch (err) {
-//       setError('Error fetching chat members');
-//       setLoading(false);
-//     }
-//   };
-
-//   const onRefresh = async () => {
-//     setRefreshing(true);
-//     await getChatMembers();
-//     setRefreshing(false);
-//   };
-
-//   useEffect(() => {
-//     if (chatMembers.length > 0) {
-//       getChatHistory(messageLimit);
-//     }
-//   }, [chatMembers, messageLimit ,unreadMessagesCount]);
-
-//   useEffect(() => {
-//     if (selectedMessageId) {
-//       setTimeout(() => {
-//         inputRef.current?.focus();
-//       }, 300);
-//     }
-//     setAllowKeyboard(false);
-//   }, [selectedMessageId]);
-
-//   const getChatHistory = async (limit = 10) => {
-//     setLoading(true);
-//     try {
-//       const histories = await Promise.all(
-//         chatMembers.map(async (member) => {
-//           const recipientUuid = member.uuid;
-//           const messageUuid = '';
-
-//           const response = await axios.get(
-//             `${EXPO_PUBLIC_API_URL}/api/chats/get-chat-history?recipientUuid=${recipientUuid}&limit=${limit}&messageUuid=${messageUuid}`
-//           );
-
-//           return response.data;
-//         })
-//       );
-
-//       const flattenedHistories = histories.flat();
-
-//       //console.log('flattenedHistories',flattenedHistories)
-//       setChatHistories((prevHistories) => {
-//         const newMessages = flattenedHistories.filter(
-//           msg => !prevHistories.some(prev => prev.message_uuid === msg.message_uuid)
-//         );
-//         const combined = [...prevHistories, ...newMessages];
-//         combined.sort((a, b) => new Date(a.date) - new Date(b.date));
-//         return combined;
-//       });
-
-//       if (selectedMessageId) {
-//         const updatedMessages = flattenedHistories.filter(
-//           (msg) =>
-//             msg.sender_uuid === selectedMessageId ||
-//             msg.recipient_uuid === selectedMessageId
-//         );
-
-//         setMessages((prevMessages) => {
-//           const uniqueMessages = updatedMessages.filter(
-//             (msg) =>
-//               !prevMessages.some(
-//                 (prev) => prev.message_uuid === msg.message_uuid
-//               )
-//           );
-//           return [...prevMessages, ...uniqueMessages].sort((a, b) => new Date(a.date) - new Date(b.date));
-//         });
-//       }
-
-//       setLoading(false);
-//       setIsFetchingMore(false);
-//     } catch (err) {
-//       setError('Error fetching chat history');
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleMessagePress = ({ Uuid }) => {
-//     setSelectedMessageId(Uuid);
-//     const selectedMessages = chatHistories.filter((msg) => msg.sender_uuid === Uuid || msg.recipient_uuid === Uuid);
-//     const selectChatHistory = chatMembers.filter((msg) => msg.uuid === Uuid);
-//     setMessages(selectedMessages);
-//     setChatHistory(selectChatHistory);
-
-//     //console.log('selectedMessages',selectedMessages)
-//     let messages_Uuid;
- 
-//     const lastUnreadTime = unreadMessages.length > 0 ? unreadMessages[0].last_unread_message_time : null;
-//     //console.log('lastUnreadTime', lastUnreadTime);
-//     if (lastUnreadTime) {
-//       const currentTimestamp = new Date(lastUnreadTime).getTime();
-//       //console.log('currentTimestamp', currentTimestamp);
-//       messages_Uuid = `m-${currentTimestamp}`
-//       //console.log('messages_Uuid',messages_Uuid)
-//     }
-
-//     const updateMessageStatus = async () => {
-//       try {
-//         const payload = {
-//           message_uuid: messages_Uuid,
-//           status: 'read'
-//         };
-    
-//         const response = await axios.put(`${EXPO_PUBLIC_API_URL}/api/chats/update-message-status`, payload);
-    
-//         console.log('Message status updated:', response.data);
-//       } catch (error) {
-//         console.error('Error updating message status:', error);
-//       }
-//     }
-
-//     if(unreadMessagesCount>0){
-//       updateMessageStatus();
-//     }
-//   };
-
-//   const handleSendMessage = async () => {
-//     const currentTimestamp = Date.now();
-//     const messages_Uuid = `m-${currentTimestamp}`
-//     const uuid = chatHistory[0].uuid;
-
-//     const newMessage = {
-//       message_uuid: messages_Uuid,
-//       content: message,
-//       sender: "You",
-//       recipient_uuid: uuid,
-//       date: currentTimestamp,
-//       status: "sent",
-//     };
-
-//     setMessages((prev) => [...prev, newMessage]);
-//     setMessage('');
-
-//     setTimeout(() => {
-//       scrollViewRef.current?.scrollToEnd({ animated: true });
-//     }, 100);
-//     setLoading(true);
-//     try {
-//       const socket = getSocket();
-//       socket.emit('send-message', {
-//         ...newMessage,
-//         sender_uuid: user.uuid,
-//       });
-//       const response = await axios.post(`${EXPO_PUBLIC_API_URL}/api/chats/send-message`, {
-//         recipientUuid: uuid,
-//         content: message,
-//         message_uuid: messages_Uuid,
-//         date: currentTimestamp
-//       }, {
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': 'Bearer YOUR_API_KEY'
-//         }
-//       });
-//       setCount(count + 1);
-//       setLoading(false);
-//     } catch (error) {
-//       console.error('Error sending message:', error.response ? error.response.data : error.message);
-//       setLoading(false);
-//     }
-//     setMessage('');
-//     setTimeout(() => {
-//       scrollViewRef.current?.scrollToEnd({ animated: true });
-//     }, 100);    
-//   };
-
-//   const handleTyping = () => {
-//     const socket = getSocket();
-//     if (selectedMessageId && socket) {
-//       socket.emit('typing', {
-//         to: selectedMessageId,
-//         from: user.uuid,
-//       });
-//     }
-//   };  
-
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -339,6 +28,7 @@ const MessagesScreen = () => {
   const [allowKeyboard, setAllowKeyboard] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState({});
+  const[online, setOnline]=useState(false);
   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
 
   const chatMembersRef = useRef();
@@ -369,24 +59,14 @@ const MessagesScreen = () => {
 
     socket.on('online-users', (users) => {
       setOnlineUsers(users);
-      console.log('users', users);
     });
 
     socket.on('userStatus', ({ username, status }) => {
       setOnlineUsers((prevUsers) => {
         const updatedUsers = { ...prevUsers, [username]: status };
-        console.log('updatedUsers',updatedUsers)
         return updatedUsers;
       });
     });
-
-    // socket.on('messageStatus', ({ message_uuid, status }) => {
-    //   setMessages((prevMessages) =>
-    //     prevMessages.map((msg) =>
-    //       msg.message_uuid === message_uuid ? { ...msg, status } : msg
-    //     )
-    //   );
-    // });
 
     return () => {
       socket.disconnect();
@@ -394,12 +74,10 @@ const MessagesScreen = () => {
   }, []);
 
   useEffect(() => {
-    //console.log('message',messages)
     const socket = getSocket();
     if (!socket) return;
 
     socket.on("privateMessage", (msg) => {
-      console.log("Received message:", msg);
   
       const isInCurrentChat =
         msg.senderId === selectedMessageId ||
@@ -415,7 +93,6 @@ const MessagesScreen = () => {
     });
   
     socket.on("messageStatus", ({ message_uuid, status }) => {
-      console.log("Status update:", message_uuid, status);
   
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
@@ -427,7 +104,6 @@ const MessagesScreen = () => {
     });
 
     socket.on('typing', (data) => {
-      console.log('🟡 Typing data received:', data);
     
       const { sender, status } = data;
     
@@ -489,7 +165,7 @@ const MessagesScreen = () => {
     if (chatMembers.length > 0) {
       getChatHistory(messageLimit);
     }
-  }, [chatMembers, messageLimit, unreadMessagesCount]);
+  }, [chatMembers, messageLimit, unreadMessagesCount,messages]);
 
   useEffect(() => {
     if (selectedMessageId) {
@@ -498,7 +174,7 @@ const MessagesScreen = () => {
       }, 300);
     }
     setAllowKeyboard(false);
-  }, [selectedMessageId]);
+  }, [selectedMessageId]);  
 
   const getChatHistory = async (limit = 10) => {
     setLoading(true);
@@ -540,92 +216,91 @@ const MessagesScreen = () => {
 
   const handleMessagePress = ({ Uuid }) => {
     setSelectedMessageId(Uuid);
+  
     const selectedMessages = chatHistories.filter(msg =>
       msg.sender_uuid === Uuid || msg.recipient_uuid === Uuid
     );
     const selectChatHistory = chatMembers.filter(msg => msg.uuid === Uuid);
-    console.log('selectChatHistory',selectChatHistory)
     setMessages(selectedMessages);
     setChatHistory(selectChatHistory);
-
-    const lastUnreadTime = unreadMessages.length > 0 ? unreadMessages[0].last_unread_message_time : null;
-
-    let messages_Uuid;
-    if (lastUnreadTime) {
-      const currentTimestamp = new Date(lastUnreadTime).getTime();
-      messages_Uuid = `m-${currentTimestamp}`;
-    }
-
-    const updateMessageStatus = async () => {
+  
+    const sentMessages = selectedMessages.filter(msg => msg.status === 'sent');
+  
+    const updateMessageStatus = async (message_uuid) => {
       try {
         const payload = {
-          message_uuid: messages_Uuid,
+          message_uuid: message_uuid,
           status: 'read'
         };
         const response = await axios.put(`${EXPO_PUBLIC_API_URL}/api/chats/update-message-status`, payload);
-        console.log('Message status updated:', response.data);
       } catch (error) {
-        console.error('Error updating message status:', error);
+        console.error(`Error updating message ${message_uuid}:`, error.response?.data || error.message);
       }
     };
-
-    if (unreadMessagesCount > 0) {
-      updateMessageStatus();
+  
+    if (sentMessages.length > 0) {
+      sentMessages.forEach(msg => {
+        updateMessageStatus(msg.message_uuid);
+      });
     }
   };
+  
 
   const handleSendMessage = async () => {
-    const currentTimestamp = Date.now();
-    const messages_Uuid = `m-${currentTimestamp}`;
-    const uuid = chatHistory[0].uuid;
+  const currentTimestamp = Date.now();
+  const messages_Uuid = `m-${currentTimestamp}`;
+  const uuid = chatHistory[0].uuid; 
 
-    const newMessage = {
-      message_uuid: messages_Uuid,
-      content: message,
-      sender: "You",
-      recipient_uuid: uuid,
-      date: currentTimestamp,
-      status: "sent"
-    };
-
-    setMessages(prev => [...prev, newMessage]);
-    setMessage('');
-
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-
-    setLoading(true);
-    try {
-      const socket = getSocket();
-      socket.emit('privateMessage', {
-        ...newMessage,
-        sender_uuid: user.uuid
-      });
-
-      await axios.post(`${EXPO_PUBLIC_API_URL}/api/chats/send-message`, {
-        recipientUuid: uuid,
-        content: message,
-        message_uuid: messages_Uuid,
-        date: currentTimestamp
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_KEY'
-        }
-      });
-
-      setCount(count + 1);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error sending message:', error.response ? error.response.data : error.message);
-      setLoading(false);
-    }
-
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+  const newMessage = {
+    message_uuid: messages_Uuid,
+    content: message.trim(),
+    sender: "You",
+    recipient_uuid: uuid,
+    date: currentTimestamp,
+    status: "sent",
   };
+
+  if (!newMessage.content) return;
+
+  setMessages((prev) => [...prev, newMessage]);
+  setMessage("");
+
+  setTimeout(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, 100);
+
+  setLoading(true);
+  try {
+    const socket = getSocket(); 
+    socket.emit('privateMessage', {
+      ...newMessage,
+      sender_uuid: user.uuid, 
+    });
+
+    await axios.post(`${EXPO_PUBLIC_API_URL}/api/chats/send-message`, {
+      recipientUuid: uuid,
+      content: newMessage.content,
+      message_uuid: messages_Uuid,
+      date: currentTimestamp,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${YOUR_API_KEY}` 
+      }
+    });
+
+    setCount((prevCount) => prevCount + 1); 
+  } catch (error) {
+    console.error('Error sending message:', error.response ? error.response.data : error.message);
+  } finally {
+    setLoading(false);
+  }
+
+  setTimeout(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, 100);
+};
+
 
   let typingTimeout;
 
@@ -639,10 +314,8 @@ const handleTyping = () => {
       receiverName: chatHistory[0]?.name
     });
 
-    // Clear the last timeout
     if (typingTimeout) clearTimeout(typingTimeout);
 
-    // Emit stopTyping after 2 seconds of inactivity
     typingTimeout = setTimeout(() => {
       socket.emit('stopTyping', {
         sender: user.uuid,
@@ -656,13 +329,12 @@ const handleTyping = () => {
  
 
   const renderMessage = ({ item }) => {
-    //console.log('item',item)
     const senderInitials = item.name ? item.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
 
     const isOnline = Array.isArray(onlineUsers)
   ? onlineUsers.includes(item.uuid)
   : !!onlineUsers[item.uuid];
-
+  
     const isTypingForThisUser = selectedMessageId !== item.uuid && isReceiverTyping && item.uuid === selectedMessageId;
     
     return (
@@ -713,11 +385,10 @@ const handleTyping = () => {
             <Text style={styles.avatarText}>{senderInitials}</Text>
           </View>
           <Text style={styles.headerText}>{selectedMessage.name}</Text>
-          {/* {onlineUsers.includes(selectedMessageId) ? (
-            <Text style={{ color: 'green', fontSize: 12 }}>Online</Text>
-          ) : (
-            <Text style={{ color: 'gray', fontSize: 12 }}>Offline</Text>
-          )} */}
+          {/* <Text style={{ color: online ? 'green' : 'gray', fontSize: 12 }}>
+            {online ? 'Online' : 'Offline'}
+          </Text> */}
+
           <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedMessageId(null)}>
             <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
@@ -826,7 +497,6 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 22,
-    //fontWeight: 'bold',
     fontFamily:'Poppins_700Bold',
     color: Colors.textPrimary,
     marginLeft: 20,
@@ -861,7 +531,6 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 18,
-   // fontWeight: 'bold',
     fontFamily:'Poppins_700Bold',
     color: Colors.white,
     marginTop: 3,
@@ -877,7 +546,6 @@ const styles = StyleSheet.create({
   },
   senderName: {
     fontSize: 16,
-    //fontWeight: '800',
     fontFamily:'Poppins_700Bold',
     color: Colors.black,
   },

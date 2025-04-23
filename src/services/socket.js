@@ -10,7 +10,7 @@ export const connectSocket = (userUuid) => {
   });
 
   socket.on('connect', () => {
-    console.log('Socket connected:', socket.id,socket.status);
+    console.log('Socket connected:', socket.id);
   });
 
   socket.on('disconnect', () => {
