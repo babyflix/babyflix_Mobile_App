@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
@@ -11,6 +11,50 @@ import { useNavigation } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../components/Loader';
 import { connectSocket, getSocket } from '../services/socket';
+import dayjs from 'dayjs';
+import calendar from 'dayjs/plugin/calendar';
+
+dayjs.extend(calendar);
+
+const buildTimedFeed = (msgs = []) => {
+  const feed = [];
+  let lastDay = null;
+
+  msgs.forEach((m) => {
+    const dayKey = dayjs(m.date).format('YYYY-MM-DD');
+
+    if (dayKey !== lastDay) {
+      feed.push({
+        _type: 'separator',
+        id: `sep-${dayKey}`,
+        label: dayjs(m.date).calendar(undefined, {
+          sameDay: '[Today]',
+          lastDay: '[Yesterday]',
+          lastWeek: 'ddd, D MMM YYYY',
+          sameElse: 'D MMM YYYY',
+        }),
+      });
+      lastDay = dayKey;
+    }
+
+    feed.push({ _type: 'message', ...m });
+  });
+
+  return feed;
+};
+
+const markMessageRead = async (message_uuid) => {
+  try {
+    await axios.put(`${EXPO_PUBLIC_API_URL}/api/chats/update-message-status`, {
+      message_uuid,
+      status: 'read',
+    });
+    console.log('Message status update successfully')
+  } catch (err) {
+    console.warn('Error updating status:', err.response?.data || err.message);
+  }
+};
+
 
 const MessagesScreen = () => {
   const [selectedMessageId, setSelectedMessageId] = useState();
@@ -30,6 +74,9 @@ const MessagesScreen = () => {
   const [onlineUsers, setOnlineUsers] = useState({});
   const[online, setOnline]=useState(false);
   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
+
+ const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
+
 
   const chatMembersRef = useRef();
   const scrollViewRef = useRef();
@@ -73,18 +120,41 @@ const MessagesScreen = () => {
     };
   }, []);
 
+  const normalizeMsg = (raw) => ({
+    message_uuid: raw.message_uuid || raw.messageId,
+    content: raw.content,
+    date: raw.date,
+    sender_uuid: raw.senderId,     
+    sender: raw.sender,
+    recipient_uuid: selectedMessageId,
+    status: raw.status || 'sent',
+  });
+  
+
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
-    socket.on("privateMessage", (msg) => {
-  
+    socket.on("privateMessage", (raw) => {
+      const msg = normalizeMsg(raw);
       const isInCurrentChat =
-        msg.senderId === selectedMessageId ||
+        msg.sender_uuid === selectedMessageId ||
         msg.receiverName === selectedMessageId;
   
       if (isInCurrentChat) {
         setMessages((prev) => [...prev, msg]);
+        console.log('hello hii',msg)
+        console.log(msg.sender_uuid !== user.uuid && msg.status === 'sent')
+        if (msg.sender_uuid !== user.uuid && msg.status === 'sent') {
+          console.log('hello hii 1')
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.message_uuid === msg.message_uuid ? { ...m, status: 'read' } : m
+            )
+          );
+
+          markMessageRead(msg.message_uuid);
+        }
   
         setTimeout(() => {
           scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -177,7 +247,7 @@ const MessagesScreen = () => {
   }, [selectedMessageId]);  
 
   const getChatHistory = async (limit = 10) => {
-    setLoading(true);
+    //setLoading(true);
     try {
       const histories = await Promise.all(
         chatMembers.map(async (member) => {
@@ -284,8 +354,7 @@ const MessagesScreen = () => {
       date: currentTimestamp,
     }, {
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${YOUR_API_KEY}` 
+        'Content-Type': 'application/json', 
       }
     });
 
@@ -378,27 +447,33 @@ const handleTyping = () => {
 
   if (selectedMessageId) {
     const senderInitials = selectedMessage.name ? selectedMessage.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
+    const partnerOnline = Array.isArray(onlineUsers)
+  ? onlineUsers.includes(selectedMessageId)
+  : !!onlineUsers[selectedMessageId];
     return (
       <View style={styles.container}>
         <View style={[styles.headerRow]}>
           <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
             <Text style={styles.avatarText}>{senderInitials}</Text>
           </View>
-          <Text style={styles.headerText}>{selectedMessage.name}</Text>
-          {/* <Text style={{ color: online ? 'green' : 'gray', fontSize: 12 }}>
-            {online ? 'Online' : 'Offline'}
-          </Text> */}
+          <View style={styles.headerNameBlock}>
+            <Text style={styles.headerText}>{selectedMessage.name}</Text>
+            <Text
+              style={[
+                styles.headerStatus,
+                { color: isReceiverTyping ? Colors.messagePrimary
+                                          : partnerOnline ? 'green' : 'gray' },
+              ]}
+            >
+              {isReceiverTyping ? 'Typing…'
+                                : partnerOnline ? 'Online' : 'Offline'}
+            </Text>
+          </View>
 
           <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedMessageId(null)}>
             <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
-
-        {isReceiverTyping && (
-          <View style={{ paddingHorizontal: 10, paddingBottom: 5 }}>
-            <Text style={{ fontStyle: 'italic', color: Colors.messagePrimary }}>Typing...</Text>
-          </View>
-        )}
 
         <ScrollView
           style={styles.chatContainer}
@@ -424,7 +499,7 @@ const handleTyping = () => {
             </View>
           )}
 
-          {messages.map((msg) => {
+          {/* {messages.map((msg) => {
             const messageContent = String(msg.content);
             const messageDate = formatDate(msg.date);
 
@@ -447,7 +522,44 @@ const handleTyping = () => {
                 </View>
               </View>
             );
-          })}
+          })} */}
+
+{timeline.map((item) => {
+  if (item._type === 'separator') {
+    return (
+      <View key={item.id} style={styles.dayChip}>
+        <Text style={styles.dayChipText}>{item.label}</Text>
+      </View>
+    );
+  }
+
+  const messageContent = String(item.content);
+  const messageDate = formatDate(item.date);
+
+  return (
+    <View
+      key={`${item.id || item.message_uuid}`}
+      style={[
+        styles.messageBubble,
+        item.sender === 'You' ? styles.sentMessage : styles.receivedMessage,
+      ]}
+    >
+      <Text style={styles.messageText2}>{messageContent}</Text>
+      <View style={styles.metaContainer}>
+        <Text style={styles.messageTime2}>{messageDate}</Text>
+        {item.sender === 'You' && (
+          <Ionicons
+            name="checkmark-done"
+            size={14}
+            color={item.status === 'read' ? 'blue' : 'black'}
+            style={{ marginLeft: 2 }}
+          />
+        )}
+      </View>
+    </View>
+  );
+})}
+
         </ScrollView>
 
         <View style={styles.messageBox}>
@@ -499,7 +611,8 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontFamily:'Poppins_700Bold',
     color: Colors.textPrimary,
-    marginLeft: 20,
+    marginLeft: 15,
+    paddingTop:10,
     alignItems: 'center'
   },
   messageWrapper: {
@@ -673,8 +786,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginBottom: 10,
-    marginTop: 10,
+    marginBottom: 5,
   },
   statusDot: {
     position: 'absolute',
@@ -686,6 +798,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#fff',
   },
+  dayChip: {
+    alignSelf: 'center',
+    backgroundColor: Colors.messageGray,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginVertical: 6,
+  },
+  dayChipText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    color: Colors.textPrimary,
+  },
+  headerStatus: {
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    marginLeft: 15,
+  },  
+  headerNameBlock: {
+    flexDirection: 'column',
+    marginLeft: 0,  
+  }, 
   
 });
 

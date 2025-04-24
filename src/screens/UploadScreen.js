@@ -20,10 +20,11 @@ import axios from 'axios';
 import { Video } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
+import * as Linking from 'expo-linking';
+import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 
-const EXPO_PUBLIC_CLOUD_API_URL = 'https://dev-apis.babyflix.net/upload-files/';
+const UPLOAD_API_URL = `${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`;
 const CHUNK_SIZE = 2 * 1024 * 1024;
-
 
 const imageExtensions = [
   "jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "tif", "jfif", "heic", "heif"
@@ -37,6 +38,16 @@ const isValidMediaFile = (file) => {
   const uri = file.uri;
   const extension = uri.split('.').pop().toLowerCase();
   return imageExtensions.includes(extension) || videoExtensions.includes(extension);
+};
+
+const getHostUrl = async () => {
+  if (Platform.OS === 'web') {
+    return window.location.href;            // Expo Web
+  }
+
+  // Native: deep‑link that launched the app (may be null)
+  const url = await Linking.getInitialURL();
+  return url || 'app://opened/normally';    // fallback if you want one
 };
 
 
@@ -113,6 +124,14 @@ const UploadScreen = () => {
     setLoading(true);
     setUploadProgress(0);
 
+    const hostUrl = await getHostUrl();
+     
+    const details = {
+      machine_id: user.role === 'user' ? user.machineId : machineId,
+      user_id: user.role === 'user' ? user.uuid : '',
+      uploaded_by: user.role === 'user' ? "By Me" : "By Clinic",
+      hostUrl
+    };
 
     try {
       const chunks = await chunkFile(media.uri);
@@ -133,7 +152,7 @@ const UploadScreen = () => {
         formData.append('machine_id', user.role === 'user' ? user.machineId : '');
         formData.append('user_id', user.role === 'user' ? user.uuid : '');
 
-        const response = await axios.post(EXPO_PUBLIC_CLOUD_API_URL, formData, {
+        const response = await axios.post(UPLOAD_API_URL, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             accept: 'application/json',
@@ -150,8 +169,26 @@ const UploadScreen = () => {
       }
       setShowSuccessModal(true);
     } catch (error) {
-      console.error('Upload error:', error.message);
+      console.error('Upload error email send:', error.message);
       Alert.alert('Upload Failed', 'There was a problem uploading the file.');
+
+            const payload={
+              error: error.response,
+              data: chunk[i],
+              details: details,
+            }
+            console.log('payload',payload)
+      
+            try {
+              const response = await axios.post(`${EXPO_PUBLIC_API_URL}/error/triggerError`, payload, {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                },
+              });
+              console.log('email responce',response)
+            } catch (err) {
+              console.error('Failed to send error:', err);
+            }
 
     } finally {
       setLoading(false);
