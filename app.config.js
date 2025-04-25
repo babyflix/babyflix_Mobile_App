@@ -15,7 +15,7 @@ export default ({ config }) => ({
   orientation: "portrait",
   icon: "./assets/logo.png",
   splash: {
-    image: "./assets/images/adaptive-icon.png",
+    image: "./assets/images/adaptive-icon2.png",
     resizeMode: "contain",
     backgroundColor: "#ffffff"
   },
@@ -27,7 +27,7 @@ export default ({ config }) => ({
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
+      foregroundImage: "./assets/images/adaptive-icon2.png",
       backgroundColor: "#ffffff"
     },
     package: "com.babyflix.app",
