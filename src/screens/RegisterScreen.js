@@ -9,6 +9,8 @@ import {
   ScrollView,
   StyleSheet,
   Keyboard,
+  Linking, 
+  TouchableWithoutFeedback,
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { useRouter } from 'expo-router';
@@ -297,6 +299,8 @@ const RegisterScreen = () => {
   }, []);
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={{ flex: 1 }}>
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
@@ -307,7 +311,7 @@ const RegisterScreen = () => {
 
 
         <View style={{ alignItems: 'center' }}>
-          <Text style={[GlobalStyles.title, { marginTop: 100 }]}>Create BabyFlix Account</Text>
+          <Text style={[GlobalStyles.title, { marginTop: 100 }]}>Create Account</Text>
         </View>
 
         <ScrollView contentContainerStyle={[GlobalStyles.registrationScreenPadding, { position: 'relative' }]}>
@@ -318,7 +322,8 @@ const RegisterScreen = () => {
             <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
               <View style={[styles.textInputIconView, styles.allMarginRight, { position: 'relative', justifyContent: 'center' }]}>
                 <TextInput
-                  style={[{ paddingLeft: 40,fontFamily: 'Poppins_400Regular' }]}
+                  //allowFontScaling={false}
+                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular', color: 'black' }]}
                   placeholder="First Name"
                   value={formData.firstName}
                   onChangeText={(text) => setFormData({ ...formData, firstName: text })}
@@ -327,13 +332,14 @@ const RegisterScreen = () => {
                   name="person"
                   size={20}
                   color={Colors.gray}
-                  style={{ position: 'absolute', left: 10, top: 17 }}
+                  style={{ position: 'absolute', left: '6%', top: 15 }}
                 />
               </View>
 
               <View style={[styles.textInputIconView, styles.allMarginLeft, { position: 'relative', justifyContent: 'center' }]}>
                 <TextInput
-                  style={[{ paddingLeft: 40,fontFamily: 'Poppins_400Regular'  }]}
+                  //allowFontScaling={false}
+                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular',color: 'black' }]}
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChangeText={(text) => setFormData({ ...formData, lastName: text })}
@@ -342,14 +348,15 @@ const RegisterScreen = () => {
                   name="person"
                   size={20}
                   color={Colors.gray}
-                  style={{ position: 'absolute', left: 10, top: 17 }}
+                  style={{ position: 'absolute', left: '6%', top: 15 }}
                 />
               </View>
             </View>
 
             <View style={{ position: 'relative' }}>
               <TextInput
-                style={[GlobalStyles.input, { paddingLeft: 40 }]}
+                //allowFontScaling={false}
+                style={[GlobalStyles.input, { paddingLeft: 38,color: 'black'  }]}
                 placeholder="Email"
                 value={formData.email}
                 onChangeText={(text) => setFormData({ ...formData, email: text })}
@@ -360,7 +367,7 @@ const RegisterScreen = () => {
                 name="email"
                 size={20}
                 color={Colors.gray}
-                style={{ position: 'absolute', left: 10, top: 17 }}
+                style={{ position: 'absolute', left: '3%', top: 15 }}
               />
             </View>
 
@@ -368,7 +375,7 @@ const RegisterScreen = () => {
               <View
                 style={[
                   styles.textInputIconView,
-                  { marginBottom: 15, width: '100%', justifyContent: 'center', paddingLeft: 22, },
+                  { marginBottom: 15, width: '100%', justifyContent: 'center', paddingLeft: 22,height: 55, position: 'relative'},
                 ]}
               >
                 <Icon
@@ -378,8 +385,8 @@ const RegisterScreen = () => {
                   style={{
                     position: 'absolute',
                     left: '3%',
-                    top: '50%',
-                    transform: [{ translateY: -10 }],
+                    top: 15,
+                    zIndex: 1,
                   }}
                 />
 
@@ -393,25 +400,27 @@ const RegisterScreen = () => {
                   value={formData.accountType}
                   style={{
                     inputIOS: {
+                      height: 50,
                       paddingRight: 30,
-                      paddingLeft: 18,
-                      fontSize: 14.5,
+                      paddingLeft: 15,
+                      fontSize: 14,
                       fontFamily: 'Poppins_400Regular',
-                      paddingVertical: 12,
                       textAlign: 'left',
-                      paddingBottom: 10,
+                      alignItems:'center',
+                      color: 'black' 
                     },
                     inputAndroid: {
+                      height: 50,
                       paddingRight: 30,
-                      paddingLeft: 18,
-                      fontSize: 14.5,
-                      fontFamily: 'Poppins_400Regular',
-                      paddingVertical: 12,
+                      paddingLeft: 15,
+                      fontSize: 14,
+                      fontFamily: 'Poppins_400Regular',                      
                       textAlign: 'left',
-                      paddingBottom: 10,
+                      alignItems:'center',
+                      color: 'black' 
                     },
                     placeholder: {
-                      fontSize: 14.5,
+                      fontSize: 14,
                       fontFamily: 'Poppins_400Regular',
                       color: 'gray',
                     },
@@ -425,8 +434,8 @@ const RegisterScreen = () => {
                   style={{
                     position: 'absolute',
                     right: '5%',
-                    top: '50%',
-                    transform: [{ translateY: -10 }],
+                    top: 15,
+                    zIndex: 1,
                   }}
                 />
               </View>
@@ -437,7 +446,8 @@ const RegisterScreen = () => {
 
                 <View style={[styles.textInputIconView, styles.allMarginRight]}>
                   <TextInput
-                    style={GlobalStyles.textInputIcon}
+                    //allowFontScaling={false}
+                    style={[GlobalStyles.textInputIcon,{color: 'black' }]}
                     placeholder="Date of Birth"
                     value={formData.dob}
                     onFocus={() => {
@@ -449,13 +459,14 @@ const RegisterScreen = () => {
                     name="calendar-today"
                     size={20}
                     color={Colors.gray}
-                    style={{ position: 'absolute', left: '7%', top: 17 }}
+                    style={{ position: 'absolute', left: '7%', top: 15 }}
                   />
                 </View>
 
                 <View style={[styles.textInputIconView, styles.allMarginLeft]}>
                   <TextInput
-                    style={GlobalStyles.textInputIcon}
+                    //allowFontScaling={false}
+                    style={[GlobalStyles.textInputIcon,{color: 'black' }]}
                     placeholder="Due Date"
                     value={formData.dueDate}
                     onFocus={() => {
@@ -467,7 +478,7 @@ const RegisterScreen = () => {
                     name="calendar-today"
                     size={20}
                     color={Colors.gray}
-                    style={{ position: 'absolute', left: '7%', top: 17 }}
+                    style={{ position: 'absolute', left: '7%', top: 15 }}
                   />
                 </View>
               </View>
@@ -476,7 +487,8 @@ const RegisterScreen = () => {
             {formData.accountType === 'patient-family' && (
               <View style={{ position: 'relative' }}>
                 <TextInput
-                  style={[GlobalStyles.input, { paddingLeft: 40 }]}
+                  //allowFontScaling={false}
+                  style={[GlobalStyles.input, { paddingLeft: 38,color: 'black'  }]}
                   placeholder="Patient Email id"
                   value={formData.familyOf}
                   onChangeText={(text) => setFormData({ ...formData, familyOf: text })}
@@ -487,7 +499,7 @@ const RegisterScreen = () => {
                   name="email"
                   size={20}
                   color={Colors.gray}
-                  style={{ position: 'absolute', left: 10, top: 17 }}
+                  style={{ position: 'absolute', left: 10, top: 15 }}
                 />
               </View>
             )}
@@ -495,7 +507,8 @@ const RegisterScreen = () => {
             <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
               <View style={[styles.textInputIconView, styles.allMarginRight, { justifyContent: 'center' }]}>
                 <TextInput
-                  style={[{ paddingLeft: 40,fontFamily: 'Poppins_400Regular' }]}
+                  //allowFontScaling={false}
+                  style={[GlobalStyles.textInputIcon,{ paddingLeft: 37,fontFamily: 'Poppins_400Regular',marginTop:5,color: 'black'}]}
                   placeholder="Password"
                   value={formData.password}
                   onChangeText={(text) => setFormData({ ...formData, password: text })}
@@ -505,14 +518,15 @@ const RegisterScreen = () => {
                   name="lock"
                   size={20}
                   color={Colors.gray}
-                  style={{ position: 'absolute', left: '7%', top: 17 }}
+                  style={{ position: 'absolute', left: '6%', top: 15 }}
                 />
               </View>
 
               <View style={[styles.textInputIconView, styles.allMarginLeft, { justifyContent: 'center' }]}>
                 <TextInput
-                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular' }]}
-                  placeholder="Confirm Password"
+                  //allowFontScaling={false}
+                  style={[GlobalStyles.textInputIcon,{ paddingLeft: 35,fontFamily: 'Poppins_400Regular',marginTop:5,color: 'black'  }]}
+                  placeholder="Confirm Pass.."
                   value={formData.confirmPassword}
                   onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
                   secureTextEntry
@@ -522,24 +536,23 @@ const RegisterScreen = () => {
                   size={20}
                   color={Colors.gray}
                   style={{
-                    position: 'absolute', left: '7%', top: '50%',
-                    transform: [{ translateY: -10 }],
+                    position: 'absolute', left: '6%', top: 15,
                   }}
                 />
               </View>
             </View>
 
-            <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
-              <View style={[styles.textInputIconView, styles.allMarginRight, { width: '30%' }]}>
+            <View style={[GlobalStyles.row, { marginBottom: 10 }]}>
+              <View style={[styles.textInputIconView, styles.allMarginRight, { width: '30%', height: 55, position: 'relative' }]}>
                 <Icon
                   name="public"
                   size={20}
                   color={Colors.gray}
                   style={{
                     position: 'absolute',
-                    left: '7%',
-                    top: '50%',
-                    transform: [{ translateY: -10 }],
+                    left: '6%',
+                    top: 15,
+                    zIndex: 1,
                   }}
                 />
                 <RNPickerSelect
@@ -553,25 +566,27 @@ const RegisterScreen = () => {
                   value={formData.countryCode}
                   style={{
                     inputIOS: {
+                      height: 50,
                       paddingRight: 30,
-                      paddingLeft: 38,
-                      fontSize: 14.5,
+                      paddingLeft: 35,
+                      fontSize: 13.5,
                       fontFamily: 'Poppins_400Regular',
-                      paddingVertical: 12,
                       textAlign: 'left',
-                      paddingBottom: 14,
+                      alignItems:'center',
+                      color: 'black'
                     },
                     inputAndroid: {
+                      height: 50,
                       paddingRight: 30,
-                      paddingLeft: 38,
-                      fontSize: 14.5,
+                      paddingLeft: 35,
+                      fontSize: 13.5,
                       fontFamily: 'Poppins_400Regular',
-                      paddingVertical: 18,
                       textAlign: 'left',
-                      paddingBottom: 14,
+                      alignItems:'center',
+                      color: 'black'
                     },
                     placeholder: {
-                      fontSize: 14.5,
+                      fontSize: 13.5,
                       fontFamily: 'Poppins_400Regular',
                       color: 'gray',
                     },
@@ -585,8 +600,8 @@ const RegisterScreen = () => {
                   style={{
                     position: 'absolute',
                     right: '7%',
-                    top: '50%',
-                    transform: [{ translateY: -10 }],
+                    top: 15,
+                    zIndex: 1,
                   }}
                 />
               </View>
@@ -597,13 +612,13 @@ const RegisterScreen = () => {
                   size={20}
                   color={Colors.gray}
                   style={{
-                    position: 'absolute', left: '7%', top: '50%',
-                    transform: [{ translateY: -10 }],
+                    position: 'absolute', left: '7%', top: 15,
                   }}
                 />
                 <TextInput
-                  style={[GlobalStyles.textInputIcon]}
-                  placeholder="Phone Number"
+                  //allowFontScaling={false}
+                  style={[GlobalStyles.textInputIcon,{color: 'black'}]}
+                  placeholder="Phone No"
                   value={formData.phone}
                   onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
                   keyboardType="phone-pad"
@@ -611,19 +626,46 @@ const RegisterScreen = () => {
               </View>
             </View>
 
-            <View style={styles.termsContainer}>
+            {/* <View style={styles.termsContainer}>
               <View style={[styles.checkbox]}>
                 <Checkbox
                   status={termsAccepted ? 'checked' : 'unchecked'}
                   onPress={() => setTermsAccepted(prevState => !prevState)}
                   color={Colors.primary}
                 />
-                <Text style={styles.termsText}>
-                  I accept the{' '}
-                  <Text style={styles.termsLink}>Terms and Conditions</Text>
+                <Text style={[styles.termsText,{fontFamily: 'Poppins_400Regular'}]}>
+                I accept the{' '}
+                <Text
+                  style={[styles.termsLink,{fontFamily: 'Poppins_400Regular'}]}
+                  onPress={() => Linking.openURL('https://babyflix.ai/terms')}
+                >
+                  Terms and Conditions
                 </Text>
+              </Text>
+
               </View>
+            </View> */}
+
+            <View style={styles.termsContainer}>
+              <View style={styles.checkbox}>
+                <Checkbox
+                  status={termsAccepted ? 'checked' : 'unchecked'}
+                  onPress={() => setTermsAccepted(prevState => !prevState)}
+                  color={Colors.primary}
+                />
+              </View>
+
+              <Text style={[styles.termsText, { fontFamily: 'Poppins_400Regular' }]}>
+                I accept the{' '}
+                <Text
+                  style={[styles.termsLink, { fontFamily: 'Poppins_400Regular' }]}
+                  onPress={() => Linking.openURL('https://babyflix.ai/terms')}
+                >
+                  Terms and Conditions
+                </Text>
+              </Text>
             </View>
+
 
             <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
               <TouchableOpacity
@@ -645,12 +687,12 @@ const RegisterScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={[GlobalStyles.row, GlobalStyles.center, { marginTop: 10 }]}>
-              <Text style={{ color: Colors.textSecondary }}>
+            <View style={[GlobalStyles.row, GlobalStyles.center, { marginTop: 0 }]}>
+              <Text style={{ color: Colors.textSecondary,fontFamily: 'Poppins_400Regular' }}>
                 Already have an account?{' '}
               </Text>
               <TouchableOpacity onPress={() => router.push('login')}>
-                <Text style={GlobalStyles.link}>Sign In</Text>
+                <Text style={[GlobalStyles.link,{fontFamily: 'Poppins_400Regular'}]}>Sign In</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -675,6 +717,8 @@ const RegisterScreen = () => {
         />
       </View>
     </KeyboardAvoidingView>
+    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -685,7 +729,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
-    alignItems: 'left',
+    //alignItems: 'left',
+    alignItems: 'flex-start',
     backgroundColor: Colors.white,
     height: 55,
   },
@@ -694,7 +739,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
-    alignItems: 'Left',
+    //alignItems: 'Left',
+    alignItems: 'flex-start',
+    justifyContent:'center',
     height: 55,
     position: 'relative',
     backgroundColor: Colors.white,
@@ -721,34 +768,56 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
   },
+  // termsContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   marginBottom: 15,
+  // },
+  // checkbox: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   color: Colors.primary
+  // },
+  // checkboxBox: {
+  //   width: 20,
+  //   height: 20,
+  //   borderWidth: 1,
+  //   borderColor: Colors.border,
+  //   borderRadius: 3,
+  //   marginRight: 10,
+  // },
+  // checkboxChecked: {
+  //   backgroundColor: Colors.primary,
+  // },
+  // termsText: {
+  //   color: Colors.textSecondary,
+  // },
+  // termsLink: {
+  //   color: Colors.primary,
+  //   textDecorationLine: 'underline',
+  // },
+
   termsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
   },
   checkbox: {
-    flexDirection: 'row',
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
     alignItems: 'center',
-    color: Colors.primary
-  },
-  checkboxBox: {
-    width: 20,
-    height: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 3,
-    marginRight: 10,
-  },
-  checkboxChecked: {
-    backgroundColor: Colors.primary,
+    marginRight: 8,
   },
   termsText: {
-    color: Colors.textSecondary,
+    fontSize: 14,
+    color: 'black',
   },
   termsLink: {
     color: Colors.primary,
     textDecorationLine: 'underline',
   },
+  
   activeAccountType: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,

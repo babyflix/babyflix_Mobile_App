@@ -23,7 +23,17 @@ export default ({ config }) => ({
   assetBundlePatterns: ["**/*"],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.babyflix.app"
+    bundleIdentifier: "com.babyflix.app",
+    infoPlist: {
+      NSAppTransportSecurity: {
+        NSAllowsArbitraryLoads: true
+      },
+      UISupportedInterfaceOrientations: [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight"
+      ]
+    }
   },
   android: {
     adaptiveIcon: {

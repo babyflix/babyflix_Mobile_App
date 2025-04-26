@@ -69,27 +69,29 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
           {showDropdown && (
             <View style={styles.dropdown}>
-              <Text style={styles.dropdownItem}>Hello! {user.firstName + ' ' + user.lastName}</Text>
-
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => {
-                  closeDropdownHandler();
-                  navigation.navigate('profile', { screen: 'ProfileSettings' });
-                }}
-              >
-                <Ionicons name="settings-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
-                <Text style={{fontFamily:'Poppins_400Regular',marginTop:4}}>Profile Settings</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={handleLogout}
-              >
-                <Ionicons name="log-out-outline" size={20} color={Colors.error} style={styles.icon} />
-                <Text style={styles.logoutText}>Logout</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.dropdownItemFirst}>
+              👋 Hello! {user.firstName + ' ' + user.lastName}
+            </Text>
+          
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => {
+                closeDropdownHandler();
+                navigation.navigate('profile', { screen: 'ProfileSettings' });
+              }}
+            >
+              <Ionicons name="settings-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
+              <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>Profile Settings</Text>
+            </TouchableOpacity>
+          
+            <TouchableOpacity
+              style={[styles.dropdownItem, styles.dropdownItemLast]}
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out-outline" size={20} color={Colors.error} style={styles.icon} />
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          </View>          
           )}
         </View>
       )}
@@ -125,39 +127,86 @@ const styles = StyleSheet.create({
   profileButton: {
     padding: 0,
   },
+  // dropdown: {
+  //   position: 'absolute',
+  //   top: 40,
+  //   right: 0,
+  //   backgroundColor: Colors.white,
+  //   borderRadius: 8,
+  //   padding: 10,
+  //   width: 150,
+  //   marginTop: 5,
+  //   zIndex: 10,
+  //   elevation: 5,
+  //   shadowColor: Colors.black,
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.25,
+  //   shadowRadius: 4,
+  // },
+  // dropdownItem: {
+  //   padding: 10,
+  //   paddingLeft: 0,
+  //   borderBottomWidth: 1,
+  //   borderBottomColor: Colors.lightGray,
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   fontFamily:'Poppins_400Regular',
+  // },
+  // icon: {
+  //   marginRight: 10,
+  // },
+  // logoutText: {
+  //   color: Colors.error,
+  //   fontFamily:'Poppins_400Regular',
+  //   marginTop:4
+  // },
   dropdown: {
     position: 'absolute',
     top: 40,
     right: 0,
     backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 10,
-    width: 150,
-    marginTop: 5,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    width: 220,
     zIndex: 10,
-    elevation: 5,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
+  
   dropdownItem: {
-    padding: 10,
-    paddingLeft: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.lightGray,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    fontFamily:'Poppins_400Regular',
+    fontFamily: 'Poppins_400Regular',
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.lightGray,
   },
+  
+  dropdownItemFirst: {
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 14,
+    color: Colors.textPrimary,
+    marginBottom: 8,
+    borderBottomWidth: 0,
+  },
+  
+  dropdownItemLast: {
+    borderBottomWidth: 0,
+  },
+  
   icon: {
     marginRight: 10,
   },
+  
   logoutText: {
     color: Colors.error,
-    fontFamily:'Poppins_400Regular',
-    marginTop:4
+    fontFamily: 'Poppins_400Regular',
   },
+    
   messageButton: {
     marginRight: 10,
     padding: 5,

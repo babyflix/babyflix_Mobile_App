@@ -56,7 +56,7 @@ export default StyleSheet.create({
     color: Colors.white,
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
-    marginTop:3,
+    //marginTop:3,
   },
   resetButtonText: {
     color: Colors.error,
@@ -134,7 +134,7 @@ export default StyleSheet.create({
     }),
   },
   textInputIcon: {
-    paddingLeft: '24%',
+    paddingLeft: 38,
     color: Colors.textSecondary,
     height: 55,
     fontFamily: 'Poppins_400Regular',

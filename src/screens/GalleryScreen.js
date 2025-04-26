@@ -127,6 +127,8 @@ const onRefresh = async () => {
           }
         }
       );
+       
+      console.log('getPatientByEmail',res.data)
 
       if (res.status === 200) {
         const data1 = res.data;
@@ -139,6 +141,8 @@ const onRefresh = async () => {
               }
             }
           );
+
+          console.log('CLOUD_API_URL get-images',response)
 
           if (response.status === 200) {
             const images = [];
@@ -338,7 +342,7 @@ const onRefresh = async () => {
                   </View>)}
 
                 <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-                  <MaterialIcons name="close" size={30} color="red" />
+                  <MaterialIcons name="close" size={30} color="white" />
                 </TouchableOpacity>
               </View>
             </View>

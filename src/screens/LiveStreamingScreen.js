@@ -31,33 +31,59 @@ const LiveStreamingScreen = () => {
   const streamState = useSelector(state => state.stream);
 
   const streamingUrl = streamState.streamUrl || '';
-  useEffect(() => {
-    console.log('useEffect 3');
+  // useEffect(() => {
+  //   console.log('useEffect 3');
   
-    const playVideo = async () => {
-      if (videoRef.current) {
-        try {
-          await videoRef.current.unloadAsync(); 
-          await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
-        } catch (err) {
-          console.error('Video playback error:', err);
-        }
+  //   const playVideo = async () => {
+  //     if (videoRef.current) {
+  //       try {
+  //         await videoRef.current.unloadAsync(); 
+  //         await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
+  //       } catch (err) {
+  //         console.error('Video playback error:', err);
+  //       }
+  //     }
+  //   };
+  
+  //   playVideo();
+  
+  //   const id = setInterval(() => {
+  //     checkUrlStatus(streamingUrl, dispatch);
+  //   }, 3000);
+  
+  //   setIntervalId(id);
+  
+  //   return () => {
+  //     clearInterval(id);
+  //   };
+  // }, [streamState.streamState]);
+  
+
+  const playVideo = async () => {
+    if (videoRef.current) {
+      try {
+        await videoRef.current.unloadAsync();
+        await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
+      } catch (err) {
+        console.error('Video playback error:', err);
       }
-    };
-  
-    playVideo();
-  
-    const id = setInterval(() => {
-      checkUrlStatus(streamingUrl, dispatch);
-    }, 3000);
-  
-    setIntervalId(id);
-  
-    return () => {
-      clearInterval(id);
-    };
-  }, [streamState.streamState]);
-  
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      playVideo();
+      const id = setInterval(() => {
+        checkUrlStatus(streamingUrl, dispatch);
+      }, 3000);
+
+      setIntervalId(id);
+
+      return () => {
+        clearInterval(id);
+      };
+    }, [streamingUrl, dispatch]) 
+  );
 
   const checkUrlStatus = async (url, dispatch) => {
     if (streamState.streamState != 'live') {

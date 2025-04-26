@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl, KeyboardAvoidingView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 import Header from '../components/Header';
@@ -72,10 +72,10 @@ const MessagesScreen = () => {
   const [allowKeyboard, setAllowKeyboard] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState({});
-  const[online, setOnline]=useState(false);
+  const [online, setOnline] = useState(false);
   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
 
- const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
+  const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
 
 
   const chatMembersRef = useRef();
@@ -97,9 +97,9 @@ const MessagesScreen = () => {
     const socket = connectSocket(userUuid);
 
     if (socket.connected) {
-      console.log('✅ Socket is connected');
+      //console.log('✅ Socket is connected');
     } else {
-      console.log('❌ Socket is NOT connected');
+      //console.log('❌ Socket is NOT connected');
     }
 
     socket.emit('register', userUuid);
@@ -124,12 +124,12 @@ const MessagesScreen = () => {
     message_uuid: raw.message_uuid || raw.messageId,
     content: raw.content,
     date: raw.date,
-    sender_uuid: raw.senderId,     
+    sender_uuid: raw.senderId,
     sender: raw.sender,
     recipient_uuid: selectedMessageId,
     status: raw.status || 'sent',
   });
-  
+
 
   useEffect(() => {
     const socket = getSocket();
@@ -140,13 +140,10 @@ const MessagesScreen = () => {
       const isInCurrentChat =
         msg.sender_uuid === selectedMessageId ||
         msg.receiverName === selectedMessageId;
-  
+
       if (isInCurrentChat) {
         setMessages((prev) => [...prev, msg]);
-        console.log('hello hii',msg)
-        console.log(msg.sender_uuid !== user.uuid && msg.status === 'sent')
         if (msg.sender_uuid !== user.uuid && msg.status === 'sent') {
-          console.log('hello hii 1')
           setMessages((prev) =>
             prev.map((m) =>
               m.message_uuid === msg.message_uuid ? { ...m, status: 'read' } : m
@@ -155,15 +152,15 @@ const MessagesScreen = () => {
 
           markMessageRead(msg.message_uuid);
         }
-  
+
         setTimeout(() => {
           scrollViewRef.current?.scrollToEnd({ animated: true });
         }, 100);
       }
     });
-  
+
     socket.on("messageStatus", ({ message_uuid, status }) => {
-  
+
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.message_uuid === message_uuid
@@ -174,9 +171,9 @@ const MessagesScreen = () => {
     });
 
     socket.on('typing', (data) => {
-    
+
       const { sender, status } = data;
-    
+
       if (status === 'typing' && sender === selectedMessageId) {
         setIsReceiverTyping(true);
         clearTimeout(socket.typingTimeout);
@@ -187,7 +184,7 @@ const MessagesScreen = () => {
         setIsReceiverTyping(false);
       }
     });
-    
+
 
     return () => {
       socket.off("privateMessage");
@@ -235,7 +232,7 @@ const MessagesScreen = () => {
     if (chatMembers.length > 0) {
       getChatHistory(messageLimit);
     }
-  }, [chatMembers, messageLimit, unreadMessagesCount,messages]);
+  }, [chatMembers, messageLimit, unreadMessagesCount, messages]);
 
   useEffect(() => {
     if (selectedMessageId) {
@@ -244,7 +241,7 @@ const MessagesScreen = () => {
       }, 300);
     }
     setAllowKeyboard(false);
-  }, [selectedMessageId]);  
+  }, [selectedMessageId]);
 
   const getChatHistory = async (limit = 10) => {
     //setLoading(true);
@@ -286,16 +283,16 @@ const MessagesScreen = () => {
 
   const handleMessagePress = ({ Uuid }) => {
     setSelectedMessageId(Uuid);
-  
+
     const selectedMessages = chatHistories.filter(msg =>
       msg.sender_uuid === Uuid || msg.recipient_uuid === Uuid
     );
     const selectChatHistory = chatMembers.filter(msg => msg.uuid === Uuid);
     setMessages(selectedMessages);
     setChatHistory(selectChatHistory);
-  
+
     const sentMessages = selectedMessages.filter(msg => msg.status === 'sent');
-  
+
     const updateMessageStatus = async (message_uuid) => {
       try {
         const payload = {
@@ -307,105 +304,105 @@ const MessagesScreen = () => {
         console.error(`Error updating message ${message_uuid}:`, error.response?.data || error.message);
       }
     };
-  
+
     if (sentMessages.length > 0) {
       sentMessages.forEach(msg => {
         updateMessageStatus(msg.message_uuid);
       });
     }
   };
-  
+
 
   const handleSendMessage = async () => {
-  const currentTimestamp = Date.now();
-  const messages_Uuid = `m-${currentTimestamp}`;
-  const uuid = chatHistory[0].uuid; 
+    const currentTimestamp = Date.now();
+    const messages_Uuid = `m-${currentTimestamp}`;
+    const uuid = chatHistory[0].uuid;
 
-  const newMessage = {
-    message_uuid: messages_Uuid,
-    content: message.trim(),
-    sender: "You",
-    recipient_uuid: uuid,
-    date: currentTimestamp,
-    status: "sent",
-  };
-
-  if (!newMessage.content) return;
-
-  setMessages((prev) => [...prev, newMessage]);
-  setMessage("");
-
-  setTimeout(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, 100);
-
-  setLoading(true);
-  try {
-    const socket = getSocket(); 
-    socket.emit('privateMessage', {
-      ...newMessage,
-      sender_uuid: user.uuid, 
-    });
-
-    await axios.post(`${EXPO_PUBLIC_API_URL}/api/chats/send-message`, {
-      recipientUuid: uuid,
-      content: newMessage.content,
+    const newMessage = {
       message_uuid: messages_Uuid,
+      content: message.trim(),
+      sender: "You",
+      recipient_uuid: uuid,
       date: currentTimestamp,
-    }, {
-      headers: {
-        'Content-Type': 'application/json', 
-      }
-    });
+      status: "sent",
+    };
 
-    setCount((prevCount) => prevCount + 1); 
-  } catch (error) {
-    console.error('Error sending message:', error.response ? error.response.data : error.message);
-  } finally {
-    setLoading(false);
-  }
+    if (!newMessage.content) return;
 
-  setTimeout(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, 100);
-};
+    setMessages((prev) => [...prev, newMessage]);
+    setMessage("");
+
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+
+    setLoading(true);
+    try {
+      const socket = getSocket();
+      socket.emit('privateMessage', {
+        ...newMessage,
+        sender_uuid: user.uuid,
+      });
+
+      await axios.post(`${EXPO_PUBLIC_API_URL}/api/chats/send-message`, {
+        recipientUuid: uuid,
+        content: newMessage.content,
+        message_uuid: messages_Uuid,
+        date: currentTimestamp,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      setCount((prevCount) => prevCount + 1);
+    } catch (error) {
+      console.error('Error sending message:', error.response ? error.response.data : error.message);
+    } finally {
+      setLoading(false);
+    }
+
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
 
 
   let typingTimeout;
 
-const handleTyping = () => {
-  const socket = getSocket();
-  if (selectedMessageId && socket) {
-    socket.emit('typing', {
-      sender: user.uuid,
-      receiver: selectedMessageId,
-      senderName: user.name,
-      receiverName: chatHistory[0]?.name
-    });
-
-    if (typingTimeout) clearTimeout(typingTimeout);
-
-    typingTimeout = setTimeout(() => {
-      socket.emit('stopTyping', {
+  const handleTyping = () => {
+    const socket = getSocket();
+    if (selectedMessageId && socket) {
+      socket.emit('typing', {
         sender: user.uuid,
         receiver: selectedMessageId,
         senderName: user.name,
         receiverName: chatHistory[0]?.name
       });
-    }, 2000);
-  }
-};
- 
+
+      if (typingTimeout) clearTimeout(typingTimeout);
+
+      typingTimeout = setTimeout(() => {
+        socket.emit('stopTyping', {
+          sender: user.uuid,
+          receiver: selectedMessageId,
+          senderName: user.name,
+          receiverName: chatHistory[0]?.name
+        });
+      }, 2000);
+    }
+  };
+
 
   const renderMessage = ({ item }) => {
     const senderInitials = item.name ? item.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
 
     const isOnline = Array.isArray(onlineUsers)
-  ? onlineUsers.includes(item.uuid)
-  : !!onlineUsers[item.uuid];
-  
+      ? onlineUsers.includes(item.uuid)
+      : !!onlineUsers[item.uuid];
+
     const isTypingForThisUser = selectedMessageId !== item.uuid && isReceiverTyping && item.uuid === selectedMessageId;
-    
+
     return (
       <View style={styles.messageWrapper}>
         <TouchableOpacity style={styles.messageCard} onPress={() => handleMessagePress({ Uuid: item.uuid })}>
@@ -433,7 +430,7 @@ const handleTyping = () => {
         </TouchableOpacity>
       </View>
     );
-    
+
   }
 
   const selectedMessage = chatMembers.find((msg) => msg.uuid === selectedMessageId);
@@ -448,25 +445,32 @@ const handleTyping = () => {
   if (selectedMessageId) {
     const senderInitials = selectedMessage.name ? selectedMessage.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
     const partnerOnline = Array.isArray(onlineUsers)
-  ? onlineUsers.includes(selectedMessageId)
-  : !!onlineUsers[selectedMessageId];
+      ? onlineUsers.includes(selectedMessageId)
+      : !!onlineUsers[selectedMessageId];
     return (
+      <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
       <View style={styles.container}>
         <View style={[styles.headerRow]}>
           <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
             <Text style={styles.avatarText}>{senderInitials}</Text>
           </View>
-          <View style={styles.headerNameBlock}>
+          <View style={styles.nameStatusBlock}>
             <Text style={styles.headerText}>{selectedMessage.name}</Text>
             <Text
               style={[
                 styles.headerStatus,
-                { color: isReceiverTyping ? Colors.messagePrimary
-                                          : partnerOnline ? 'green' : 'gray' },
+                {
+                  color: isReceiverTyping ? Colors.messagePrimary
+                    : partnerOnline ? 'green' : 'gray'
+                },
               ]}
             >
               {isReceiverTyping ? 'Typing…'
-                                : partnerOnline ? 'Online' : 'Offline'}
+                : partnerOnline ? 'Online' : 'Offline'}
             </Text>
           </View>
 
@@ -495,7 +499,7 @@ const handleTyping = () => {
 
           {isFetchingMore && (
             <View style={{ alignItems: 'center', paddingVertical: 10 }}>
-              <Text style={{ color: Colors.textPrimary,fontFamily:'Poppins_500Medium', }}>Loading messages...</Text>
+              <Text style={{ color: Colors.textPrimary, fontFamily: 'Poppins_500Medium', }}>Loading messages...</Text>
             </View>
           )}
 
@@ -524,41 +528,41 @@ const handleTyping = () => {
             );
           })} */}
 
-{timeline.map((item) => {
-  if (item._type === 'separator') {
-    return (
-      <View key={item.id} style={styles.dayChip}>
-        <Text style={styles.dayChipText}>{item.label}</Text>
-      </View>
-    );
-  }
+          {timeline.map((item) => {
+            if (item._type === 'separator') {
+              return (
+                <View key={item.id} style={styles.dayChip}>
+                  <Text style={styles.dayChipText}>{item.label}</Text>
+                </View>
+              );
+            }
 
-  const messageContent = String(item.content);
-  const messageDate = formatDate(item.date);
+            const messageContent = String(item.content);
+            const messageDate = formatDate(item.date);
 
-  return (
-    <View
-      key={`${item.id || item.message_uuid}`}
-      style={[
-        styles.messageBubble,
-        item.sender === 'You' ? styles.sentMessage : styles.receivedMessage,
-      ]}
-    >
-      <Text style={styles.messageText2}>{messageContent}</Text>
-      <View style={styles.metaContainer}>
-        <Text style={styles.messageTime2}>{messageDate}</Text>
-        {item.sender === 'You' && (
-          <Ionicons
-            name="checkmark-done"
-            size={14}
-            color={item.status === 'read' ? 'blue' : 'black'}
-            style={{ marginLeft: 2 }}
-          />
-        )}
-      </View>
-    </View>
-  );
-})}
+            return (
+              <View
+                key={`${item.id || item.message_uuid}`}
+                style={[
+                  styles.messageBubble,
+                  item.sender === 'You' ? styles.sentMessage : styles.receivedMessage,
+                ]}
+              >
+                <Text style={styles.messageText2}>{messageContent}</Text>
+                <View style={styles.metaContainer}>
+                  <Text style={styles.messageTime2}>{messageDate}</Text>
+                  {item.sender === 'You' && (
+                    <Ionicons
+                      name="checkmark-done"
+                      size={14}
+                      color={item.status === 'read' ? 'blue' : 'black'}
+                      style={{ marginLeft: 2 }}
+                    />
+                  )}
+                </View>
+              </View>
+            );
+          })}
 
         </ScrollView>
 
@@ -580,10 +584,16 @@ const handleTyping = () => {
           </TouchableOpacity>
         </View>
       </View>
+      </KeyboardAvoidingView>
     );
   } else {
 
     return (
+      <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
       <View style={styles.container}>
         <Header title="Messages" />
         <FlatList
@@ -597,6 +607,7 @@ const handleTyping = () => {
         />
         {loading && <Loader loading={true} />}
       </View>
+      </KeyboardAvoidingView>
     );
   }
 };
@@ -607,13 +618,18 @@ const styles = StyleSheet.create({
     padding: 5,
     backgroundColor: Colors.white,
   },
+  // headerText: {
+  //   fontSize: 22,
+  //   fontFamily: 'Poppins_700Bold',
+  //   color: Colors.textPrimary,
+  //   marginLeft: 15,
+  //   paddingTop: 10,
+  //   alignItems: 'center'
+  // },
   headerText: {
-    fontSize: 22,
-    fontFamily:'Poppins_700Bold',
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
     color: Colors.textPrimary,
-    marginLeft: 15,
-    paddingTop:10,
-    alignItems: 'center'
   },
   messageWrapper: {
     backgroundColor: Colors.white,
@@ -644,7 +660,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 18,
-    fontFamily:'Poppins_700Bold',
+    fontFamily: 'Poppins_700Bold',
     color: Colors.white,
     marginTop: 3,
   },
@@ -659,17 +675,17 @@ const styles = StyleSheet.create({
   },
   senderName: {
     fontSize: 16,
-    fontFamily:'Poppins_700Bold',
+    fontFamily: 'Poppins_700Bold',
     color: Colors.black,
   },
   messageTime2: {
     fontSize: 12,
-    fontFamily:'Poppins_400Regular',
+    fontFamily: 'Poppins_400Regular',
     color: Colors.black,
   },
   messageText2: {
     fontSize: 14,
-    fontFamily:'Poppins_400Regular',
+    fontFamily: 'Poppins_400Regular',
     color: Colors.black,
     paddingRight: 50,
   },
@@ -722,12 +738,12 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 12,
-    fontFamily:'Poppins_400Regular',
+    fontFamily: 'Poppins_400Regular',
     color: Colors.messageBlack,
   },
   messageTime: {
     fontSize: 12,
-    fontFamily:'Poppins_400Regular',
+    fontFamily: 'Poppins_400Regular',
     color: Colors.messageBlack,
     textAlign: 'right',
   },
@@ -758,7 +774,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    fontFamily:'Poppins_400Regular',
+    fontFamily: 'Poppins_400Regular',
     color: Colors.textPrimary,
     paddingVertical: 6,
     paddingHorizontal: 8,
@@ -782,11 +798,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
+  // headerRow: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   justifyContent: 'flex-start',
+  //   marginBottom: 5,
+  // },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginBottom: 5,
+    paddingVertical: 10,
   },
   statusDot: {
     position: 'absolute',
@@ -811,16 +832,27 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
     color: Colors.textPrimary,
   },
+  // headerStatus: {
+  //   fontSize: 12,
+  //   fontFamily: 'Poppins_500Medium',
+  //   marginLeft: 15,
+  // },
+  // headerNameBlock: {
+  //   flexDirection: 'column',
+  //   marginLeft: 0,
+  // },
+  nameStatusBlock: {
+    flex: 1,
+    marginLeft: 10,
+    justifyContent: 'center',
+  },
   headerStatus: {
     fontSize: 12,
-    fontFamily: 'Poppins_500Medium',
-    marginLeft: 15,
-  },  
-  headerNameBlock: {
-    flexDirection: 'column',
-    marginLeft: 0,  
-  }, 
-  
+    fontFamily: 'Poppins_400Regular',
+    marginTop: 0,
+    paddingTop: 0,
+    lineHeight: 14,
+  },
 });
 
 

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   TextInput,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
@@ -389,7 +390,7 @@ const ProfileSettingsScreen = () => {
               onPress={() => setResetPasswordModalVisible(true)}
             >
               <Ionicons name="lock-closed" size={16} color={Colors.gray} />
-              <Text style={[GlobalStyles.buttonText, { color: Colors.primary }]}>Reset Password</Text>
+              <Text style={[GlobalStyles.buttonText, { color: Colors.primary }]}>Reset_Password</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[GlobalStyles.button, styles.editButton]}
@@ -440,6 +441,10 @@ const ProfileSettingsScreen = () => {
         </TouchableOpacity>
 
         <Modal visible={isResetPasswordModalVisible} transparent>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Reset Password</Text>
@@ -498,6 +503,7 @@ const ProfileSettingsScreen = () => {
               </View>
             </View>
           </View>
+          </KeyboardAvoidingView>
         </Modal>
 
         <Modal visible={isEditProfileModalVisible} transparent>

@@ -695,13 +695,14 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     position: 'absolute',
-    bottom: 38,
-    right: 20,
+    // bottom: 38,
+     right: 20,
     backgroundColor: Colors.messagePrimary,
     borderRadius: 30,
     padding: 16,
     elevation: 6,
     zIndex: 10,
+    alignSelf: 'center',
   },
   modalOverlay: {
     flex: 1,
