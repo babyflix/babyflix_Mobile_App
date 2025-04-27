@@ -127,8 +127,11 @@ const onRefresh = async () => {
           }
         }
       );
-       
-      console.log('getPatientByEmail',res.data)
+       if(res){
+       console.log('getPatientByEmail',res.data)
+       }else{
+        console.log('getPatientByEmail else',res.data)
+       }
 
       if (res.status === 200) {
         const data1 = res.data;
@@ -159,15 +162,18 @@ const onRefresh = async () => {
             setMediaData({ images, videos });
             setIsLoading(false);
           } else {
+            console.log('CLOUD_API_URL get-images error',response.error)
             setIsLoading(false);
           }
         } catch (error) {
+          console.log('catch CLOUD_API_URL get-images error',error)
           setIsLoading(false);
         } finally {
           setIsLoading(false);
         }
       }
     } catch (error) {
+      console.log('catch 2 CLOUD_API_URL get-images error',error)
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -189,6 +195,7 @@ const onRefresh = async () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-unread-chat-members`);
   
+        //console.log('get-unread-chat-members',response.data)
         dispatch(setUnreadMessagesData(response.data));
         dispatch(setUnreadMessagesCount(response.data.unread_messages?.[0]?.unread_count || 0));
       } catch (error) {

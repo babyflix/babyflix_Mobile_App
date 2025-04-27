@@ -13,6 +13,7 @@ import Loader from '../components/Loader';
 import { connectSocket, getSocket } from '../services/socket';
 import dayjs from 'dayjs';
 import calendar from 'dayjs/plugin/calendar';
+import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 
 dayjs.extend(calendar);
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import Colors from '../constants/Colors';
 import GlobalStyles from '../styles/GlobalStyles';
 import { useSelector, useDispatch } from 'react-redux';
 import { liveStreamUpdate } from '../state/slices/streamSlice';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import moment from 'moment';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -31,6 +31,7 @@ const LiveStreamingScreen = () => {
   const streamState = useSelector(state => state.stream);
 
   const streamingUrl = streamState.streamUrl || '';
+  console.log('streamingUrl',streamingUrl)
   // useEffect(() => {
   //   console.log('useEffect 3');
   
@@ -60,15 +61,28 @@ const LiveStreamingScreen = () => {
   
 
   const playVideo = async () => {
-    if (videoRef.current) {
+    if (videoRef.current && streamingUrl) {
       try {
+        // 1. Check if stream URL is available
+        const response = await fetch(streamingUrl, { method: 'HEAD' });
+  
+        if (!response.ok) {
+          console.log('Streaming URL not available. Stopping playback.');
+          setModalVisible(true);
+          return;
+        }
+  
+        // 2. If available, load and play video
         await videoRef.current.unloadAsync();
         await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
+  
       } catch (err) {
         console.error('Video playback error:', err);
+        setModalVisible(true);
       }
     }
   };
+  
 
   useFocusEffect(
     useCallback(() => {

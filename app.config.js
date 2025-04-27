@@ -26,7 +26,8 @@ export default ({ config }) => ({
     bundleIdentifier: "com.babyflix.app",
     infoPlist: {
       NSAppTransportSecurity: {
-        NSAllowsArbitraryLoads: true
+        NSAllowsArbitraryLoads: true,
+        "NSAllowsArbitraryLoadsInWebContent": true
       },
       UISupportedInterfaceOrientations: [
         "UIInterfaceOrientationPortrait",

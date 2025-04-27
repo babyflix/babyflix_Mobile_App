@@ -71,7 +71,9 @@ const ProfileSettingsScreen = () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/locations/getAllCountries`);
         setCountries(response.data);
+        console.log('getAllCountries',response.data)
       } catch (err) {
+        console.log('getAllCountries error',err)
         setError('Failed to fetch countries: ' + err);
       }
     };
@@ -127,13 +129,15 @@ const ProfileSettingsScreen = () => {
           setSpouseName(response.data.spouseFirstName || '');
           setBabyName(response.data.babyName || '');
           setBabySex(response.data.babySex || '');
-
+          console.log('getPatientByEmail ProfileSetting',response.data)
         } else {
           setSnackbarMessage(response.data.error || 'Data Fatching failed');
           setSnackbarType('error');
           setSnackbarVisible(true);
+          console.log('getPatientByEmail ProfileSetting else',response.data.error)
         }
       } catch (error) {
+        console.log('getPatientByEmail ProfileSetting catch',error)
         setSnackbarMessage(error.response?.data?.error || 'Data Fatching failed. Please try again.');
         setSnackbarType('error');
         setSnackbarVisible(true);
@@ -218,7 +222,6 @@ const ProfileSettingsScreen = () => {
       }, {
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
         },
       });
 
@@ -236,6 +239,7 @@ const ProfileSettingsScreen = () => {
         setSnackbarType('error');
         setSnackbarVisible(true);
       } else {
+        console.log('reset Password Error',error)
         setErrorMessage('Failed to reset password. Please try again.');
         setSnackbarMessage(error.response?.data?.error || 'Failed to reset password. Please try again.');
         setSnackbarType('error');
@@ -324,6 +328,7 @@ const ProfileSettingsScreen = () => {
       );
 
       if (response.status === 200) {
+        console.log('patients/update',response.data)
         setResetPasswordModalVisible(false);
         setErrorMessage('');
         setSnackbarMessage('Edit Profile successful');
@@ -331,6 +336,7 @@ const ProfileSettingsScreen = () => {
         setSnackbarVisible(true);
       }
     } catch (error) {
+      console.log('patients/update error',error)
       setErrorMessage('Failed to reset password. Please try again.');
       setSnackbarMessage(error.response?.data?.error || 'Failed to reset password. Please try again.');
       setSnackbarType('error');

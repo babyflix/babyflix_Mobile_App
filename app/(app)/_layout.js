@@ -34,10 +34,12 @@ export default function AppLayout() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textSecondary,
         tabBarStyle: {
+          position: 'absolute',
           borderTopColor: Colors.border,
           paddingTop: 5,
           paddingBottom: 5,
           height: 65,
+          backgroundColor: 'white'
         },
       }}
     >
