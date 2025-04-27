@@ -123,7 +123,7 @@ const onRefresh = async () => {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
+            //'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
           }
         }
       );

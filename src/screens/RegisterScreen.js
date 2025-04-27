@@ -18,7 +18,7 @@ import GlobalStyles from '../styles/GlobalStyles';
 import Colors from '../constants/Colors';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Checkbox } from 'react-native-paper';
+import Checkbox from 'expo-checkbox';
 import { EXPO_PUBLIC_API_URL } from '@env';
 import axios from 'axios';
 import CommonSVG from '../components/commonSvg';
@@ -179,9 +179,21 @@ const RegisterScreen = () => {
 
     try {
 
+      console.log('firstName:' ,formData.firstName,
+        'lastName:', formData.lastName,
+        'email:', formData.email,
+        'password:', formData.password,
+        'confirmPassword:', formData.confirmPassword,
+        'familyOf:', formData.familyOf,
+        'countryCode:', formData.countryCode,
+       ' phone:', formData.phone,
+        'dob:', formData.dob,
+        'dueDate:', formData.dueDate,
+        'agree:', termsAccepted,)
+
       const timezone = await AsyncStorage.getItem('timezone');
       const token = await AsyncStorage.getItem('token');
-
+      console.log('hello',EXPO_PUBLIC_API_URL)
       const response = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/register`,
         {
@@ -201,9 +213,11 @@ const RegisterScreen = () => {
         {
           headers: {
             'Content-Type': 'application/json',
+            'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
           },
         }
       );
+      console.log('responce',response.data)
       if (response.data.actionStatus == "success") {
         setSnackbarMessage('Registration successful!');
         setSnackbarType('success');
@@ -299,13 +313,13 @@ const RegisterScreen = () => {
   }, []);
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={{ flex: 1 }}>
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
       style={GlobalStyles.container}
     >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    <View style={{ flex: 1 }} pointerEvents="box-none">
       <View style={styles.container}>
         <CommonSVG color={svgColor} />
 
@@ -314,7 +328,10 @@ const RegisterScreen = () => {
           <Text style={[GlobalStyles.title, { marginTop: 100 }]}>Create Account</Text>
         </View>
 
-        <ScrollView contentContainerStyle={[GlobalStyles.registrationScreenPadding, { position: 'relative' }]}>
+        <ScrollView 
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[GlobalStyles.registrationScreenPadding, { position: 'relative' }]}
+        >
           <View >
 
             {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
@@ -323,7 +340,7 @@ const RegisterScreen = () => {
               <View style={[styles.textInputIconView, styles.allMarginRight, { position: 'relative', justifyContent: 'center' }]}>
                 <TextInput
                   //allowFontScaling={false}
-                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular', color: 'black' }]}
+                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular', color: 'black',marginTop:3 }]}
                   placeholder="First Name"
                   value={formData.firstName}
                   onChangeText={(text) => setFormData({ ...formData, firstName: text })}
@@ -339,7 +356,7 @@ const RegisterScreen = () => {
               <View style={[styles.textInputIconView, styles.allMarginLeft, { position: 'relative', justifyContent: 'center' }]}>
                 <TextInput
                   //allowFontScaling={false}
-                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular',color: 'black' }]}
+                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular',color: 'black',marginTop:3 }]}
                   placeholder="Last Name"
                   value={formData.lastName}
                   onChangeText={(text) => setFormData({ ...formData, lastName: text })}
@@ -356,7 +373,7 @@ const RegisterScreen = () => {
             <View style={{ position: 'relative' }}>
               <TextInput
                 //allowFontScaling={false}
-                style={[GlobalStyles.input, { paddingLeft: 38,color: 'black'  }]}
+                style={[GlobalStyles.input, { paddingLeft: 38,color: 'black' }]}
                 placeholder="Email"
                 value={formData.email}
                 onChangeText={(text) => setFormData({ ...formData, email: text })}
@@ -367,7 +384,7 @@ const RegisterScreen = () => {
                 name="email"
                 size={20}
                 color={Colors.gray}
-                style={{ position: 'absolute', left: '3%', top: 15 }}
+                style={{ position: 'absolute', left: '3%', top: '37%', transform: [{ translateY: -10 }] }}
               />
             </View>
 
@@ -385,7 +402,8 @@ const RegisterScreen = () => {
                   style={{
                     position: 'absolute',
                     left: '3%',
-                    top: 15,
+                    top: '47%',
+                    transform: [{ translateY: -10 }],
                     zIndex: 1,
                   }}
                 />
@@ -405,8 +423,8 @@ const RegisterScreen = () => {
                       paddingLeft: 15,
                       fontSize: 14,
                       fontFamily: 'Poppins_400Regular',
-                      textAlign: 'left',
-                      alignItems:'center',
+                      // textAlign: 'left',
+                      // alignItems:'center',
                       color: 'black' 
                     },
                     inputAndroid: {
@@ -415,8 +433,8 @@ const RegisterScreen = () => {
                       paddingLeft: 15,
                       fontSize: 14,
                       fontFamily: 'Poppins_400Regular',                      
-                      textAlign: 'left',
-                      alignItems:'center',
+                      // textAlign: 'left',
+                      // alignItems:'center',
                       color: 'black' 
                     },
                     placeholder: {
@@ -434,7 +452,8 @@ const RegisterScreen = () => {
                   style={{
                     position: 'absolute',
                     right: '5%',
-                    top: 15,
+                    top: '47%',
+                    transform: [{ translateY: -10 }],
                     zIndex: 1,
                   }}
                 />
@@ -447,7 +466,7 @@ const RegisterScreen = () => {
                 <View style={[styles.textInputIconView, styles.allMarginRight]}>
                   <TextInput
                     //allowFontScaling={false}
-                    style={[GlobalStyles.textInputIcon,{color: 'black' }]}
+                    style={[GlobalStyles.textInputIcon,{color: 'black',marginTop:6 }]}
                     placeholder="Date of Birth"
                     value={formData.dob}
                     onFocus={() => {
@@ -459,14 +478,15 @@ const RegisterScreen = () => {
                     name="calendar-today"
                     size={20}
                     color={Colors.gray}
-                    style={{ position: 'absolute', left: '7%', top: 15 }}
+                    style={{ position: 'absolute', left: '7%', top: '50%',
+                    transform: [{ translateY: -10 }], }}
                   />
                 </View>
 
                 <View style={[styles.textInputIconView, styles.allMarginLeft]}>
                   <TextInput
                     //allowFontScaling={false}
-                    style={[GlobalStyles.textInputIcon,{color: 'black' }]}
+                    style={[GlobalStyles.textInputIcon,{color: 'black',marginTop:6 }]}
                     placeholder="Due Date"
                     value={formData.dueDate}
                     onFocus={() => {
@@ -478,7 +498,8 @@ const RegisterScreen = () => {
                     name="calendar-today"
                     size={20}
                     color={Colors.gray}
-                    style={{ position: 'absolute', left: '7%', top: 15 }}
+                    style={{ position: 'absolute', left: '7%', top: '50%',
+                    transform: [{ translateY: -10 }], }}
                   />
                 </View>
               </View>
@@ -488,7 +509,7 @@ const RegisterScreen = () => {
               <View style={{ position: 'relative' }}>
                 <TextInput
                   //allowFontScaling={false}
-                  style={[GlobalStyles.input, { paddingLeft: 38,color: 'black'  }]}
+                  style={[GlobalStyles.input, { paddingLeft: 38,color: 'black',marginTop:3 }]}
                   placeholder="Patient Email id"
                   value={formData.familyOf}
                   onChangeText={(text) => setFormData({ ...formData, familyOf: text })}
@@ -499,7 +520,8 @@ const RegisterScreen = () => {
                   name="email"
                   size={20}
                   color={Colors.gray}
-                  style={{ position: 'absolute', left: 10, top: 15 }}
+                  style={{ position: 'absolute', left: 10, top: '38%',
+                    transform: [{ translateY: -10 }], }}
                 />
               </View>
             )}
@@ -518,7 +540,8 @@ const RegisterScreen = () => {
                   name="lock"
                   size={20}
                   color={Colors.gray}
-                  style={{ position: 'absolute', left: '6%', top: 15 }}
+                  style={{ position: 'absolute', left: '6%', top: '50%',
+                    transform: [{ translateY: -10 }], }}
                 />
               </View>
 
@@ -536,7 +559,8 @@ const RegisterScreen = () => {
                   size={20}
                   color={Colors.gray}
                   style={{
-                    position: 'absolute', left: '6%', top: 15,
+                    position: 'absolute', left: '6%', top: '50%',
+                    transform: [{ translateY: -10 }],
                   }}
                 />
               </View>
@@ -551,7 +575,8 @@ const RegisterScreen = () => {
                   style={{
                     position: 'absolute',
                     left: '6%',
-                    top: 15,
+                    top: '47%',
+                    transform: [{ translateY: -10 }],
                     zIndex: 1,
                   }}
                 />
@@ -571,8 +596,8 @@ const RegisterScreen = () => {
                       paddingLeft: 35,
                       fontSize: 13.5,
                       fontFamily: 'Poppins_400Regular',
-                      textAlign: 'left',
-                      alignItems:'center',
+                      // textAlign: 'left',
+                      // alignItems:'center',
                       color: 'black'
                     },
                     inputAndroid: {
@@ -581,8 +606,8 @@ const RegisterScreen = () => {
                       paddingLeft: 35,
                       fontSize: 13.5,
                       fontFamily: 'Poppins_400Regular',
-                      textAlign: 'left',
-                      alignItems:'center',
+                      // textAlign: 'left',
+                      // alignItems:'center',
                       color: 'black'
                     },
                     placeholder: {
@@ -600,7 +625,8 @@ const RegisterScreen = () => {
                   style={{
                     position: 'absolute',
                     right: '7%',
-                    top: 15,
+                    top: '47%',
+                    transform: [{ translateY: -10 }],
                     zIndex: 1,
                   }}
                 />
@@ -612,12 +638,13 @@ const RegisterScreen = () => {
                   size={20}
                   color={Colors.gray}
                   style={{
-                    position: 'absolute', left: '7%', top: 15,
+                    position: 'absolute', left: '7%', top: '50%',
+                    transform: [{ translateY: -10 }],
                   }}
                 />
                 <TextInput
                   //allowFontScaling={false}
-                  style={[GlobalStyles.textInputIcon,{color: 'black'}]}
+                  style={[GlobalStyles.textInputIcon,{color: 'black',marginTop:5}]}
                   placeholder="Phone No"
                   value={formData.phone}
                   onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
@@ -648,10 +675,15 @@ const RegisterScreen = () => {
 
             <View style={styles.termsContainer}>
               <View style={styles.checkbox}>
-                <Checkbox
+                {/* <Checkbox
                   status={termsAccepted ? 'checked' : 'unchecked'}
                   onPress={() => setTermsAccepted(prevState => !prevState)}
                   color={Colors.primary}
+                /> */}
+                <Checkbox
+                  value={termsAccepted}
+                  onValueChange={() => setTermsAccepted(prevState => !prevState)}
+                  color={termsAccepted ? Colors.primary : undefined}
                 />
               </View>
 
@@ -716,9 +748,9 @@ const RegisterScreen = () => {
           onDismiss={() => setSnackbarVisible(false)}
         />
       </View>
-    </KeyboardAvoidingView>
     </View>
     </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 

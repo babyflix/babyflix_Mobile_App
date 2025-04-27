@@ -101,11 +101,10 @@ const ProfileSettingsScreen = () => {
     { label: 'Other', value: '4' },
   ]
 
-  const timezone = AsyncStorage.getItem('timezone');
-  const token = AsyncStorage.getItem('token');
-
   useEffect(() => {
     const fetchEvents = async () => {
+      const timezone =await  AsyncStorage.getItem('timezone');
+      const token =await  AsyncStorage.getItem('token');
       setIsLoading(true);
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/patients/getPatientByEmail`, {
@@ -215,6 +214,9 @@ const ProfileSettingsScreen = () => {
         return;
       }
 
+      const timezone =await  AsyncStorage.getItem('timezone');
+      const token =await  AsyncStorage.getItem('token');
+
       setIsLoading(true);
       const response = await axios.post(`${EXPO_PUBLIC_API_URL}/api/auth/change-password`, {
         currentPassword: oldPassword,
@@ -222,6 +224,7 @@ const ProfileSettingsScreen = () => {
       }, {
         headers: {
           'Content-Type': 'application/json',
+          'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
         },
       });
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl, KeyboardAvoidingView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl, KeyboardAvoidingView, Animated, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 import Header from '../components/Header';
@@ -14,6 +14,7 @@ import { connectSocket, getSocket } from '../services/socket';
 import dayjs from 'dayjs';
 import calendar from 'dayjs/plugin/calendar';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 dayjs.extend(calendar);
 
@@ -88,6 +89,31 @@ const MessagesScreen = () => {
   const unreadMessagesCount = useSelector((state) => state.header.unreadMessagesCount);
   const unreadMessages = useSelector((state) => state.header.unreadMessages);
   const user = useSelector((state) => state.auth);
+
+  const animatedBottom = new Animated.Value(80);
+
+  useEffect(() => {
+    const keyboardShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      Animated.timing(animatedBottom, {
+        toValue: 15, 
+        duration: 0, 
+        useNativeDriver: false,
+      }).start();
+    });
+
+    const keyboardHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      Animated.timing(animatedBottom, {
+        toValue: 80, 
+        duration: 0, 
+        useNativeDriver: false, 
+      }).start();
+    });
+
+    return () => {
+      keyboardShowListener.remove();
+      keyboardHideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     getChatMembers();
@@ -450,10 +476,10 @@ const MessagesScreen = () => {
       : !!onlineUsers[selectedMessageId];
     return (
       <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
+  style={{ flex: 1 }}
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 0}
+>
       <View style={styles.container}>
         <View style={[styles.headerRow]}>
           <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -482,6 +508,7 @@ const MessagesScreen = () => {
 
         <ScrollView
           style={styles.chatContainer}
+          contentContainerStyle={{ paddingBottom: 90 }}
           ref={scrollViewRef}
           onScroll={({ nativeEvent }) => {
             const { contentOffset } = nativeEvent;
@@ -503,31 +530,6 @@ const MessagesScreen = () => {
               <Text style={{ color: Colors.textPrimary, fontFamily: 'Poppins_500Medium', }}>Loading messages...</Text>
             </View>
           )}
-
-          {/* {messages.map((msg) => {
-            const messageContent = String(msg.content);
-            const messageDate = formatDate(msg.date);
-
-            return (
-              <View
-                key={`${msg.id}-${msg.message_uuid}`}
-                style={[styles.messageBubble, msg.sender == "You" ? styles.sentMessage : styles.receivedMessage]}
-              >
-                <Text style={styles.messageText2}>{messageContent}</Text>
-                <View style={styles.metaContainer}>
-                  <Text style={styles.messageTime2}>{messageDate}</Text>
-                  {msg.sender === "You" && (
-                    <Ionicons
-                      name="checkmark-done"
-                      size={14}
-                      color={msg.status == "read" ? 'blue' : 'black'}
-                      style={{ marginLeft: 2 }}
-                    />
-                  )}
-                </View>
-              </View>
-            );
-          })} */}
 
           {timeline.map((item) => {
             if (item._type === 'separator') {
@@ -590,11 +592,6 @@ const MessagesScreen = () => {
   } else {
 
     return (
-      <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
       <View style={styles.container}>
         <Header title="Messages" />
         <FlatList
@@ -608,7 +605,6 @@ const MessagesScreen = () => {
         />
         {loading && <Loader loading={true} />}
       </View>
-      </KeyboardAvoidingView>
     );
   }
 };
@@ -619,14 +615,6 @@ const styles = StyleSheet.create({
     padding: 5,
     backgroundColor: Colors.white,
   },
-  // headerText: {
-  //   fontSize: 22,
-  //   fontFamily: 'Poppins_700Bold',
-  //   color: Colors.textPrimary,
-  //   marginLeft: 15,
-  //   paddingTop: 10,
-  //   alignItems: 'center'
-  // },
   headerText: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
@@ -706,7 +694,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 10,
-    marginBottom: 75,
+   // marginBottom: 75,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     backgroundColor: Colors.white
@@ -756,7 +744,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     position: 'absolute',
-    bottom: 15,
+    bottom: 80,
     left: 15,
     right: 15,
     ...Platform.select({
@@ -799,12 +787,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  // headerRow: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   justifyContent: 'flex-start',
-  //   marginBottom: 5,
-  // },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -833,15 +815,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
     color: Colors.textPrimary,
   },
-  // headerStatus: {
-  //   fontSize: 12,
-  //   fontFamily: 'Poppins_500Medium',
-  //   marginLeft: 15,
-  // },
-  // headerNameBlock: {
-  //   flexDirection: 'column',
-  //   marginLeft: 0,
-  // },
   nameStatusBlock: {
     flex: 1,
     marginLeft: 10,
@@ -855,6 +828,4 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
 });
-
-
 export default MessagesScreen;
