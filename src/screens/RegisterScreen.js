@@ -19,6 +19,7 @@ import Colors from '../constants/Colors';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Checkbox from 'expo-checkbox';
+//import CheckBox from '@react-native-community/checkbox';
 import { EXPO_PUBLIC_API_URL } from '@env';
 import axios from 'axios';
 import CommonSVG from '../components/commonSvg';
@@ -390,9 +391,10 @@ const RegisterScreen = () => {
 
             <View style={[GlobalStyles.row]}>
               <View
+                pointerEvents="box-none"
                 style={[
                   styles.textInputIconView,
-                  { marginBottom: 15, width: '100%', justifyContent: 'center', paddingLeft: 22,height: 55, position: 'relative'},
+                  { marginBottom: 15, width: '100%', justifyContent: 'center', paddingLeft: 22,height: 55, zIndex: 10,},
                 ]}
               >
                 <Icon
@@ -567,7 +569,7 @@ const RegisterScreen = () => {
             </View>
 
             <View style={[GlobalStyles.row, { marginBottom: 10 }]}>
-              <View style={[styles.textInputIconView, styles.allMarginRight, { width: '30%', height: 55, position: 'relative' }]}>
+              <View pointerEvents="box-none" style={[styles.textInputIconView, styles.allMarginRight, { width: '30%', height: 55, zIndex: 10, }]}>
                 <Icon
                   name="public"
                   size={20}
@@ -680,11 +682,16 @@ const RegisterScreen = () => {
                   onPress={() => setTermsAccepted(prevState => !prevState)}
                   color={Colors.primary}
                 /> */}
-                <Checkbox
+                <TouchableOpacity onPress={() => setTermsAccepted(!termsAccepted)} style={styles.checkboxBox}>
+                  {termsAccepted && <View style={styles.checkboxChecked} />}
+                </TouchableOpacity>
+
+                {/* <CheckBox
                   value={termsAccepted}
                   onValueChange={() => setTermsAccepted(prevState => !prevState)}
-                  color={termsAccepted ? Colors.primary : undefined}
-                />
+                  tintColors={{ true: Colors.primary, false: Colors.gray }}
+                /> */}
+
               </View>
 
               <Text style={[styles.termsText, { fontFamily: 'Poppins_400Regular' }]}>
@@ -889,6 +896,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  checkboxBox: {
+    width: 22,
+    height: 22,
+    borderWidth: 1,
+    borderColor: Colors.gray,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    marginLeft: 10
+  },
+  checkboxChecked: {
+    width: 14,
+    height: 14,
+    backgroundColor: Colors.primary,
+    borderRadius: 2,
+  },
+  
 });
 
 export default RegisterScreen;

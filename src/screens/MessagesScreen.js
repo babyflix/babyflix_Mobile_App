@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl, KeyboardAvoidingView, Animated, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
@@ -90,30 +90,56 @@ const MessagesScreen = () => {
   const unreadMessages = useSelector((state) => state.header.unreadMessages);
   const user = useSelector((state) => state.auth);
 
-  const animatedBottom = new Animated.Value(80);
+  const inputBottom = useRef(new Animated.Value(80)).current;
+
 
   useEffect(() => {
-    const keyboardShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      Animated.timing(animatedBottom, {
-        toValue: 15, 
-        duration: 0, 
+    const showSub = Keyboard.addListener('keyboardDidShow', () => {
+      Animated.timing(inputBottom, {
+        toValue: 20,
+        duration: 100,
         useNativeDriver: false,
       }).start();
     });
-
-    const keyboardHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      Animated.timing(animatedBottom, {
-        toValue: 80, 
-        duration: 0, 
-        useNativeDriver: false, 
+  
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      Animated.timing(inputBottom, {
+        toValue: 80,
+        duration: 100,
+        useNativeDriver: false,
       }).start();
     });
-
+  
     return () => {
-      keyboardShowListener.remove();
-      keyboardHideListener.remove();
+      showSub.remove();
+      hideSub.remove();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.setOptions({ tabBarStyle: { display: 'none' } });
+      }
+  
+      return () => {
+        if (parent) {
+          parent.setOptions({
+            tabBarStyle: {
+              position: 'absolute',
+              backgroundColor: 'white',
+              height: 65,
+              paddingBottom: 5,
+              paddingTop: 5,
+              borderTopColor: Colors.border,
+              display: 'flex',
+            },
+          });
+        }
+      };
+    }, [navigation])
+  );  
 
   useEffect(() => {
     getChatMembers();
@@ -476,10 +502,10 @@ const MessagesScreen = () => {
       : !!onlineUsers[selectedMessageId];
     return (
       <KeyboardAvoidingView
-  style={{ flex: 1 }}
-  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-  keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 0}
->
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 0}
+      >
       <View style={styles.container}>
         <View style={[styles.headerRow]}>
           <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -508,7 +534,7 @@ const MessagesScreen = () => {
 
         <ScrollView
           style={styles.chatContainer}
-          contentContainerStyle={{ paddingBottom: 90 }}
+          contentContainerStyle={{ paddingBottom: 160 }}
           ref={scrollViewRef}
           onScroll={({ nativeEvent }) => {
             const { contentOffset } = nativeEvent;
@@ -569,7 +595,7 @@ const MessagesScreen = () => {
 
         </ScrollView>
 
-        <View style={styles.messageBox}>
+        {/* <View style={[styles.messageBox,{marginBottom:keyboardHeight}]}>
           <TextInput
             ref={inputRef}
             style={styles.input}
@@ -585,7 +611,25 @@ const MessagesScreen = () => {
           <TouchableOpacity onPress={handleSendMessage}>
             <Ionicons name="send" size={24} color={Colors.messagePrimary} />
           </TouchableOpacity>
-        </View>
+        </View> */}
+  <Animated.View style={[styles.messageBox, { bottom: inputBottom  }]}>
+  <TextInput
+    ref={inputRef}
+    style={styles.input}
+    placeholder="Type a message"
+    value={message}
+    onChangeText={(text) => {
+      setMessage(text);
+      handleTyping();
+    }}
+    showSoftInputOnFocus={allowKeyboard}
+    onTouchStart={() => setAllowKeyboard(true)}
+  />
+  <TouchableOpacity onPress={handleSendMessage}>
+    <Ionicons name="send" size={24} color={Colors.messagePrimary} />
+  </TouchableOpacity>
+</Animated.View>
+
       </View>
       </KeyboardAvoidingView>
     );
@@ -744,7 +788,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     position: 'absolute',
-    bottom: 80,
+    //bottom: 80,
     left: 15,
     right: 15,
     ...Platform.select({

@@ -63,7 +63,6 @@ const LiveStreamingScreen = () => {
   const playVideo = async () => {
     if (videoRef.current && streamingUrl) {
       try {
-        // 1. Check if stream URL is available
         const response = await fetch(streamingUrl, { method: 'HEAD' });
   
         if (!response.ok) {
@@ -71,8 +70,7 @@ const LiveStreamingScreen = () => {
           setModalVisible(true);
           return;
         }
-  
-        // 2. If available, load and play video
+
         await videoRef.current.unloadAsync();
         await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
   

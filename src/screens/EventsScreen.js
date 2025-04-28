@@ -49,7 +49,7 @@ const sortEvents = (events) => {
   return { upcoming, passed };
 };
 
-const EventsTab = ({ data, onPreview, onLoadMore }) => {
+const EventsTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => {
   const onEndReachedCalledDuringMomentum = useRef(false);
 
   const renderItem = ({ item, index }) => {
@@ -139,13 +139,15 @@ const EventsTab = ({ data, onPreview, onLoadMore }) => {
         onEndReachedCalledDuringMomentum.current = false;
       }}
       keyboardShouldPersistTaps="handled"
+      refreshing={refreshing}
+      onRefresh={onRefresh}
     />
   );
 }
 
-const AllTab = ({ data, onPreview, onLoadMore  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} />;
-const UpcomingTab = ({ data, onPreview, onLoadMore  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} />;
-const PassedTab = ({ data, onPreview, onLoadMore  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} />;
+const AllTab = ({ data, onPreview, onLoadMore,onRefresh, refreshing  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing}/>;
+const UpcomingTab = ({ data, onPreview, onLoadMore,onRefresh, refreshing  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing}/>;
+const PassedTab = ({ data, onPreview, onLoadMore,onRefresh, refreshing  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing} />;
 
 const EventsScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -170,6 +172,7 @@ const EventsScreen = () => {
   const [mobileErrors, setMobileErrors] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [hasMoreData, setHasMoreData] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
 
   const user = useSelector((state) => state.auth);
@@ -238,6 +241,12 @@ const EventsScreen = () => {
   useEffect(() => {
     fetchData();
   }, [user.id, existingEmails, existingMobileNumbers]);
+
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchData(0); // Re-fetch from the beginning
+    setIsRefreshing(false);
+  };  
 
   const loadMoreData = () => {
     if (hasMoreData && !isLoading) {
@@ -392,9 +401,9 @@ const EventsScreen = () => {
             tabBarInactiveTintColor: Colors.textSecondary,
           })}
         >
-          <Tab.Screen name="All" children={() => <AllTab data={[...upcomingEvents, ...passedEvents]} onPreview={handlePreview} onLoadMore={loadMoreData} />} />
-          <Tab.Screen name="Upcoming" children={() => <UpcomingTab data={upcomingEvents} onPreview={handlePreview} onLoadMore={loadMoreData} />} />
-          <Tab.Screen name="Passed" children={() => <PassedTab data={passedEvents} onPreview={handlePreview} onLoadMore={loadMoreData} />} />
+          <Tab.Screen name="All" children={() => <AllTab data={[...upcomingEvents, ...passedEvents]} onPreview={handlePreview} onLoadMore={loadMoreData} onRefresh={onRefresh} refreshing={isRefreshing} />} />
+          <Tab.Screen name="Upcoming" children={() => <UpcomingTab data={upcomingEvents} onPreview={handlePreview} onLoadMore={loadMoreData} onRefresh={onRefresh} refreshing={isRefreshing}/>} />
+          <Tab.Screen name="Passed" children={() => <PassedTab data={passedEvents} onPreview={handlePreview} onLoadMore={loadMoreData} onRefresh={onRefresh} refreshing={isRefreshing}/>} />
         </Tab.Navigator>
       )}
 
@@ -413,7 +422,7 @@ const EventsScreen = () => {
                 style={[GlobalStyles.button, styles.moduleButton, { marginTop: 10 }]}
                 onPress={openMobileModal}
               >
-                <Ionicons name="share-social-outline" size={22} color={Colors.white} />
+                <Ionicons name="phone-portrait-outline" size={22} color={Colors.white} />
                 <Text style={[GlobalStyles.buttonText, styles.modalButtonText]}>Share via Mobile</Text>
               </TouchableOpacity>
 
@@ -649,6 +658,7 @@ const EventsScreen = () => {
 const styles = StyleSheet.create({
   gridContainer: {
     padding: 15,
+    paddingBottom:65,
   },
   eventCard: {
     backgroundColor: Colors.white,
@@ -735,7 +745,7 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: Colors.white,
     fontSize: 16,
-    paddingLeft: 10,
+    paddingLeft: 7,
     flexDirection: 'row',
     justifyContent: 'center',
   },
@@ -856,11 +866,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  modalButtonText: {
-    marginLeft: 10,
-    color: Colors.white,
-    fontSize: 16,
-  },
+  // modalButtonText: {
+  //   marginLeft: 7,
+  //   color: Colors.white,
+  //   fontSize: 16,
+  // },
   disabledShareButton: {
     opacity: 0.5,
   },

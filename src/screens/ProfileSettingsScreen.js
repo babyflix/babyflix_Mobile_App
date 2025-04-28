@@ -387,7 +387,7 @@ const ProfileSettingsScreen = () => {
   return (
     <View style={GlobalStyles.container}>
       <Header title="Profile Settings" showMenu={false} />
-      <ScrollView style={[GlobalStyles.container, { padding: 10, }]}>
+      <ScrollView style={[GlobalStyles.container, { padding: 10,marginBottom:65 }]}>
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             <Ionicons name="person" size={50} color={Colors.gray} />

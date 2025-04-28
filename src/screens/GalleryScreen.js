@@ -255,7 +255,7 @@ const onRefresh = async () => {
   };
 
   return (
-    <View style={GlobalStyles.container}>
+    <View style={[GlobalStyles.container,{marginBottom:65}]}>
       <LiveStreamStatus />
       <Header title="Gallery" />
       {isLoading ? (
