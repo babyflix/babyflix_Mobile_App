@@ -484,7 +484,6 @@ const RegisterScreen = () => {
       },
     ]}
   >
-    {/* Left Icon */}
     <Icon
       name="account-circle"
       size={20}
@@ -498,16 +497,13 @@ const RegisterScreen = () => {
       }}
     />
 
-    {/* Custom Dropdown Trigger */}
     <TouchableOpacity
       onPress={() => setShowAccountTypeOptions(!showAccountTypeOptions)}
       style={{
         height: 50,
+        width:'100%',
         paddingLeft: 15,
-        paddingRight: 30,
         justifyContent: 'center',
-        // borderBottomWidth: 1,
-        // borderBottomColor: '#ccc',
       }}
     >
       <Text
@@ -523,7 +519,6 @@ const RegisterScreen = () => {
       </Text>
     </TouchableOpacity>
 
-    {/* Right Arrow Icon */}
     <Icon
       name={showAccountTypeOptions ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
       size={20}
@@ -537,7 +532,6 @@ const RegisterScreen = () => {
       }}
     />
 
-    {/* Dropdown Options */}
     {showAccountTypeOptions && (
       <View
         style={{
@@ -599,7 +593,6 @@ const RegisterScreen = () => {
 
                 <View style={[styles.textInputIconView, styles.allMarginLeft]}>
                   <TextInput
-                    //allowFontScaling={false}
                     style={[GlobalStyles.textInputIcon,{color: 'black',marginTop:6 }]}
                     placeholder="Due Date"
                     value={formData.dueDate}
@@ -622,7 +615,6 @@ const RegisterScreen = () => {
             {formData.accountType === 'patient-family' && (
               <View style={{ position: 'relative' }}>
                 <TextInput
-                  //allowFontScaling={false}
                   style={[GlobalStyles.input, { paddingLeft: 38,color: 'black',marginTop:3 }]}
                   placeholder="Patient Email id"
                   value={formData.familyOf}
@@ -643,7 +635,6 @@ const RegisterScreen = () => {
             <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
               <View style={[styles.textInputIconView, styles.allMarginRight, { justifyContent: 'center' }]}>
                 <TextInput
-                  //allowFontScaling={false}
                   style={[GlobalStyles.textInputIcon,{ paddingLeft: 37,fontFamily: 'Poppins_400Regular',marginTop:5,color: 'black'}]}
                   placeholder="Password"
                   value={formData.password}
@@ -661,7 +652,6 @@ const RegisterScreen = () => {
 
               <View style={[styles.textInputIconView, styles.allMarginLeft, { justifyContent: 'center' }]}>
                 <TextInput
-                  //allowFontScaling={false}
                   style={[GlobalStyles.textInputIcon,{ paddingLeft: 35,fontFamily: 'Poppins_400Regular',marginTop:5,color: 'black'  }]}
                   placeholder="Confirm Pass.."
                   value={formData.confirmPassword}
@@ -769,7 +759,6 @@ const RegisterScreen = () => {
 
 <View style={[GlobalStyles.row, { marginBottom: 10 }]}>
       
-      {/* Country Code Dropdown */}
       <View
         style={[
           styles.textInputIconView,
@@ -833,7 +822,6 @@ const RegisterScreen = () => {
           }}
         />
 
-        {/* Modal Dropdown */}
         <Modal visible={showDropdown} transparent animationType="fade">
           <Pressable
             style={{
@@ -872,7 +860,6 @@ const RegisterScreen = () => {
         </Modal>
       </View>
 
-      {/* Phone Number Input */}
       <View style={[styles.textInputIconView, styles.allMarginLeft, {
         flex: 6,
         height: 55,
@@ -1143,21 +1130,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   checkboxBox: {
-    width: 22,
-    height: 22,
+    width: 21,
+    height: 21,
     borderWidth: 1,
     borderColor: Colors.gray,
-    borderRadius: 4,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
     marginLeft: 10
   },
   checkboxChecked: {
-    width: 14,
-    height: 14,
+    width: 13,
+    height: 13,
     backgroundColor: Colors.primary,
-    borderRadius: 2,
+    borderRadius: 12,
   },
   
 });
