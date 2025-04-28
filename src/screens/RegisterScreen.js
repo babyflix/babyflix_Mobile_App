@@ -11,6 +11,9 @@ import {
   Keyboard,
   Linking, 
   TouchableWithoutFeedback,
+  Modal,
+  Pressable,
+  FlatList, 
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { useRouter } from 'expo-router';
@@ -27,6 +30,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { closeDropdown } from '../state/slices/headerSlice';
 import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
+import DropDown from 'react-native-paper-dropdown';
 
 const RegisterScreen = () => {
   const router = useRouter();
@@ -55,6 +59,8 @@ const RegisterScreen = () => {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarType, setSnackbarType] = useState('success');
+  const [showAccountTypeOptions, setShowAccountTypeOptions] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -83,7 +89,7 @@ const RegisterScreen = () => {
 
       const formatted = countries.map((country) => ({
         label: `+${country.phonecode} ${country.country_name}`,
-        value: `${country.phonecode}`,
+        value: `${country.phonecode}_${country.country_name}`,
       }));
 
       setFormattedCountries(formatted);
@@ -186,7 +192,7 @@ const RegisterScreen = () => {
         'password:', formData.password,
         'confirmPassword:', formData.confirmPassword,
         'familyOf:', formData.familyOf,
-        'countryCode:', formData.countryCode,
+        'countryCode:', formData.countryCode?.split('_')[0],
        ' phone:', formData.phone,
         'dob:', formData.dob,
         'dueDate:', formData.dueDate,
@@ -205,7 +211,7 @@ const RegisterScreen = () => {
           password: formData.password,
           confirmPassword: formData.confirmPassword,
           familyOf: formData.familyOf,
-          countryCode: formData.countryCode,
+          countryCode: formData.countryCode?.split('_')[0],
           phone: formData.phone,
           dob: formData.dob,
           dueDate: formData.dueDate,
@@ -389,7 +395,7 @@ const RegisterScreen = () => {
               />
             </View>
 
-            <View style={[GlobalStyles.row]}>
+            {/* <View style={[GlobalStyles.row]}>
               <View
                 pointerEvents="box-none"
                 style={[
@@ -460,7 +466,113 @@ const RegisterScreen = () => {
                   }}
                 />
               </View>
-            </View>
+            </View> */}
+
+
+<View style={[GlobalStyles.row]}>
+  <View
+    pointerEvents="box-none"
+    style={[
+      styles.textInputIconView,
+      {
+        marginBottom: 15,
+        width: '100%',
+        justifyContent: 'center',
+        paddingLeft: 22,
+        height: 55,
+        zIndex: 10,
+      },
+    ]}
+  >
+    {/* Left Icon */}
+    <Icon
+      name="account-circle"
+      size={20}
+      color={Colors.gray}
+      style={{
+        position: 'absolute',
+        left: '3%',
+        top: '47%',
+        transform: [{ translateY: -10 }],
+        zIndex: 1,
+      }}
+    />
+
+    {/* Custom Dropdown Trigger */}
+    <TouchableOpacity
+      onPress={() => setShowAccountTypeOptions(!showAccountTypeOptions)}
+      style={{
+        height: 50,
+        paddingLeft: 15,
+        paddingRight: 30,
+        justifyContent: 'center',
+        // borderBottomWidth: 1,
+        // borderBottomColor: '#ccc',
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 14,
+          fontFamily: 'Poppins_400Regular',
+          color: formData.accountType ? 'black' : 'gray',
+        }}
+      >
+        {formData.accountType
+          ? accountType.find((opt) => opt.value === formData.accountType)?.label
+          : 'Account Type'}
+      </Text>
+    </TouchableOpacity>
+
+    {/* Right Arrow Icon */}
+    <Icon
+      name={showAccountTypeOptions ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+      size={20}
+      color={Colors.gray}
+      style={{
+        position: 'absolute',
+        right: '5%',
+        top: '47%',
+        transform: [{ translateY: -10 }],
+        zIndex: 1,
+      }}
+    />
+
+    {/* Dropdown Options */}
+    {showAccountTypeOptions && (
+      <View
+        style={{
+          position: 'absolute',
+          top: 55,
+          left: 0,
+          right: 0,
+          backgroundColor: 'white',
+          borderRadius: 5,
+          elevation: 5,
+          zIndex: 999,
+        }}
+      >
+        {accountType.map((option) => (
+          <TouchableOpacity
+            key={option.value}
+            onPress={() => {
+              handleAccountTypeChange(option.value);
+              setShowAccountTypeOptions(false);
+            }}
+            style={{
+              paddingVertical: 12,
+              paddingHorizontal: 22,
+              borderBottomWidth: 1,
+              borderBottomColor: '#eee',
+            }}
+          >
+            <Text style={{ fontFamily: 'Poppins_400Regular' }}>{option.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    )}
+  </View>
+</View>
+
 
             {formData.accountType === 'patient' && (
               <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
@@ -568,7 +680,7 @@ const RegisterScreen = () => {
               </View>
             </View>
 
-            <View style={[GlobalStyles.row, { marginBottom: 10 }]}>
+            {/* <View style={[GlobalStyles.row, { marginBottom: 10 }]}>
               <View pointerEvents="box-none" style={[styles.textInputIconView, styles.allMarginRight, { width: '30%', height: 55, zIndex: 10, }]}>
                 <Icon
                   name="public"
@@ -653,7 +765,141 @@ const RegisterScreen = () => {
                   keyboardType="phone-pad"
                 />
               </View>
+            </View> */}
+
+<View style={[GlobalStyles.row, { marginBottom: 10 }]}>
+      
+      {/* Country Code Dropdown */}
+      <View
+        style={[
+          styles.textInputIconView,
+          styles.allMarginRight,
+          {
+            flex: 4.76,
+            height: 55,
+            justifyContent: 'center',
+            paddingLeft: 35,
+            position: 'relative',
+            zIndex: 8,
+          },
+        ]}
+      >
+        <Icon
+          name="public"
+          size={20}
+          color={Colors.gray}
+          style={{
+            position: 'absolute',
+            left: '6%',
+            top: '47%',
+            transform: [{ translateY: -10 }],
+            zIndex: 1,
+          }}
+        />
+
+        <TouchableOpacity
+          onPress={() => setShowDropdown(true)}
+          style={{
+            height: 50,
+            justifyContent: 'center',
+            paddingRight: 0,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 13.5,
+              fontFamily: 'Poppins_400Regular',
+              color: formData.countryCode ? 'black' : 'gray',
+            }}
+          >
+            {
+              formData.countryCode
+                ? FormattedCountries.find((c) => c.value === formData.countryCode)?.label
+                : 'Country Code'
+            }
+          </Text>
+        </TouchableOpacity>
+
+        <Icon
+          name="keyboard-arrow-down"
+          size={20}
+          color={Colors.gray}
+          style={{
+            position: 'absolute',
+            right: '7%',
+            top: '47%',
+            transform: [{ translateY: -10 }],
+            zIndex: 1,
+          }}
+        />
+
+        {/* Modal Dropdown */}
+        <Modal visible={showDropdown} transparent animationType="fade">
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              justifyContent: 'center',
+              paddingHorizontal: 20,
+            }}
+            onPress={() => setShowDropdown(false)}
+          >
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 8,
+                maxHeight: 300,
+                padding: 10,
+              }}
+            >
+              <FlatList
+                data={FormattedCountries}
+                keyExtractor={(item) => `${item.value}`}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setFormData({ ...formData, countryCode: item.value });
+                      setShowDropdown(false);
+                    }}
+                    style={{ paddingVertical: 12 }}
+                  >
+                    <Text style={{ fontFamily: 'Poppins_400Regular' }}>{item.label}</Text>
+                  </TouchableOpacity>
+                )}
+              />
             </View>
+          </Pressable>
+        </Modal>
+      </View>
+
+      {/* Phone Number Input */}
+      <View style={[styles.textInputIconView, styles.allMarginLeft, {
+        flex: 6,
+        height: 55,
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 8,
+      }]}>
+        <Icon
+          name="phone"
+          size={20}
+          color={Colors.gray}
+          style={{
+            position: 'absolute',
+            left: '7%',
+            top: '50%',
+            transform: [{ translateY: -10 }],
+          }}
+        />
+        <TextInput
+          style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
+          placeholder="Phone No"
+          value={formData.phone}
+          onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
+          keyboardType="phone-pad"
+        />
+      </View>
+    </View>
 
             {/* <View style={styles.termsContainer}>
               <View style={[styles.checkbox]}>

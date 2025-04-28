@@ -76,7 +76,7 @@ import { useSelector } from 'react-redux';
 import { API_URL, DEBUG } from '@env';
 import 'react-native-polyfill-globals/auto';
 import 'react-native-url-polyfill/auto';
-
+import { Provider as PaperProvider } from 'react-native-paper'; 
 import { useFonts } from 'expo-font';
 import {
   Poppins_400Regular,
@@ -129,9 +129,11 @@ TextInput.defaultProps.style = [{ color: 'black' }];
 
   return (
     <Provider store={store}>
+      <PaperProvider>
       <SafeAreaProvider>
         <AppContent />
       </SafeAreaProvider>
+      </PaperProvider>
     </Provider>
   );
 }

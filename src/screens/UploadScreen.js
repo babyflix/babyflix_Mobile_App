@@ -125,7 +125,7 @@ const UploadScreen = () => {
     setUploadProgress(0);
 
     const hostUrl = await getHostUrl();
-     
+
     const details = {
       machine_id: user.role === 'user' ? user.machineId : machineId,
       user_id: user.role === 'user' ? user.uuid : '',
@@ -172,23 +172,23 @@ const UploadScreen = () => {
       console.error('Upload error email send:', error.message);
       Alert.alert('Upload Failed', 'There was a problem uploading the file.');
 
-            const payload={
-              error: error.response,
-              data: chunk[i],
-              details: details,
-            }
-            console.log('payload',payload)
-      
-            try {
-              const response = await axios.post(`${EXPO_PUBLIC_API_URL}/error/triggerError`, payload, {
-                headers: {
-                  'Content-Type': 'multipart/form-data',
-                },
-              });
-              console.log('email responce',response)
-            } catch (err) {
-              console.error('Failed to send error:', err);
-            }
+      const payload = {
+        error: error.response,
+        data: chunk[i],
+        details: details,
+      }
+      console.log('payload', payload)
+
+      try {
+        const response = await axios.post(`${EXPO_PUBLIC_API_URL}/error/triggerError`, payload, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log('email responce', response)
+      } catch (err) {
+        console.error('Failed to send error:', err);
+      }
 
     } finally {
       setLoading(false);
@@ -202,7 +202,7 @@ const UploadScreen = () => {
 
 
   return (
-    <View style={GlobalStyles.container}>
+    <View style={[GlobalStyles.container,{marginBottom:65}]}>
       <Header title="Upload" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', textAlign: 'center' }}>
@@ -251,60 +251,60 @@ const UploadScreen = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal
-  visible={showDeleteModal}
-  transparent
-  animationType="fade"
-  onRequestClose={() => setShowDeleteModal(false)}
->
-  <View style={styles.modalBackground}>
-    <View style={[styles.modalContainer, { padding: 24, borderRadius: 20 }]}>
-      <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Ionicons name="warning" size={48} color={Colors.error} />
-        <Text style={[styles.modalTitle, { marginTop: 12, fontSize: 20 }]}>
-          Confirm Delete
-        </Text>
-        <Text style={{ textAlign: 'center', marginTop: 6, color: '#666', fontSize: 15,fontFamily:'Poppins_400Regular' }}>
-          Are you sure you want to delete this media? This action cannot be undone.
-        </Text>
-      </View>
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={[styles.modalContainer, { padding: 24, borderRadius: 20 }]}>
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+              <Ionicons name="warning" size={48} color={Colors.error} />
+              <Text style={[styles.modalTitle, { marginTop: 12, fontSize: 20 }]}>
+                Confirm Delete
+              </Text>
+              <Text style={{ textAlign: 'center', marginTop: 6, color: '#666', fontSize: 15, fontFamily: 'Poppins_400Regular' }}>
+                Are you sure you want to delete this media? This action cannot be undone.
+              </Text>
+            </View>
 
-      <View style={styles.modalActions}>
-        <TouchableOpacity
-          style={[
-            styles.modalButton,
-            {
-              backgroundColor: '#f0f0f0',
-              borderColor: '#ccc',
-              borderWidth: 1,
-              borderRadius: 12,
-              paddingVertical: 10,
-              flex: 1,
-              marginRight: 10,
-            },
-          ]}
-          onPress={() => setShowDeleteModal(false)}
-        >
-          <Text style={{ color: '#333', fontSize: 15, fontFamily:'Poppins_600SemiBold', }}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.modalButton,
-            {
-              backgroundColor: Colors.error,
-              borderRadius: 12,
-              paddingVertical: 10,
-              flex: 1,
-              marginLeft: 10,
-            },
-          ]}
-          onPress={handleDeleteMedia}
-        >
-          <Text style={{ color: '#fff', fontSize: 15, fontFamily:'Poppins_600SemiBold' }}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  {
+                    backgroundColor: '#f0f0f0',
+                    borderColor: '#ccc',
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    paddingVertical: 10,
+                    flex: 1,
+                    marginRight: 10,
+                  },
+                ]}
+                onPress={() => setShowDeleteModal(false)}
+              >
+                <Text style={{ color: '#333', fontSize: 15, fontFamily: 'Poppins_600SemiBold', }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  {
+                    backgroundColor: Colors.error,
+                    borderRadius: 12,
+                    paddingVertical: 10,
+                    flex: 1,
+                    marginLeft: 10,
+                  },
+                ]}
+                onPress={handleDeleteMedia}
+              >
+                <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Poppins_600SemiBold' }}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
 
       {/* Upload Progress Modal */}
@@ -332,17 +332,16 @@ const UploadScreen = () => {
                 <Text style={styles.successTitle}>Upload Successful</Text>
               </View>
               <Text style={styles.successMessage}>
-                 Please check gallery after 5 minutes.
+                Please check gallery after 5 minutes.
               </Text>
               <TouchableOpacity
-                 onPress={() => {
-                    setMedia(false)
-                    setShowSuccessModal(false);
-                    router.push('/gallery');
-                  }}
+                onPress={() => {
+                  setMedia(false)
+                  setShowSuccessModal(false);
+                }}
                 style={[styles.modalButton, { backgroundColor: Colors.primary }]}
               >
-                <Text style={{ color: Colors.white,fontFamily:'Poppins_500Medium',}}>OK</Text>
+                <Text style={{ color: Colors.white, fontFamily: 'Poppins_500Medium', }}>OK</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -382,7 +381,7 @@ const styles = StyleSheet.create({
   uploadButtonText: {
     marginTop: 20,
     color: Colors.textPrimary,
-    fontFamily:'Poppins_600SemiBold',
+    fontFamily: 'Poppins_600SemiBold',
   },
   preview: {
     backgroundColor: Colors.white,
@@ -416,7 +415,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
-  },  
+  },
   mediaName: {
     fontSize: 16,
     fontWeight: '600',
@@ -443,10 +442,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-  },  
+  },
   modalTitle: {
     fontSize: 18,
-    fontFamily:'Poppins_600SemiBold',
+    fontFamily: 'Poppins_600SemiBold',
     marginBottom: 10,
   },
   modalActions: {
@@ -486,14 +485,14 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     fontSize: 18,
-    fontFamily:'Poppins_700Bold',
+    fontFamily: 'Poppins_700Bold',
     color: '#28a745',
     marginLeft: 10,
     textAlign: 'center',
   },
   successMessage: {
     fontSize: 16,
-    fontFamily:'Poppins_400Regular',
+    fontFamily: 'Poppins_400Regular',
     color: '#155724',
     marginBottom: 20,
     textAlign: 'center',

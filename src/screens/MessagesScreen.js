@@ -504,7 +504,7 @@ const MessagesScreen = () => {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 0}
+        //keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 0}
       >
       <View style={styles.container}>
         <View style={[styles.headerRow]}>
