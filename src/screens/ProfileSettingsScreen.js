@@ -224,10 +224,10 @@ const ProfileSettingsScreen = () => {
       }, {
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
+          //'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
         },
       });
-
+      console.log('response reset pass',response.data)
       if (response.status === 200) {
         setResetPasswordModalVisible(false);
         setErrorMessage('');

@@ -184,7 +184,7 @@ const onRefresh = async () => {
     if (user) {
       fetchMediaData();
     }
-  }, [user,stream]);
+  }, [user]);
 
   useEffect(() => {
 
