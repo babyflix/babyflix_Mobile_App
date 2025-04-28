@@ -9,11 +9,11 @@ import {
   ScrollView,
   StyleSheet,
   Keyboard,
-  Linking, 
+  Linking,
   TouchableWithoutFeedback,
   Modal,
   Pressable,
-  FlatList, 
+  FlatList,
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { useRouter } from 'expo-router';
@@ -21,16 +21,12 @@ import GlobalStyles from '../styles/GlobalStyles';
 import Colors from '../constants/Colors';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import Checkbox from 'expo-checkbox';
-//import CheckBox from '@react-native-community/checkbox';
 import { EXPO_PUBLIC_API_URL } from '@env';
 import axios from 'axios';
 import CommonSVG from '../components/commonSvg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { closeDropdown } from '../state/slices/headerSlice';
 import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
-import DropDown from 'react-native-paper-dropdown';
 
 const RegisterScreen = () => {
   const router = useRouter();
@@ -61,6 +57,8 @@ const RegisterScreen = () => {
   const [snackbarType, setSnackbarType] = useState('success');
   const [showAccountTypeOptions, setShowAccountTypeOptions] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
+
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -186,21 +184,21 @@ const RegisterScreen = () => {
 
     try {
 
-      console.log('firstName:' ,formData.firstName,
+      console.log('firstName:', formData.firstName,
         'lastName:', formData.lastName,
         'email:', formData.email,
         'password:', formData.password,
         'confirmPassword:', formData.confirmPassword,
         'familyOf:', formData.familyOf,
         'countryCode:', formData.countryCode?.split('_')[0],
-       ' phone:', formData.phone,
+        ' phone:', formData.phone,
         'dob:', formData.dob,
         'dueDate:', formData.dueDate,
         'agree:', termsAccepted,)
 
       const timezone = await AsyncStorage.getItem('timezone');
       const token = await AsyncStorage.getItem('token');
-      console.log('hello',EXPO_PUBLIC_API_URL)
+      console.log('hello', EXPO_PUBLIC_API_URL)
       const response = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/register`,
         {
@@ -224,7 +222,7 @@ const RegisterScreen = () => {
           },
         }
       );
-      console.log('responce',response.data)
+      console.log('responce', response.data)
       if (response.data.actionStatus == "success") {
         setSnackbarMessage('Registration successful!');
         setSnackbarType('success');
@@ -265,9 +263,12 @@ const RegisterScreen = () => {
     const currentDate = selectedDate || formData.dob;
     setShowDatePicker(false);
 
+    console.log('TempDate',tempDate)
+
     const formattedDate = formatDate(currentDate);
 
     if (dateField === 'dob' && formattedDate !== formData.dob) {
+      setTempDate(currentDate);
       setFormData({ ...formData, dob: formattedDate });
     } else if (dateField === 'dueDate' && formattedDate !== formData.dueDate) {
       setFormData({ ...formData, dueDate: formattedDate });
@@ -325,671 +326,500 @@ const RegisterScreen = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
       style={GlobalStyles.container}
     >
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-    <View style={{ flex: 1 }} pointerEvents="box-none">
-      <View style={styles.container}>
-        <CommonSVG color={svgColor} />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={{ flex: 1 }} pointerEvents="box-none">
+          <View style={styles.container}>
+            <CommonSVG color={svgColor} />
 
 
-        <View style={{ alignItems: 'center' }}>
-          <Text style={[GlobalStyles.title, { marginTop: 100 }]}>Create Account</Text>
-        </View>
-
-        <ScrollView 
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[GlobalStyles.registrationScreenPadding, { position: 'relative' }]}
-        >
-          <View >
-
-            {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
-
-            <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
-              <View style={[styles.textInputIconView, styles.allMarginRight, { position: 'relative', justifyContent: 'center' }]}>
-                <TextInput
-                  //allowFontScaling={false}
-                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular', color: 'black',marginTop:3 }]}
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChangeText={(text) => setFormData({ ...formData, firstName: text })}
-                />
-                <Icon
-                  name="person"
-                  size={20}
-                  color={Colors.gray}
-                  style={{ position: 'absolute', left: '6%', top: 15 }}
-                />
-              </View>
-
-              <View style={[styles.textInputIconView, styles.allMarginLeft, { position: 'relative', justifyContent: 'center' }]}>
-                <TextInput
-                  //allowFontScaling={false}
-                  style={[{ paddingLeft: 38,fontFamily: 'Poppins_400Regular',color: 'black',marginTop:3 }]}
-                  placeholder="Last Name"
-                  value={formData.lastName}
-                  onChangeText={(text) => setFormData({ ...formData, lastName: text })}
-                />
-                <Icon
-                  name="person"
-                  size={20}
-                  color={Colors.gray}
-                  style={{ position: 'absolute', left: '6%', top: 15 }}
-                />
-              </View>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={[GlobalStyles.title, { marginTop: 100 }]}>Create Account</Text>
             </View>
 
-            <View style={{ position: 'relative' }}>
-              <TextInput
-                //allowFontScaling={false}
-                style={[GlobalStyles.input, { paddingLeft: 38,color: 'black' }]}
-                placeholder="Email"
-                value={formData.email}
-                onChangeText={(text) => setFormData({ ...formData, email: text })}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <Icon
-                name="email"
-                size={20}
-                color={Colors.gray}
-                style={{ position: 'absolute', left: '3%', top: '37%', transform: [{ translateY: -10 }] }}
-              />
-            </View>
-
-            {/* <View style={[GlobalStyles.row]}>
-              <View
-                pointerEvents="box-none"
-                style={[
-                  styles.textInputIconView,
-                  { marginBottom: 15, width: '100%', justifyContent: 'center', paddingLeft: 22,height: 55, zIndex: 10,},
-                ]}
-              >
-                <Icon
-                  name="account-circle"
-                  size={20}
-                  color={Colors.gray}
-                  style={{
-                    position: 'absolute',
-                    left: '3%',
-                    top: '47%',
-                    transform: [{ translateY: -10 }],
-                    zIndex: 1,
-                  }}
-                />
-
-                <RNPickerSelect
-                  placeholder={{
-                    label: 'Account Type',
-                    value: null,
-                  }}
-                  items={accountType}
-                  onValueChange={(value) => handleAccountTypeChange(value)}
-                  value={formData.accountType}
-                  style={{
-                    inputIOS: {
-                      height: 50,
-                      paddingRight: 30,
-                      paddingLeft: 15,
-                      fontSize: 14,
-                      fontFamily: 'Poppins_400Regular',
-                      // textAlign: 'left',
-                      // alignItems:'center',
-                      color: 'black' 
-                    },
-                    inputAndroid: {
-                      height: 50,
-                      paddingRight: 30,
-                      paddingLeft: 15,
-                      fontSize: 14,
-                      fontFamily: 'Poppins_400Regular',                      
-                      // textAlign: 'left',
-                      // alignItems:'center',
-                      color: 'black' 
-                    },
-                    placeholder: {
-                      fontSize: 14,
-                      fontFamily: 'Poppins_400Regular',
-                      color: 'gray',
-                    },
-                  }}
-                  useNativeAndroidPickerStyle={false}
-                />
-                <Icon
-                  name="keyboard-arrow-down"
-                  size={20}
-                  color={Colors.gray}
-                  style={{
-                    position: 'absolute',
-                    right: '5%',
-                    top: '47%',
-                    transform: [{ translateY: -10 }],
-                    zIndex: 1,
-                  }}
-                />
-              </View>
-            </View> */}
-
-
-<View style={[GlobalStyles.row]}>
-  <View
-    pointerEvents="box-none"
-    style={[
-      styles.textInputIconView,
-      {
-        marginBottom: 15,
-        width: '100%',
-        justifyContent: 'center',
-        paddingLeft: 22,
-        height: 55,
-        zIndex: 10,
-      },
-    ]}
-  >
-    <Icon
-      name="account-circle"
-      size={20}
-      color={Colors.gray}
-      style={{
-        position: 'absolute',
-        left: '3%',
-        top: '47%',
-        transform: [{ translateY: -10 }],
-        zIndex: 1,
-      }}
-    />
-
-    <TouchableOpacity
-      onPress={() => setShowAccountTypeOptions(!showAccountTypeOptions)}
-      style={{
-        height: 50,
-        width:'100%',
-        paddingLeft: 15,
-        justifyContent: 'center',
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 14,
-          fontFamily: 'Poppins_400Regular',
-          color: formData.accountType ? 'black' : 'gray',
-        }}
-      >
-        {formData.accountType
-          ? accountType.find((opt) => opt.value === formData.accountType)?.label
-          : 'Account Type'}
-      </Text>
-    </TouchableOpacity>
-
-    <Icon
-      name={showAccountTypeOptions ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-      size={20}
-      color={Colors.gray}
-      style={{
-        position: 'absolute',
-        right: '5%',
-        top: '47%',
-        transform: [{ translateY: -10 }],
-        zIndex: 1,
-      }}
-    />
-
-    {showAccountTypeOptions && (
-      <View
-        style={{
-          position: 'absolute',
-          top: 55,
-          left: 0,
-          right: 0,
-          backgroundColor: 'white',
-          borderRadius: 5,
-          elevation: 5,
-          zIndex: 999,
-        }}
-      >
-        {accountType.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            onPress={() => {
-              handleAccountTypeChange(option.value);
-              setShowAccountTypeOptions(false);
-            }}
-            style={{
-              paddingVertical: 12,
-              paddingHorizontal: 22,
-              borderBottomWidth: 1,
-              borderBottomColor: '#eee',
-            }}
-          >
-            <Text style={{ fontFamily: 'Poppins_400Regular' }}>{option.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    )}
-  </View>
-</View>
-
-
-            {formData.accountType === 'patient' && (
-              <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
-
-                <View style={[styles.textInputIconView, styles.allMarginRight]}>
-                  <TextInput
-                    //allowFontScaling={false}
-                    style={[GlobalStyles.textInputIcon,{color: 'black',marginTop:6 }]}
-                    placeholder="Date of Birth"
-                    value={formData.dob}
-                    onFocus={() => {
-                      setDateField('dob');
-                      setShowDatePicker(true);
-                    }}
-                  />
-                  <Icon
-                    name="calendar-today"
-                    size={20}
-                    color={Colors.gray}
-                    style={{ position: 'absolute', left: '7%', top: '50%',
-                    transform: [{ translateY: -10 }], }}
-                  />
-                </View>
-
-                <View style={[styles.textInputIconView, styles.allMarginLeft]}>
-                  <TextInput
-                    style={[GlobalStyles.textInputIcon,{color: 'black',marginTop:6 }]}
-                    placeholder="Due Date"
-                    value={formData.dueDate}
-                    onFocus={() => {
-                      setDateField('dueDate');
-                      setShowDatePicker(true);
-                    }}
-                  />
-                  <Icon
-                    name="calendar-today"
-                    size={20}
-                    color={Colors.gray}
-                    style={{ position: 'absolute', left: '7%', top: '50%',
-                    transform: [{ translateY: -10 }], }}
-                  />
-                </View>
-              </View>
-            )}
-
-            {formData.accountType === 'patient-family' && (
-              <View style={{ position: 'relative' }}>
-                <TextInput
-                  style={[GlobalStyles.input, { paddingLeft: 38,color: 'black',marginTop:3 }]}
-                  placeholder="Patient Email id"
-                  value={formData.familyOf}
-                  onChangeText={(text) => setFormData({ ...formData, familyOf: text })}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-                <Icon
-                  name="email"
-                  size={20}
-                  color={Colors.gray}
-                  style={{ position: 'absolute', left: 10, top: '38%',
-                    transform: [{ translateY: -10 }], }}
-                />
-              </View>
-            )}
-
-            <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
-              <View style={[styles.textInputIconView, styles.allMarginRight, { justifyContent: 'center' }]}>
-                <TextInput
-                  style={[GlobalStyles.textInputIcon,{ paddingLeft: 37,fontFamily: 'Poppins_400Regular',marginTop:5,color: 'black'}]}
-                  placeholder="Password"
-                  value={formData.password}
-                  onChangeText={(text) => setFormData({ ...formData, password: text })}
-                  secureTextEntry
-                />
-                <Icon
-                  name="lock"
-                  size={20}
-                  color={Colors.gray}
-                  style={{ position: 'absolute', left: '6%', top: '50%',
-                    transform: [{ translateY: -10 }], }}
-                />
-              </View>
-
-              <View style={[styles.textInputIconView, styles.allMarginLeft, { justifyContent: 'center' }]}>
-                <TextInput
-                  style={[GlobalStyles.textInputIcon,{ paddingLeft: 35,fontFamily: 'Poppins_400Regular',marginTop:5,color: 'black'  }]}
-                  placeholder="Confirm Pass.."
-                  value={formData.confirmPassword}
-                  onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
-                  secureTextEntry
-                />
-                <Icon
-                  name="lock"
-                  size={20}
-                  color={Colors.gray}
-                  style={{
-                    position: 'absolute', left: '6%', top: '50%',
-                    transform: [{ translateY: -10 }],
-                  }}
-                />
-              </View>
-            </View>
-
-            {/* <View style={[GlobalStyles.row, { marginBottom: 10 }]}>
-              <View pointerEvents="box-none" style={[styles.textInputIconView, styles.allMarginRight, { width: '30%', height: 55, zIndex: 10, }]}>
-                <Icon
-                  name="public"
-                  size={20}
-                  color={Colors.gray}
-                  style={{
-                    position: 'absolute',
-                    left: '6%',
-                    top: '47%',
-                    transform: [{ translateY: -10 }],
-                    zIndex: 1,
-                  }}
-                />
-                <RNPickerSelect
-                  placeholder={{
-                    label: 'Country Code',
-                    value: null,
-
-                  }}
-                  items={FormattedCountries}
-                  onValueChange={(value) => setFormData({ ...formData, countryCode: value })}
-                  value={formData.countryCode}
-                  style={{
-                    inputIOS: {
-                      height: 50,
-                      paddingRight: 30,
-                      paddingLeft: 35,
-                      fontSize: 13.5,
-                      fontFamily: 'Poppins_400Regular',
-                      // textAlign: 'left',
-                      // alignItems:'center',
-                      color: 'black'
-                    },
-                    inputAndroid: {
-                      height: 50,
-                      paddingRight: 30,
-                      paddingLeft: 35,
-                      fontSize: 13.5,
-                      fontFamily: 'Poppins_400Regular',
-                      // textAlign: 'left',
-                      // alignItems:'center',
-                      color: 'black'
-                    },
-                    placeholder: {
-                      fontSize: 13.5,
-                      fontFamily: 'Poppins_400Regular',
-                      color: 'gray',
-                    },
-                  }}
-                  useNativeAndroidPickerStyle={false}
-                />
-                <Icon
-                  name="keyboard-arrow-down"
-                  size={20}
-                  color={Colors.gray}
-                  style={{
-                    position: 'absolute',
-                    right: '7%',
-                    top: '47%',
-                    transform: [{ translateY: -10 }],
-                    zIndex: 1,
-                  }}
-                />
-              </View>
-
-              <View style={[styles.textInputIconView, styles.allMarginLeft, { width: '70%' }]}>
-                <Icon
-                  name="phone"
-                  size={20}
-                  color={Colors.gray}
-                  style={{
-                    position: 'absolute', left: '7%', top: '50%',
-                    transform: [{ translateY: -10 }],
-                  }}
-                />
-                <TextInput
-                  //allowFontScaling={false}
-                  style={[GlobalStyles.textInputIcon,{color: 'black',marginTop:5}]}
-                  placeholder="Phone No"
-                  value={formData.phone}
-                  onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
-                  keyboardType="phone-pad"
-                />
-              </View>
-            </View> */}
-
-<View style={[GlobalStyles.row, { marginBottom: 10 }]}>
-      
-      <View
-        style={[
-          styles.textInputIconView,
-          styles.allMarginRight,
-          {
-            flex: 4.76,
-            height: 55,
-            justifyContent: 'center',
-            paddingLeft: 35,
-            position: 'relative',
-            zIndex: 8,
-          },
-        ]}
-      >
-        <Icon
-          name="public"
-          size={20}
-          color={Colors.gray}
-          style={{
-            position: 'absolute',
-            left: '6%',
-            top: '47%',
-            transform: [{ translateY: -10 }],
-            zIndex: 1,
-          }}
-        />
-
-        <TouchableOpacity
-          onPress={() => setShowDropdown(true)}
-          style={{
-            height: 50,
-            justifyContent: 'center',
-            paddingRight: 0,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 13.5,
-              fontFamily: 'Poppins_400Regular',
-              color: formData.countryCode ? 'black' : 'gray',
-            }}
-          >
-            {
-              formData.countryCode
-                ? FormattedCountries.find((c) => c.value === formData.countryCode)?.label
-                : 'Country Code'
-            }
-          </Text>
-        </TouchableOpacity>
-
-        <Icon
-          name="keyboard-arrow-down"
-          size={20}
-          color={Colors.gray}
-          style={{
-            position: 'absolute',
-            right: '7%',
-            top: '47%',
-            transform: [{ translateY: -10 }],
-            zIndex: 1,
-          }}
-        />
-
-        <Modal visible={showDropdown} transparent animationType="fade">
-          <Pressable
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0,0,0,0.3)',
-              justifyContent: 'center',
-              paddingHorizontal: 20,
-            }}
-            onPress={() => setShowDropdown(false)}
-          >
-            <View
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 8,
-                maxHeight: 300,
-                padding: 10,
-              }}
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={[GlobalStyles.registrationScreenPadding, { position: 'relative' }]}
             >
-              <FlatList
-                data={FormattedCountries}
-                keyExtractor={(item) => `${item.value}`}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setFormData({ ...formData, countryCode: item.value });
-                      setShowDropdown(false);
-                    }}
-                    style={{ paddingVertical: 12 }}
+              <View >
+
+                {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
+
+                <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
+                  <View style={[styles.textInputIconView, styles.allMarginRight, { position: 'relative', justifyContent: 'center' }]}>
+                    <TextInput
+                      style={[{ paddingLeft: 38, fontFamily: 'Poppins_400Regular', color: 'black' }]}
+                      placeholder="First Name"
+                      value={formData.firstName}
+                      onChangeText={(text) => setFormData({ ...formData, firstName: text })}
+                    />
+                    <Icon
+                      name="person"
+                      size={20}
+                      color={Colors.gray}
+                      style={{ position: 'absolute', left: '6%', top: 15 }}
+                    />
+                  </View>
+
+                  <View style={[styles.textInputIconView, styles.allMarginLeft, { position: 'relative', justifyContent: 'center' }]}>
+                    <TextInput
+                      style={[{ paddingLeft: 38, fontFamily: 'Poppins_400Regular', color: 'black' }]}
+                      placeholder="Last Name"
+                      value={formData.lastName}
+                      onChangeText={(text) => setFormData({ ...formData, lastName: text })}
+                    />
+                    <Icon
+                      name="person"
+                      size={20}
+                      color={Colors.gray}
+                      style={{ position: 'absolute', left: '6%', top: 15 }}
+                    />
+                  </View>
+                </View>
+
+                <View style={{ position: 'relative' }}>
+                  <TextInput
+                    style={[GlobalStyles.input, { paddingLeft: 38, color: 'black' }]}
+                    placeholder="Email"
+                    value={formData.email}
+                    onChangeText={(text) => setFormData({ ...formData, email: text })}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                  <Icon
+                    name="email"
+                    size={20}
+                    color={Colors.gray}
+                    style={{ position: 'absolute', left: '3%', top: 15 }}
+                  />
+                </View>
+
+                <View style={[GlobalStyles.row]}>
+                  <View
+                    pointerEvents="box-none"
+                    style={[
+                      styles.textInputIconView,
+                      {
+                        marginBottom: 15,
+                        width: '100%',
+                        justifyContent: 'center',
+                        paddingLeft: 22,
+                        height: 55,
+                        zIndex: 10,
+                      },
+                    ]}
                   >
-                    <Text style={{ fontFamily: 'Poppins_400Regular' }}>{item.label}</Text>
-                  </TouchableOpacity>
+                    <Icon
+                      name="account-circle"
+                      size={20}
+                      color={Colors.gray}
+                      style={{
+                        position: 'absolute',
+                        left: '3%',
+                        top: 15,
+                        zIndex: 1,
+                      }}
+                    />
+
+                    <TouchableOpacity
+                      onPress={() => setShowAccountTypeOptions(!showAccountTypeOptions)}
+                      style={{
+                        height: 50,
+                        width: '100%',
+                        paddingLeft: 15,
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontFamily: 'Poppins_400Regular',
+                          color: formData.accountType ? 'black' : 'gray',
+                        }}
+                      >
+                        {formData.accountType
+                          ? accountType.find((opt) => opt.value === formData.accountType)?.label
+                          : 'Account Type'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <Icon
+                      name={showAccountTypeOptions ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                      size={20}
+                      color={Colors.gray}
+                      style={{
+                        position: 'absolute',
+                        right: '5%',
+                        top: 15,
+                        zIndex: 1,
+                      }}
+                    />
+
+                    {showAccountTypeOptions && (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          top: 55,
+                          left: 0,
+                          right: 0,
+                          backgroundColor: 'white',
+                          borderRadius: 5,
+                          elevation: 5,
+                          zIndex: 999,
+                        }}
+                      >
+                        {accountType.map((option) => (
+                          <TouchableOpacity
+                            key={option.value}
+                            onPress={() => {
+                              handleAccountTypeChange(option.value);
+                              setShowAccountTypeOptions(false);
+                            }}
+                            style={{
+                              paddingVertical: 12,
+                              paddingHorizontal: 22,
+                              borderBottomWidth: 1,
+                              borderBottomColor: '#eee',
+                            }}
+                          >
+                            <Text style={{ fontFamily: 'Poppins_400Regular' }}>{option.label}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </View>
+
+
+                {formData.accountType === 'patient' && (
+                  <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
+
+                    <View style={[styles.textInputIconView, styles.allMarginRight]}>
+                      <TextInput
+                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 6 }]}
+                        placeholder="Date of Birth"
+                        value={formData.dob}
+                        onFocus={() => {
+                          setDateField('dob');
+                          setShowDatePicker(true);
+                        }}
+                      />
+                      <Icon
+                        name="calendar-today"
+                        size={20}
+                        color={Colors.gray}
+                        style={{ position: 'absolute', left: '7%', top: 15, }}
+                      />
+                    </View>
+
+                    <View style={[styles.textInputIconView, styles.allMarginLeft]}>
+                      <TextInput
+                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 6 }]}
+                        placeholder="Due Date"
+                        value={formData.dueDate}
+                        onFocus={() => {
+                          setDateField('dueDate');
+                          setShowDatePicker(true);
+                        }}
+                      />
+                      <Icon
+                        name="calendar-today"
+                        size={20}
+                        color={Colors.gray}
+                        style={{ position: 'absolute', left: '7%', top: 15, }}
+                      />
+                    </View>
+                  </View>
                 )}
-              />
-            </View>
-          </Pressable>
-        </Modal>
-      </View>
 
-      <View style={[styles.textInputIconView, styles.allMarginLeft, {
-        flex: 6,
-        height: 55,
-        justifyContent: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 8,
-      }]}>
-        <Icon
-          name="phone"
-          size={20}
-          color={Colors.gray}
-          style={{
-            position: 'absolute',
-            left: '7%',
-            top: '50%',
-            transform: [{ translateY: -10 }],
-          }}
-        />
-        <TextInput
-          style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
-          placeholder="Phone No"
-          value={formData.phone}
-          onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
-          keyboardType="phone-pad"
-        />
-      </View>
-    </View>
+                {formData.accountType === 'patient-family' && (
+                  <View style={{ position: 'relative' }}>
+                    <TextInput
+                      style={[GlobalStyles.input, { paddingLeft: 38, color: 'black', marginTop: 3 }]}
+                      placeholder="Patient Email id"
+                      value={formData.familyOf}
+                      onChangeText={(text) => setFormData({ ...formData, familyOf: text })}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                    <Icon
+                      name="email"
+                      size={20}
+                      color={Colors.gray}
+                      style={{ position: 'absolute', left: 10, top: 18, }}
+                    />
+                  </View>
+                )}
 
-            {/* <View style={styles.termsContainer}>
-              <View style={[styles.checkbox]}>
-                <Checkbox
-                  status={termsAccepted ? 'checked' : 'unchecked'}
-                  onPress={() => setTermsAccepted(prevState => !prevState)}
-                  color={Colors.primary}
+                <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
+                  <View style={[styles.textInputIconView, styles.allMarginRight, { justifyContent: 'center' }]}>
+                    <TextInput
+                      style={[GlobalStyles.textInputIcon, { paddingLeft: 37, fontFamily: 'Poppins_400Regular', marginTop: 5, color: 'black' }]}
+                      placeholder="Password"
+                      value={formData.password}
+                      onChangeText={(text) => setFormData({ ...formData, password: text })}
+                      secureTextEntry
+                    />
+                    <Icon
+                      name="lock"
+                      size={20}
+                      color={Colors.gray}
+                      style={{ position: 'absolute', left: '6%', top: 15, }}
+                    />
+                  </View>
+
+                  <View style={[styles.textInputIconView, styles.allMarginLeft, { justifyContent: 'center' }]}>
+                    <TextInput
+                      style={[GlobalStyles.textInputIcon, { paddingLeft: 35, fontFamily: 'Poppins_400Regular', marginTop: 5, color: 'black' }]}
+                      placeholder="Confirm Pass.."
+                      value={formData.confirmPassword}
+                      onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+                      secureTextEntry
+                    />
+                    <Icon
+                      name="lock"
+                      size={20}
+                      color={Colors.gray}
+                      style={{
+                        position: 'absolute', left: '6%', top: 15,
+                      }}
+                    />
+                  </View>
+                </View>
+
+                <View style={[GlobalStyles.row, { marginBottom: 10 }]}>
+
+                  <View
+                    style={[
+                      styles.textInputIconView,
+                      styles.allMarginRight,
+                      {
+                        flex: 4.76,
+                        height: 55,
+                        justifyContent: 'center',
+                        paddingLeft: 35,
+                        position: 'relative',
+                        zIndex: 8,
+                      },
+                    ]}
+                  >
+                    <Icon
+                      name="public"
+                      size={20}
+                      color={Colors.gray}
+                      style={{
+                        position: 'absolute',
+                        left: '6%',
+                        top: 15,
+                        zIndex: 1,
+                      }}
+                    />
+
+                    <TouchableOpacity
+                      onPress={() => setShowDropdown(true)}
+                      style={{
+                        height: 50,
+                        justifyContent: 'center',
+                        paddingRight: 0,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13.5,
+                          fontFamily: 'Poppins_400Regular',
+                          color: formData.countryCode ? 'black' : 'gray',
+                        }}
+                      >
+                        {
+                          formData.countryCode
+                            ? FormattedCountries.find((c) => c.value === formData.countryCode)?.label
+                            : 'Country Code'
+                        }
+                      </Text>
+                    </TouchableOpacity>
+
+                    <Icon
+                      name="keyboard-arrow-down"
+                      size={20}
+                      color={Colors.gray}
+                      style={{
+                        position: 'absolute',
+                        right: '7%',
+                        top: 15,
+                        zIndex: 1,
+                      }}
+                    />
+
+                    <Modal visible={showDropdown} transparent animationType="fade">
+                      <Pressable
+                        style={{
+                          flex: 1,
+                          backgroundColor: 'rgba(0,0,0,0.3)',
+                          justifyContent: 'center',
+                          paddingHorizontal: 20,
+                        }}
+                        onPress={() => setShowDropdown(false)}
+                      >
+                        <View
+                          style={{
+                            backgroundColor: 'white',
+                            borderRadius: 8,
+                            maxHeight: 300,
+                            padding: 10,
+                          }}
+                        >
+                          <FlatList
+                            data={FormattedCountries}
+                            keyExtractor={(item) => `${item.value}`}
+                            renderItem={({ item }) => (
+                              <TouchableOpacity
+                                onPress={() => {
+                                  setFormData({ ...formData, countryCode: item.value });
+                                  setShowDropdown(false);
+                                }}
+                                style={{ paddingVertical: 12 }}
+                              >
+                                <Text style={{ fontFamily: 'Poppins_400Regular' }}>{item.label}</Text>
+                              </TouchableOpacity>
+                            )}
+                          />
+                        </View>
+                      </Pressable>
+                    </Modal>
+                  </View>
+
+                  <View style={[styles.textInputIconView, styles.allMarginLeft, {
+                    flex: 6,
+                    height: 55,
+                    justifyContent: 'center',
+                    backgroundColor: '#fff',
+                    borderRadius: 8,
+                  }]}>
+                    <Icon
+                      name="phone"
+                      size={20}
+                      color={Colors.gray}
+                      style={{
+                        position: 'absolute',
+                        left: '7%',
+                        top: 15,
+                      }}
+                    />
+                    <TextInput
+                      style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
+                      placeholder="Phone No"
+                      value={formData.phone}
+                      onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+                </View>
+                <View style={styles.termsContainer}>
+                  <View style={styles.checkbox}>
+                    <TouchableOpacity onPress={() => setTermsAccepted(!termsAccepted)} style={styles.checkboxBox}>
+                      {termsAccepted && <View style={styles.checkboxChecked} />}
+                    </TouchableOpacity>
+
+                  </View>
+
+                  <Text style={[styles.termsText, { fontFamily: 'Poppins_400Regular' }]}>
+                    I accept the{' '}
+                    <Text
+                      style={[styles.termsLink, { fontFamily: 'Poppins_400Regular' }]}
+                      onPress={() => Linking.openURL('https://babyflix.ai/terms')}
+                    >
+                      Terms and Conditions
+                    </Text>
+                  </Text>
+                </View>
+
+
+                <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
+                  <TouchableOpacity
+                    style={[GlobalStyles.resetButton, GlobalStyles.allMarginRight]}
+                    onPress={handleReset}
+                  >
+                    <Icon name="refresh" size={20} color={Colors.black} style={{ marginRight: 5 }} />
+                    <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>
+                      Reset
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft]}
+                    onPress={handleRegister}
+                  >
+                    <Icon name="done" size={20} color={Colors.white} style={{ marginRight: 5 }} />
+                    <Text style={GlobalStyles.buttonText}>Register</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={[GlobalStyles.row, GlobalStyles.center, { marginTop: 0 }]}>
+                  <Text style={{ color: Colors.textSecondary, fontFamily: 'Poppins_400Regular' }}>
+                    Already have an account?{' '}
+                  </Text>
+                  <TouchableOpacity onPress={() => router.push('login')}>
+                    <Text style={[GlobalStyles.link, { fontFamily: 'Poppins_400Regular' }]}>Sign In</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* {showDatePicker && (
+                <DateTimePicker
+                  value={new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                  themeVariant="light"
                 />
-                <Text style={[styles.termsText,{fontFamily: 'Poppins_400Regular'}]}>
-                I accept the{' '}
-                <Text
-                  style={[styles.termsLink,{fontFamily: 'Poppins_400Regular'}]}
-                  onPress={() => Linking.openURL('https://babyflix.ai/terms')}
-                >
-                  Terms and Conditions
-                </Text>
-              </Text>
+              )} */}
 
-              </View>
-            </View> */}
-
-            <View style={styles.termsContainer}>
-              <View style={styles.checkbox}>
-                {/* <Checkbox
-                  status={termsAccepted ? 'checked' : 'unchecked'}
-                  onPress={() => setTermsAccepted(prevState => !prevState)}
-                  color={Colors.primary}
-                /> */}
-                <TouchableOpacity onPress={() => setTermsAccepted(!termsAccepted)} style={styles.checkboxBox}>
-                  {termsAccepted && <View style={styles.checkboxChecked} />}
-                </TouchableOpacity>
-
-                {/* <CheckBox
-                  value={termsAccepted}
-                  onValueChange={() => setTermsAccepted(prevState => !prevState)}
-                  tintColors={{ true: Colors.primary, false: Colors.gray }}
-                /> */}
-
-              </View>
-
-              <Text style={[styles.termsText, { fontFamily: 'Poppins_400Regular' }]}>
-                I accept the{' '}
-                <Text
-                  style={[styles.termsLink, { fontFamily: 'Poppins_400Regular' }]}
-                  onPress={() => Linking.openURL('https://babyflix.ai/terms')}
-                >
-                  Terms and Conditions
-                </Text>
-              </Text>
-            </View>
-
-
-            <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
-              <TouchableOpacity
-                style={[GlobalStyles.resetButton, GlobalStyles.allMarginRight]}
-                onPress={handleReset}
+            {Platform.OS === 'ios' ? (
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={showDatePicker}
+                onRequestClose={() => setShowDatePicker(false)}
               >
-                <Icon name="refresh" size={20} color={Colors.black} style={{ marginRight: 5 }} />
-                <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>
-                  Reset
-                </Text>
-              </TouchableOpacity>
+                <View style={styles.modalContainer}>
+                  <View style={styles.pickerContainer}>
+                    <DateTimePicker
+                      value={tempDate}
+                      mode="date"
+                      display="spinner"
+                      onChange={(event, selectedDate) => {
+                        if (selectedDate) handleDateChange(event, selectedDate);
+                        setShowDatePicker(false);
+                      }}
+                    />
+                    <TouchableOpacity onPress={() => setShowDatePicker(false)} style={styles.doneButton}>
+                      <Text style={{ color: Colors.primary, fontWeight: '600' }}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
+            ) : (
+              showDatePicker && (
+                <DateTimePicker
+                  value={tempDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                />
+              )
+            )}
 
-              <TouchableOpacity
-                style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft]}
-                onPress={handleRegister}
-              >
-                <Icon name="done" size={20} color={Colors.white} style={{ marginRight: 5 }} />
-                <Text style={GlobalStyles.buttonText}>Register</Text>
-              </TouchableOpacity>
-            </View>
+            </ScrollView>
+            {isLoading && <Loader loading={true} />}
 
-            <View style={[GlobalStyles.row, GlobalStyles.center, { marginTop: 0 }]}>
-              <Text style={{ color: Colors.textSecondary,fontFamily: 'Poppins_400Regular' }}>
-                Already have an account?{' '}
-              </Text>
-              <TouchableOpacity onPress={() => router.push('login')}>
-                <Text style={[GlobalStyles.link,{fontFamily: 'Poppins_400Regular'}]}>Sign In</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={new Date()}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-              themeVariant="light"
+            <Snackbar
+              visible={snackbarVisible}
+              message={snackbarMessage}
+              type={snackbarType}
+              onDismiss={() => setSnackbarVisible(false)}
             />
-          )}
-        </ScrollView>
-        {isLoading && <Loader loading={true} />}
-
-        <Snackbar
-          visible={snackbarVisible}
-          message={snackbarMessage}
-          type={snackbarType}
-          onDismiss={() => setSnackbarVisible(false)}
-        />
-      </View>
-    </View>
-    </TouchableWithoutFeedback>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 };
@@ -1001,7 +831,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
-    //alignItems: 'left',
     alignItems: 'flex-start',
     backgroundColor: Colors.white,
     height: 55,
@@ -1011,9 +840,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
-    //alignItems: 'Left',
     alignItems: 'flex-start',
-    justifyContent:'center',
+    justifyContent: 'center',
     height: 55,
     position: 'relative',
     backgroundColor: Colors.white,
@@ -1040,35 +868,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
   },
-  // termsContainer: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   marginBottom: 15,
-  // },
-  // checkbox: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   color: Colors.primary
-  // },
-  // checkboxBox: {
-  //   width: 20,
-  //   height: 20,
-  //   borderWidth: 1,
-  //   borderColor: Colors.border,
-  //   borderRadius: 3,
-  //   marginRight: 10,
-  // },
-  // checkboxChecked: {
-  //   backgroundColor: Colors.primary,
-  // },
-  // termsText: {
-  //   color: Colors.textSecondary,
-  // },
-  // termsLink: {
-  //   color: Colors.primary,
-  //   textDecorationLine: 'underline',
-  // },
-
   termsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1089,7 +888,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     textDecorationLine: 'underline',
   },
-  
+
   activeAccountType: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
@@ -1145,6 +944,23 @@ const styles = StyleSheet.create({
     height: 13,
     backgroundColor: Colors.primary,
     borderRadius: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  pickerContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    paddingBottom: 10,
+  },
+  doneButton: {
+    padding: 15,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderColor: '#eee',
   },
   
 });

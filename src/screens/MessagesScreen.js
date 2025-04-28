@@ -15,6 +15,8 @@ import dayjs from 'dayjs';
 import calendar from 'dayjs/plugin/calendar';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import useKeyboardTabBarEffect from '../hooks/useKeyboardTabBarEffect';
+
 
 dayjs.extend(calendar);
 
@@ -57,8 +59,8 @@ const markMessageRead = async (message_uuid) => {
   }
 };
 
-
 const MessagesScreen = () => {
+  useKeyboardTabBarEffect();
   const [selectedMessageId, setSelectedMessageId] = useState();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -76,6 +78,7 @@ const MessagesScreen = () => {
   const [onlineUsers, setOnlineUsers] = useState({});
   const [online, setOnline] = useState(false);
   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
 
@@ -90,56 +93,65 @@ const MessagesScreen = () => {
   const unreadMessages = useSelector((state) => state.header.unreadMessages);
   const user = useSelector((state) => state.auth);
 
-  const inputBottom = useRef(new Animated.Value(80)).current;
-
-
   useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', () => {
-      Animated.timing(inputBottom, {
-        toValue: 20,
-        duration: 100,
-        useNativeDriver: false,
-      }).start();
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
     });
   
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      Animated.timing(inputBottom, {
-        toValue: 80,
-        duration: 100,
-        useNativeDriver: false,
-      }).start();
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
     });
   
     return () => {
-      showSub.remove();
-      hideSub.remove();
+      showSubscription.remove();
+      hideSubscription.remove();
     };
-  }, []);
+  }, []);  
 
+  const inputBottom = useRef(new Animated.Value(80)).current;
+
+  useEffect(() => {
+    Animated.timing(inputBottom, {
+      toValue: isKeyboardVisible ? 15 : 80,
+      duration: 0,
+      useNativeDriver: false,
+    }).start();
+  }, [isKeyboardVisible]);
+  
   useFocusEffect(
     useCallback(() => {
-      const parent = navigation.getParent();
-      if (parent) {
-        parent.setOptions({ tabBarStyle: { display: 'none' } });
-      }
+      const beforeRemoveListener = navigation.addListener('beforeRemove', (e) => {
+        if (selectedMessageId) {
+          e.preventDefault(); // Prevent default behavior (i.e., navigating back)
+          setSelectedMessageId(null); // Instead, deselect current chat
+        }
+      });
   
       return () => {
-        if (parent) {
-          parent.setOptions({
-            tabBarStyle: {
-              position: 'absolute',
-              backgroundColor: 'white',
-              height: 65,
-              paddingBottom: 5,
-              paddingTop: 5,
-              borderTopColor: Colors.border,
-              display: 'flex',
-            },
-          });
-        }
+        beforeRemoveListener();
       };
-    }, [navigation])
-  );  
+    }, [selectedMessageId, navigation])
+  );
+  
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     const parent = navigation.getParent();
+  //     if (parent) {
+  //       parent.setOptions({
+  //         tabBarStyle: {
+  //           display: isKeyboardVisible ? 'none' : 'flex',
+  //           position: 'absolute',
+  //           backgroundColor: 'white',
+  //           height: 65,
+  //           paddingBottom: 5,
+  //           paddingTop: 5,
+  //           borderTopColor: Colors.border,
+  //         },
+  //       });
+  //     }
+  //   }, [isKeyboardVisible])
+  // );  
 
   useEffect(() => {
     getChatMembers();
@@ -612,7 +624,7 @@ const MessagesScreen = () => {
             <Ionicons name="send" size={24} color={Colors.messagePrimary} />
           </TouchableOpacity>
         </View> */}
-  <Animated.View style={[styles.messageBox, { bottom: inputBottom  }]}>
+  <Animated.View style={[styles.messageBox, { bottom: inputBottom }]}>
   <TextInput
     ref={inputRef}
     style={styles.input}
@@ -629,6 +641,7 @@ const MessagesScreen = () => {
     <Ionicons name="send" size={24} color={Colors.messagePrimary} />
   </TouchableOpacity>
 </Animated.View>
+
 
       </View>
       </KeyboardAvoidingView>
