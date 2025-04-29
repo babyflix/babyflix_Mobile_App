@@ -191,6 +191,7 @@ const LiveStreamingScreen = () => {
 <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.liveTitle}>Video Streaming is Live</Text>
 
+      {streamState.streamState === 'live' && streamingUrl?.startsWith('https') ? (
       <View style={[styles.previewContainer, isMinimized ? styles.maximized : styles.minimized ]}>
       <Video
         ref={videoRef}
@@ -223,7 +224,13 @@ const LiveStreamingScreen = () => {
         </TouchableOpacity>
         </View>
       </View>
+      ) : (
+        <Text style={{ textAlign: 'center', color: 'gray', marginVertical: 20 }}>
+          Waiting for live stream...
+        </Text>
+      )}
     </ScrollView>
+    
 
       <Modal
         animationType="slide"

@@ -338,6 +338,7 @@ const UploadScreen = () => {
                 onPress={() => {
                   setMedia(false)
                   setShowSuccessModal(false);
+                  router.push('/gallery');
                 }}
                 style={[styles.modalButton, { backgroundColor: Colors.primary }]}
               >

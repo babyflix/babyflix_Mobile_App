@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Platform, ScrollView, RefreshControl, KeyboardAvoidingView, Animated, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
@@ -80,6 +80,8 @@ const MessagesScreen = () => {
   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [inputMarginBottom, setInputMarginBottom] = useState(15);
+  const [selectedChat, setSelectedChat] = useState(null);
+  console.log('selectedChat',selectedChat)
 
   const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
 
@@ -126,6 +128,34 @@ const MessagesScreen = () => {
   //     keyboardDidHideListener.remove();
   //   };
   // }, []);
+
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     // Hide tab bar when navigating to message details
+  //     navigation.setOptions({ tabBarStyle: { display: 'none' } });
+
+  //     // Re-show the tab bar when navigating back
+  //     return () => {
+  //       navigation.setOptions({ tabBarStyle: { display: 'flex' } });
+  //     };
+  //   }, [navigation])
+  // );
+
+  useEffect(() => {
+    console.log('heloooooo',selectedChat ? 'none' : 'flex')
+    navigation.setOptions({  tabBarStyle: selectedChat
+      ? { display: 'none' }
+      : {
+          display: 'flex',
+          position: 'absolute',
+          borderTopColor: Colors.border,
+          paddingTop: 5,
+          paddingBottom: 5,
+          height: 65,
+          backgroundColor: 'white'
+        },
+    });
+  }, [selectedChat]);
   
   useEffect(() => {
     getChatMembers();
@@ -249,6 +279,7 @@ const MessagesScreen = () => {
       if (selectedMessageId !== null) {
         setSelectedMessageId(null);
         getChatMembers();
+        setSelectedChat(null)
         return true;
       }
       return false;
@@ -331,9 +362,9 @@ const MessagesScreen = () => {
     }
   };
 
-  var bottom=15;
+
   const handleMessagePress = ({ Uuid }) => {
-    navigation.setOptions({ tabBarStyle: { display: 'none' } });
+    //navigation.setOptions({ tabBarStyle: { display: 'none' } });
     setSelectedMessageId(Uuid);
 
     const selectedMessages = chatHistories.filter(msg =>
@@ -447,6 +478,7 @@ const MessagesScreen = () => {
 
 
   const renderMessage = ({ item }) => {
+    //navigation.setOptions({ tabBarStyle: { display: 'flex' } });
     const senderInitials = item.name ? item.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
 
     const isOnline = Array.isArray(onlineUsers)
@@ -457,7 +489,10 @@ const MessagesScreen = () => {
 
     return (
       <View style={styles.messageWrapper}>
-        <TouchableOpacity style={styles.messageCard} onPress={() => handleMessagePress({ Uuid: item.uuid })}>
+        <TouchableOpacity style={styles.messageCard} onPress={() => {
+            setSelectedChat(item);
+            handleMessagePress({ Uuid: item.uuid });
+          }}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{senderInitials}</Text>
             <View style={[styles.statusDot, { backgroundColor: isOnline ? 'green' : 'gray' }]} />
@@ -494,7 +529,9 @@ const MessagesScreen = () => {
     return `${hours}:${minutes}`;
   };
 
-  if (selectedMessageId) {
+  console.log('selectedMessageId 111',selectedMessageId)
+  console.log('selectedChat 111',selectedChat)
+  if (selectedMessageId && selectedChat) {
     const senderInitials = selectedMessage.name ? selectedMessage.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
     const partnerOnline = Array.isArray(onlineUsers)
       ? onlineUsers.includes(selectedMessageId)
@@ -526,7 +563,7 @@ const MessagesScreen = () => {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedMessageId(null)}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => {setSelectedMessageId(null);setSelectedChat(null)}}>
             <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
