@@ -85,7 +85,7 @@ const checkUrlStatus = async (url, dispatch, intervalId) => {
       method: 'GET',
     });
      
-    //console.log('response.ok',response.ok)
+    console.log('response.ok',response.ok)
 
     if (response.ok) {
       dispatch(liveStreamUpdate({ streamUrl: url, isStreamStarted: true, streamState: 'live' }));
@@ -104,6 +104,7 @@ const LiveStreamStatus = () => {
 
   useEffect(() => {
     if (user && user.role === 'user' && user.machineId) {
+      console.log("useEffect 1")
       const fetchData = async () => {
         getEventsData(user, dispatch, stream, intervalId, stream.eventEndTime);
       };
@@ -113,13 +114,17 @@ const LiveStreamStatus = () => {
 
   useEffect(() => {
     if (stream.eventStartTime && stream.eventEndTime && stream.streamUrl) {
+      if (intervalId) clearInterval(intervalId);
+      console.log("useEffect 2")
       const newIntervalId = setInterval(() => {
         const currentTime = moment();
         if (currentTime.isSameOrAfter(stream.eventStartTime) && currentTime.isBefore(stream.eventEndTime)) {
           checkUrlStatus(stream.streamUrl, dispatch, newIntervalId,);
+          console.log('isStreamStarted',stream.isStreamStarted,'streamState',stream.streamState)
         }
       }, 2000);
       setIntervalId(newIntervalId);
+      return () => clearInterval(newIntervalId);
     }
   }, [stream]);
   return (

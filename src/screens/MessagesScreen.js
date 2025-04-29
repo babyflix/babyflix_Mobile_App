@@ -79,6 +79,7 @@ const MessagesScreen = () => {
   const [online, setOnline] = useState(false);
   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [inputMarginBottom, setInputMarginBottom] = useState(15);
 
   const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
 
@@ -92,70 +93,54 @@ const MessagesScreen = () => {
   const unreadMessagesCount = useSelector((state) => state.header.unreadMessagesCount);
   const unreadMessages = useSelector((state) => state.header.unreadMessages);
   const user = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
-      setKeyboardVisible(true);
-    });
-  
-    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardVisible(false);
-    });
-  
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);  
-
-  const inputBottom = useRef(new Animated.Value(80)).current;
-
-  useEffect(() => {
-    Animated.timing(inputBottom, {
-      toValue: isKeyboardVisible ? 15 : 80,
-      duration: 0,
-      useNativeDriver: false,
-    }).start();
-  }, [isKeyboardVisible]);
   
   useFocusEffect(
     useCallback(() => {
       const beforeRemoveListener = navigation.addListener('beforeRemove', (e) => {
         if (selectedMessageId) {
-          e.preventDefault(); // Prevent default behavior (i.e., navigating back)
-          setSelectedMessageId(null); // Instead, deselect current chat
+          e.preventDefault(); 
+          setSelectedMessageId(null); 
+          getChatMembers(); 
+  
+          setTimeout(() => {
+            navigation.dispatch(e.data.action);
+          }, 0);
         }
       });
   
-      return () => {
-        beforeRemoveListener();
-      };
+      return () => beforeRemoveListener();
     }, [selectedMessageId, navigation])
-  );
+  );  
+
+  // useEffect(() => {
+  //   const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+  //     setInputMarginBottom(15); // raise input
+  //   });
   
-
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     const parent = navigation.getParent();
-  //     if (parent) {
-  //       parent.setOptions({
-  //         tabBarStyle: {
-  //           display: isKeyboardVisible ? 'none' : 'flex',
-  //           position: 'absolute',
-  //           backgroundColor: 'white',
-  //           height: 65,
-  //           paddingBottom: 5,
-  //           paddingTop: 5,
-  //           borderTopColor: Colors.border,
-  //         },
-  //       });
-  //     }
-  //   }, [isKeyboardVisible])
-  // );  
-
+  //   const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+  //     setInputMarginBottom(15); // reset input
+  //   });
+  
+  //   return () => {
+  //     keyboardDidShowListener.remove();
+  //     keyboardDidHideListener.remove();
+  //   };
+  // }, []);
+  
   useEffect(() => {
     getChatMembers();
   }, [unreadMessagesCount]);
+
+  useEffect(() => {
+    const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100); // slight delay ensures keyboard height is fully applied
+    });
+  
+    return () => keyboardDidShow.remove();
+  }, []);
+  
 
   useEffect(() => {
     const userUuid = user.uuid;
@@ -346,7 +331,9 @@ const MessagesScreen = () => {
     }
   };
 
+  var bottom=15;
   const handleMessagePress = ({ Uuid }) => {
+    navigation.setOptions({ tabBarStyle: { display: 'none' } });
     setSelectedMessageId(Uuid);
 
     const selectedMessages = chatHistories.filter(msg =>
@@ -516,7 +503,7 @@ const MessagesScreen = () => {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        //keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 0}
+        //keyboardVerticalOffset={Platform.OS === 'ios' ? 30 : 0}
       >
       <View style={styles.container}>
         <View style={[styles.headerRow]}>
@@ -546,7 +533,7 @@ const MessagesScreen = () => {
 
         <ScrollView
           style={styles.chatContainer}
-          contentContainerStyle={{ paddingBottom: 160 }}
+          contentContainerStyle={{ paddingBottom: 15 }}
           ref={scrollViewRef}
           onScroll={({ nativeEvent }) => {
             const { contentOffset } = nativeEvent;
@@ -607,7 +594,7 @@ const MessagesScreen = () => {
 
         </ScrollView>
 
-        {/* <View style={[styles.messageBox,{marginBottom:keyboardHeight}]}>
+        <View style={[styles.messageBox]}>
           <TextInput
             ref={inputRef}
             style={styles.input}
@@ -618,31 +605,12 @@ const MessagesScreen = () => {
               handleTyping();
             }}
             showSoftInputOnFocus={allowKeyboard}
-            onTouchStart={() => setAllowKeyboard(true)}
+            onTouchStart={() => {setAllowKeyboard(true); var bottom=25}}
           />
           <TouchableOpacity onPress={handleSendMessage}>
             <Ionicons name="send" size={24} color={Colors.messagePrimary} />
           </TouchableOpacity>
-        </View> */}
-  <Animated.View style={[styles.messageBox, { bottom: inputBottom }]}>
-  <TextInput
-    ref={inputRef}
-    style={styles.input}
-    placeholder="Type a message"
-    value={message}
-    onChangeText={(text) => {
-      setMessage(text);
-      handleTyping();
-    }}
-    showSoftInputOnFocus={allowKeyboard}
-    onTouchStart={() => setAllowKeyboard(true)}
-  />
-  <TouchableOpacity onPress={handleSendMessage}>
-    <Ionicons name="send" size={24} color={Colors.messagePrimary} />
-  </TouchableOpacity>
-</Animated.View>
-
-
+        </View>
       </View>
       </KeyboardAvoidingView>
     );
@@ -800,10 +768,12 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    position: 'absolute',
-    //bottom: 80,
-    left: 15,
-    right: 15,
+    marginHorizontal:15,
+    marginBottom:40,
+    // position: 'absolute',
+    // bottom: 20,
+    // left: 15,
+    // right: 15,
     ...Platform.select({
       ios: {
         shadowColor: Colors.black,

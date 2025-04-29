@@ -553,11 +553,13 @@ const RegisterScreen = () => {
                 <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
                   <View style={[styles.textInputIconView, styles.allMarginRight, { justifyContent: 'center' }]}>
                     <TextInput
-                      style={[GlobalStyles.textInputIcon, { paddingLeft: 37, fontFamily: 'Poppins_400Regular', marginTop: 5, color: 'black' }]}
+                      style={[GlobalStyles.textInputIcon, { paddingLeft: 37, fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined, marginTop: 5, color: 'black' }]}
                       placeholder="Password"
                       value={formData.password}
                       onChangeText={(text) => setFormData({ ...formData, password: text })}
                       secureTextEntry
+                      autoCapitalize="none"
+                      autoCorrect={false}
                     />
                     <Icon
                       name="lock"
@@ -569,11 +571,13 @@ const RegisterScreen = () => {
 
                   <View style={[styles.textInputIconView, styles.allMarginLeft, { justifyContent: 'center' }]}>
                     <TextInput
-                      style={[GlobalStyles.textInputIcon, { paddingLeft: 35, fontFamily: 'Poppins_400Regular', marginTop: 5, color: 'black' }]}
+                      style={[GlobalStyles.textInputIcon, { paddingLeft: 35, fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined, marginTop: 5, color: 'black' }]}
                       placeholder="Confirm Pass.."
                       value={formData.confirmPassword}
                       onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
                       secureTextEntry
+                      autoCapitalize="none"
+                      autoCorrect={false}
                     />
                     <Icon
                       name="lock"

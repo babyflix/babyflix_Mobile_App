@@ -103,8 +103,8 @@ const ProfileSettingsScreen = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const timezone =await  AsyncStorage.getItem('timezone');
-      const token =await  AsyncStorage.getItem('token');
+      // const timezone =await  AsyncStorage.getItem('timezone');
+      // const token =await  AsyncStorage.getItem('token');
       setIsLoading(true);
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/patients/getPatientByEmail`, {
@@ -113,7 +113,7 @@ const ProfileSettingsScreen = () => {
           },
           headers: {
             'Content-Type': 'application/json',
-            'Cookies': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
+            //'Cookies': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
           },
         })
         if (response.data) {
@@ -193,29 +193,26 @@ const ProfileSettingsScreen = () => {
       return;
     }
 
-    const checkPassword = async (enteredPassword, storedHash) => {
-      return new Promise((resolve, reject) => {
-        bcrypt.compare(enteredPassword, storedHash, (err, isMatch) => {
-          if (err) {
-            reject("Error comparing passwords");
-          }
-          resolve(isMatch);
-        });
-      });
-    };
+    // const checkPassword = async (enteredPassword, storedHash) => {
+    //   return new Promise((resolve, reject) => {
+    //     bcrypt.compare(enteredPassword, storedHash, (err, isMatch) => {
+    //       if (err) {
+    //         reject("Error comparing passwords");
+    //       }
+    //       resolve(isMatch);
+    //     });
+    //   });
+    // };
 
     try {
-      const enteredPassword = oldPassword;
-      const storedHash = result.password;
-      const isMatch = await checkPassword(enteredPassword, storedHash);
+      // const enteredPassword = oldPassword;
+      // const storedHash = result.password;
+      // const isMatch = await checkPassword(enteredPassword, storedHash);
 
-      if (!isMatch) {
-        setErrorMessage("Old Password is incorrect!");
-        return;
-      }
-
-      const timezone =await  AsyncStorage.getItem('timezone');
-      const token =await  AsyncStorage.getItem('token');
+      // if (!isMatch) {
+      //   setErrorMessage("Old Password is incorrect!");
+      //   return;
+      // }
 
       setIsLoading(true);
       const response = await axios.post(`${EXPO_PUBLIC_API_URL}/api/auth/change-password`, {
@@ -224,15 +221,21 @@ const ProfileSettingsScreen = () => {
       }, {
         headers: {
           'Content-Type': 'application/json',
-          //'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
         },
       });
       console.log('response reset pass',response.data)
-      if (response.status === 200) {
+      if (response.data.actionStatus === "success") {
         setResetPasswordModalVisible(false);
         setErrorMessage('');
-        setSnackbarMessage('Password reset successful');
+        setSnackbarMessage(response.data.message);
         setSnackbarType('success');
+        setSnackbarVisible(true);
+        setResetPasswordModalVisible(false);
+      }else {
+        setResetPasswordModalVisible(false);
+        setErrorMessage('');
+        setSnackbarMessage(response.data.message);
+        setSnackbarType('error');
         setSnackbarVisible(true);
       }
     } catch (error) {
@@ -250,6 +253,9 @@ const ProfileSettingsScreen = () => {
       }
     } finally {
       setIsLoading(false);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     }
   };
 
@@ -460,33 +466,39 @@ const ProfileSettingsScreen = () => {
 
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={[GlobalStyles.input]}
+                  style={[GlobalStyles.input,{fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined}]}
                   placeholder="Old Password"
                   secureTextEntry
                   value={oldPassword}
                   onChangeText={setOldPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
                 <Ionicons name="lock-open-outline" size={20} color={Colors.gray} style={styles.icon} />
               </View>
 
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={GlobalStyles.input}
+                  style={[GlobalStyles.input,{fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined}]}
                   placeholder="New Password"
                   secureTextEntry
                   value={newPassword}
                   onChangeText={setNewPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
                 <Ionicons name="key-outline" size={20} color={Colors.gray} style={styles.icon} />
               </View>
 
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={GlobalStyles.input}
+                  style={[GlobalStyles.input,{fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined}]}
                   placeholder="Confirm New Password"
                   secureTextEntry
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
                 <Ionicons name="lock-closed-outline" size={20} color={Colors.gray} style={styles.icon} />
               </View>
@@ -513,6 +525,7 @@ const ProfileSettingsScreen = () => {
             </View>
           </View>
           </KeyboardAvoidingView>
+          {isLoading && <Loader loading={true} />}
         </Modal>
 
         <Modal visible={isEditProfileModalVisible} transparent>
@@ -725,6 +738,7 @@ const ProfileSettingsScreen = () => {
               </View>
             </ScrollView>
           </View>
+          {isLoading && <Loader loading={true} />}
         </Modal>
         {showDatePicker && (
           <DateTimePicker

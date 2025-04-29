@@ -38,13 +38,18 @@ const LiveStreamingScreen = () => {
   //   const playVideo = async () => {
   //     if (videoRef.current) {
   //       try {
-  //         await videoRef.current.unloadAsync(); 
-  //         await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
+  //         await videoRef.current.loadAsync({ uri: streamingUrl }, {}, false);
+  //         await videoRef.current.playAsync(); 
   //       } catch (err) {
   //         console.error('Video playback error:', err);
   //       }
   //     }
   //   };
+
+  //   if (!streamingUrl) {
+  //     console.warn("Streaming URL is empty, skipping video load.");
+  //     return;
+  //   }
   
   //   playVideo();
   
@@ -59,69 +64,99 @@ const LiveStreamingScreen = () => {
   //   };
   // }, [streamState.streamState]);
   
+  // const checkUrlStatus = async (url, dispatch) => {
+  //   if (streamState.streamState != 'live') {
+  //     return;
+  //   }
+  //   try {
+  //     const response = await fetch(url, {
+  //       method: 'GET',
+  //     });
+  //     console.log('response.ok 2',response.ok)
+  //     if (response.ok) {
+  //     } else {
+  //       if (streamState.streamState == 'live') {
+  //         updateLiveStreamState(url, false, 'stop', '');
+  //         setModalVisible(true);
+  //         clearInterval(intervalId);
+  //       } else {
+  //         updateLiveStreamState('', true, '', '');
+  //       }
+  //     }
+  //   } catch (error) {
+  //     updateLiveStreamState(url, false, '', '');
+  //     setModalVisible(true);
 
-  const playVideo = async () => {
-    if (videoRef.current && streamingUrl) {
-      try {
-        const response = await fetch(streamingUrl, { method: 'HEAD' });
-  
-        if (!response.ok) {
-          console.log('Streaming URL not available. Stopping playback.');
-          setModalVisible(true);
-          return;
+  //   }
+  // };
+
+   useEffect(() => {
+    console.log('useEffect 3')
+      // if (videoRef.current) {
+      //   videoRef.current.loadAsync({ uri: streamingUrl }, {}, false);
+      //   videoRef.current.playAsync();
+      // }
+
+      const playVideo = async () => {
+        if (videoRef.current) {
+          if (!streamingUrl || !streamingUrl.startsWith('http') || streamState.streamState !== 'live') {
+            console.log("Invalid stream URL or state, skipping load.");
+            return;
+          }
+      
+          console.log("Trying to load video from", streamingUrl);
+          try {
+            await videoRef.current.unloadAsync(); 
+            await videoRef.current.loadAsync(
+              { uri: streamingUrl },
+              { shouldPlay: true },
+              false
+            );
+            await videoRef.current.playAsync();
+            console.log('Video loaded and playing...');
+          } catch (err) {
+            console.error('Video playback error:', err);
+            setModalVisible(true);
+          }
         }
-
-        await videoRef.current.unloadAsync();
-        await videoRef.current.loadAsync({ uri: streamingUrl }, { shouldPlay: true }, false);
-  
-      } catch (err) {
-        console.error('Video playback error:', err);
-        setModalVisible(true);
-      }
-    }
-  };
-  
-
-  useFocusEffect(
-    useCallback(() => {
+      };
+    
       playVideo();
+  
       const id = setInterval(() => {
         checkUrlStatus(streamingUrl, dispatch);
       }, 3000);
-
+  
       setIntervalId(id);
-
-      return () => {
-        clearInterval(id);
-      };
-    }, [streamingUrl, dispatch]) 
-  );
-
-  const checkUrlStatus = async (url, dispatch) => {
-    if (streamState.streamState != 'live') {
-      return;
-    }
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-      } else {
-        if (streamState.streamState == 'live') {
-          updateLiveStreamState(url, false, 'stop', '');
-          setModalVisible(true);
-          clearInterval(intervalId);
-        } else {
-          updateLiveStreamState('', true, '', '');
-        }
+  
+      return () => clearInterval(id);
+    }, [streamState.streamState]);
+  
+    const checkUrlStatus = async (url, dispatch) => {
+      if (streamState.streamState != 'live') {
+        return;
       }
-    } catch (error) {
-      updateLiveStreamState(url, false, '', '');
-      setModalVisible(true);
-
-    }
-  };
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+        });
+        console.log('response ok 2',response.ok)
+        if (response.ok) {
+        } else {
+          if (streamState.streamState == 'live') {
+            updateLiveStreamState(url, false, 'stop', '');
+            setModalVisible(true);
+            clearInterval(intervalId);
+          } else {
+            updateLiveStreamState('', true, '', '');
+          }
+        }
+      } catch (error) {
+        updateLiveStreamState(url, false, '', '');
+        setModalVisible(true);
+  
+      }
+    };
 
   const handleMinimize = () => {
     setIsMinimized(true);
