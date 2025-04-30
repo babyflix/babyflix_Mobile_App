@@ -99,6 +99,7 @@ const LiveStreamingScreen = () => {
 
       const playVideo = async () => {
         if (videoRef.current) {
+          console.log('videoRef:', videoRef.current);
           if (!streamingUrl || !streamingUrl.startsWith('http') || streamState.streamState !== 'live') {
             console.log("Invalid stream URL or state, skipping load.");
             return;
@@ -106,11 +107,9 @@ const LiveStreamingScreen = () => {
       
           console.log("Trying to load video from", streamingUrl);
           try {
-            await videoRef.current.unloadAsync(); 
             await videoRef.current.loadAsync(
               { uri: streamingUrl },
               { shouldPlay: true },
-              false
             );
             await videoRef.current.playAsync();
             console.log('Video loaded and playing...');
@@ -200,6 +199,17 @@ const LiveStreamingScreen = () => {
         resizeMode={ResizeMode.CONTAIN}
         isLooping={false}
         isMuted={isMuted}
+        onReadyForDisplay={() => {
+          console.log('✅ Video component is ready');
+          // Optionally: set a state like setVideoReady(true)
+        }}
+        onError={(e) => {
+          console.error('❌ Video error:', e);
+          setModalVisible(true); // Show error modal if needed
+        }}
+        onPlaybackStatusUpdate={(status) => {
+          console.log('🎥 Playback status:', status);
+        }}
       />
       <View style={styles.overlay}>
           <Text style={styles.liveLabel}>LIVE</Text>

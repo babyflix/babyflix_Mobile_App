@@ -374,6 +374,7 @@ const MessagesScreen = () => {
     } catch (err) {
       setError('Error fetching chat history');
       setLoading(false);
+      console.log('9999999999')
       await logError({
         error: err,
         data: err.response?.data || err.message,
@@ -881,7 +882,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 50,
-    marginTop:8,
+    marginTop:10,
   },
   metaContainer: {
     flexDirection: 'row',
@@ -891,7 +892,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 15 : 10,
+    paddingTop: Platform.OS === 'ios' ? 20 : 10,
     paddingBottom:10,
   },
   statusDot: {

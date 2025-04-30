@@ -26,6 +26,7 @@ import { useRouter } from 'expo-router';
 import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
 import { logError } from '../components/logError';
+import CustomDropdown from '../components/CustomDropdown';
 
 const ProfileSettingsScreen = () => {
   const dispatch = useDispatch();
@@ -615,7 +616,7 @@ const ProfileSettingsScreen = () => {
                 <Ionicons name="mail-outline" size={20} color="#888" style={styles.icon} />
               </View>
 
-              <View style={[styles.inputContainer, styles.picker]}>
+              {/* <View style={[styles.inputContainer, styles.picker]}>
                 <Ionicons name="globe-outline" size={20} color="#888" style={styles.icon} />
                 <RNPickerSelect
                   placeholder={{
@@ -654,7 +655,16 @@ const ProfileSettingsScreen = () => {
                   useNativeAndroidPickerStyle={false}
                 />
                 <Ionicons name="chevron-down-outline" size={20} color="#888" style={styles.iconC} />
-              </View>
+              </View> */}
+
+<CustomDropdown
+  selectedValue={selectedCountry}
+  onSelect={setSelectedCountry}
+  options={FormattedCountries}
+  placeholder="Country Code"
+  iconName="globe-outline"
+/>
+
 
               <View style={styles.inputContainer}>
                 <TextInput
@@ -695,7 +705,7 @@ const ProfileSettingsScreen = () => {
                     <Ionicons name="person-add-outline" size={20} color="#888" style={styles.icon} />
                   </View>
 
-                  <View style={[styles.inputContainer, styles.picker]}>
+                  {/* <View style={[styles.inputContainer, styles.picker]}>
                     <Ionicons name="male-female" size={20} color="#888" style={styles.icon} />
                     <RNPickerSelect
                       placeholder={{
@@ -734,7 +744,15 @@ const ProfileSettingsScreen = () => {
                       useNativeAndroidPickerStyle={false}
                     />
                     <Ionicons name="chevron-down-outline" size={20} color="#888" style={styles.iconC} />
-                  </View>
+                  </View> */}
+
+<CustomDropdown
+  selectedValue={babySex}
+  onSelect={setBabySex}
+  options={BabySex}
+  placeholder="Baby Sex"
+  iconName="male-female"
+/>
 
                 </>
               )}
