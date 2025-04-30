@@ -135,26 +135,58 @@ const LiveStreamingScreen = () => {
       if (streamState.streamState != 'live') {
         return;
       }
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-        });
-        console.log('response ok 2',response.ok)
-        if (response.ok) {
-        } else {
-          if (streamState.streamState == 'live') {
-            updateLiveStreamState(url, false, 'stop', '');
-            setModalVisible(true);
-            clearInterval(intervalId);
-          } else {
-            updateLiveStreamState('', true, '', '');
-          }
-        }
-      } catch (error) {
-        updateLiveStreamState(url, false, '', '');
-        setModalVisible(true);
+      // try {
+      //   const response = await fetch(url, {
+      //     method: 'GET',
+      //   });
+      //   console.log('response ok 2',response.ok)
+      //   if (response.ok) {
+      //   } else {
+      //     if (streamState.streamState == 'live') {
+      //       updateLiveStreamState(url, false, 'stop', '');
+      //       setModalVisible(true);
+      //       clearInterval(intervalId);
+      //     } else {
+      //       updateLiveStreamState('', true, '', '');
+      //     }
+      //   }
+      // } catch (error) {
+      //   updateLiveStreamState(url, false, '', '');
+      //   setModalVisible(true);
   
+      // }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+      try {
+        const response = await fetch(url + '?nocache=' + Date.now(), {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+          },
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        const text = await response.text();
+        console.log("text",text)
+        console.log('response ok 2',response.ok)
+        if (!response.ok || !text.includes('#EXTM3U')) {
+          console.log('!text.includes(#EXTM3U)',!text.includes('#EXTM3U'))
+          updateLiveStreamState(url, false, 'stop', '');
+          setModalVisible(true);
+          clearInterval(intervalId);
+        }
+      } catch (err) {
+        console.log('Fetch failed or aborted', err);
+        updateLiveStreamState(url, false, 'stop', '');
+        setModalVisible(true);
+        clearInterval(intervalId);
       }
+
     };
 
   const handleMinimize = () => {
@@ -206,9 +238,6 @@ const LiveStreamingScreen = () => {
         onError={(e) => {
           console.error('❌ Video error:', e);
           setModalVisible(true); // Show error modal if needed
-        }}
-        onPlaybackStatusUpdate={(status) => {
-          console.log('🎥 Playback status:', status);
         }}
       />
       <View style={styles.overlay}>

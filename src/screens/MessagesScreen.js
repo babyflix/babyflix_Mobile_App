@@ -574,6 +574,7 @@ const MessagesScreen = () => {
         //keyboardVerticalOffset={Platform.OS === 'ios' ? 30 : 0}
       >
       <View style={styles.container}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 20 : 10,}}>
         <View style={[styles.headerRow]}>
           <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
             <Text style={styles.avatarText}>{senderInitials}</Text>
@@ -601,6 +602,7 @@ const MessagesScreen = () => {
             <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
+        </SafeAreaView>
 
         <ScrollView
           style={styles.chatContainer}
@@ -892,8 +894,9 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 20 : 10,
+    paddingTop: Platform.OS === 'ios' ? 20 : 0,
     paddingBottom:10,
+    //backgroundColor:'red'
   },
   statusDot: {
     position: 'absolute',
