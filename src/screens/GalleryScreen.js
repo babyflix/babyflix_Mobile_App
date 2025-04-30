@@ -31,6 +31,8 @@ import moment from 'moment-timezone';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { setUnreadMessagesData, setUnreadMessagesCount } from '../state/slices/headerSlice';
 import { connectSocket, getSocket } from '../services/socket';
+import { updateActionStatus } from '../state/slices/authSlice.js';
+import { logError } from '../components/logError.js';
 
 
 const Tab = createMaterialTopTabNavigator();
@@ -113,8 +115,12 @@ const onRefresh = async () => {
 
   
   const fetchMediaData = async () => {
+    console.log("upload")
     setIsLoading(true);
     try {
+      if (!user.email) {
+        return;        
+      }
       const token = await AsyncStorage.getItem('token');
       const timezone = await AsyncStorage.getItem('timezone');
 
@@ -128,7 +134,7 @@ const onRefresh = async () => {
         }
       );
        if(res){
-       console.log('getPatientByEmail',res.data)
+       //console.log('getPatientByEmail',res.data)
        }else{
         console.log('getPatientByEmail else',res.data)
        }
@@ -145,7 +151,7 @@ const onRefresh = async () => {
             }
           );
 
-          console.log('CLOUD_API_URL get-images',response)
+          //console.log('CLOUD_API_URL get-images',response)
 
           if (response.status === 200) {
             const images = [];
@@ -162,11 +168,18 @@ const onRefresh = async () => {
             setMediaData({ images, videos });
             setIsLoading(false);
           } else {
-            console.log('CLOUD_API_URL get-images error',response.error)
+            console.log('CLOUD_API_URL get-images error',response.message)
             setIsLoading(false);
           }
         } catch (error) {
           console.log('catch CLOUD_API_URL get-images error',error)
+
+          await logError({
+                  error: error,
+                  data: error.response,
+                  details: "Error in get-images API call on GalleryScreen"
+                });
+
           setIsLoading(false);
         } finally {
           setIsLoading(false);
@@ -174,6 +187,11 @@ const onRefresh = async () => {
       }
     } catch (error) {
       console.log('catch 2 CLOUD_API_URL get-images error',error)
+      await logError({
+        error: error,
+        data: error.response,
+        details: "Error in get-images API call catch 2 on GalleryScreen"
+      });
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -183,8 +201,10 @@ const onRefresh = async () => {
   useEffect(() => {
     if (user) {
       fetchMediaData();
+      dispatch(updateActionStatus(''));
     }
   }, [user]);
+
 
   useEffect(() => {
 
@@ -200,6 +220,11 @@ const onRefresh = async () => {
         dispatch(setUnreadMessagesCount(response.data.unread_messages?.[0]?.unread_count || 0));
       } catch (error) {
         console.error('Error fetching unread chats:', error);
+        await logError({
+          error: error,
+          data: error.response,
+          details: "Error in get-unread-chat-members API call on GalleryScreen"
+        });
       }
     };
   

@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { liveStreamUpdate } from '../state/slices/streamSlice';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logError } from '../components/logError';
 
 const getEventsData = async (user, dispatch, stream, intervalId, eventEndTime,) => {
   const timezone = await AsyncStorage.getItem('timezone');
@@ -58,11 +59,21 @@ const getEventsData = async (user, dispatch, stream, intervalId, eventEndTime,) 
           }
         } else {
           console.error('Missing start or end time for event:', firstEvent);
+          await logError({
+            error: response.data,
+            data: response.data.massege,
+            details: "Error in get-channel-details API call on LiveStreamStatus Missing start or end time for event"
+          });
         }
       }
     }
   } catch (error) {
     console.error('Error fetching events:', error);
+    await logError({
+      error: error,
+      data: error.response,
+      details: "Error in get-channel-details API call on LiveStreamStatus"
+    });
   }
 };
 

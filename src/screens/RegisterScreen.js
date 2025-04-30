@@ -27,6 +27,7 @@ import CommonSVG from '../components/commonSvg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
+import { logError } from '../components/logError';
 
 const RegisterScreen = () => {
   const router = useRouter();
@@ -67,6 +68,11 @@ const RegisterScreen = () => {
         setCountries(response.data);
       } catch (err) {
         setError('Failed to fetch countries: ' + err);
+         await logError({
+          error: err,
+          data: err.response?.data.error || response.data.error,
+          details: "Error in getAllCountries API call on  RegisterScreen"
+        });
       }
     };
     fetchCountries();
@@ -231,14 +237,24 @@ const RegisterScreen = () => {
           router.replace('/login');
         }, 3000)
       } else {
-        setSnackbarMessage(res.data.error || 'Registration failed. Please try again.');
+        setSnackbarMessage(response.data.error || 'Registration failed. Please try again.');
         setSnackbarType('error');
         setSnackbarVisible(true);
+        await logError({
+          error: response.data.error,
+          data: response?.data.error || error,
+          details: "Error in register API call on RegisterScreen"
+        });
       }
     } catch (error) {
-      setSnackbarMessage(res.data.error || 'An error occurred. Please try again later.');
+      setSnackbarMessage(response.data.error || 'An error occurred. Please try again later.');
       setSnackbarType('error');
       setSnackbarVisible(true);
+      await logError({
+        error: error,
+        data: error.response?.data.error || response.data.error,
+        details: "Error in register API call on RegisterScreen"
+      });
     } finally {
       setIsLoading(false);
     }

@@ -15,13 +15,15 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Header from '../components/Header';
 import Colors from '../constants/Colors';
 import GlobalStyles from '../styles/GlobalStyles';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { Video } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
+import { updateActionStatus } from '../state/slices/authSlice';
+import { logError } from '../components/logError';
 
 const UPLOAD_API_URL = `${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`;
 const CHUNK_SIZE = 2 * 1024 * 1024;
@@ -59,6 +61,7 @@ const UploadScreen = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const user = useSelector((state) => state.auth);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const pickMedia = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -130,11 +133,13 @@ const UploadScreen = () => {
       machine_id: user.role === 'user' ? user.machineId : machineId,
       user_id: user.role === 'user' ? user.uuid : '',
       uploaded_by: user.role === 'user' ? "By Me" : "By Clinic",
-      hostUrl
+      hostUrl,
+      provider: "MobileApp",
+      fileDetails:media,
     };
 
     try {
-      const chunks = await chunkFile(media.uri);
+      var chunks = await chunkFile(media.uri);
 
       for (const chunk of chunks) {
         const formData = new FormData();
@@ -161,6 +166,7 @@ const UploadScreen = () => {
 
         setUploadProgress(Math.round(((chunk.index + 1) / chunk.totalChunks) * 100));
         if (response.data?.message) {
+          dispatch(updateActionStatus('Upload Successfull'));
           console.log(`Chunk ${chunk.index + 1} uploaded`);
         } else {
           throw new Error(`Chunk ${chunk.index + 1} upload failed`);
@@ -171,24 +177,13 @@ const UploadScreen = () => {
     } catch (error) {
       console.error('Upload error email send:', error.message);
       Alert.alert('Upload Failed', 'There was a problem uploading the file.');
+      console.log(error)
 
-      const payload = {
-        error: error.response,
-        data: chunk[i],
-        details: details,
-      }
-      console.log('payload', payload)
-
-      try {
-        const response = await axios.post(`${EXPO_PUBLIC_API_URL}/error/triggerError`, payload, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        console.log('email responce', response)
-      } catch (err) {
-        console.error('Failed to send error:', err);
-      }
+      await logError({
+        error: error.message,
+        data: chunks,
+        details: details
+      });
 
     } finally {
       setLoading(false);

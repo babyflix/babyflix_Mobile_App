@@ -16,6 +16,7 @@ import calendar from 'dayjs/plugin/calendar';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useKeyboardTabBarEffect from '../hooks/useKeyboardTabBarEffect';
+import { logError } from '../components/logError';
 
 
 dayjs.extend(calendar);
@@ -56,6 +57,11 @@ const markMessageRead = async (message_uuid) => {
     console.log('Message status update successfully')
   } catch (err) {
     console.warn('Error updating status:', err.response?.data || err.message);
+     await logError({
+            error: err,
+            data: err.response?.data || err.message,
+            details: "Error in update-message-status API call on MessagesScreen"
+          });
   }
 };
 
@@ -99,11 +105,12 @@ const MessagesScreen = () => {
   useFocusEffect(
     useCallback(() => {
       const beforeRemoveListener = navigation.addListener('beforeRemove', (e) => {
-        if (selectedMessageId) {
+        if (selectedMessageId !== null) {
           e.preventDefault(); 
-          setSelectedMessageId(null); 
-          getChatMembers(); 
+          setSelectedMessageId(null);
+          getChatMembers();
   
+          // Allow navigation after clearing state
           setTimeout(() => {
             navigation.dispatch(e.data.action);
           }, 0);
@@ -222,7 +229,10 @@ const MessagesScreen = () => {
         msg.receiverName === selectedMessageId;
 
       if (isInCurrentChat) {
-        setMessages((prev) => [...prev, msg]);
+        //setMessages((prev) => [...prev, msg]);
+        setMessages((prev) =>
+          prev.some((m) => m.message_uuid === msg.message_uuid) ? prev : [...prev, msg]
+        );        
         if (msg.sender_uuid !== user.uuid && msg.status === 'sent') {
           setMessages((prev) =>
             prev.map((m) =>
@@ -300,6 +310,11 @@ const MessagesScreen = () => {
     } catch (err) {
       setError('Error fetching chat members');
       setLoading(false);
+      await logError({
+        error: err,
+        data: err.response?.data || err.message,
+        details: "Error in get-chat-members API call on MessagesScreen"
+      });
     }
   };
 
@@ -315,14 +330,14 @@ const MessagesScreen = () => {
     }
   }, [chatMembers, messageLimit, unreadMessagesCount, messages]);
 
-  useEffect(() => {
-    if (selectedMessageId) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 300);
-    }
-    setAllowKeyboard(false);
-  }, [selectedMessageId]);
+  // useEffect(() => {
+  //   if (selectedMessageId) {
+  //     setTimeout(() => {
+  //       inputRef.current?.focus();
+  //     }, 300);
+  //   }
+  //   setAllowKeyboard(false);
+  // }, [selectedMessageId]);
 
   const getChatHistory = async (limit = 10) => {
     //setLoading(true);
@@ -359,6 +374,11 @@ const MessagesScreen = () => {
     } catch (err) {
       setError('Error fetching chat history');
       setLoading(false);
+      await logError({
+        error: err,
+        data: err.response?.data || err.message,
+        details: "Error in get-chat-history API call on MessagesScreen"
+      });
     }
   };
 
@@ -385,6 +405,11 @@ const MessagesScreen = () => {
         const response = await axios.put(`${EXPO_PUBLIC_API_URL}/api/chats/update-message-status`, payload);
       } catch (error) {
         console.error(`Error updating message ${message_uuid}:`, error.response?.data || error.message);
+        await logError({
+          error: error,
+          data: `Error updating message ${message_uuid}:${error.response.data || error.message}`,
+          details: "Error in update-message-status API call on MessagesScreen"
+        });
       }
     };
 
@@ -441,6 +466,11 @@ const MessagesScreen = () => {
       setCount((prevCount) => prevCount + 1);
     } catch (error) {
       console.error('Error sending message:', error.response ? error.response.data : error.message);
+      await logError({
+        error: error,
+        data: error.response ? error.response.data : error.message,
+        details: "Error in send-message API call on MessagesScreen"
+      });
     } finally {
       setLoading(false);
     }
@@ -563,7 +593,10 @@ const MessagesScreen = () => {
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.closeButton} onPress={() => {setSelectedMessageId(null);setSelectedChat(null)}}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => {
+            console.log('Back pressed');
+            setSelectedMessageId(null);
+            setSelectedChat(null)}}>
             <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
@@ -585,6 +618,7 @@ const MessagesScreen = () => {
             }
           }}
           scrollEventThrottle={16}
+          keyboardShouldPersistTaps="handled"
         >
 
           {isFetchingMore && (
@@ -664,6 +698,7 @@ const MessagesScreen = () => {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
+          keyboardShouldPersistTaps="handled"
         />
         {loading && <Loader loading={true} />}
       </View>
@@ -841,10 +876,12 @@ const styles = StyleSheet.create({
   closeButton: {
     position: 'absolute',
     left: 0,
-    zIndex: 1,
+    zIndex: 999, // for iOS
+    //elevation: 5,
     padding: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 50,
+    marginTop:8,
   },
   metaContainer: {
     flexDirection: 'row',
@@ -854,7 +891,8 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingTop: Platform.OS === 'ios' ? 15 : 10,
+    paddingBottom:10,
   },
   statusDot: {
     position: 'absolute',

@@ -25,6 +25,7 @@ import bcrypt from 'react-native-bcrypt';
 import { useRouter } from 'expo-router';
 import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
+import { logError } from '../components/logError';
 
 const ProfileSettingsScreen = () => {
   const dispatch = useDispatch();
@@ -75,6 +76,11 @@ const ProfileSettingsScreen = () => {
       } catch (err) {
         console.log('getAllCountries error',err)
         setError('Failed to fetch countries: ' + err);
+        await logError({
+          error: err,
+          data: err.response?.data || response.data.error,
+          details: "Error in getAllCountries API call on ProfileSettingScreen"
+        });
       }
     };
     fetchCountries();
@@ -140,6 +146,11 @@ const ProfileSettingsScreen = () => {
         setSnackbarMessage(error.response?.data?.error || 'Data Fatching failed. Please try again.');
         setSnackbarType('error');
         setSnackbarVisible(true);
+        await logError({
+          error: error,
+          data: error.response?.data.error || response.data.error,
+          details: "Error in getPatientByEmail API call on ProfileSettingScreen"
+        });
       } finally {
         setIsLoading(false);
       }
@@ -251,6 +262,11 @@ const ProfileSettingsScreen = () => {
         setSnackbarType('error');
         setSnackbarVisible(true);
       }
+      await logError({
+              error: error,
+              data: error.response?.data?.error || response.data.error,
+              details: "Error in change-password API call on ProfileSettingScreen"
+            });
     } finally {
       setIsLoading(false);
       setOldPassword('');
@@ -350,6 +366,11 @@ const ProfileSettingsScreen = () => {
       setSnackbarMessage(error.response?.data?.error || 'Failed to reset password. Please try again.');
       setSnackbarType('error');
       setSnackbarVisible(true);
+      await logError({
+        error: error,
+        data: error.response?.data.error || response.data.error,
+        details: "Error in patients/update API call on ProfileSettingScreen"
+      });
     } finally {
       setIsLoading(false);
     }

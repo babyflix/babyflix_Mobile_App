@@ -10,6 +10,8 @@ import {
   Modal,
   Platform,
   ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { Ionicons } from 'react-native-vector-icons';
@@ -24,6 +26,7 @@ import axios from 'axios';
 import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
 import * as Animatable from 'react-native-animatable';
+import { logError } from '../components/logError';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -33,13 +36,13 @@ const sortEvents = (events) => {
   const passed = [];
 
   events.forEach((event) => {
-    const eventEndDate = event.eventEndDate
+    // const eventEndDate = event.eventEndDate
 
-    const eventEndDateInMilliseconds = eventEndDate * 1000;
+    // const eventEndDateInMilliseconds = eventEndDate * 1000;
 
-    const eventEndDateObj = new Date(eventEndDateInMilliseconds);
+    // const eventEndDateObj = new Date(eventEndDateInMilliseconds);
 
-    if (eventEndDateObj > currentDate) {
+    if (event.isActive == true) {
       upcoming.push(event);
     } else {
       passed.push(event);
@@ -53,15 +56,25 @@ const EventsTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => {
   const onEndReachedCalledDuringMomentum = useRef(false);
 
   const renderItem = ({ item, index }) => {
-    const isUpcoming = (item.isActive == true && item.isEventScheduleOnToday == true && item.isEventStarted == true);
-  
+    const isUpcoming = (item.isActive == true );
+    console.log('Item',item)
     const eventDateConverted = item.eventDateConverted;
-    const [month, day, year] = eventDateConverted.split("/");
-    const eventDate = new Date(`${year}-${month}-${day}`);
+    console.log('eventDateConverted',eventDateConverted)
+    // const [month, day, year] = eventDateConverted.split("/");
+    // const eventDate = new Date(`${year}-${month}-${day}`);
   
-    const monthName = eventDate.toLocaleString('default', { month: 'short' });
-    const dayFormatted = String(eventDate.getDate()).padStart(2, '0');
-    const yearFormatted = eventDate.getFullYear();
+    // const monthName = eventDate.toLocaleString('default', { month: 'short' });
+    const [month, day,year] = eventDateConverted.split("/").map(Number);
+    console.log('month, day, year',month, day, year)
+const eventDate = new Date(Date.UTC(year, month - 1, day)); // UTC-safe
+
+const monthName = eventDate.toLocaleString('en-US', {
+  month: 'short',
+  timeZone: 'UTC' // Force consistent timezone
+});
+
+    const dayFormatted = day
+    const yearFormatted = year
   
     return (
       <Animatable.View
@@ -197,7 +210,8 @@ const EventsScreen = () => {
           'Content-Type': 'application/json',
         },
       });
-  
+       
+      console.log('Events',response.data.data)
       const newEvents = response.data.data;
       const allEvents = isLoadMore ? [...events, ...newEvents] : newEvents;
   
@@ -209,30 +223,14 @@ const EventsScreen = () => {
       setPageIndex(page);
     } catch (error) {
       console.error(error.response);
-
-      const formData = new FormData();
-
       const errorData = JSON.stringify(error?.response || error || 'Unknown Error');
 
-      formData.append('error', errorData); 
-      formData.append('data', errorData); 
-      formData.append('details', errorData);
-
-      const payload={
-        error : errorData,
-        data: errorData,
-        details : errorData,
-      }
-
-      try {
-        const response = await axios.post(`${EXPO_PUBLIC_API_URL}/error/triggerError`, payload, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-      } catch (err) {
-        console.error('Failed to send error:', err);
-      }
+      await logError({
+             error: error,
+             data: errorData,
+             details: "Error in getAllEvents API call on EventScreen"
+           });
+     
     } finally {
       setIsLoading(false);
     }
@@ -308,11 +306,16 @@ const EventsScreen = () => {
         setSnackbarVisible(true);
       }
     } catch (error) {
-      if (error.response) {
-        console.error('Server Error:', error.response.data);
-      } else {
-        console.error('Request Error:', error.message);
-      }
+      // if (error.response) {
+      //   console.error('Server Error:', error.response.data);
+      // } else {
+      //   console.error('Request Error:', error.message);
+      // }
+      await logError({
+        error: error,
+        data: error.response,
+        details: "Error in sendInvite API call on EventScreen"
+      });
     }
   };
 
@@ -450,6 +453,7 @@ const EventsScreen = () => {
 
       {emailModalVisible && (
         <Modal transparent={true} visible={emailModalVisible} onRequestClose={() => setEmailModalVisible(false)}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Share Event Via Email</Text>
@@ -543,11 +547,20 @@ const EventsScreen = () => {
               </View>
             </View>
           </View>
+          </TouchableWithoutFeedback>
+          {isLoading && <Loader loading={true} />}
+           <Snackbar
+              visible={snackbarVisible}
+              message={snackbarMessage}
+              type={snackbarType}
+              onDismiss={() => setSnackbarVisible(false)}
+            />
         </Modal>
       )}
 
       {mobileModalVisible && (
         <Modal transparent={true} visible={mobileModalVisible} onRequestClose={() => setMobileModalVisible(false)}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Share Event Via SMS</Text>
@@ -642,15 +655,16 @@ const EventsScreen = () => {
               </View>
             </View>
           </View>
+          </TouchableWithoutFeedback>
+          {isLoading && <Loader loading={true} />}
+          <Snackbar
+              visible={snackbarVisible}
+              message={snackbarMessage}
+              type={snackbarType}
+              onDismiss={() => setSnackbarVisible(false)}
+            />
         </Modal>
       )}
-      {isLoading && <Loader loading={true} />}
-      <Snackbar
-        visible={snackbarVisible}
-        message={snackbarMessage}
-        type={snackbarType}
-        onDismiss={() => setSnackbarVisible(false)}
-      />
     </View>
   );
 };

@@ -19,6 +19,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import CommonSVG from '../components/commonSvg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logError } from '../components/logError';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const router = useRouter();
@@ -60,7 +61,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Cookie': `Timezone=${timezone || 'UTC'}; token=${token || ''}`,
+            //'Cookie': `Timezone=${timezone || 'UTC'}; token=${token || ''}`,
           },
         }
       );
@@ -91,6 +92,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
       setSnackbarMessage('Failed to send reset link. Please try again.');
       setSnackbarType('error');
       setSnackbarVisible(true);
+      await logError({
+              error: error,
+              data: error.response,
+              details: "Error in forgot-password API call on ForgotPasswordScreen"
+            });
     } finally {
       setIsLoading(false);
     }
