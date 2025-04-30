@@ -45,9 +45,10 @@ const CustomDropdown = ({
         >
           <Text
             style={{
-              fontSize: 13.5,
+              fontSize: 14,
               fontFamily: 'Poppins_400Regular',
               color: selectedValue ? 'black' : 'gray',
+              paddingLeft: 5,
             }}
           >
             {

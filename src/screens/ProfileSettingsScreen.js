@@ -616,55 +616,13 @@ const ProfileSettingsScreen = () => {
                 <Ionicons name="mail-outline" size={20} color="#888" style={styles.icon} />
               </View>
 
-              {/* <View style={[styles.inputContainer, styles.picker]}>
-                <Ionicons name="globe-outline" size={20} color="#888" style={styles.icon} />
-                <RNPickerSelect
-                  placeholder={{
-                    label: 'Country Code',
-                    value: null,
-
-                  }}
-                  items={FormattedCountries}
-                  onValueChange={(value) => setSelectedCountry(value)}
-                  value={selectedCountry}
-                  style={{
-                    inputIOS: {
-                      paddingRight: 30,
-                      paddingLeft: 38,
-                      fontSize: 14.5,
-                      fontWeight: '400',
-                      paddingVertical: 10,
-                      textAlign: 'left',
-                      height: 55,
-                    },
-                    inputAndroid: {
-                      paddingRight: 30,
-                      paddingLeft: 38,
-                      fontSize: 14.5,
-                      fontWeight: '400',
-                      paddingVertical: 10,
-                      textAlign: 'left',
-                      height: 55,
-                    },
-                    placeholder: {
-                      fontSize: 14.5,
-                      fontWeight: '350',
-                      color: 'gray',
-                    },
-                  }}
-                  useNativeAndroidPickerStyle={false}
-                />
-                <Ionicons name="chevron-down-outline" size={20} color="#888" style={styles.iconC} />
-              </View> */}
-
-<CustomDropdown
-  selectedValue={selectedCountry}
-  onSelect={setSelectedCountry}
-  options={FormattedCountries}
-  placeholder="Country Code"
-  iconName="globe-outline"
-/>
-
+              <CustomDropdown
+                selectedValue={selectedCountry}
+                onSelect={setSelectedCountry}
+                options={FormattedCountries}
+                placeholder="Country Code"
+                iconName="globe-outline"
+              />
 
               <View style={styles.inputContainer}>
                 <TextInput
@@ -705,55 +663,13 @@ const ProfileSettingsScreen = () => {
                     <Ionicons name="person-add-outline" size={20} color="#888" style={styles.icon} />
                   </View>
 
-                  {/* <View style={[styles.inputContainer, styles.picker]}>
-                    <Ionicons name="male-female" size={20} color="#888" style={styles.icon} />
-                    <RNPickerSelect
-                      placeholder={{
-                        label: 'Baby Sex',
-                        value: null,
-
-                      }}
-                      items={BabySex}
-                      onValueChange={(value) => setBabySex(value)}
-                      value={babySex}
-                      style={{
-                        inputIOS: {
-                          paddingRight: 30,
-                          paddingLeft: 38,
-                          fontSize: 14.5,
-                          fontWeight: '400',
-                          paddingVertical: 10,
-                          textAlign: 'left',
-                          height: 55,
-                        },
-                        inputAndroid: {
-                          paddingRight: 30,
-                          paddingLeft: 38,
-                          fontSize: 14.5,
-                          fontWeight: '400',
-                          paddingVertical: 10,
-                          textAlign: 'left',
-                          height: 55,
-                        },
-                        placeholder: {
-                          fontSize: 14.5,
-                          fontWeight: '350',
-                          color: 'gray',
-                        },
-                      }}
-                      useNativeAndroidPickerStyle={false}
-                    />
-                    <Ionicons name="chevron-down-outline" size={20} color="#888" style={styles.iconC} />
-                  </View> */}
-
-<CustomDropdown
-  selectedValue={babySex}
-  onSelect={setBabySex}
-  options={BabySex}
-  placeholder="Baby Sex"
-  iconName="male-female"
-/>
-
+                <CustomDropdown
+                  selectedValue={babySex}
+                  onSelect={setBabySex}
+                  options={BabySex}
+                  placeholder="Baby Sex"
+                  iconName="male-female"
+                />
                 </>
               )}
 
