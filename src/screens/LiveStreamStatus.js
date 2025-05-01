@@ -40,6 +40,7 @@ const getEventsData = async (user, dispatch, stream, intervalId, eventEndTime,) 
           );
 
           if (response && response.data && response.data.master_stream_url) {
+            console.log('streamingUrl 1',response.data.master_stream_url)
             const eventData = {
               streamUrl: response.data.master_stream_url,
               isStreamStarted: false,
@@ -129,7 +130,7 @@ const LiveStreamStatus = () => {
       console.log("useEffect 2")
       const newIntervalId = setInterval(() => {
         const currentTime = moment();
-        if (currentTime.isSameOrAfter(stream.eventStartTime) && currentTime.isBefore(stream.eventEndTime)) {
+        if (currentTime.isSameOrAfter(stream.eventStartTime) && currentTime.isBefore(stream.eventEndTime) && stream.streamState !== 'live') {
           checkUrlStatus(stream.streamUrl, dispatch, newIntervalId,);
           console.log('isStreamStarted',stream.isStreamStarted,'streamState',stream.streamState)
         }

@@ -574,7 +574,7 @@ const MessagesScreen = () => {
         //keyboardVerticalOffset={Platform.OS === 'ios' ? 30 : 0}
       >
       <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 20 : 10,}}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 10 : 10,}}>
         <View style={[styles.headerRow]}>
           <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
             <Text style={styles.avatarText}>{senderInitials}</Text>
