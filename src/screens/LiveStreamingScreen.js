@@ -216,8 +216,8 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
         return;
       }
     
-      //const controller = new AbortController();
-     // const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000); 
     
       try {
         const response = await fetch(url + '?nocache=' + Date.now(), {
@@ -226,10 +226,10 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
             'Cache-Control': 'no-cache',
             Pragma: 'no-cache',
           },
-          //signal: controller.signal,
+          signal: controller.signal,
         });
     
-        //clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
     
         const text = await response.text();
         const isLiveStream = response.ok && text.includes('#EXTM3U');
@@ -252,7 +252,7 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
           }
         }
       } catch (err) {
-        //clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
         console.log('❌ Fetch failed or aborted', err.name);
     
         if (err.name === 'AbortError') {
@@ -408,15 +408,31 @@ const styles = StyleSheet.create({
   //   height: screenWidth,
   //   alignSelf: 'center',
   // },  
+  // rotated: {
+  //   transform: [{ rotate: '90deg' }],
+  //   width: screenHeight,
+  //   height: screenWidth,
+  //   position: 'absolute',
+  //   top: (screenHeight - screenWidth) / 2,
+  //   left: (screenWidth - screenHeight) / 400,
+  //   zIndex: 1000,
+  //   backgroundColor: 'black',
+  // },
   rotated: {
-    transform: [{ rotate: '90deg' }],
-    width: screenHeight,
-    height: screenWidth,
+    width:  screenHeight-65,
+    height: Math.min(screenWidth, screenHeight),    
     position: 'absolute',
     top: 0,
     left: 0,
-    zIndex: 1000,
+    right:-65,
     backgroundColor: 'black',
+    borderRadius:0,
+    zIndex: 1000,
+    transform: [
+      { rotate: '90deg' },
+      { translateX: ((screenHeight - 65) - screenWidth) / 2 },
+      { translateY: (screenHeight - screenWidth-65) / 2 }
+    ],
   },
   container: {
     padding: 16,
@@ -469,12 +485,13 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     position: 'relative',
-    width: '100%',
+    width: Math.max(screenWidth, screenHeight),
+    height: Math.min(screenWidth, screenHeight),
     borderRadius: 8,
     overflow: 'hidden',
-    height:'100%', 
-    maxWidth: screenWidth,
-    maxHeight: screenHeight,
+    //height:'100%', 
+    // maxWidth: screenWidth,
+    // maxHeight: screenHeight,
     backgroundColor: 'black',
     padding: 10,
   },  
@@ -486,15 +503,15 @@ const styles = StyleSheet.create({
     height: 220,
     width: '100%',
   },
-  // maximized: {
-  //   height: screenHeight,
-  //   width: screenWidth,
-  //   position: 'absolute',
-  //   top: 0,
-  //   left: 0,
-  //   zIndex: 999, 
-  //   backgroundColor: 'black', 
-  // },
+  maximized: {
+    height: screenHeight,
+    width: screenWidth,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 999, 
+    backgroundColor: 'black', 
+  },
   
   overlay: {
     position: 'absolute',
@@ -518,17 +535,19 @@ const styles = StyleSheet.create({
   controls: {
     flexDirection: 'row',
     gap: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   muteButton: {
     position: 'absolute',
     top: 0,
     right: 30,
     padding: 6,
-    borderRadius: 20
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   rotateButton: {
     position: 'absolute',
-    top: 5,
+    top: 6,
     left: 43,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,

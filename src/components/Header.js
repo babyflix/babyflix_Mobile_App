@@ -22,7 +22,8 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('token');
-
+  
+      dispatch(closeDropdown());
       dispatch(logout());
 
       setTimeout(() => {

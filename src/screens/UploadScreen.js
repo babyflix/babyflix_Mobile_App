@@ -44,14 +44,12 @@ const isValidMediaFile = (file) => {
 
 const getHostUrl = async () => {
   if (Platform.OS === 'web') {
-    return window.location.href;            // Expo Web
+    return window.location.href;          
   }
 
-  // Native: deep‑link that launched the app (may be null)
   const url = await Linking.getInitialURL();
-  return url || 'app://opened/normally';    // fallback if you want one
+  return url || 'app://opened/normally';   
 };
-
 
 const UploadScreen = () => {
   const [media, setMedia] = useState(null);
@@ -167,17 +165,13 @@ const UploadScreen = () => {
         setUploadProgress(Math.round(((chunk.index + 1) / chunk.totalChunks) * 100));
         if (response.data?.message) {
           dispatch(updateActionStatus('Upload Successfull'));
-          console.log(`Chunk ${chunk.index + 1} uploaded`);
         } else {
           throw new Error(`Chunk ${chunk.index + 1} upload failed`);
         }
-        console.log('Success', response.data);
       }
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Upload error email send:', error.message);
-      Alert.alert('Upload Failed', 'There was a problem uploading the file.');
-      console.log(error)
 
       await logError({
         error: error.message,

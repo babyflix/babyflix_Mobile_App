@@ -27,6 +27,7 @@ import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
 import { logError } from '../components/logError';
 import CustomDropdown from '../components/CustomDropdown';
+import { closeDropdown } from '../state/slices/headerSlice';
 
 const ProfileSettingsScreen = () => {
   const dispatch = useDispatch();
@@ -73,9 +74,7 @@ const ProfileSettingsScreen = () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/locations/getAllCountries`);
         setCountries(response.data);
-        console.log('getAllCountries',response.data)
       } catch (err) {
-        console.log('getAllCountries error',err)
         setError('Failed to fetch countries: ' + err);
         await logError({
           error: err,
@@ -97,10 +96,9 @@ const ProfileSettingsScreen = () => {
 
       setFormattedCountries(formatted);
     } else {
-      console.log("contries not array")
+      console.log("")
     }
   }, [countries]);
-
 
   const BabySex = [
     { label: 'Male', value: '1' },
@@ -110,8 +108,6 @@ const ProfileSettingsScreen = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      // const timezone =await  AsyncStorage.getItem('timezone');
-      // const token =await  AsyncStorage.getItem('token');
       setIsLoading(true);
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/patients/getPatientByEmail`, {
@@ -120,7 +116,6 @@ const ProfileSettingsScreen = () => {
           },
           headers: {
             'Content-Type': 'application/json',
-            //'Cookies': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
           },
         })
         if (response.data) {
@@ -135,15 +130,12 @@ const ProfileSettingsScreen = () => {
           setSpouseName(response.data.spouseFirstName || '');
           setBabyName(response.data.babyName || '');
           setBabySex(response.data.babySex || '');
-          console.log('getPatientByEmail ProfileSetting',response.data)
         } else {
           setSnackbarMessage(response.data.error || 'Data Fatching failed');
           setSnackbarType('error');
           setSnackbarVisible(true);
-          console.log('getPatientByEmail ProfileSetting else',response.data.error)
         }
       } catch (error) {
-        console.log('getPatientByEmail ProfileSetting catch',error)
         setSnackbarMessage(error.response?.data?.error || 'Data Fatching failed. Please try again.');
         setSnackbarType('error');
         setSnackbarVisible(true);
@@ -163,7 +155,8 @@ const ProfileSettingsScreen = () => {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('token');
-
+      
+      dispatch(closeDropdown());
       dispatch(logout());
 
       setTimeout(() => {
@@ -205,27 +198,7 @@ const ProfileSettingsScreen = () => {
       return;
     }
 
-    // const checkPassword = async (enteredPassword, storedHash) => {
-    //   return new Promise((resolve, reject) => {
-    //     bcrypt.compare(enteredPassword, storedHash, (err, isMatch) => {
-    //       if (err) {
-    //         reject("Error comparing passwords");
-    //       }
-    //       resolve(isMatch);
-    //     });
-    //   });
-    // };
-
     try {
-      // const enteredPassword = oldPassword;
-      // const storedHash = result.password;
-      // const isMatch = await checkPassword(enteredPassword, storedHash);
-
-      // if (!isMatch) {
-      //   setErrorMessage("Old Password is incorrect!");
-      //   return;
-      // }
-
       setIsLoading(true);
       const response = await axios.post(`${EXPO_PUBLIC_API_URL}/api/auth/change-password`, {
         currentPassword: oldPassword,
@@ -235,7 +208,6 @@ const ProfileSettingsScreen = () => {
           'Content-Type': 'application/json',
         },
       });
-      console.log('response reset pass',response.data)
       if (response.data.actionStatus === "success") {
         setResetPasswordModalVisible(false);
         setErrorMessage('');
@@ -257,7 +229,6 @@ const ProfileSettingsScreen = () => {
         setSnackbarType('error');
         setSnackbarVisible(true);
       } else {
-        console.log('reset Password Error',error)
         setErrorMessage('Failed to reset password. Please try again.');
         setSnackbarMessage(error.response?.data?.error || 'Failed to reset password. Please try again.');
         setSnackbarType('error');
@@ -354,7 +325,6 @@ const ProfileSettingsScreen = () => {
       );
 
       if (response.status === 200) {
-        console.log('patients/update',response.data)
         setResetPasswordModalVisible(false);
         setErrorMessage('');
         setSnackbarMessage('Edit Profile successful');
@@ -362,7 +332,6 @@ const ProfileSettingsScreen = () => {
         setSnackbarVisible(true);
       }
     } catch (error) {
-      console.log('patients/update error',error)
       setErrorMessage('Failed to reset password. Please try again.');
       setSnackbarMessage(error.response?.data?.error || 'Failed to reset password. Please try again.');
       setSnackbarType('error');

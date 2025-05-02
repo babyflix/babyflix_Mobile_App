@@ -50,9 +50,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      const token = await AsyncStorage.getItem('token');
-      const timezone = await AsyncStorage.getItem('timezone');
-
       const res = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/forgot-password`,
         {
@@ -61,7 +58,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
         {
           headers: {
             'Content-Type': 'application/json',
-            //'Cookie': `Timezone=${timezone || 'UTC'}; token=${token || ''}`,
           },
         }
       );

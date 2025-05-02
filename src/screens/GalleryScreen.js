@@ -115,30 +115,20 @@ const onRefresh = async () => {
 
   
   const fetchMediaData = async () => {
-    console.log("upload")
     setIsLoading(true);
     try {
       if (!user.email) {
         return;        
       }
-      const token = await AsyncStorage.getItem('token');
-      const timezone = await AsyncStorage.getItem('timezone');
 
       const res = await axios.get(
         EXPO_PUBLIC_API_URL + `/api/patients/getPatientByEmail?email=${user.email}`,
         {
           headers: {
             'Content-Type': 'application/json',
-            //'Cookie': `Timezone=${timezone || 'UTC'}; Token=${token || ''}`,
           }
         }
       );
-       if(res){
-       //console.log('getPatientByEmail',res.data)
-       }else{
-        console.log('getPatientByEmail else',res.data)
-       }
-
       if (res.status === 200) {
         const data1 = res.data;
         try {
@@ -150,8 +140,6 @@ const onRefresh = async () => {
               }
             }
           );
-
-          //console.log('CLOUD_API_URL get-images',response)
 
           if (response.status === 200) {
             const images = [];
@@ -168,11 +156,9 @@ const onRefresh = async () => {
             setMediaData({ images, videos });
             setIsLoading(false);
           } else {
-            console.log('CLOUD_API_URL get-images error',response.message)
             setIsLoading(false);
           }
         } catch (error) {
-          console.log('catch CLOUD_API_URL get-images error',error)
 
           await logError({
                   error: error,
@@ -186,7 +172,6 @@ const onRefresh = async () => {
         }
       }
     } catch (error) {
-      console.log('catch 2 CLOUD_API_URL get-images error',error)
       await logError({
         error: error,
         data: error.response,
@@ -215,7 +200,6 @@ const onRefresh = async () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-unread-chat-members`);
   
-        //console.log('get-unread-chat-members',response.data)
         dispatch(setUnreadMessagesData(response.data));
         dispatch(setUnreadMessagesCount(response.data.unread_messages?.[0]?.unread_count || 0));
       } catch (error) {

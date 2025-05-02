@@ -54,7 +54,6 @@ const markMessageRead = async (message_uuid) => {
       message_uuid,
       status: 'read',
     });
-    console.log('Message status update successfully')
   } catch (err) {
     console.warn('Error updating status:', err.response?.data || err.message);
      await logError({
@@ -87,10 +86,8 @@ const MessagesScreen = () => {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [inputMarginBottom, setInputMarginBottom] = useState(15);
   const [selectedChat, setSelectedChat] = useState(null);
-  console.log('selectedChat',selectedChat)
 
   const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
-
 
   const chatMembersRef = useRef();
   const scrollViewRef = useRef();
@@ -110,7 +107,6 @@ const MessagesScreen = () => {
           setSelectedMessageId(null);
           getChatMembers();
   
-          // Allow navigation after clearing state
           setTimeout(() => {
             navigation.dispatch(e.data.action);
           }, 0);
@@ -121,35 +117,7 @@ const MessagesScreen = () => {
     }, [selectedMessageId, navigation])
   );  
 
-  // useEffect(() => {
-  //   const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-  //     setInputMarginBottom(15); // raise input
-  //   });
-  
-  //   const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-  //     setInputMarginBottom(15); // reset input
-  //   });
-  
-  //   return () => {
-  //     keyboardDidShowListener.remove();
-  //     keyboardDidHideListener.remove();
-  //   };
-  // }, []);
-
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     // Hide tab bar when navigating to message details
-  //     navigation.setOptions({ tabBarStyle: { display: 'none' } });
-
-  //     // Re-show the tab bar when navigating back
-  //     return () => {
-  //       navigation.setOptions({ tabBarStyle: { display: 'flex' } });
-  //     };
-  //   }, [navigation])
-  // );
-
   useEffect(() => {
-    console.log('heloooooo',selectedChat ? 'none' : 'flex')
     navigation.setOptions({  tabBarStyle: selectedChat
       ? { display: 'none' }
       : {
@@ -172,7 +140,7 @@ const MessagesScreen = () => {
     const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100); // slight delay ensures keyboard height is fully applied
+      }, 100); 
     });
   
     return () => keyboardDidShow.remove();
@@ -229,7 +197,6 @@ const MessagesScreen = () => {
         msg.receiverName === selectedMessageId;
 
       if (isInCurrentChat) {
-        //setMessages((prev) => [...prev, msg]);
         setMessages((prev) =>
           prev.some((m) => m.message_uuid === msg.message_uuid) ? prev : [...prev, msg]
         );        
@@ -330,17 +297,7 @@ const MessagesScreen = () => {
     }
   }, [chatMembers, messageLimit, unreadMessagesCount, messages]);
 
-  // useEffect(() => {
-  //   if (selectedMessageId) {
-  //     setTimeout(() => {
-  //       inputRef.current?.focus();
-  //     }, 300);
-  //   }
-  //   setAllowKeyboard(false);
-  // }, [selectedMessageId]);
-
   const getChatHistory = async (limit = 10) => {
-    //setLoading(true);
     try {
       const histories = await Promise.all(
         chatMembers.map(async (member) => {
@@ -374,7 +331,6 @@ const MessagesScreen = () => {
     } catch (err) {
       setError('Error fetching chat history');
       setLoading(false);
-      console.log('9999999999')
       await logError({
         error: err,
         data: err.response?.data || err.message,
@@ -385,7 +341,6 @@ const MessagesScreen = () => {
 
 
   const handleMessagePress = ({ Uuid }) => {
-    //navigation.setOptions({ tabBarStyle: { display: 'none' } });
     setSelectedMessageId(Uuid);
 
     const selectedMessages = chatHistories.filter(msg =>
@@ -509,7 +464,6 @@ const MessagesScreen = () => {
 
 
   const renderMessage = ({ item }) => {
-    //navigation.setOptions({ tabBarStyle: { display: 'flex' } });
     const senderInitials = item.name ? item.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
 
     const isOnline = Array.isArray(onlineUsers)
@@ -560,8 +514,6 @@ const MessagesScreen = () => {
     return `${hours}:${minutes}`;
   };
 
-  console.log('selectedMessageId 111',selectedMessageId)
-  console.log('selectedChat 111',selectedChat)
   if (selectedMessageId && selectedChat) {
     const senderInitials = selectedMessage.name ? selectedMessage.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
     const partnerOnline = Array.isArray(onlineUsers)
@@ -571,7 +523,6 @@ const MessagesScreen = () => {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        //keyboardVerticalOffset={Platform.OS === 'ios' ? 30 : 0}
       >
       <View style={styles.container}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 10 : 10,}}>
@@ -794,7 +745,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 10,
-   // marginBottom: 75,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     backgroundColor: Colors.white
@@ -845,10 +795,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginHorizontal:15,
     marginBottom:40,
-    // position: 'absolute',
-    // bottom: 20,
-    // left: 15,
-    // right: 15,
     ...Platform.select({
       ios: {
         shadowColor: Colors.black,
@@ -879,8 +825,7 @@ const styles = StyleSheet.create({
   closeButton: {
     position: 'absolute',
     left: 0,
-    zIndex: 999, // for iOS
-    //elevation: 5,
+    zIndex: 999,
     padding: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 50,
@@ -896,7 +841,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: Platform.OS === 'ios' ? 20 : 0,
     paddingBottom:10,
-    //backgroundColor:'red'
   },
   statusDot: {
     position: 'absolute',

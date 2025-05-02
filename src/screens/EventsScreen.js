@@ -36,12 +36,6 @@ const sortEvents = (events) => {
   const passed = [];
 
   events.forEach((event) => {
-    // const eventEndDate = event.eventEndDate
-
-    // const eventEndDateInMilliseconds = eventEndDate * 1000;
-
-    // const eventEndDateObj = new Date(eventEndDateInMilliseconds);
-
     if (event.isActive == true) {
       upcoming.push(event);
     } else {
@@ -57,20 +51,13 @@ const EventsTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => {
 
   const renderItem = ({ item, index }) => {
     const isUpcoming = (item.isActive == true );
-    console.log('Item',item)
     const eventDateConverted = item.eventDateConverted;
-    console.log('eventDateConverted',eventDateConverted)
-    // const [month, day, year] = eventDateConverted.split("/");
-    // const eventDate = new Date(`${year}-${month}-${day}`);
-  
-    // const monthName = eventDate.toLocaleString('default', { month: 'short' });
     const [month, day,year] = eventDateConverted.split("/").map(Number);
-    console.log('month, day, year',month, day, year)
-const eventDate = new Date(Date.UTC(year, month - 1, day)); // UTC-safe
+const eventDate = new Date(Date.UTC(year, month - 1, day)); 
 
 const monthName = eventDate.toLocaleString('en-US', {
   month: 'short',
-  timeZone: 'UTC' // Force consistent timezone
+  timeZone: 'UTC' 
 });
 
     const dayFormatted = day
@@ -211,7 +198,6 @@ const EventsScreen = () => {
         },
       });
        
-      console.log('Events',response.data.data)
       const newEvents = response.data.data;
       const allEvents = isLoadMore ? [...events, ...newEvents] : newEvents;
   
@@ -242,7 +228,7 @@ const EventsScreen = () => {
 
   const onRefresh = async () => {
     setIsRefreshing(true);
-    await fetchData(0); // Re-fetch from the beginning
+    await fetchData(0); 
     setIsRefreshing(false);
   };  
 
@@ -306,11 +292,6 @@ const EventsScreen = () => {
         setSnackbarVisible(true);
       }
     } catch (error) {
-      // if (error.response) {
-      //   console.error('Server Error:', error.response.data);
-      // } else {
-      //   console.error('Request Error:', error.message);
-      // }
       await logError({
         error: error,
         data: error.response,
@@ -719,8 +700,7 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     position: 'absolute',
-    // bottom: 38,
-     right: 20,
+    right: 20,
     backgroundColor: Colors.messagePrimary,
     borderRadius: 30,
     padding: 16,
@@ -880,11 +860,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  // modalButtonText: {
-  //   marginLeft: 7,
-  //   color: Colors.white,
-  //   fontSize: 16,
-  // },
   disabledShareButton: {
     opacity: 0.5,
   },

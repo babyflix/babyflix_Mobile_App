@@ -189,22 +189,8 @@ const RegisterScreen = () => {
     setIsLoading(true);
 
     try {
-
-      console.log('firstName:', formData.firstName,
-        'lastName:', formData.lastName,
-        'email:', formData.email,
-        'password:', formData.password,
-        'confirmPassword:', formData.confirmPassword,
-        'familyOf:', formData.familyOf,
-        'countryCode:', formData.countryCode?.split('_')[0],
-        ' phone:', formData.phone,
-        'dob:', formData.dob,
-        'dueDate:', formData.dueDate,
-        'agree:', termsAccepted,)
-
       const timezone = await AsyncStorage.getItem('timezone');
       const token = await AsyncStorage.getItem('token');
-      console.log('hello', EXPO_PUBLIC_API_URL)
       const response = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/register`,
         {
@@ -228,7 +214,6 @@ const RegisterScreen = () => {
           },
         }
       );
-      console.log('responce', response.data)
       if (response.data.actionStatus == "success") {
         setSnackbarMessage('Registration successful!');
         setSnackbarType('success');
@@ -278,8 +263,6 @@ const RegisterScreen = () => {
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || formData.dob;
     setShowDatePicker(false);
-
-    console.log('TempDate',tempDate)
 
     const formattedDate = formatDate(currentDate);
 

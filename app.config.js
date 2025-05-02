@@ -13,7 +13,7 @@ export default ({ config }) => ({
     }
   },
   orientation: "portrait",
-  icon: "./assets/logo.png",
+  icon: "./assets/icon.png",
   splash: {
     image: "./assets/images/adaptive-icon2.png",
     resizeMode: "contain",
@@ -33,7 +33,8 @@ export default ({ config }) => ({
         "UIInterfaceOrientationPortrait",
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight"
-      ]
+      ],
+      "NSPhotoLibraryUsageDescription": "This app requires access to your photo library.",
     }
   },
   android: {
@@ -46,7 +47,6 @@ export default ({ config }) => ({
     permissions: [
       "READ_EXTERNAL_STORAGE",
       "WRITE_EXTERNAL_STORAGE",
-      "CAMERA"
     ] 
   },
   plugins: [
@@ -55,7 +55,6 @@ export default ({ config }) => ({
       "expo-image-picker",
       {
         photosPermission: "Allow BabyFlix to access your photos",
-        cameraPermission: "Allow BabyFlix to access your camera"
       }
     ],
     "expo-video",
