@@ -45,8 +45,9 @@ export default ({ config }) => ({
     package: "com.babyflix.app",
     jsEngine: "hermes",
     permissions: [
-      "READ_EXTERNAL_STORAGE",
-      "WRITE_EXTERNAL_STORAGE",
+      "android.permission.READ_MEDIA_IMAGES",
+      "android.permission.READ_MEDIA_VIDEO",
+      "android.permission.CAMERA"
     ] 
   },
   plugins: [
