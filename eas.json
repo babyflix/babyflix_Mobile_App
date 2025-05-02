@@ -3,22 +3,16 @@
     "version": ">= 15.0.14",
     "appVersionSource": "remote"
   },
-  "build": {
-    "preview": {
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "preview2": {
-      "android": {
-        "gradleCommand": ":app:assembleRelease"
-      }
-    },
-    "preview3": {
-      "developmentClient": true
-    },
-    "preview4": {
+ "build": {
+    "development": {
+      "developmentClient": true,
       "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true
     }
   },
   "submit": {
