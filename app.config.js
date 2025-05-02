@@ -61,5 +61,8 @@ export default ({ config }) => ({
     "expo-video",
     "expo-build-properties",
     "expo-font"
-  ]
+  ],
+  // experimental: {
+  //   newArchitecture: false
+  // }
 });
