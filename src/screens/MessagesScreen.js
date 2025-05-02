@@ -90,7 +90,7 @@ const MessagesScreen = () => {
   const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
 
   const chatMembersRef = useRef();
-  const scrollViewRef = useRef();
+  const scrollViewRef = useRef(null);
   const inputRef = useRef(null);
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -341,12 +341,14 @@ const MessagesScreen = () => {
 
 
   const handleMessagePress = ({ Uuid }) => {
+    console.log('helloo')
     setSelectedMessageId(Uuid);
 
     const selectedMessages = chatHistories.filter(msg =>
       msg.sender_uuid === Uuid || msg.recipient_uuid === Uuid
     );
     const selectChatHistory = chatMembers.filter(msg => msg.uuid === Uuid);
+    console.log('selectedMessages',selectedMessages)
     setMessages(selectedMessages);
     setChatHistory(selectChatHistory);
 
@@ -464,6 +466,7 @@ const MessagesScreen = () => {
 
 
   const renderMessage = ({ item }) => {
+    console.log('item',item)
     const senderInitials = item.name ? item.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
 
     const isOnline = Array.isArray(onlineUsers)
@@ -502,7 +505,6 @@ const MessagesScreen = () => {
         </TouchableOpacity>
       </View>
     );
-
   }
 
   const selectedMessage = chatMembers.find((msg) => msg.uuid === selectedMessageId);
@@ -513,19 +515,27 @@ const MessagesScreen = () => {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
   };
-
+ 
+  console.log(selectedMessageId,selectedChat)
   if (selectedMessageId && selectedChat) {
-    const senderInitials = selectedMessage.name ? selectedMessage.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
+    console.log('hello 2')
+    console.log('timeline',timeline)
+    console.log('scrollViewRef',scrollViewRef)
+    console.log('selectedMessage',selectedMessage)
+    console.log('isReceiverTyping',isReceiverTyping)
+    const senderInitials = selectedMessage.name ? selectedMessage?.name?.split(' ')[0]?.substring(0, 2)?.toUpperCase() : '';
+    console.log('senderInitials',senderInitials)
     const partnerOnline = Array.isArray(onlineUsers)
       ? onlineUsers.includes(selectedMessageId)
       : !!onlineUsers[selectedMessageId];
+      console.log('partnerOnline',partnerOnline)
     return (
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+      {/* <SafeAreaView edges={['top']} style={{flex: 1, backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 10 : 10,}}> */}
       <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 10 : 10,}}>
         <View style={[styles.headerRow]}>
           <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
             <Text style={styles.avatarText}>{senderInitials}</Text>
@@ -553,7 +563,7 @@ const MessagesScreen = () => {
             <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
-        </SafeAreaView>
+       
 
         <ScrollView
           style={styles.chatContainer}
@@ -637,6 +647,7 @@ const MessagesScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
+      {/* </SafeAreaView> */}
       </KeyboardAvoidingView>
     );
   } else {
@@ -839,8 +850,8 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 20 : 0,
-    paddingBottom:10,
+    paddingTop: Platform.OS === 'ios' ? 30 : 10,
+    paddingBottom:15,
   },
   statusDot: {
     position: 'absolute',
