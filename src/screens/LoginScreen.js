@@ -98,6 +98,7 @@ const LoginScreen = () => {
       if (res.data.token) {
         setIsStreamStart(true);
         await AsyncStorage.setItem('token', res.data.token);
+        await AsyncStorage.setItem('userData', JSON.stringify(res.data));
         dispatch(setCredentials(res.data));
         setToken(res.data.token);
 

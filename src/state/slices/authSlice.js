@@ -72,6 +72,8 @@ const authSlice = createSlice({
       state.token = '';
       state.uuid = '';
       state.isAuthenticated = false;
+      AsyncStorage.removeItem('token');
+      AsyncStorage.removeItem('userData');
     },
     updateActionStatus: (state, action) => {
       state.actionStatus = action.payload;
