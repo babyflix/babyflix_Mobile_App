@@ -18,7 +18,7 @@ const uiSlice = createSlice({
     },
     showSnackbar: (state, action) => {
       state.snackbar = {
-        visible: true,
+        visible: action.payload.visible,
         message: action.payload.message,
         type: action.payload.type || 'success',
       };
