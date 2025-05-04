@@ -13,7 +13,7 @@ export default ({ config }) => ({
     }
   },
   orientation: "portrait",
-  icon: "./assets/icon.png",
+  icon: "./assets/icon5.png",
   splash: {
     image: "./assets/images/adaptive-icon2.png",
     resizeMode: "contain",

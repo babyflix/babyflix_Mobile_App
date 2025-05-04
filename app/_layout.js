@@ -55,7 +55,8 @@ import AuthLoader from '../src/components/AuthLoader';
 import NetInfo from '@react-native-community/netinfo';
 import * as ImagePicker from 'expo-image-picker';
 import { showSnackbar } from '../src/state/slices/uiSlice';
-import { Text, TextInput } from 'react-native';
+import { Alert, Linking, Text, TextInput } from 'react-native';
+import Constants from 'expo-constants';
 
 import { useFonts } from 'expo-font';
 import {
@@ -70,20 +71,20 @@ const LayoutContent = () => {
   const { loading, snackbar } = useSelector((state) => state.ui);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const [isConnected, setIsConnected] = useState(null);
+  const [isUpdatePromptShown, setIsUpdatePromptShown] = useState(false);
 
   useEffect(() => {
     const checkConnection = async () => {
-      const state = await NetInfo.fetch(); // Check the current connection status once
+      const state = await NetInfo.fetch(); 
       setIsConnected(state.isConnected);
     };
 
-    checkConnection(); // Check connection on load
+    checkConnection(); 
 
     const unsubscribe = NetInfo.addEventListener(state => {
       const isNowConnected = state.isConnected;
 
       if (isConnected === null) {
-        // First check (on mount)
         if (!isNowConnected) {
           dispatch(showSnackbar({ visible: true, message: 'No internet connection', type: 'error' }));
           setTimeout(() => {
@@ -97,10 +98,8 @@ const LayoutContent = () => {
             dispatch(showSnackbar({ visible: false, message: '', type: '' }));
           }, 3000);
         } else if (!isConnected && isNowConnected) {
-          // Only show 'online' if coming back from offline
           dispatch(showSnackbar({ visible: true, message: 'You are online', type: 'success' }));
 
-          // Hide snackbar after 3 seconds
           setTimeout(() => {
             dispatch(showSnackbar({ visible: false, message: '', type: '' }));
           }, 3000);
@@ -122,6 +121,47 @@ const LayoutContent = () => {
     };
     if (isAuthenticated) requestPermissions();
   }, [isAuthenticated]);
+
+
+  useEffect(() => {
+    checkForAppUpdate();
+  }, []);
+
+  // const fetchLatestVersionFromServer = async () => {
+  //   try {
+  //     const response = await fetch('https://yourdomain.com/api/version'); // or Firebase method
+  //     const data = await response.json();
+  //     return data.latestVersion; // example: "1.0.2"
+  //   } catch (error) {
+  //     console.error("Failed to fetch version", error);
+  //     return null;
+  //   }
+  // };
+
+  const checkForAppUpdate = async () => {
+    const currentVersion = Constants.expoConfig.version; 
+    const latestVersion = "1.0.5"//await fetchLatestVersionFromServer();
+
+    if (latestVersion && currentVersion !== latestVersion && !isUpdatePromptShown) {
+      setIsUpdatePromptShown(true); 
+
+      Alert.alert(
+        "Update Required",
+        "A new version is available. Please update the app.",
+        [
+          {
+            text: "Skip Now",
+            onPress: () => setIsUpdatePromptShown(false) 
+          },
+          {
+            text: "Update Now",
+            onPress: () => Linking.openURL("https://www.youtube.com/") 
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  };
 
   return (
     <>
@@ -147,7 +187,6 @@ export default function RootLayout() {
 
   if (!fontsLoaded) return null;
 
-  // Prevent scaling
   if (Text.defaultProps == null) Text.defaultProps = {};
   if (TextInput.defaultProps == null) TextInput.defaultProps = {};
   Text.defaultProps.allowFontScaling = false;

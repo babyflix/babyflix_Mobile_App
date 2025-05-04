@@ -57,24 +57,54 @@ const UploadScreen = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  //const [hasPermission, setHasPermission] = useState(false);
   const user = useSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Permission to access media library is required!');
-      }
-    })();
-  }, []);
+  // useEffect(() => {
+  //   (async () => {
+  //     const { status ,canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //     console.log('permission status',status)
+  //     setHasPermission(status === 'granted');
+  //     console.log('Can ask again:', canAskAgain);
+  //     if (status !== 'granted') {
+  //       Alert.alert(
+  //         'Permission Required',
+  //         'Permission to access media library is required for uploads.'
+  //       );
+  //     }
+  //   })();
+  // }, []);
+  
 
   const pickMedia = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permission Required', 'We need access to your media.');
+    // const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    // if (!permissionResult.granted) {
+    //   Alert.alert('Permission Required', 'We need access to your media.');
 
+    //   return;
+    // }
+    const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      if (!canAskAgain) {
+        // Permission denied and cannot be asked again (user selected "Don't ask again")
+        Alert.alert(
+          'Permission Required',
+          'Media access was denied and cannot be requested again. Please enable it manually in settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
+      } else {
+        // Permission denied but can ask again
+        Alert.alert(
+          'Permission Required',
+          'Please allow access to your media to select files.'
+        );
+      }
       return;
     }
 
