@@ -33,7 +33,7 @@ import { setUnreadMessagesData, setUnreadMessagesCount } from '../state/slices/h
 import { connectSocket, getSocket } from '../services/socket';
 import { updateActionStatus } from '../state/slices/authSlice.js';
 import { logError } from '../components/logError.js';
-
+import AppUpdateModal from '../components/AppUpdateModal';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -102,6 +102,7 @@ const GalleryScreen = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMaximized, setIsMaximized]= useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  //const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -113,6 +114,16 @@ const onRefresh = async () => {
   setRefreshing(false);
 };
 
+// useEffect(() => {
+//   const check = async () => {
+//     const updateRequired = true//await checkForUpdate('https://yourdomain.com/api/version');
+//     if (updateRequired) {
+//       setShowUpdateModal(true);
+//     }
+//   }
+
+//   check();
+// }, []);
   
   const fetchMediaData = async () => {
     setIsLoading(true);
@@ -283,6 +294,8 @@ const onRefresh = async () => {
           <Tab.Screen name="Videos" children={() => <VideosTab data={mediaData.videos} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh}/>} />
         </Tab.Navigator>
       )}
+
+<AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
 
       {previewItem && previewItem.object_url && (
         <Modal transparent={true} visible={modalVisible} onRequestClose={closeModal}>

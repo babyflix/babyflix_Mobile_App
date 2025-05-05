@@ -123,9 +123,9 @@ const LayoutContent = () => {
   }, [isAuthenticated]);
 
 
-  useEffect(() => {
-    checkForAppUpdate();
-  }, []);
+  // useEffect(() => {
+  //   checkForAppUpdate();
+  // }, []);
 
   // const fetchLatestVersionFromServer = async () => {
   //   try {
@@ -138,30 +138,30 @@ const LayoutContent = () => {
   //   }
   // };
 
-  const checkForAppUpdate = async () => {
-    const currentVersion = Constants.expoConfig.version; 
-    const latestVersion = "1.0.5"//await fetchLatestVersionFromServer();
+  // const checkForAppUpdate = async () => {
+  //   const currentVersion = Constants.expoConfig.version; 
+  //   const latestVersion = "1.0.5"//await fetchLatestVersionFromServer();
 
-    if (latestVersion && currentVersion !== latestVersion && !isUpdatePromptShown) {
-      setIsUpdatePromptShown(true); 
+  //   if (latestVersion && currentVersion !== latestVersion && !isUpdatePromptShown) {
+  //     setIsUpdatePromptShown(true); 
 
-      Alert.alert(
-        "Update Required",
-        "A new version is available. Please update the app.",
-        [
-          {
-            text: "Skip Now",
-            onPress: () => setIsUpdatePromptShown(false) 
-          },
-          {
-            text: "Update Now",
-            onPress: () => Linking.openURL("https://www.youtube.com/") 
-          }
-        ],
-        { cancelable: false }
-      );
-    }
-  };
+  //     Alert.alert(
+  //       "Update Required",
+  //       "A new version is available. Please update the app.",
+  //       [
+  //         {
+  //           text: "Skip Now",
+  //           onPress: () => setIsUpdatePromptShown(false) 
+  //         },
+  //         {
+  //           text: "Update Now",
+  //           onPress: () => Linking.openURL("https://www.youtube.com/") 
+  //         }
+  //       ],
+  //       { cancelable: false }
+  //     );
+  //   }
+  // };
 
   return (
     <>
