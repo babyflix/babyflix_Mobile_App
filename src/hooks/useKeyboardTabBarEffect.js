@@ -1,4 +1,3 @@
-// hooks/useKeyboardTabBarEffect.js
 import { useEffect } from 'react';
 import { Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';

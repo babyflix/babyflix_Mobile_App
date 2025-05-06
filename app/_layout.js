@@ -1,49 +1,3 @@
-// import { Stack } from 'expo-router';
-// import { Provider } from 'react-redux';
-// import { store } from '../src/state/store';
-// import { SafeAreaProvider } from 'react-native-safe-area-context';
-// import Snackbar from '../src/components/Snackbar';
-// import Loader from '../src/components/Loader';
-// import LiveStreamStatus from '../src/screens/LiveStreamStatus';
-
-// import { useFonts } from 'expo-font';
-// import {
-//   Poppins_400Regular,
-//   Poppins_500Medium,
-//   Poppins_600SemiBold,
-//   Poppins_700Bold,
-// } from '@expo-google-fonts/poppins';
-
-// import { Text } from 'react-native';
-
-// export default function RootLayout() {
-//   const [fontsLoaded] = useFonts({
-//     Poppins_400Regular,
-//     Poppins_500Medium,
-//     Poppins_600SemiBold,
-//     Poppins_700Bold,
-//   });
-
-//   if (!fontsLoaded) {
-//     return null; // Or use a loading screen
-//   }
-
-//   return (
-//     <Provider store={store}>
-//       <SafeAreaProvider>
-//         <Stack screenOptions={{ headerShown: false }} initialRouteName="splash">
-//           <Stack.Screen name="index" />
-//           <Stack.Screen name="splash" />
-//           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-//           <Stack.Screen name="(app)" options={{ headerShown: false }} />
-//         </Stack>
-//         <Snackbar />
-//         <Loader />
-//       </SafeAreaProvider>
-//     </Provider>
-//   );
-// }
-
 import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { Provider, useDispatch, useSelector } from 'react-redux';
@@ -121,47 +75,6 @@ const LayoutContent = () => {
     };
     if (isAuthenticated) requestPermissions();
   }, [isAuthenticated]);
-
-
-  // useEffect(() => {
-  //   checkForAppUpdate();
-  // }, []);
-
-  // const fetchLatestVersionFromServer = async () => {
-  //   try {
-  //     const response = await fetch('https://yourdomain.com/api/version'); // or Firebase method
-  //     const data = await response.json();
-  //     return data.latestVersion; // example: "1.0.2"
-  //   } catch (error) {
-  //     console.error("Failed to fetch version", error);
-  //     return null;
-  //   }
-  // };
-
-  // const checkForAppUpdate = async () => {
-  //   const currentVersion = Constants.expoConfig.version; 
-  //   const latestVersion = "1.0.5"//await fetchLatestVersionFromServer();
-
-  //   if (latestVersion && currentVersion !== latestVersion && !isUpdatePromptShown) {
-  //     setIsUpdatePromptShown(true); 
-
-  //     Alert.alert(
-  //       "Update Required",
-  //       "A new version is available. Please update the app.",
-  //       [
-  //         {
-  //           text: "Skip Now",
-  //           onPress: () => setIsUpdatePromptShown(false) 
-  //         },
-  //         {
-  //           text: "Update Now",
-  //           onPress: () => Linking.openURL("https://www.youtube.com/") 
-  //         }
-  //       ],
-  //       { cancelable: false }
-  //     );
-  //   }
-  // };
 
   return (
     <>

@@ -23,11 +23,10 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 const LiveStreamingScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
- // const [isMinimized, setIsMinimized] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isFullScreen, setIsFullScreen] = useState(false);  // <- starts NOT in full screen
-const [isMinimized, setIsMinimized] = useState(true);     // <- starts minimized
-const [isRotated, setIsRotated] = useState(false);         // <- rotation state
+  const [isFullScreen, setIsFullScreen] = useState(false);
+const [isMinimized, setIsMinimized] = useState(true);
+const [isRotated, setIsRotated] = useState(false);
 
 
   const videoRef = useRef(null);
@@ -35,93 +34,27 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
   const streamState = useSelector(state => state.stream);
 
   const streamingUrl = streamState.streamUrl || '';
-  console.log('streamingUrl',streamingUrl)
-  // useEffect(() => {
-  //   console.log('useEffect 3');
-  
-  //   const playVideo = async () => {
-  //     if (videoRef.current) {
-  //       try {
-  //         await videoRef.current.loadAsync({ uri: streamingUrl }, {}, false);
-  //         await videoRef.current.playAsync(); 
-  //       } catch (err) {
-  //         console.error('Video playback error:', err);
-  //       }
-  //     }
-  //   };
-
-  //   if (!streamingUrl) {
-  //     console.warn("Streaming URL is empty, skipping video load.");
-  //     return;
-  //   }
-  
-  //   playVideo();
-  
-  //   const id = setInterval(() => {
-  //     checkUrlStatus(streamingUrl, dispatch);
-  //   }, 3000);
-  
-  //   setIntervalId(id);
-  
-  //   return () => {
-  //     clearInterval(id);
-  //   };
-  // }, [streamState.streamState]);
-  
-  // const checkUrlStatus = async (url, dispatch) => {
-  //   if (streamState.streamState != 'live') {
-  //     return;
-  //   }
-  //   try {
-  //     const response = await fetch(url, {
-  //       method: 'GET',
-  //     });
-  //     console.log('response.ok 2',response.ok)
-  //     if (response.ok) {
-  //     } else {
-  //       if (streamState.streamState == 'live') {
-  //         updateLiveStreamState(url, false, 'stop', '');
-  //         setModalVisible(true);
-  //         clearInterval(intervalId);
-  //       } else {
-  //         updateLiveStreamState('', true, '', '');
-  //       }
-  //     }
-  //   } catch (error) {
-  //     updateLiveStreamState(url, false, '', '');
-  //     setModalVisible(true);
-
-  //   }
-  // };
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
       const isLandscape = window.width > window.height;
-      setIsFullScreen(isLandscape); // update full screen state based on orientation
+      setIsFullScreen(isLandscape); 
     });
   
     return () => {
-      subscription.remove(); // Clean up
+      subscription.remove();
     };
   }, []);
 
    useEffect(() => {
     console.log('useEffect 3')
-    console.log(streamState.streamState)
-      // if (videoRef.current) {
-      //   videoRef.current.loadAsync({ uri: streamingUrl }, {}, false);
-      //   videoRef.current.playAsync();
-      // }
 
       const playVideo = async () => {
         if (videoRef.current && streamState.streamState == 'live') {
-          console.log('videoRef:', videoRef.current);
           if (!streamingUrl || !streamingUrl.startsWith('http') || streamState.streamState !== 'live') {
-            console.log("Invalid stream URL or state, skipping load.");
             return;
           }
       
-          console.log("Trying to load video from", streamingUrl);
           try {
             await videoRef.current.loadAsync(
               { uri: streamingUrl },
@@ -129,9 +62,7 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
               false
             );
             await videoRef.current.playAsync();
-            console.log('Video loaded and playing...');
           } catch (err) {
-            console.error('Video playback error:', err);
             setModalVisible(true);
           }
         }
@@ -147,77 +78,14 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
   
       return () => clearInterval(id);
     }, [streamState.streamState]);
-  
-    // const checkUrlStatus = async (url, dispatch) => {
-    //   if (streamState.streamState != 'live') {
-    //     return;
-    //   }
-    //   // try {
-    //   //   const response = await fetch(url, {
-    //   //     method: 'GET',
-    //   //   });
-    //   //   console.log('response ok 2',response.ok)
-    //   //   if (response.ok) {
-    //   //   } else {
-    //       // if (streamState.streamState == 'live') {
-    //       //   updateLiveStreamState(url, false, 'stop', '');
-    //       //   setModalVisible(true);
-    //       //   clearInterval(intervalId);
-    //       // } else {
-    //       //   updateLiveStreamState('', true, '', '');
-    //       // }
-    //   //   }
-    //   // } catch (error) {
-    //   //   updateLiveStreamState(url, false, '', '');
-    //   //   setModalVisible(true);
-  
-    //   // }
-
-    //   const controller = new AbortController();
-    //   const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-    //   try {
-    //     const response = await fetch(url + '?nocache=' + Date.now(), {
-    //       method: 'GET',
-    //       headers: {
-    //         'Cache-Control': 'no-cache',
-    //         Pragma: 'no-cache',
-    //       },
-    //       signal: controller.signal,
-    //     });
-
-    //     clearTimeout(timeoutId);
-
-    //     const text = await response.text();
-    //     console.log("text",text)
-    //     console.log('response ok 2',response.ok)
-    //     if (!response.ok || !text.includes('#EXTM3U')) {
-    //       console.log('!text.includes(#EXTM3U)',!text.includes('#EXTM3U'))
-    //       if (streamState.streamState == 'live') {
-    //         updateLiveStreamState(url, false, 'stop', '');
-    //         setModalVisible(true);
-    //         clearInterval(intervalId);
-    //       } else {
-    //         updateLiveStreamState('', true, '', '');
-    //       }
-    //     }
-    //   } catch (err) {
-    //     console.log('Fetch failed or aborted', err);
-    //     updateLiveStreamState(url, false, 'stop', '');
-    //     setModalVisible(true);
-    //     clearInterval(intervalId);
-    //   }
-
-    // };
 
     const checkUrlStatus = async (url, dispatch) => {
       if (streamState.streamState !== 'live') {
-        console.log('Stream not live, skipping check.');
         return;
       }
     
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); 
+      const timeoutId = setTimeout(() => controller.abort(), 8000); 
     
       try {
         const response = await fetch(url + '?nocache=' + Date.now(), {
@@ -238,12 +106,10 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
         console.log('✅ text contains #EXTM3U:', text.includes('#EXTM3U'));
     
         if (!isLiveStream) {
-          console.log('❌ Stream is not live anymore.',streamState.streamState);
           if (streamState.streamState === 'live') {
             updateLiveStreamState('', false, 'stop', '');
             setModalVisible(true);
             if (intervalId) {
-              console.log('intervalId',intervalId)
               clearInterval(intervalId);
               setIntervalId(null);
             }
@@ -253,15 +119,12 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
         }
       } catch (err) {
         clearTimeout(timeoutId);
-        console.log('❌ Fetch failed or aborted', err.name);
     
         if (err.name === 'AbortError') {
-          console.log('⚠️ Fetch was aborted due to timeout.');
         }
     
         if (streamState.streamState === 'live') {
           updateLiveStreamState('', false, 'stop', '');
-         // setModalVisible(true);
           if (intervalId) {
             clearInterval(intervalId);
             setIntervalId(null);
@@ -333,10 +196,10 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
         resizeMode={ResizeMode.CONTAIN}
         isLooping={false}
         isMuted={isMuted}
-        onReadyForDisplay={() => {
-          console.log('✅ Video component is ready');
-          // Optionally: set a state like setVideoReady(true)
-        }}
+        // onReadyForDisplay={() => {
+        //   console.log('✅ Video component is ready');
+        //   // Optionally: set a state like setVideoReady(true)
+        // }}
       />
       <View style={styles.overlay}>
           <Text style={styles.liveLabel}>LIVE</Text>
@@ -402,22 +265,6 @@ const [isRotated, setIsRotated] = useState(false);         // <- rotation state
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  // rotated: {
-  //   transform: [{ rotate: '90deg' }],
-  //   width: screenHeight,
-  //   height: screenWidth,
-  //   alignSelf: 'center',
-  // },  
-  // rotated: {
-  //   transform: [{ rotate: '90deg' }],
-  //   width: screenHeight,
-  //   height: screenWidth,
-  //   position: 'absolute',
-  //   top: (screenHeight - screenWidth) / 2,
-  //   left: (screenWidth - screenHeight) / 400,
-  //   zIndex: 1000,
-  //   backgroundColor: 'black',
-  // },
   rotated: {
     width:  screenHeight-65,
     height: Math.min(screenWidth, screenHeight),    
@@ -489,9 +336,6 @@ const styles = StyleSheet.create({
     height: Math.min(screenWidth, screenHeight),
     borderRadius: 8,
     overflow: 'hidden',
-    //height:'100%', 
-    // maxWidth: screenWidth,
-    // maxHeight: screenHeight,
     backgroundColor: 'black',
     padding: 10,
   },  

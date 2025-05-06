@@ -1,127 +1,3 @@
-// // components/AppUpdateModal.js
-
-// import React, { useEffect, useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   Modal,
-//   StyleSheet,
-//   TouchableOpacity,
-//   ActivityIndicator,
-//   Platform,
-//   Linking
-// } from 'react-native';
-// import Constants from 'expo-constants';
-
-// const AppUpdateModal = ({ visible, onClose }) => {
-//   const [isLoading, setIsLoading] = useState(false);
-
-//   const openAppStore = () => {
-//     const androidUrl = "market://details?id=com.yourappid";
-//     const iosUrl = "https://apps.apple.com/app/idYOUR_APP_ID";
-
-//     const url = Platform.OS === 'ios' ? iosUrl : androidUrl;
-//     Linking.openURL(url).catch((err) =>
-//       console.error("Failed to open store", err)
-//     );
-//   };
-
-//   return (
-//     <Modal visible={visible} transparent animationType="fade">
-//       <View style={styles.overlay}>
-//         <View style={styles.modal}>
-//           <Text style={styles.title}>Update Required</Text>
-//           <Text style={styles.message}>
-//             A new version of the app is available. Please update to continue.
-//           </Text>
-
-//           {isLoading ? (
-//             <ActivityIndicator size="large" color="#007AFF" />
-//           ) : (
-//             <View style={styles.buttons}>
-//               <TouchableOpacity style={[styles.button, styles.skip]} onPress={onClose}>
-//                 <Text style={styles.buttonText}>Skip</Text>
-//               </TouchableOpacity>
-//               <TouchableOpacity
-//                 style={[styles.button, styles.update]}
-//                 onPress={() => {
-//                   setIsLoading(true);
-//                   openAppStore();
-//                   setTimeout(() => setIsLoading(false), 2000);
-//                 }}
-//               >
-//                 <Text style={styles.buttonText}>Update Now</Text>
-//               </TouchableOpacity>
-//             </View>
-//           )}
-//         </View>
-//       </View>
-//     </Modal>
-//   );
-// };
-
-// export const checkForUpdate = async (serverUrl) => {
-//   try {
-//     const response = await fetch(serverUrl);
-//     const data = await response.json();
-//     const latestVersion = data.latestVersion;
-//     const currentVersion = Constants.expoConfig.version;
-
-//     return latestVersion && latestVersion !== currentVersion;
-//   } catch (err) {
-//     console.error("Update check failed", err);
-//     return false;
-//   }
-// };
-
-// export default AppUpdateModal;
-
-// const styles = StyleSheet.create({
-//   overlay: {
-//     flex: 1,
-//     backgroundColor: 'rgba(0,0,0,0.4)',
-//     justifyContent: 'center',
-//     alignItems: 'center'
-//   },
-//   modal: {
-//     width: '85%',
-//     backgroundColor: '#fff',
-//     borderRadius: 20,
-//     padding: 20
-//   },
-//   title: {
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//     marginBottom: 10
-//   },
-//   message: {
-//     fontSize: 16,
-//     marginBottom: 20
-//   },
-//   buttons: {
-//     flexDirection: 'row',
-//     justifyContent: 'flex-end'
-//   },
-//   button: {
-//     paddingVertical: 10,
-//     paddingHorizontal: 20,
-//     borderRadius: 10,
-//     marginLeft: 10
-//   },
-//   skip: {
-//     backgroundColor: '#aaa'
-//   },
-//   update: {
-//     backgroundColor: '#007AFF'
-//   },
-//   buttonText: {
-//     color: '#fff',
-//     fontWeight: 'bold'
-//   }
-// });
-
-// components/AppUpdateModal.js
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -138,7 +14,7 @@ import Colors from '../constants/Colors';
 
 const AppUpdateModal = ({ serverUrl }) => {
   const [visible, setVisible] = useState(false);
-  const [storeLinks, setStoreLinks] = useState();
+  const [storeLinks, setStoreLinks] = useState({android:'',ios:''});
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -150,7 +26,7 @@ const AppUpdateModal = ({ serverUrl }) => {
         const currentVersion = Constants.expoConfig.version;
 
         if (latestVersion && latestVersion !== currentVersion) {
-          setStoreLinks(data.storeLinks);
+          setStoreLinks({android:data.androidUrl,ios:data.iosUrl});
           setVisible(true);
         }
       } catch (err) {
@@ -215,8 +91,6 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
       backgroundColor: Colors.background,
-    //   borderTopLeftRadius: 24,
-    //   borderTopRightRadius: 24,
       borderRadius:24,
       padding: 24,
       ...Platform.select({

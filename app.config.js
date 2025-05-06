@@ -13,7 +13,7 @@ export default ({ config }) => ({
     }
   },
   orientation: "portrait",
-  icon: "./assets/icon5.png",
+  icon: "./assets/icon.png",
   splash: {
     image: "./assets/images/adaptive-icon2.png",
     resizeMode: "contain",
@@ -64,7 +64,4 @@ export default ({ config }) => ({
     "expo-build-properties",
     "expo-font"
   ],
-  // experimental: {
-  //   newArchitecture: false
-  // }
 });

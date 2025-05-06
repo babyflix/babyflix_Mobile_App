@@ -53,7 +53,6 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       {showProfile && (
         <View style={styles.profileContainer}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {/* Message Icon with Badge */}
             <TouchableOpacity style={styles.messageButton} onPress={() => router.push('/messages')}>
               <Ionicons name="chatbubble-ellipses-outline" size={28} color={Colors.textPrimary} />
               <View style={styles.messageBadge}>
@@ -61,8 +60,6 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
               </View>
             </TouchableOpacity>
 
-
-            {/* Profile Icon */}
             <TouchableOpacity onPress={toggleDropdownHandler} style={styles.profileButton}>
               <Ionicons name="person-circle" size={30} color={Colors.textPrimary} />
             </TouchableOpacity>
@@ -115,7 +112,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    //fontWeight: '600',
     fontFamily:'Poppins_700Bold',
     color: Colors.textPrimary,
     paddingLeft:45
@@ -128,39 +124,6 @@ const styles = StyleSheet.create({
   profileButton: {
     padding: 0,
   },
-  // dropdown: {
-  //   position: 'absolute',
-  //   top: 40,
-  //   right: 0,
-  //   backgroundColor: Colors.white,
-  //   borderRadius: 8,
-  //   padding: 10,
-  //   width: 150,
-  //   marginTop: 5,
-  //   zIndex: 10,
-  //   elevation: 5,
-  //   shadowColor: Colors.black,
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 0.25,
-  //   shadowRadius: 4,
-  // },
-  // dropdownItem: {
-  //   padding: 10,
-  //   paddingLeft: 0,
-  //   borderBottomWidth: 1,
-  //   borderBottomColor: Colors.lightGray,
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   fontFamily:'Poppins_400Regular',
-  // },
-  // icon: {
-  //   marginRight: 10,
-  // },
-  // logoutText: {
-  //   color: Colors.error,
-  //   fontFamily:'Poppins_400Regular',
-  //   marginTop:4
-  // },
   dropdown: {
     position: 'absolute',
     top: 40,

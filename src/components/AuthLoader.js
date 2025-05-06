@@ -1,4 +1,3 @@
-// src/components/AuthLoader.js
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch } from 'react-redux';
@@ -32,7 +31,7 @@ const AuthLoader = ({ children }) => {
     checkAuth();
   }, []);
 
-  if (checkingAuth) return null; // or splash screen
+  if (checkingAuth) return null;
 
   return children;
 };

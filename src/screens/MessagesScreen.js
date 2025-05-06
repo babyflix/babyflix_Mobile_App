@@ -14,7 +14,7 @@ import { connectSocket, getSocket } from '../services/socket';
 import dayjs from 'dayjs';
 import calendar from 'dayjs/plugin/calendar';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useKeyboardTabBarEffect from '../hooks/useKeyboardTabBarEffect';
 import { logError } from '../components/logError';
 
@@ -98,6 +98,7 @@ const MessagesScreen = () => {
   const unreadMessagesCount = useSelector((state) => state.header.unreadMessagesCount);
   const unreadMessages = useSelector((state) => state.header.unreadMessages);
   const user = useSelector((state) => state.auth);
+  const insets = useSafeAreaInsets();
   
   useFocusEffect(
     useCallback(() => {
@@ -152,9 +153,9 @@ const MessagesScreen = () => {
     const socket = connectSocket(userUuid);
 
     if (socket.connected) {
-      //console.log('✅ Socket is connected');
+      //console.log('Socket is connected');
     } else {
-      //console.log('❌ Socket is NOT connected');
+      //console.log('Socket is NOT connected');
     }
 
     socket.emit('register', userUuid);
@@ -341,14 +342,12 @@ const MessagesScreen = () => {
 
 
   const handleMessagePress = ({ Uuid }) => {
-    console.log('helloo')
     setSelectedMessageId(Uuid);
 
     const selectedMessages = chatHistories.filter(msg =>
       msg.sender_uuid === Uuid || msg.recipient_uuid === Uuid
     );
     const selectChatHistory = chatMembers.filter(msg => msg.uuid === Uuid);
-    console.log('selectedMessages',selectedMessages)
     setMessages(selectedMessages);
     setChatHistory(selectChatHistory);
 
@@ -466,7 +465,6 @@ const MessagesScreen = () => {
 
 
   const renderMessage = ({ item }) => {
-    console.log('item',item)
     const senderInitials = item.name ? item.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
 
     const isOnline = Array.isArray(onlineUsers)
@@ -515,27 +513,19 @@ const MessagesScreen = () => {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${hours}:${minutes}`;
   };
- 
-  console.log(selectedMessageId,selectedChat)
+
   if (selectedMessageId && selectedChat) {
-    console.log('hello 2')
-    console.log('timeline',timeline)
-    console.log('scrollViewRef',scrollViewRef)
-    console.log('selectedMessage',selectedMessage)
-    console.log('isReceiverTyping',isReceiverTyping)
     const senderInitials = selectedMessage.name ? selectedMessage?.name?.split(' ')[0]?.substring(0, 2)?.toUpperCase() : '';
-    console.log('senderInitials',senderInitials)
     const partnerOnline = Array.isArray(onlineUsers)
       ? onlineUsers.includes(selectedMessageId)
       : !!onlineUsers[selectedMessageId];
-      console.log('partnerOnline',partnerOnline)
     return (
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
       {/* <SafeAreaView edges={['top']} style={{flex: 1, backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 10 : 10,}}> */}
-      <View style={styles.container}>
+      <View style={[styles.container,{paddingTop:insets.top}]}>
         <View style={[styles.headerRow]}>
           <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
             <Text style={styles.avatarText}>{senderInitials}</Text>
@@ -850,7 +840,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 30 : 10,
+    paddingTop: Platform.OS === 'ios' ? 20 : 15,
     paddingBottom:15,
   },
   statusDot: {

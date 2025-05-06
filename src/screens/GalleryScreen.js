@@ -102,7 +102,6 @@ const GalleryScreen = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMaximized, setIsMaximized]= useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  //const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -113,17 +112,6 @@ const onRefresh = async () => {
   await fetchMediaData();
   setRefreshing(false);
 };
-
-// useEffect(() => {
-//   const check = async () => {
-//     const updateRequired = true//await checkForUpdate('https://yourdomain.com/api/version');
-//     if (updateRequired) {
-//       setShowUpdateModal(true);
-//     }
-//   }
-
-//   check();
-// }, []);
   
   const fetchMediaData = async () => {
     setIsLoading(true);
