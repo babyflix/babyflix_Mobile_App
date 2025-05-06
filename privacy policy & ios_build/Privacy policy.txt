@@ -1,0 +1,77 @@
+Personal Information You Provide to Us
+* We collect “Personal Information” that you or the clinic submit to us voluntarily through our Web Site.
+* When you or a clinic register with BabyFlix, you provide certain Personal Information, including your name, email address, mobile phone and password.
+* When you or a clinic create a profile on the Web Site after registering, you may provide material that may contain Personal Information, such as a personal photo, email address, or a “headline.”
+* When you or a clinic post any material (such as User Content) on the Web Site, you may be providing Personal Information.
+* When you order products or services on BabyFlix, you provide Personal Information necessary to complete the transaction, including your name, credit card information, shipping information and billing information.
+* When you contact us to give feedback or ask a question using the forms on the Web Site, you provide your name, email address and your comment, question, or feedback.
+* When you participate in our surveys, we may collect additional Personal Information.
+* When you contact us by sending us an email, we will collect your email address, any Personal Information contained in the email, and any Personal Information attached to the email.
+ 
+Web Site Use Information
+When you access BabyFlix, we collect non-personally-identifiable information including your browser type, operating system, domain names, and IP Address. We use different types of technologies to collect this information, including single-pixel GIFs. In addition, we store certain information from your browser using “cookies.” A cookie is a piece of data stored on the user’s computer tied to information about the user. We use session ID cookies to confirm that users are logged in. These cookies terminate when the user closes the browser. Under other circumstances, including if you select the “Remember Me” option upon login, we use a persistent cookie, for example, to store your login ID (but not your password) to allow you to automatically login when you come back to BabyFlix. You can set your browser to refuse cookies; however, if you do so, some or all of the Web Site may not function properly or at all.
+
+User Content and Other Information
+When you use BabyFlix, you may form relationships, send messages, perform searches and queries, and transmit Personal Information through various channels. We collect Personal Information related to these services so that we can provide you the service and offer personalized features. In most cases, we retain the Personal Information so that, for instance, you can view a list of your friends or see the books you are currently contributing to. When you update your Personal Information, we sometimes keep a backup copy of the prior version for a reasonable period of time to enable reversion to the prior version of that information.
+ 
+You post Personal Information in User Content on the Web Site at your own risk. Although we allow you to set privacy options that limit access to your content, please be aware that no security measures are perfect or impenetrable. We cannot control the actions of other users with whom you may choose to share your content and Personal Information. Therefore, we cannot and do not guarantee that User Content you post on the Web Site will not be viewed by unauthorized persons. We are not responsible for circumvention of any privacy settings or security measures contained on the Web Site. You understand and acknowledge that, even after removal, copies of User Content may remain viewable in cached and archived pages or if other users have copied or stored your User Content.
+If you choose to use our invitation service to tell friends about our Web Site or invite them to collaborate on a book, we will ask you for your friend’s email address. Your friend will automatically be sent a one-time email inviting him or her to visit the Web Site. BabyFlix stores information gathered during this process to register a friend connection if your invitation is accepted, and to track the success of our referral program. Your friend may contact us at support@babyflix.net to request that we remove your friend’s information from our database.
+ 
+By using BabyFlix, you are consenting to have your personal data transferred to and processed in the United States.
+ 
+Use of Information Obtained by BabyFlix
+In general, information you submit to us is used either to respond to requests that you make or to aid us in serving you better, including to fix technical problems, provide administrative services, and monitor traffic, the number of visitors, and the effectiveness of programs. We may use aggregated user data to market the Web Site to others. We may provide these services ourselves or share the information with partners who will provide the services for us.
+ 
+We may use your Personal Information to provide you with newsletters and surveys and to notify you of important changes to the Web Site, new services, and special offers and in medical research. If you do not want to receive such email notices, you may login to your account at the Web Site and opt out of receiving such emails or medical research by sending an email to support@babyflix.net. Opting out may prevent you from receiving email messages regarding updates, improvements, or special offers or participating in medical research. If we have provided any third party with your information, you will have to contact the third-party directly with any opt-out request.
+ 
+Profile information is used by BabyFlix primarily to be presented back to and edited by you when you access BabyFlix and to be presented to others you permit to view that information.
+ 
+User Content in your account will be displayed to users with whom you have a relationship through your profile, search results and various other pages on the Web Site. In addition, the title, page count, thumbnail photo, description, author and list of contributors of your content will be visible to all users you shared with.
+ 
+Links
+BabyFlix may contain links to other web sites. We are of course not responsible for the privacy practices of other web sites. We encourage our users to be aware when they leave our Web Site to read the privacy statements of each and every web site that collects personally identifiable information. This Privacy Policy applies solely to information collected via BabyFlix.
+ 
+Changing or Removing Information
+Access and control over most Personal Information on BabyFlix is readily available through your account settings. BabyFlix users may modify or remove their information through the Gallery page or by contacting customer support @ support@babyflix.net. Information will be updated immediately.
+ 
+If you make use of the communication features of the service to share information with other individuals on BabyFlix (e.g., sending a message), you generally cannot remove or edit such communications. BabyFlix may delete your information from its system, at its sole discretion, at any time.
+ 
+Security
+BabyFlix takes precautions to protect our users’ Personal Information; however, no precautions are 100% effective. As a result, BabyFlix does not guarantee that Personal Information you provide to us will remain secure. Your account information is located on a secured server behind a firewall. Because email and instant messaging are not recognized as secure communications, we request that you not send private information to us by email or instant messaging services.
+ 
+Terms of Use, Notice and Revisions
+If you choose to visit BabyFlix, your visit and any dispute over privacy is subject to the then-current Privacy Policy and our Terms of Use, including limitations and damages, arbitration of, and application of law of the state of California. We reserve the right to change our Privacy Policy at any time by posting any changes on the Web Site. All changes will take effect immediately upon their posting on the Web Site. If we make changes, we will indicate at the top of the page the policy’s effective date. We therefore encourage you to refer to this policy on an ongoing basis so that you understand our current privacy policy. Your use of the Web Site after any changes to the Privacy Policy constitutes your acceptance of the new Privacy Policy. Unless stated otherwise, our current Privacy Policy applies to all information that we have about you and your account.
+ 
+Contacting BabyFlix
+If you have any questions about this Privacy Policy, please contact us at support@babyflix.net.
+ 
+1. California Consumer Privacy Act (CCPA):
+If you are a resident of California, you have specific rights regarding your personal information, as granted by the California Consumer Privacy Act (CCPA). We acknowledge your right to:
+(a) Know what personal data is being collected about you;
+(b) Know whether your personal data is sold or disclosed and to whom;
+(c) Say no to the sale of personal data;
+(d) Access your personal data;
+(e) Request the deletion of your personal data;
+(f) Not be discriminated against for exercising your privacy rights.
+For more information or to exercise your rights under the CCPA, please visit our Privacy Notice or contact us at [insert contact information].
+2. Virginia Consumer Data Protection Act (VCDPA):
+If you are a resident of Virginia, the Virginia Consumer Data Protection Act (VCDPA) provides you with specific rights regarding your personal data. These rights include:
+(a) The right to access your personal data;
+(b) The right to correct inaccuracies in your personal data;
+(c) The right to delete your personal data;
+(d) The right to obtain a copy of your personal data in a portable format;
+(e) The right to opt-out of the processing of your personal data for targeted advertising, sale, or profiling purposes.
+For more information or to exercise your rights under the VCDPA, please visit our Privacy Notice or contact us at [insert contact information].
+3. Colorado Privacy Act (CPA):
+If you are a resident of Colorado, the Colorado Privacy Act (CPA) provides you with specific rights regarding your personal data. These rights include:
+(a) The right to access your personal data;
+(b) The right to correct inaccuracies in your personal data;
+(c) The right to delete your personal data;
+(d) The right to obtain a copy of your personal data in a portable and usable format;
+(e) The right to opt-out of the processing of your personal data for targeted advertising, sale, or profiling that produces legal or similarly significant effects.
+For more information or to exercise your rights under the CPA, please visit our Privacy Notice or contact us at [insert contact information].
+4. Contact Information and Requests:
+To exercise any of the rights mentioned above, please contact us via support@babyflix.net. We will respond to your request in accordance with the applicable data protection laws. Please note that we may require you to provide additional information to confirm your identity before processing your request.
+5. Updates to this Section:
+We reserve the right to modify this section at any time to reflect changes in the applicable laws or our data practices. We will notify you of any significant changes by posting a notice on our website or by other appropriate means.
+By using our services, you acknowledge that you have read and understood this Compliance with Data Protection Laws section, and you agree to be bound by its terms.

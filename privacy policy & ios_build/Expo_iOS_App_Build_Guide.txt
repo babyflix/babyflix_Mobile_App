@@ -1,0 +1,95 @@
+**Expo iOS App: Build and Install Guide on iPhone (via TestFlight)**
+
+
+* Step 1: Prepare the Expo App for iOS Build
+
+1. Make sure your Expo project has a valid `app.json` or `app.config.js`.
+2. Inside it, configure the iOS section:
+
+json
+{
+  "expo": {
+    "name": "YourAppName",
+    "slug": "your-app",
+    "ios": {
+      "bundleIdentifier": "com.yourname.yourapp"
+    }
+  }
+}
+
+
+* Step 2: Build the iOS App using EAS
+
+1. Install EAS CLI:
+
+- bash
+  npm install -g eas-cli
+
+2. Log in to your Expo account:
+
+- bash
+  eas login
+
+3. Configure EAS for iOS:
+
+- bash
+  eas build:configure
+
+4. Start the iOS build:
+
+- bash
+  eas build --platform ios
+
+- You'll be asked to log in to your Apple Developer account.
+- EAS will manage certificates and provisioning profiles.
+- After the build finishes, you will get a `.ipa` file download link.
+
+
+* Step 3: Upload App to App Store Connect via Transporter
+
+1. Create an App in App Store Connect:
+
+- Visit: https://appstoreconnect.apple.com/
+- Go to "My Apps" > click "+" > select "New App"
+- Fill in the following:
+  - "Name": Your app name
+  - "Bundle ID": Must match what you used in `app.json`
+  - "SKU": Unique ID (e.g. `yourapp2025`)
+  - Create the app
+
+2. Use Transporter App:
+
+- Download "Transporter" from the Mac App Store.
+- Open it and log in with your Apple Developer account.
+- Drag and drop the `.ipa` file into Transporter.
+- Click "Deliver" to upload.
+
+
+Step 4: Enable TestFlight Testing
+
+1. In "App Store Connect", go to your app.
+2. Navigate to the "TestFlight" tab.
+3. You’ll see the uploaded build. Click it and start internal testing.
+
+4. Add Yourself as a Tester:
+
+- Under "Internal Testing", click "Add Tester".
+- Add your Apple ID.
+
+* Step 5: Install the App via TestFlight on iPhone
+
+1. On your iPhone, download "TestFlight" from the App Store.
+2. Open TestFlight – your app should appear.
+3. Tap "Install" to get the app on your iPhone.
+
+---
+
+* Notes:
+
+- Requires an active "Apple Developer account ($99/year)".
+- Transporter is used only for app upload, not build.
+- TestFlight allows testing before public App Store release.
+
+---
+
+"End of Guide"

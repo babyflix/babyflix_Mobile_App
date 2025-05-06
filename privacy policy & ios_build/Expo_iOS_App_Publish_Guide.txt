@@ -1,0 +1,80 @@
+
+Expo iOS App: Build, Install, and Publish Guide on iPhone (via TestFlight & App Store)
+----------------------------------------------------------------------------------------
+
+Step 1: Prepare the Expo App for iOS Build
+------------------------------------------
+1. Make sure your Expo project has a valid `app.json` or `app.config.js`.
+2. Inside it, configure the iOS section:
+
+{
+  "expo": {
+    "name": "YourAppName",
+    "slug": "your-app",
+    "ios": {
+      "bundleIdentifier": "com.yourname.yourapp"
+    }
+  }
+}
+
+3. Ensure the app works well by testing it locally:
+    npx expo start
+
+Step 2: Build the iOS App using EAS
+-----------------------------------
+1. Install EAS CLI:
+    npm install -g eas-cli
+
+2. Log in to your Expo account:
+    eas login
+
+3. Configure EAS for iOS:
+    eas build:configure
+
+4. Start the iOS build:
+    eas build --platform ios
+
+- You'll be asked to log in to your Apple Developer account.
+- EAS will manage certificates and provisioning profiles.
+- After the build finishes, you will get a `.ipa` file download link.
+
+Step 3: Upload App to App Store Connect via Transporter
+--------------------------------------------------------
+1. Create an App in App Store Connect:
+    - Visit: https://appstoreconnect.apple.com/
+    - Go to "My Apps" > click "+" > select "New App"
+    - Fill in: Name, Bundle ID, SKU, and create the app.
+
+2. Use Transporter App:
+    - Download from Mac App Store.
+    - Log in with your Apple Developer account.
+    - Drag the .ipa file and click Deliver.
+
+Step 4: Enable TestFlight Testing
+---------------------------------
+1. In App Store Connect, go to your app > TestFlight tab.
+2. Click the uploaded build and start internal testing.
+3. Add yourself as a tester under Internal Testing.
+
+Step 5: Install the App via TestFlight on iPhone
+------------------------------------------------
+1. Download TestFlight from the App Store on iPhone.
+2. Open TestFlight and install the app.
+
+Step 6: Publish the App to the App Store
+----------------------------------------
+1. Go to App Store tab > Prepare for Submission.
+2. Fill in app info, screenshots, description, etc.
+3. Select the uploaded build and fill review info.
+4. Submit for Review.
+
+Apple will review and publish your app once approved.
+
+Notes:
+------
+- Requires Apple Developer account ($99/year).
+- Transporter is only for upload.
+- TestFlight helps test before public release.
+- Review may take 1–3 business days.
+
+End of Guide
