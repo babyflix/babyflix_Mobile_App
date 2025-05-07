@@ -20,45 +20,9 @@ import {
 } from '@expo-google-fonts/poppins';
 
 import NetInfo from '@react-native-community/netinfo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setCredentials, logout } from './src/state/slices/authSlice';
 import * as ImagePicker from 'expo-image-picker';
 import { setSnackbar, setLoading } from './src/state/slices/uiSlice';
-
-const AuthLoader = ({ children }) => {
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const userDataStr = await AsyncStorage.getItem('userData');
-        const userData = userDataStr ? JSON.parse(userDataStr) : null;
-
-        if (token && userData) {
-          dispatch(setCredentials(userData));
-        } else {
-          await AsyncStorage.removeItem('token');
-          await AsyncStorage.removeItem('userData');
-          dispatch(logout());
-        }
-      } catch (error) {
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('userData');
-        dispatch(logout());
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (checkingAuth) return null; 
-
-  return children;
-};
+import AuthLoader from './src/components/AuthLoader';
 
 const AppContent = () => {
   const { loading } = useSelector((state) => state.ui);

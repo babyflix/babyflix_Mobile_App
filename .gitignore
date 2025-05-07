@@ -36,4 +36,4 @@ yarn-error.*
 /android
 /ios
 
-#/privacy policy & ios_build
+/privacy policy & ios_build
