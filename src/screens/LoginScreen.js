@@ -114,21 +114,11 @@ const LoginScreen = () => {
         setSnackbarMessage(res.data.error || 'Login failed');
         setSnackbarType('error');
         setSnackbarVisible(true);
-         await logError({
-              error: res.data.error,
-              data: res.data,
-              details: "Error in login API call on LoginScreen"
-            });
       }
     } catch (error) {
       setSnackbarMessage(error.res?.data?.error || 'Login failed. Please try again.');
       setSnackbarType('error');
       setSnackbarVisible(true);
-      await logError({
-        error: error,
-        data: error.res,
-        details: "Error in login API call on LoginScreen"
-      });
     } finally {
       setIsLoading(false);
     }

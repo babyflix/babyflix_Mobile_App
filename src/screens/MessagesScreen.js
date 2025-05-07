@@ -56,11 +56,6 @@ const markMessageRead = async (message_uuid) => {
     });
   } catch (err) {
     console.warn('Error updating status:', err.response?.data || err.message);
-     await logError({
-            error: err,
-            data: err.response?.data || err.message,
-            details: "Error in update-message-status API call on MessagesScreen"
-          });
   }
 };
 
@@ -362,11 +357,6 @@ const MessagesScreen = () => {
         const response = await axios.put(`${EXPO_PUBLIC_API_URL}/api/chats/update-message-status`, payload);
       } catch (error) {
         console.error(`Error updating message ${message_uuid}:`, error.response?.data || error.message);
-        await logError({
-          error: error,
-          data: `Error updating message ${message_uuid}:${error.response.data || error.message}`,
-          details: "Error in update-message-status API call on MessagesScreen"
-        });
       }
     };
 
@@ -423,11 +413,6 @@ const MessagesScreen = () => {
       setCount((prevCount) => prevCount + 1);
     } catch (error) {
       console.error('Error sending message:', error.response ? error.response.data : error.message);
-      await logError({
-        error: error,
-        data: error.response ? error.response.data : error.message,
-        details: "Error in send-message API call on MessagesScreen"
-      });
     } finally {
       setLoading(false);
     }

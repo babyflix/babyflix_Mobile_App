@@ -44,7 +44,7 @@ import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
-import { setCredentials, logout } from '../store/authSlice'; // update path if different
+import { setCredentials, logout } from '../state/slices/authSlice'; // update path if different
 import { EXPO_PUBLIC_API_URL } from '@env';
 
 const AuthLoader = ({ children }) => {

@@ -198,16 +198,11 @@ const onRefresh = async () => {
     const fetchUnreadChats = async () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-unread-chat-members`);
-  
+        console.log('response',response.data)
         dispatch(setUnreadMessagesData(response.data));
         dispatch(setUnreadMessagesCount(response.data.unread_messages?.[0]?.unread_count || 0));
       } catch (error) {
         console.error('Error fetching unread chats:', error);
-        await logError({
-          error: error,
-          data: error.response,
-          details: "Error in get-unread-chat-members API call on GalleryScreen"
-        });
       }
     };
   
