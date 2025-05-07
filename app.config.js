@@ -8,6 +8,9 @@ export default ({ config }) => ({
   extra: {
     API_URL: process.env.API_URL,
     ENV: process.env.ENV,
+    eas: {
+      projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
+    }
   },
   orientation: "portrait",
   icon: "./assets/BabyFlixIcon.png",
