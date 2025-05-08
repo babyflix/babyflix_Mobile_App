@@ -82,7 +82,7 @@ const LoginScreen = () => {
       const timezone = await AsyncStorage.getItem('timezone');
 
       const res = await axios.post(
-        `${EXPO_PUBLIC_API_URL}/api/auth/login`,
+        `${EXPO_PUBLIC_API_URL}/api/auth/applogin`,
         {
           email,
           password,

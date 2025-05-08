@@ -13,7 +13,7 @@ export default ({ config }) => ({
     }
   },
   orientation: "portrait",
-  icon: "./assets/BabyFlixIcon.png",
+  icon: "./assets/icon2.png",
   splash: {
     image: "./assets/images/adaptive-icon2.png",
     resizeMode: "contain",
