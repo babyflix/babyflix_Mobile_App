@@ -12,6 +12,9 @@ export default ({ config }) => ({
       projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
     }
   },
+  updates: {
+  fallbackToCacheTimeout: 0
+  },
   orientation: "portrait",
   icon: "./assets/icon.png",
   splash: {
@@ -24,11 +27,12 @@ export default ({ config }) => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.babyflix.app",
+    buildNumber: "1",
     icon: "./assets/icon.png",
     infoPlist: {
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: true,
-        "NSAllowsArbitraryLoadsInWebContent": true
+        NSAllowsArbitraryLoadsInWebContent: true
       },
       UISupportedInterfaceOrientations: [
         "UIInterfaceOrientationPortrait",
@@ -39,6 +43,7 @@ export default ({ config }) => ({
     }
   },
   android: {
+    versionCode: 1,
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon2.png",
       backgroundColor: "#ffffff"
@@ -53,7 +58,6 @@ export default ({ config }) => ({
     permissions: [
       "android.permission.READ_MEDIA_IMAGES",
       "android.permission.READ_MEDIA_VIDEO",
-      "android.permission.CAMERA",
       "android.permission.READ_EXTERNAL_STORAGE", 
       "android.permission.WRITE_EXTERNAL_STORAGE"
     ] 
