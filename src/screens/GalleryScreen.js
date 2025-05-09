@@ -208,7 +208,7 @@ const onRefresh = async () => {
   
     fetchUnreadChats();
 
-    const intervalId = setInterval(fetchUnreadChats, 3000); 
+    const intervalId = setInterval(fetchUnreadChats, 5000); 
   
     return () => clearInterval(intervalId);
   }, []);  

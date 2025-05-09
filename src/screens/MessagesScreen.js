@@ -527,7 +527,7 @@ const MessagesScreen = () => {
               ]}
             >
               {isReceiverTyping ? 'Typing…'
-                : partnerOnline ? 'Online' : 'Offline'}
+                : partnerOnline ? 'Online' : ''}
             </Text>
           </View>
 

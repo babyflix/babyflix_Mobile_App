@@ -13,7 +13,7 @@ export default ({ config }) => ({
     }
   },
   orientation: "portrait",
-  icon: "./assets/icon2.png",
+  icon: "./assets/icon.png",
   splash: {
     image: "./assets/images/adaptive-icon2.png",
     resizeMode: "contain",
@@ -24,6 +24,7 @@ export default ({ config }) => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.babyflix.app",
+    icon: "./assets/icon.png",
     infoPlist: {
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: true,
@@ -41,6 +42,11 @@ export default ({ config }) => ({
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon2.png",
       backgroundColor: "#ffffff"
+    },
+    icon: "./assets/icon2.png", 
+    adaptiveIcon: {
+      foregroundImage: "./assets/icon-foreground.png", 
+      backgroundColor: "#FF6996" 
     },
     package: "com.babyflix.app",
     jsEngine: "hermes",
