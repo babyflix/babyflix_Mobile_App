@@ -27,7 +27,6 @@ export default ({ config }) => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.babyflix.app",
-    buildNumber: "1",
     icon: "./assets/icon.png",
     infoPlist: {
       NSAppTransportSecurity: {
@@ -39,11 +38,10 @@ export default ({ config }) => ({
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight"
       ],
-      "NSPhotoLibraryUsageDescription": "This app requires access to your photo library.",
+      NSPhotoLibraryUsageDescription: "This app requires access to your photo library.",
     }
   },
   android: {
-    versionCode: 1,
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon2.png",
       backgroundColor: "#ffffff"
