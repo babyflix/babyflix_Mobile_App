@@ -24,7 +24,6 @@ import * as Linking from 'expo-linking';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import { updateActionStatus } from '../state/slices/authSlice';
 import { logError } from '../components/logError';
-import * as Sentry from '@sentry/react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const UPLOAD_API_URL = `${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`;
@@ -205,7 +204,6 @@ const UploadScreen = () => {
   const handleDeleteMedia = () => {
     setMedia(null);
     setShowDeleteModal(false);
-    Sentry.captureException(new Error('Test error from Jayesh’s app!'));
   };
 
 
