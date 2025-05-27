@@ -28,7 +28,7 @@ export default ({ config }) => ({
   assetBundlePatterns: ["**/*"],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.babyflix.app",
+    bundleIdentifier: "com.babyflix.mobile.app",
     icon: "./assets/icon.png",
     infoPlist: {
       NSAppTransportSecurity: {
