@@ -628,7 +628,7 @@ const MessagesScreen = () => {
   } else {
 
     return (
-      <View style={styles.container}>
+      <View style={[styles.container,{paddingTop: insets.top}]}>
         <Header title="Messages" />
         <FlatList
           data={chatMembers}

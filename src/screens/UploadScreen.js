@@ -24,6 +24,8 @@ import * as Linking from 'expo-linking';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import { updateActionStatus } from '../state/slices/authSlice';
 import { logError } from '../components/logError';
+import * as Sentry from '@sentry/react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const UPLOAD_API_URL = `${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`;
 const CHUNK_SIZE = 2 * 1024 * 1024;
@@ -60,6 +62,7 @@ const UploadScreen = () => {
   const user = useSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useDispatch();  
+  const insets = useSafeAreaInsets();
 
   const pickMedia = async () => {
 
@@ -202,11 +205,12 @@ const UploadScreen = () => {
   const handleDeleteMedia = () => {
     setMedia(null);
     setShowDeleteModal(false);
+    Sentry.captureException(new Error('Test error from Jayesh’s app!'));
   };
 
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65}]}>
+    <View style={[GlobalStyles.container,{marginBottom:65,paddingTop: insets.top}]}>
       <Header title="Upload" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', textAlign: 'center' }}>

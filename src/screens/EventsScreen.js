@@ -27,6 +27,7 @@ import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
 import * as Animatable from 'react-native-animatable';
 import { logError } from '../components/logError';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -176,6 +177,7 @@ const EventsScreen = () => {
 
 
   const user = useSelector((state) => state.auth);
+  const insets = useSafeAreaInsets();
 
   const fetchData = async (page = 0, isLoadMore = false) => {
     setIsLoading(true);
@@ -367,7 +369,7 @@ const EventsScreen = () => {
 
 
   return (
-    <View style={GlobalStyles.container}>
+    <View style={[GlobalStyles.container,{paddingTop: insets.top}]}>
       <Header title="Events" />
 
       {isLoading ? (

@@ -26,6 +26,7 @@ import Snackbar from '../components/Snackbar';
 import { logError } from '../components/logError';
 import CustomDropdown from '../components/CustomDropdown';
 import { closeDropdown } from '../state/slices/headerSlice';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ProfileSettingsScreen = () => {
   const dispatch = useDispatch();
@@ -66,6 +67,7 @@ const ProfileSettingsScreen = () => {
   const modalContentHeight = showAdditionalInfo ? '95%' : '85%';
 
   const user = useSelector((state) => state.auth);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -380,7 +382,7 @@ const ProfileSettingsScreen = () => {
   }
 
   return (
-    <View style={GlobalStyles.container}>
+    <View style={[GlobalStyles.container,{paddingTop: insets.top}]}>
       <Header title="Profile Settings" showMenu={false} />
       <ScrollView style={[GlobalStyles.container, { padding: 10,marginBottom:65 }]}>
         <View style={styles.profileSection}>

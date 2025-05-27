@@ -19,6 +19,7 @@ import { router, useFocusEffect } from 'expo-router';
 import moment from 'moment';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const LiveStreamingScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -32,6 +33,7 @@ const [isRotated, setIsRotated] = useState(false);
   const videoRef = useRef(null);
   const dispatch = useDispatch();
   const streamState = useSelector(state => state.stream);
+  const insets = useSafeAreaInsets();
 
   const streamingUrl = streamState.streamUrl || '';
 
@@ -174,7 +176,7 @@ const [isRotated, setIsRotated] = useState(false);
   }  
 
   return (
-    <View style={GlobalStyles.container}>
+    <View style={[GlobalStyles.container,{paddingTop: insets.top}]}>
       {!isFullScreen &&<Header title="Live Streaming" />}
 
    <ScrollView contentContainerStyle={styles.container}>

@@ -34,6 +34,7 @@ import { connectSocket, getSocket } from '../services/socket';
 import { updateActionStatus } from '../state/slices/authSlice.js';
 import { logError } from '../components/logError.js';
 import AppUpdateModal from '../components/AppUpdateModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -106,6 +107,7 @@ const GalleryScreen = () => {
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
   const dispatch = useDispatch();
+  const insets = useSafeAreaInsets();
 
 const onRefresh = async () => {
   setRefreshing(true);
@@ -258,7 +260,7 @@ const onRefresh = async () => {
   };
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65}]}>
+    <View style={[GlobalStyles.container,{marginBottom:65,paddingTop: insets.top}]}>
       <LiveStreamStatus />
       <Header title="Gallery" />
       {isLoading ? (
@@ -290,7 +292,7 @@ const onRefresh = async () => {
                     source={{ uri: previewItem.object_url }}
                     style={[styles.modalVideo, isFullScreen && { width: '100%', height: '100%' }]}
                     useNativeControls
-                    shouldPlay={true}
+                    shouldPlay={false}
                     isLooping={true}
                     isMuted={isMuted}
                     resizeMode="contain"

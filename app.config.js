@@ -5,11 +5,13 @@ export default ({ config }) => ({
   name: "BabyFlix",
   slug: "babyflix",
   version: "1.0.0",
+  scheme: "babyflix",
   extra: {
-    API_URL: process.env.API_URL,
-    ENV: process.env.ENV,
     eas: {
       projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
+    },
+    sentry: {
+        dsn: "https://94225de8dec8beebd5a14d91a7d68980@o4509394123227136.ingest.us.sentry.io/4509394126307328"
     }
   },
   updates: {
@@ -18,7 +20,7 @@ export default ({ config }) => ({
   orientation: "portrait",
   icon: "./assets/icon.png",
   splash: {
-    image: "./assets/images/adaptive-icon2.png",
+    image: "./assets/icon.png",
     resizeMode: "contain",
     backgroundColor: "#ffffff"
   },
@@ -39,20 +41,19 @@ export default ({ config }) => ({
         "UIInterfaceOrientationLandscapeRight"
       ],
       NSPhotoLibraryUsageDescription: "This app requires access to your photo library.",
+      NSPhotoLibraryAddUsageDescription: "This app needs permission to save photos to your library.",
+      NSCameraUsageDescription: "This app needs access to your camera to capture photos or videos.",
+      NSMicrophoneUsageDescription: "This app needs access to your microphone to record audio.",
     }
   },
   android: {
-    adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon2.png",
-      backgroundColor: "#ffffff"
-    },
     icon: "./assets/icon2.png", 
     adaptiveIcon: {
       foregroundImage: "./assets/icon-foreground.png", 
       backgroundColor: "#FF6996" 
     },
     package: "com.babyflix.app",
-    jsEngine: "hermes",
+    //jsEngine: "hermes",
     permissions: [
       "android.permission.READ_MEDIA_IMAGES",
       "android.permission.READ_MEDIA_VIDEO",
@@ -68,8 +69,19 @@ export default ({ config }) => ({
         photosPermission: "Allow BabyFlix to access your photos",
       }
     ],
-    "expo-video",
-    "expo-build-properties",
+    "expo-av",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          jsEngine: "hermes",
+          turboModules: false,  // Disable TurboModules for iOS
+        },
+        android: {
+          jsEngine: "hermes",
+        },
+      }
+    ],
     "expo-font"
   ],
 });
