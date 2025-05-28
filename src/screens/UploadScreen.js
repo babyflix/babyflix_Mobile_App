@@ -208,7 +208,7 @@ const UploadScreen = () => {
 
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65,paddingTop: insets.top}]}>
+    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' && { paddingTop: insets.top }]}>
       <Header title="Upload" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', textAlign: 'center' }}>
@@ -243,7 +243,7 @@ const UploadScreen = () => {
             <TouchableOpacity style={styles.closeIcon} onPress={() => setShowDeleteModal(true)}>
               <Ionicons name="close-circle" size={32} color={Colors.error} />
             </TouchableOpacity>
-
+            
             <TouchableOpacity
               style={GlobalStyles.button}
               onPress={handleUpload}

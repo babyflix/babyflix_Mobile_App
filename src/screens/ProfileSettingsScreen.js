@@ -382,7 +382,7 @@ const ProfileSettingsScreen = () => {
   }
 
   return (
-    <View style={[GlobalStyles.container,{paddingTop: insets.top}]}>
+    <View style={[GlobalStyles.container,Platform.OS === 'android' && { paddingTop: insets.top }]}>
       <Header title="Profile Settings" showMenu={false} />
       <ScrollView style={[GlobalStyles.container, { padding: 10,marginBottom:65 }]}>
         <View style={styles.profileSection}>

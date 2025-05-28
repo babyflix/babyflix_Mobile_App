@@ -1,7 +1,7 @@
 {
   "name": "babyflix",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "dev": "cross-env EXPO_NO_TELEMETRY=1 EXPO_PUBLIC_ENV=development expo start --clear",
@@ -24,7 +24,6 @@
     "@react-navigation/material-top-tabs": "^7.1.0",
     "@react-navigation/native": "^7.0.14",
     "@reduxjs/toolkit": "^2.0.1",
-    "@sentry/react-native": "~6.14.0",
     "axios": "^1.8.4",
     "base-64": "^1.0.0",
     "expo": "^53.0.7",

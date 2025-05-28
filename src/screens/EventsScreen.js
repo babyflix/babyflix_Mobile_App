@@ -369,7 +369,7 @@ const EventsScreen = () => {
 
 
   return (
-    <View style={[GlobalStyles.container,{paddingTop: insets.top}]}>
+    <View style={[GlobalStyles.container,Platform.OS === 'android' && { paddingTop: insets.top }]}>
       <Header title="Events" />
 
       {isLoading ? (

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Modal,
   TouchableWithoutFeedback,
+  Platform,
 } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Header from '../components/Header';
@@ -260,7 +261,7 @@ const onRefresh = async () => {
   };
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65,paddingTop: insets.top}]}>
+    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' && { paddingTop: insets.top }]}>
       <LiveStreamStatus />
       <Header title="Gallery" />
       {isLoading ? (
@@ -292,7 +293,7 @@ const onRefresh = async () => {
                     source={{ uri: previewItem.object_url }}
                     style={[styles.modalVideo, isFullScreen && { width: '100%', height: '100%' }]}
                     useNativeControls
-                    shouldPlay={false}
+                    shouldPlay={true}
                     isLooping={true}
                     isMuted={isMuted}
                     resizeMode="contain"

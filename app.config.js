@@ -4,15 +4,12 @@ export default ({ config }) => ({
   ...config,
   name: "BabyFlix",
   slug: "babyflix",
-  version: "1.0.1",
+  version: "1.0.2",
   scheme: "babyflix",
   extra: {
     eas: {
       projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
     },
-    sentry: {
-        dsn: "https://94225de8dec8beebd5a14d91a7d68980@o4509394123227136.ingest.us.sentry.io/4509394126307328"
-    }
   },
   updates: {
   fallbackToCacheTimeout: 0
@@ -30,6 +27,11 @@ export default ({ config }) => ({
     supportsTablet: true,
     bundleIdentifier: "com.babyflix.mobile.app",
     icon: "./assets/icon.png",
+    splash: {
+      image: "./assets/icon-foreground.png", 
+      resizeMode: "contain",    
+      backgroundColor: "#ffffff"
+    },
     infoPlist: {
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: true,
@@ -42,8 +44,7 @@ export default ({ config }) => ({
       ],
       NSPhotoLibraryUsageDescription: "This app requires access to your photo library.",
       NSPhotoLibraryAddUsageDescription: "This app needs permission to save photos to your library.",
-      NSCameraUsageDescription: "This app needs access to your camera to capture photos or videos.",
-      NSMicrophoneUsageDescription: "This app needs access to your microphone to record audio.",
+      ITSAppUsesNonExemptEncryption: false,
     }
   },
   android: {

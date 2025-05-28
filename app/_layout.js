@@ -1,4 +1,3 @@
-import '../sentry.config';
 import React, { useEffect, useState } from 'react';
 import { ErrorBoundary, Stack } from 'expo-router';
 import { Provider, useDispatch, useSelector } from 'react-redux';
