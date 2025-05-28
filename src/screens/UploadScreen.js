@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -36,6 +37,13 @@ const videoExtensions = [
   "mp4", "webm", "ogg", "avi", "mov", "mkv", "flv", "wmv", "3gp"
 ];
 
+const getMimeType = (uri) => {
+  const ext = uri.split('.').pop().toLowerCase();
+  if (imageExtensions.includes(ext)) return `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+  if (videoExtensions.includes(ext)) return `video/${ext}`;
+  return 'application/octet-stream';
+};
+
 const isValidMediaFile = (file) => {
   if (!file || !file.uri) return false;
   const uri = file.uri;
@@ -58,6 +66,8 @@ const UploadScreen = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+
   const user = useSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useDispatch();  
@@ -93,7 +103,15 @@ const UploadScreen = () => {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        const file = result.assets[0];
+        //const file = result.assets[0];
+        const asset = result.assets[0];
+          const info = await FileSystem.getInfoAsync(asset.uri);
+
+          const file = {
+            ...asset,
+            fileSize: info.size || 0,
+          };
+
 
         if (!isValidMediaFile(file)) {
           Alert.alert(
@@ -103,6 +121,7 @@ const UploadScreen = () => {
           return;
         }
         setMedia(file);
+        setVideoReady(false);
       }
     } catch (error) {
       console.error('Picker error:', error);
@@ -145,7 +164,7 @@ const UploadScreen = () => {
     const hostUrl = await getHostUrl();
 
     const details = {
-      machine_id: user.role === 'user' ? user.machineId : machineId,
+      machine_id: user.role === 'user' ? user.machineId : user.machineId,
       user_id: user.role === 'user' ? user.uuid : '',
       uploaded_by: user.role === 'user' ? "By Me" : "By Clinic",
       hostUrl,
@@ -208,7 +227,7 @@ const UploadScreen = () => {
 
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' && { paddingTop: insets.top }]}>
+    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <Header title="Upload" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', textAlign: 'center' }}>
@@ -228,15 +247,32 @@ const UploadScreen = () => {
             {media.type.startsWith('image') ? (
               <Image source={{ uri: media.uri }} style={styles.previewImage} resizeMode="cover" />
             ) : (
+              // <Video
+              //   source={{ uri: media.uri }}
+              //   style={styles.previewImage}
+              //   resizeMode="cover"
+              //   shouldPlay
+              //   isLooping
+              //   useNativeControls
+              // />
               <Video
                 source={{ uri: media.uri }}
                 style={styles.previewImage}
                 resizeMode="cover"
-                shouldPlay
-                isLooping
+                shouldPlay={false}
+                isLooping={false}
                 useNativeControls
+                onLoad={() => setVideoReady(true)}
+                onError={(e) => console.log('Video error:', e)}
               />
             )}
+            {media.type.startsWith('video') && !videoReady && (
+              <View style={{ marginVertical: 10, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text>Loading video preview...</Text>
+              </View>
+            )}
+
             <Text style={styles.mediaName}>{media.fileName}</Text>
             <Text style={styles.mediaSize}>{(media.fileSize / 1024).toFixed(2)} KB</Text>
 
@@ -342,7 +378,7 @@ const UploadScreen = () => {
               </Text>
               <TouchableOpacity
                 onPress={() => {
-                  setMedia(false)
+                  setMedia(null)
                   setShowSuccessModal(false);
                   router.push('/gallery');
                 }}

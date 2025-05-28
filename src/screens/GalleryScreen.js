@@ -261,7 +261,7 @@ const onRefresh = async () => {
   };
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' && { paddingTop: insets.top }]}>
+    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <LiveStreamStatus />
       <Header title="Gallery" />
       {isLoading ? (

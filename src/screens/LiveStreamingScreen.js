@@ -176,7 +176,7 @@ const [isRotated, setIsRotated] = useState(false);
   }  
 
   return (
-    <View style={[GlobalStyles.container,Platform.OS === 'android' && { paddingTop: insets.top }]}>
+    <View style={[GlobalStyles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       {!isFullScreen &&<Header title="Live Streaming" />}
 
    <ScrollView contentContainerStyle={styles.container}>
