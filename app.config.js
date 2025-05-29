@@ -10,17 +10,15 @@ export default ({ config }) => ({
     eas: {
       projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
     },
+    sentry: {
+      dsn: "https://94225de8dec8beebd5a14d91a7d68980@o4509394123227136.ingest.us.sentry.io/4509394126307328"
+    }
   },
   updates: {
   fallbackToCacheTimeout: 0
   },
   orientation: "portrait",
   icon: "./assets/icon.png",
-  splash: {
-    image: "./assets/icon.png",
-    resizeMode: "contain",
-    backgroundColor: "#ffffff"
-  },
   userInterfaceStyle: "light",
   assetBundlePatterns: ["**/*"],
   ios: {
@@ -45,6 +43,7 @@ export default ({ config }) => ({
       NSPhotoLibraryUsageDescription: "This app requires access to your photo library.",
       NSPhotoLibraryAddUsageDescription: "This app needs permission to save photos to your library.",
       ITSAppUsesNonExemptEncryption: false,
+      UIBackgroundModes: ["fetch", "remote-notification"],
     }
   },
   android: {
@@ -54,6 +53,11 @@ export default ({ config }) => ({
       backgroundColor: "#FF6996" 
     },
     package: "com.babyflix.app",
+    splash: {
+      image: "./assets/icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
     //jsEngine: "hermes",
     permissions: [
       "android.permission.READ_MEDIA_IMAGES",
@@ -75,7 +79,7 @@ export default ({ config }) => ({
       "expo-build-properties",
       {
         ios: {
-          jsEngine: "hermes",
+          jsEngine: "jsc",
           turboModules: false,  // Disable TurboModules for iOS
         },
         android: {
