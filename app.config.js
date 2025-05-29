@@ -4,15 +4,12 @@ export default ({ config }) => ({
   ...config,
   name: "BabyFlix",
   slug: "babyflix",
-  version: "1.0.2",
+  version: "1.0.3",
   scheme: "babyflix",
   extra: {
     eas: {
       projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
     },
-    sentry: {
-      dsn: "https://94225de8dec8beebd5a14d91a7d68980@o4509394123227136.ingest.us.sentry.io/4509394126307328"
-    }
   },
   updates: {
   fallbackToCacheTimeout: 0

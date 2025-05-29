@@ -1,4 +1,3 @@
-import '../sentry.config';
 import React, { useEffect, useState } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { store } from './src/state/store';

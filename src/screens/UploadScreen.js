@@ -67,6 +67,7 @@ const UploadScreen = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
+  const [previewLoad, setPreviewLoad] = useState(false);
 
   const user = useSelector((state) => state.auth);
   const router = useRouter();
@@ -74,7 +75,7 @@ const UploadScreen = () => {
   const insets = useSafeAreaInsets();
 
   const pickMedia = async () => {
-
+    setPreviewLoad(true);
     const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== 'granted') {
@@ -223,6 +224,7 @@ const UploadScreen = () => {
   const handleDeleteMedia = () => {
     setMedia(null);
     setShowDeleteModal(false);
+    setPreviewLoad(false);
   };
 
 
@@ -241,20 +243,17 @@ const UploadScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {media && (
+        {media ? (
           <View style={styles.preview}>
             <Text style={styles.previewTitle}>Preview</Text>
+
             {media.type.startsWith('image') ? (
-              <Image source={{ uri: media.uri }} style={styles.previewImage} resizeMode="cover" />
+              <Image
+                source={{ uri: media.uri }}
+                style={styles.previewImage}
+                resizeMode="cover"
+              />
             ) : (
-              // <Video
-              //   source={{ uri: media.uri }}
-              //   style={styles.previewImage}
-              //   resizeMode="cover"
-              //   shouldPlay
-              //   isLooping
-              //   useNativeControls
-              // />
               <Video
                 source={{ uri: media.uri }}
                 style={styles.previewImage}
@@ -266,6 +265,8 @@ const UploadScreen = () => {
                 onError={(e) => console.log('Video error:', e)}
               />
             )}
+
+            {/* Show loader only while video is loading */}
             {media.type.startsWith('video') && !videoReady && (
               <View style={{ marginVertical: 10, alignItems: 'center' }}>
                 <ActivityIndicator size="large" color={Colors.primary} />
@@ -279,7 +280,7 @@ const UploadScreen = () => {
             <TouchableOpacity style={styles.closeIcon} onPress={() => setShowDeleteModal(true)}>
               <Ionicons name="close-circle" size={32} color={Colors.error} />
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={GlobalStyles.button}
               onPress={handleUpload}
@@ -288,7 +289,12 @@ const UploadScreen = () => {
               <Text style={GlobalStyles.buttonText}>{loading ? 'Uploading...' : 'Upload'}</Text>
             </TouchableOpacity>
           </View>
-        )}
+        ) : previewLoad ? (
+          <View style={{ marginVertical: 20, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text>Loading media preview...</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       {/* Delete Confirmation Modal */}
