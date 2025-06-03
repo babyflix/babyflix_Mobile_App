@@ -58,7 +58,7 @@ const RegisterScreen = () => {
   const [showAccountTypeOptions, setShowAccountTypeOptions] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
-
+  const [showPhoneInfo, setShowPhoneInfo] = useState(false);
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -712,9 +712,26 @@ const RegisterScreen = () => {
                       value={formData.phone}
                       onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
                       keyboardType="phone-pad"
+                      onFocus={() => setShowPhoneInfo(true)}
+                      onBlur={() => setShowPhoneInfo(false)}
                     />
                   </View>
                 </View>
+
+                {showPhoneInfo && (
+                  <View style={{
+                    backgroundColor: 'lightyellow',
+                    padding: 8,
+                    borderRadius: 5,
+                    marginTop: 5,
+                    marginBottom:5,
+                  }}>
+                    <Text style={{ fontSize: 12, color: 'black' }}>
+                      The Phone number is used to represent the real-time communication feature in the BabyFlix app
+                    </Text>
+                  </View>
+                )}
+
                 <View style={styles.termsContainer}>
                   <View style={styles.checkbox}>
                     <TouchableOpacity onPress={() => setTermsAccepted(!termsAccepted)} style={styles.checkboxBox}>

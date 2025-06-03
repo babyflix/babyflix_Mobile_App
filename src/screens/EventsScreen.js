@@ -174,6 +174,7 @@ const EventsScreen = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [hasMoreData, setHasMoreData] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showPhoneInfo, setShowPhoneInfo] = useState(false);
 
 
   const user = useSelector((state) => state.auth);
@@ -315,7 +316,7 @@ const EventsScreen = () => {
   const handleAddMobileRow = () => {
     const last = mobileNumbers[mobileNumbers.length - 1];
     if (!last.countryCode || !last.mobileNumber) {
-      setMobileErrors("complete the current row before adding new");
+      setMobileErrors(" complete the current row before adding new");
       return;
     }
 
@@ -585,6 +586,7 @@ const EventsScreen = () => {
                         onChangeText={(text) => handleUpdateMobileNumber(index, "mobileNumber", text)}
                         keyboardType="phone-pad"
                         maxLength={10}
+                        onFocus={() => setShowPhoneInfo(true)}
                       />
                     </View>
 
@@ -598,6 +600,18 @@ const EventsScreen = () => {
                 {mobileErrors ? (
                   <Text style={styles.errorText}>{mobileErrors}</Text>
                 ) : null}
+                {showPhoneInfo && (
+                <View style={{
+                  backgroundColor: 'lightyellow',
+                  padding: 8,
+                  borderRadius: 5,
+                  marginTop: 5,
+                }}>
+                  <Text style={{ fontSize: 12, color: 'black' }}>
+                    This number will only be used to send the event invite via SMS to your family or friends..
+                  </Text>
+                </View>
+              )}
               </ScrollView>
 
 
