@@ -284,17 +284,22 @@ const onRefresh = async () => {
 <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
 
       {previewItem && previewItem.object_url && (
-        <Modal transparent={true} visible={modalVisible} onRequestClose={closeModal}>
-          <TouchableWithoutFeedback >
+        <Modal 
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={closeModal}
+        >
             <View style={styles.modalOverlay}>
-              <View style={[styles.modalContent, isFullScreen && styles.maxRotateModelContent,isMaximized && styles.maxModalContent]}>
+              <View style={[styles.modalContent,isFullScreen && styles.maxRotateModelContent,isMaximized && styles.maxModalContent]}>
                 {previewItem.object_type === 'video' ? (
                   <Video
+                    key={previewItem?.id}
                     source={{ uri: previewItem.object_url }}
                     style={[styles.modalVideo, isFullScreen && { width: '100%', height: '100%' }]}
                     useNativeControls
-                    shouldPlay={true}
-                    isLooping={true}
+                    shouldPlay={modalVisible}
+                    isLooping
                     isMuted={isMuted}
                     resizeMode="contain"
                   />
@@ -361,7 +366,6 @@ const onRefresh = async () => {
                 </TouchableOpacity>
               </View>
             </View>
-          </TouchableWithoutFeedback>
         </Modal>
       )}
 
@@ -452,10 +456,12 @@ const styles = StyleSheet.create({
   modalImage: {
     width: '100%',
     height: '100%',
+    resizeMode: 'contain',
   },
   modalVideo: {
     width: '100%',
     height: '100%',
+    resizeMode: 'contain',
   },
   controls: {
     position: 'absolute',
@@ -476,11 +482,12 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: 'black',
+    top: 5,
+    right: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,
     borderRadius: 5,
+    zIndex: 999,
   },
   closeButtonText: {
     color: 'red',
@@ -493,6 +500,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,
     borderRadius: 5,
+    zIndex: 999,
   },
   rotateButton: {
     position: 'absolute',
@@ -501,6 +509,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,
     borderRadius: 5,
+    zIndex: 999,
   },
   muteButtonText: {
     color: 'white',
