@@ -727,7 +727,8 @@ const RegisterScreen = () => {
                     marginBottom:5,
                   }}>
                     <Text style={{ fontSize: 12, color: 'black' }}>
-                      The Phone number is used to represent the real-time communication feature in the BabyFlix app
+                      Your phone number is required to fetch your gallery and share events with
+                      your family. We do not use it for login or marketing.
                     </Text>
                   </View>
                 )}
