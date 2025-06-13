@@ -107,10 +107,10 @@ const ProfileSettingsScreen = () => {
   }, [countries]);
 
   const BabySex = [
-    { label: 'Male', value: '1' },
-    { label: 'Female', value: '3' },
-    { label: 'Other', value: '4' },
-  ]
+    { label: 'Male', value: 'male' },
+    { label: 'Female', value: 'female' },
+    { label: 'Other', value: 'other' },
+  ];
 
   useEffect(() => {
     const fetchEvents = async () => {
