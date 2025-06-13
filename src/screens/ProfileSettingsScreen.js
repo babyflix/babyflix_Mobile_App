@@ -68,8 +68,7 @@ const ProfileSettingsScreen = () => {
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
-  const [modalType, setModalType] = useState('success'); // or 'error'
-
+  const [modalType, setModalType] = useState('success');
 
   const modalContentHeight = showAdditionalInfo ? '95%' : '85%';
 
@@ -132,7 +131,7 @@ const ProfileSettingsScreen = () => {
           setDueDate(response.data.dueDate || '');
           setDob(response.data.dob || '');
           setEmail(response.data.email || '')
-          setCountryCode(response.data.countryCode || '');
+          setCountryCode(response.data.countryCode || 1 );
           setPhone(response.data.phone || '');
           setSpouseName(response.data.spouseFirstName || '');
           setBabyName(response.data.babyName || '');
@@ -179,7 +178,7 @@ const ProfileSettingsScreen = () => {
     const currentDate = selectedDate || dob;
     setShowDatePicker(false);
 
-    const formattedDate = currentDate.toLocaleDateString();
+    const formattedDate = currentDate.toLocaleDateString("en-US"); 
 
     if (dateField === 'dob' && formattedDate !== dob) {
       setDob(formattedDate);
@@ -300,10 +299,29 @@ const ProfileSettingsScreen = () => {
       }
     }
 
-    if (!firstName || !lastName || !countryCode) {
+    if (!firstName || !lastName) {
       setErrorMessage('Please fill in all fields.');
       return;
     }
+    console.log(`
+🔍 User Data to be Updated:
+First Name      : ${firstName}
+Last Name       : ${lastName}
+Email           : ${email}
+Phone           : ${phone}
+Country Code    : ${selectedCountry || countryCode }
+Due Date        : ${dueDate}
+Date of Birth   : ${dob}
+Company ID      : ${result.companyId}
+Location ID     : ${result.locationId}
+Machine ID      : ${result.machineId}
+User Groups     : ${JSON.stringify(result.userGroups)}
+Spouse Name     : ${spouseName}
+Baby Name       : ${babyName}
+Baby Sex        : ${babySex}
+UUID            : ${result.uuid}
+`);
+
 
     try {
       const response = await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update`,
@@ -312,7 +330,7 @@ const ProfileSettingsScreen = () => {
           lastName: lastName,
           email: email,
           phone: phone,
-          countryCode: countryCode,
+          countryCode: selectedCountry || countryCode ,
           dueDate: dueDate,
           dob: dob,
           companyId: result.companyId,
@@ -714,7 +732,10 @@ const ProfileSettingsScreen = () => {
 
               <CustomDropdown
                 selectedValue={selectedCountry}
-                onSelect={setSelectedCountry}
+                onSelect={(item) => {
+                  setSelectedCountry(item);           // full selected object (optional)
+                  console.log('selectedCountry',item)
+                }}
                 options={FormattedCountries}
                 placeholder="Country Code"
                 iconName="globe-outline"
