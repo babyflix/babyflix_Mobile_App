@@ -263,15 +263,15 @@ const ProfileSettingsScreen = () => {
     }
 
     const phoneRegex = /^(?:\+1\s?)?(\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}$/;
-    if (!phoneRegex.test(phone)) {
-      setErrorMessage('Please enter a valid USA phone number.');
-      return;
-    }
+    // if (!phoneRegex.test(phone)) {
+    //   setErrorMessage('Please enter a valid USA phone number.');
+    //   return;
+    // }
 
-    if (!dob) {
-      setErrorMessage('Please select a date of birth');
-      return;
-    }
+    // if (!dob) {
+    //   setErrorMessage('Please select a date of birth');
+    //   return;
+    // }
 
     if (!dueDate) {
       setErrorMessage('Please select a due date');
@@ -724,7 +724,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={phone}
                   onChangeText={(text) => setPhone(formatPhoneNumber(text))}
-                  placeholder="Phone Number"
+                  placeholder="Phone Number(Optional)"
                   keyboardType="phone-pad"
                   style={GlobalStyles.input}
                 />

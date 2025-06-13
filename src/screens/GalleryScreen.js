@@ -135,7 +135,7 @@ const onRefresh = async () => {
         const data1 = res.data;
         try {
           const response = await axios.get(
-            EXPO_PUBLIC_CLOUD_API_URL + `/get-images/?machine_id=${user.machineId}&user_id=${user.uuid}&mobile=${data1.phone}&email=${user.email}`,
+            EXPO_PUBLIC_CLOUD_API_URL + `/get-images/?machine_id=${user.machineId}&user_id=${user.uuid}&email=${user.email}`,
             {
               headers: {
                 'Content-Type': 'application/json',

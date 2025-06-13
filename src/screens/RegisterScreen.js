@@ -109,7 +109,7 @@ const RegisterScreen = () => {
 
     setError('');
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword || !phone) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword ) {
       setError('Please fill in all fields');
       return;
     }
@@ -137,15 +137,15 @@ const RegisterScreen = () => {
     }
 
     const phoneRegex = /^(?:\+1\s?)?(\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}$/;
-    if (!phoneRegex.test(phone)) {
-      setError('Please enter a valid USA phone number.');
-      return;
-    }
+    // if (!phoneRegex.test(phone)) {
+    //   setError('Please enter a valid USA phone number.');
+    //   return;
+    // }
 
-    if (accountType === 'patient' && !dob) {
-      setError('Please select a date of birth');
-      return;
-    }
+    // if (accountType === 'patient' && !dob) {
+    //   setError('Please select a date of birth');
+    //   return;
+    // }
 
     if (accountType === 'patient' && !dueDate) {
       setError('Please select a due date');
@@ -493,8 +493,8 @@ const RegisterScreen = () => {
 
                     <View style={[styles.textInputIconView, styles.allMarginRight]}>
                       <TextInput
-                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 6 }]}
-                        placeholder="Date of Birth"
+                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
+                        placeholder="DOB(Optional)"
                         value={formData.dob}
                         onFocus={() => {
                           setDateField('dob');
@@ -511,7 +511,7 @@ const RegisterScreen = () => {
 
                     <View style={[styles.textInputIconView, styles.allMarginLeft]}>
                       <TextInput
-                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 6 }]}
+                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
                         placeholder="Due Date"
                         value={formData.dueDate}
                         onFocus={() => {
@@ -708,7 +708,7 @@ const RegisterScreen = () => {
                     />
                     <TextInput
                       style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
-                      placeholder="Phone No"
+                      placeholder="Ph. No(Optional)"
                       value={formData.phone}
                       onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
                       keyboardType="phone-pad"
@@ -727,8 +727,7 @@ const RegisterScreen = () => {
                     marginBottom:5,
                   }}>
                     <Text style={{ fontSize: 12, color: 'black' }}>
-                      Your phone number is required to fetch your gallery and share events with
-                      your family. We do not use it for login or marketing.
+                      Providing your phone number is optional, but it helps us to improve your experience. We do not use it for login or marketing purposes.
                     </Text>
                   </View>
                 )}
