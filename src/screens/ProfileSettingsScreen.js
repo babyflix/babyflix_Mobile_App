@@ -691,7 +691,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={dob}
                   onChangeText={setDob}
-                  placeholder="Date of Birth"
+                  placeholder="DOB(Optional)"
                   style={GlobalStyles.input}
                   onFocus={() => {
                     setDateField('dob');
