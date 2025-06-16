@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -24,6 +25,7 @@ import * as Linking from 'expo-linking';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import { updateActionStatus } from '../state/slices/authSlice';
 import { logError } from '../components/logError';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const UPLOAD_API_URL = `${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`;
 const CHUNK_SIZE = 2 * 1024 * 1024;
@@ -57,12 +59,17 @@ const UploadScreen = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [previewLoad, setPreviewLoad] = useState(false);
+
   const user = useSelector((state) => state.auth);
   const router = useRouter();
   const dispatch = useDispatch();  
+  const insets = useSafeAreaInsets();
 
   const pickMedia = async () => {
 
+    setPreviewLoad(true);
     const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== 'granted') {
@@ -101,6 +108,7 @@ const UploadScreen = () => {
           return;
         }
         setMedia(file);
+        setVideoReady(false);
       }
     } catch (error) {
       console.error('Picker error:', error);
@@ -202,11 +210,12 @@ const UploadScreen = () => {
   const handleDeleteMedia = () => {
     setMedia(null);
     setShowDeleteModal(false);
+    setPreviewLoad(false);
   };
 
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65}]}>
+    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <Header title="Upload" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', textAlign: 'center' }}>
@@ -220,21 +229,37 @@ const UploadScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {media && (
+        {media ? (
           <View style={styles.preview}>
             <Text style={styles.previewTitle}>Preview</Text>
+
             {media.type.startsWith('image') ? (
-              <Image source={{ uri: media.uri }} style={styles.previewImage} resizeMode="cover" />
+              <Image
+                source={{ uri: media.uri }}
+                style={styles.previewImage}
+                resizeMode="cover"
+              />
             ) : (
               <Video
                 source={{ uri: media.uri }}
                 style={styles.previewImage}
                 resizeMode="cover"
-                shouldPlay
-                isLooping
+                shouldPlay={true}
+                isLooping={false}
                 useNativeControls
+                onLoad={() => setVideoReady(true)}
+                onError={(e) => console.log('Video error:', e)}
               />
             )}
+
+            {/* Show loader only while video is loading */}
+            {media.type.startsWith('video') && !videoReady && (
+              <View style={{ marginVertical: 10, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text>Loading video preview...</Text>
+              </View>
+            )}
+
             <Text style={styles.mediaName}>{media.fileName}</Text>
             <Text style={styles.mediaSize}>{(media.fileSize / 1024).toFixed(2)} KB</Text>
 
@@ -250,7 +275,12 @@ const UploadScreen = () => {
               <Text style={GlobalStyles.buttonText}>{loading ? 'Uploading...' : 'Upload'}</Text>
             </TouchableOpacity>
           </View>
-        )}
+        ) : previewLoad ? (
+          <View style={{ marginVertical: 20, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text>Loading media preview...</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       {/* Delete Confirmation Modal */}

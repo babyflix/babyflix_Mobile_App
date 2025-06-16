@@ -628,7 +628,7 @@ const MessagesScreen = () => {
   } else {
 
     return (
-      <View style={styles.container}>
+      <View style={[styles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
         <Header title="Messages" />
         <FlatList
           data={chatMembers}

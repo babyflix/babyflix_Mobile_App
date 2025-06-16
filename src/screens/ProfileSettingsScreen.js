@@ -26,6 +26,7 @@ import Snackbar from '../components/Snackbar';
 import { logError } from '../components/logError';
 import CustomDropdown from '../components/CustomDropdown';
 import { closeDropdown } from '../state/slices/headerSlice';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ProfileSettingsScreen = () => {
   const dispatch = useDispatch();
@@ -62,10 +63,18 @@ const ProfileSettingsScreen = () => {
   const [countries, setCountries] = useState([]);
   const [FormattedCountries, setFormattedCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState('success'); // or 'error'
+
 
   const modalContentHeight = showAdditionalInfo ? '95%' : '85%';
 
   const user = useSelector((state) => state.auth);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -99,10 +108,11 @@ const ProfileSettingsScreen = () => {
   }, [countries]);
 
   const BabySex = [
-    { label: 'Male', value: '1' },
-    { label: 'Female', value: '3' },
-    { label: 'Other', value: '4' },
-  ]
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
+  { label: 'Other', value: 'other' },
+];
+
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -123,7 +133,7 @@ const ProfileSettingsScreen = () => {
           setDueDate(response.data.dueDate || '');
           setDob(response.data.dob || '');
           setEmail(response.data.email || '')
-          setCountryCode(response.data.countryCode || '');
+          setCountryCode(response.data.countryCode || 1);
           setPhone(response.data.phone || '');
           setSpouseName(response.data.spouseFirstName || '');
           setBabyName(response.data.babyName || '');
@@ -170,7 +180,7 @@ const ProfileSettingsScreen = () => {
     const currentDate = selectedDate || dob;
     setShowDatePicker(false);
 
-    const formattedDate = currentDate.toLocaleDateString();
+    const formattedDate = currentDate.toLocaleDateString("en-US");
 
     if (dateField === 'dob' && formattedDate !== dob) {
       setDob(formattedDate);
@@ -254,15 +264,15 @@ const ProfileSettingsScreen = () => {
     }
 
     const phoneRegex = /^(?:\+1\s?)?(\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}$/;
-    if (!phoneRegex.test(phone)) {
-      setErrorMessage('Please enter a valid USA phone number.');
-      return;
-    }
+    // if (!phoneRegex.test(phone)) {
+    //   setErrorMessage('Please enter a valid USA phone number.');
+    //   return;
+    // }
 
-    if (!dob) {
-      setErrorMessage('Please select a date of birth');
-      return;
-    }
+    // if (!dob) {
+    //   setErrorMessage('Please select a date of birth');
+    //   return;
+    // }
 
     if (!dueDate) {
       setErrorMessage('Please select a due date');
@@ -291,10 +301,30 @@ const ProfileSettingsScreen = () => {
       }
     }
 
-    if (!firstName || !lastName || !countryCode) {
+    if (!firstName || !lastName ) {
       setErrorMessage('Please fill in all fields.');
       return;
     }
+
+     console.log(`
+🔍 User Data to be Updated:
+First Name      : ${firstName}
+Last Name       : ${lastName}
+Email           : ${email}
+Phone           : ${phone}
+Country Code    : ${selectedCountry || countryCode }
+Due Date        : ${dueDate}
+Date of Birth   : ${dob}
+Company ID      : ${result.companyId}
+Location ID     : ${result.locationId}
+Machine ID      : ${result.machineId}
+User Groups     : ${JSON.stringify(result.userGroups)}
+Spouse Name     : ${spouseName}
+Baby Name       : ${babyName}
+Baby Sex        : ${babySex}
+UUID            : ${result.uuid}
+`);
+
 
     try {
       const response = await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update`,
@@ -303,7 +333,7 @@ const ProfileSettingsScreen = () => {
           lastName: lastName,
           email: email,
           phone: phone,
-          countryCode: countryCode,
+          countryCode: selectedCountry || countryCode ,
           dueDate: dueDate,
           dob: dob,
           companyId: result.companyId,
@@ -330,8 +360,8 @@ const ProfileSettingsScreen = () => {
         setSnackbarVisible(true);
       }
     } catch (error) {
-      setErrorMessage('Failed to reset password. Please try again.');
-      setSnackbarMessage(error.response?.data?.error || 'Failed to reset password. Please try again.');
+      setErrorMessage('Failed to Edit Profile. Please try again.');
+      setSnackbarMessage(error.response?.data?.error || 'Failed to Edit Profile. Please try again.');
       setSnackbarType('error');
       setSnackbarVisible(true);
       await logError({
@@ -379,8 +409,48 @@ const ProfileSettingsScreen = () => {
     setBabySex(result.babySex || '');
   }
 
+  const handleDeleteAccount = async () => {
+  try {
+    const response = await axios.delete(`${EXPO_PUBLIC_API_URL}/api/patients/delete`, {
+      data: { uuid: user.uuid },
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.data.actionStatus === 'success') {
+      await AsyncStorage.removeItem('token');
+      dispatch(logout());
+      setModalTitle('Account Deleted');
+      setModalMessage(response.data.message || 'Your account has been deleted successfully.');
+      setModalType('success');
+      setStatusModalVisible(true);
+      //router.replace('login');
+      //console.log("account deleted successfully")
+    } else {
+      setModalTitle('Deletion Failed');
+      setModalMessage(response.data.message || 'Something went wrong while deleting your account.');
+      setModalType('error');
+      setStatusModalVisible(true);
+      setSnackbarMessage(response.data.message || 'Account deletion failed.');
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+    }
+  } catch (error) {
+    setSnackbarMessage(error.response?.data?.error || 'Something went wrong while deleting your account.');
+    setSnackbarType('error');
+    setSnackbarVisible(true);
+    await logError({
+      error,
+      data: error.response?.data?.error,
+      details: "Error in delete account API call on ProfileSettingScreen"
+    });
+  }
+};
+
+
   return (
-    <View style={GlobalStyles.container}>
+    <View style={[GlobalStyles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <Header title="Profile Settings" showMenu={false} />
       <ScrollView style={[GlobalStyles.container, { padding: 10,marginBottom:65 }]}>
         <View style={styles.profileSection}>
@@ -443,6 +513,86 @@ const ProfileSettingsScreen = () => {
           <Ionicons name="log-out" size={20} color={Colors.white} />
           <Text style={[GlobalStyles.buttonText]}> Logout</Text>
         </TouchableOpacity>
+
+       <TouchableOpacity
+          style={[GlobalStyles.button, styles.deleteButton]}
+          onPress={() => setDeleteModalVisible(true)}
+        >
+          <Ionicons name="trash-bin" size={20} color={Colors.white} />
+          <Text style={[GlobalStyles.buttonText]}>Delete Account</Text>
+        </TouchableOpacity>
+
+        <Modal
+          visible={deleteModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setDeleteModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="warning" size={48} color={Colors.error} />
+                <Text style={styles.modalTitle}>Confirm Deletion</Text>
+                <Text style={styles.modalMessage}>
+                   Are you sure you want to permanently delete your account? This action cannot be undone.
+                </Text>
+              </View>
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setDeleteModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.deleteButtonModel}
+                  onPress={() => {
+                    setDeleteModalVisible(false);
+                    handleDeleteAccount();
+                  }}
+                >
+                  <Text style={styles.deleteButtonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={statusModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => {}}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.successModalContainer}>
+              <View style={styles.iconContainer}>
+                <Ionicons
+                  name={modalType === 'success' ? 'checkmark-circle' : 'close-circle'}
+                  size={60}
+                  color={modalType === 'success' ? 'green' : 'red'}
+                />
+                <Text style={styles.successTitle}>{modalTitle}</Text>
+                <Text style={styles.successMessage}>{modalMessage}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.okButton,
+                  { backgroundColor: modalType === 'success' ? 'green' : 'red' },
+                ]}
+                onPress={() => {
+                  setStatusModalVisible(false);
+                  if (modalType === 'success') router.replace('login'); // Only redirect if success
+                }}
+              >
+                <Text style={styles.okButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         <Modal visible={isResetPasswordModalVisible} transparent>
         <KeyboardAvoidingView
@@ -562,7 +712,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={dob}
                   onChangeText={setDob}
-                  placeholder="Date of Birth"
+                  placeholder="DOB(Optional)"
                   style={GlobalStyles.input}
                   onFocus={() => {
                     setDateField('dob');
@@ -585,7 +735,10 @@ const ProfileSettingsScreen = () => {
 
               <CustomDropdown
                 selectedValue={selectedCountry}
-                onSelect={setSelectedCountry}
+                 onSelect={(item) => {
+                  setSelectedCountry(item);           // full selected object (optional)
+                  console.log('selectedCountry',item)
+                }}
                 options={FormattedCountries}
                 placeholder="Country Code"
                 iconName="globe-outline"
@@ -595,7 +748,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={phone}
                   onChangeText={(text) => setPhone(formatPhoneNumber(text))}
-                  placeholder="Phone Number"
+                  placeholder="Phone Number(Optional)"
                   keyboardType="phone-pad"
                   style={GlobalStyles.input}
                 />
@@ -776,7 +929,16 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: Colors.primary,
-    marginVertical: 30,
+    //marginVertical: 0,
+    marginHorizontal: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    height: 50,
+  },
+  deleteButton: {
+    backgroundColor: Colors.primary,
+    marginBottom: 30,
     marginHorizontal: 5,
     flexDirection: 'row',
     alignItems: 'center',
@@ -808,6 +970,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '80%',
     overflow: 'scroll',
+  },
+  modalMessage: {
+  fontSize: 14,
+  textAlign: 'center',
+  marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    width: '100%',
   },
   input: {
     height: 85,
@@ -903,7 +1075,74 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: Colors.lightGray,
     marginBottom: 15
-  }
+  },
+  modalActions: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    flex: 1,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+  },
+  deleteButtonModel: {
+    backgroundColor: Colors.error,
+    borderRadius: 12,
+    paddingVertical: 10,
+    flex: 1,
+    marginLeft: 10,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+  },
+   iconContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  successModalContainer: {
+  width: '85%',
+  backgroundColor: '#fff',
+  padding: 24,
+  borderRadius: 20,
+  alignItems: 'center',
+},
+successTitle: {
+  marginTop: 12,
+  fontSize: 20,
+  fontFamily: 'Poppins_600SemiBold',
+},
+successMessage: {
+  textAlign: 'center',
+  marginTop: 6,
+  color: '#666',
+  fontSize: 15,
+  fontFamily: 'Poppins_400Regular',
+},
+okButton: {
+  backgroundColor: 'green',
+  borderRadius: 12,
+  paddingVertical: 10,
+  paddingHorizontal: 30,
+  marginTop: 20,
+},
+okButtonText: {
+  color: '#fff',
+  fontSize: 15,
+  fontFamily: 'Poppins_600SemiBold',
+},
 });
 
 export default ProfileSettingsScreen;

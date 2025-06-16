@@ -19,10 +19,12 @@ import {
   Poppins_600SemiBold,
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
+import { getStoragePlanDetails } from '../src/components/getStoragePlanDetails';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
   const { loading, snackbar } = useSelector((state) => state.ui);
+  const user = useSelector((state) => state.auth);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const [isConnected, setIsConnected] = useState(null);
   const [isUpdatePromptShown, setIsUpdatePromptShown] = useState(false);
@@ -75,6 +77,12 @@ const LayoutContent = () => {
     };
     if (isAuthenticated) requestPermissions();
   }, [isAuthenticated]);
+
+   useEffect(() => {
+    if (isAuthenticated && user?.email) {
+      getStoragePlanDetails(user.email, dispatch);
+    }
+  }, [isAuthenticated, user?.email]);
 
   return (
     <>

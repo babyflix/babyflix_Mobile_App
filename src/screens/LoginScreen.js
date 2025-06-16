@@ -27,6 +27,7 @@ import CommonSVG from '../components/commonSvg';
 import axios from 'axios';
 import LiveStreamStatus from './LiveStreamStatus';
 import { logError } from '../components/logError';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -42,7 +43,7 @@ const LoginScreen = () => {
   const [svgColor, setSvgColor] = useState(Colors.primary);
   const [isStreamStart, setIsStreamStart] = useState(false);
   const dispatch = useDispatch();
-
+  const insets = useSafeAreaInsets();
   const appVersion = Constants.expoConfig.version;
 
   useEffect(() => {

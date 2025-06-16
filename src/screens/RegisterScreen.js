@@ -59,7 +59,7 @@ const RegisterScreen = () => {
   const [showAccountTypeOptions, setShowAccountTypeOptions] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
-
+  const [showPhoneInfo, setShowPhoneInfo] = useState(false);
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -110,7 +110,7 @@ const RegisterScreen = () => {
 
     setError('');
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword || !phone) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword ) {
       setError('Please fill in all fields');
       return;
     }
@@ -138,15 +138,15 @@ const RegisterScreen = () => {
     }
 
     const phoneRegex = /^(?:\+1\s?)?(\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}$/;
-    if (!phoneRegex.test(phone)) {
-      setError('Please enter a valid USA phone number.');
-      return;
-    }
+    // if (!phoneRegex.test(phone)) {
+    //   setError('Please enter a valid USA phone number.');
+    //   return;
+    // }
 
-    if (accountType === 'patient' && !dob) {
-      setError('Please select a date of birth');
-      return;
-    }
+    // if (accountType === 'patient' && !dob) {
+    //   setError('Please select a date of birth');
+    //   return;
+    // }
 
     if (accountType === 'patient' && !dueDate) {
       setError('Please select a due date');
@@ -495,7 +495,7 @@ const RegisterScreen = () => {
                     <View style={[styles.textInputIconView, styles.allMarginRight]}>
                       <TextInput
                         style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 6 }]}
-                        placeholder="Date of Birth"
+                        placeholder="DOB(Optional)"
                         value={formData.dob}
                         onFocus={() => {
                           setDateField('dob');
@@ -707,15 +707,32 @@ const RegisterScreen = () => {
                         top: 15,
                       }}
                     />
-                    <TextInput
+                     <TextInput
                       style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
-                      placeholder="Phone No"
+                      placeholder="Ph. No(Optional)"
                       value={formData.phone}
                       onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
                       keyboardType="phone-pad"
+                      onFocus={() => setShowPhoneInfo(true)}
+                      onBlur={() => setShowPhoneInfo(false)}
                     />
                   </View>
                 </View>
+
+                {showPhoneInfo && (
+                  <View style={{
+                    backgroundColor: 'lightyellow',
+                    padding: 8,
+                    borderRadius: 5,
+                    marginTop: 5,
+                    marginBottom:5,
+                  }}>
+                    <Text style={{ fontSize: 12, color: 'black' }}>
+                      Providing your phone number is optional, but it helps us to improve your experience. We do not use it for login or marketing purposes.
+                    </Text>
+                  </View>
+                )}
+
                 <View style={styles.termsContainer}>
                   <View style={styles.checkbox}>
                     <TouchableOpacity onPress={() => setTermsAccepted(!termsAccepted)} style={styles.checkboxBox}>

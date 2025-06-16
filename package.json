@@ -1,7 +1,7 @@
 {
   "name": "babyflix",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "dev": "cross-env EXPO_NO_TELEMETRY=1 EXPO_PUBLIC_ENV=development expo start --clear",
@@ -76,7 +76,8 @@
     "socket.io-client": "^4.8.1",
     "text-encoding": "^0.7.0",
     "web-streams-polyfill": "^4.1.0",
-    "world-countries": "^5.1.0"
+    "world-countries": "^5.1.0",
+    "expo-web-browser": "~14.1.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

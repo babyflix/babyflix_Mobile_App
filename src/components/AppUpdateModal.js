@@ -174,7 +174,7 @@ const AppUpdateModal = ({ serverUrl }) => {
         const response = await fetch(serverUrl);
         const data = await response.json();
 
-        const latestVersion = data.latestVersion;
+        const latestVersion = Platform.OS === 'android' ? data.latestVersion : data.appleLatestVersion;
         const currentVersion = Constants.expoConfig.version;
 
         console.log('latestVersion:', latestVersion);

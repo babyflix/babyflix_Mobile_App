@@ -4,10 +4,9 @@ export default ({ config }) => ({
   ...config,
   name: "BabyFlix",
   slug: "babyflix",
-  version: "1.0.0",
+  version: "1.0.3",
+  scheme: "babyflix",
   extra: {
-    API_URL: process.env.API_URL,
-    ENV: process.env.ENV,
     eas: {
       projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
     }
@@ -17,17 +16,17 @@ export default ({ config }) => ({
   },
   orientation: "portrait",
   icon: "./assets/icon.png",
-  splash: {
-    image: "./assets/images/adaptive-icon2.png",
-    resizeMode: "contain",
-    backgroundColor: "#ffffff"
-  },
   userInterfaceStyle: "light",
   assetBundlePatterns: ["**/*"],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.babyflix.app",
+    bundleIdentifier: "com.babyflix.mobile.app",
     icon: "./assets/icon.png",
+    splash: {
+      image: "./assets/icon-foreground.png", 
+      resizeMode: "contain",    
+      backgroundColor: "#ffffff"
+    },
     infoPlist: {
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: true,
@@ -39,6 +38,14 @@ export default ({ config }) => ({
         "UIInterfaceOrientationLandscapeRight"
       ],
       NSPhotoLibraryUsageDescription: "This app requires access to your photo library.",
+      NSPhotoLibraryAddUsageDescription: "This app needs permission to save photos to your library.",
+      ITSAppUsesNonExemptEncryption: false,
+      UIBackgroundModes: ["fetch", "remote-notification"],
+      CFBundleURLTypes: [ 
+        {
+          CFBundleURLSchemes: ["babyflix"]
+        }
+      ]
     }
   },
   android: {
@@ -52,7 +59,25 @@ export default ({ config }) => ({
       backgroundColor: "#FF6996" 
     },
     package: "com.babyflix.app",
-    jsEngine: "hermes",
+    splash: {
+      image: "./assets/icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff"
+    },
+    //jsEngine: "hermes",
+    intentFilters: [ // ✅ Android deep linking
+      {
+        action: "VIEW",
+        data: [
+          {
+            scheme: "babyflix",
+            host: "*",
+            pathPrefix: "/"
+          }
+        ],
+        category: ["BROWSABLE", "DEFAULT"]
+      }
+    ],
     permissions: [
       "android.permission.READ_MEDIA_IMAGES",
       "android.permission.READ_MEDIA_VIDEO",
@@ -68,8 +93,20 @@ export default ({ config }) => ({
         photosPermission: "Allow BabyFlix to access your photos",
       }
     ],
-    "expo-video",
-    "expo-build-properties",
-    "expo-font"
+    "expo-web-browser",
+    "expo-av",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          jsEngine: "jsc",
+          turboModules: false,  // Disable TurboModules for iOS
+        },
+        android: {
+          jsEngine: "hermes",
+        },
+      }
+    ],
+    "expo-font",
   ],
 });

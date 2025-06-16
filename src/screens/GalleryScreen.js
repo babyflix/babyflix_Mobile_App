@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Modal,
   TouchableWithoutFeedback,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Header from '../components/Header';
@@ -26,7 +28,7 @@ import { defaultThumbnail } from '../../assets/images/Pause_video.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loader from '../components/Loader';
 import LiveStreamStatus from './LiveStreamStatus.js';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import moment from 'moment-timezone';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { setUnreadMessagesData, setUnreadMessagesCount } from '../state/slices/headerSlice';
@@ -34,6 +36,9 @@ import { connectSocket, getSocket } from '../services/socket';
 import { updateActionStatus } from '../state/slices/authSlice.js';
 import { logError } from '../components/logError.js';
 import AppUpdateModal from '../components/AppUpdateModal';
+import StorageModals from '../components/StorageModals.js'
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { selectStoragePlan, setStoragePlanDetails } from '../state/slices/storagePlanSlice.js';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -101,11 +106,16 @@ const GalleryScreen = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMaximized, setIsMaximized]= useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); 
+  //const [storagePlanPayment, setStoragePlanPayment] = useState(null);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
+  //const storagePlan = useSelector(state => state.storagePlan)
+  const { storagePlanPayment } = useSelector(selectStoragePlan);
+  console.log("storagePlanPayment",storagePlanPayment)
   const dispatch = useDispatch();
+  const insets = useSafeAreaInsets();
 
 const onRefresh = async () => {
   setRefreshing(true);
@@ -130,9 +140,16 @@ const onRefresh = async () => {
       );
       if (res.status === 200) {
         const data1 = res.data;
+        // setStoragePlanPayment(data1.storagePlanPayment)
+        // dispatch(setStoragePlanDetails({
+        //   skippedPlanCount: data1.skippedPlanCount,
+        //   storagePlanId: data1.storagePlanId,
+        //   storagePlanPayment: data1.storagePlanPayment,
+        // }));
+        // console.log("data1",data1)
         try {
           const response = await axios.get(
-            EXPO_PUBLIC_CLOUD_API_URL + `/get-images/?machine_id=${user.machineId}&user_id=${user.uuid}&mobile=${data1.phone}&email=${user.email}`,
+            EXPO_PUBLIC_CLOUD_API_URL + `/get-images/?machine_id=${user.machineId}&user_id=${user.uuid}&email=${user.email}`,
             {
               headers: {
                 'Content-Type': 'application/json',
@@ -190,9 +207,11 @@ const onRefresh = async () => {
   }, [user]);
 
 
-  useEffect(() => {
-
-  }, []);  
+//  useFocusEffect(
+//   useCallback(() => {
+//     StatusBar.setHidden(true); // Ensure it’s visible
+//   }, [])
+// ); 
 
   useEffect(() => {
     const fetchUnreadChats = async () => {
@@ -223,16 +242,20 @@ const onRefresh = async () => {
 
   const closeModal = async () => {
     await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    StatusBar.setHidden(false);
+
     setModalVisible(false);
     setPreviewItem(null);
     setIsFullScreen(false);
     setIsMaximized(false);
+    //StatusBar.setHidden(false);
   };
 
   useEffect(() => {
     if (!modalVisible) {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     }
+    StatusBar.setHidden(modalVisible);
   }, [modalVisible]);
   
   const togglePlayPause = () => {
@@ -248,17 +271,21 @@ const onRefresh = async () => {
   };
 
   const enterFullScreen = async () => {
+    //StatusBar.setHidden(true);
     await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
     setIsFullScreen(true);
+    <StatusBar hidden={modalVisible} />
+    StatusBar.setHidden(false)
   };
   
   const exitFullScreen = async () => {
     await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     setIsFullScreen(false);
+    StatusBar.setHidden(false)
   };
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65}]}>
+    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <LiveStreamStatus />
       <Header title="Gallery" />
       {isLoading ? (
@@ -279,19 +306,25 @@ const onRefresh = async () => {
       )}
 
 <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
+{storagePlanPayment !== 1 && <StorageModals />}
 
       {previewItem && previewItem.object_url && (
-        <Modal transparent={true} visible={modalVisible} onRequestClose={closeModal}>
-          <TouchableWithoutFeedback >
+        <Modal 
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={closeModal}
+        >
             <View style={styles.modalOverlay}>
               <View style={[styles.modalContent, isFullScreen && styles.maxRotateModelContent,isMaximized && styles.maxModalContent]}>
                 {previewItem.object_type === 'video' ? (
                   <Video
+                    key={previewItem?.id}
                     source={{ uri: previewItem.object_url }}
                     style={[styles.modalVideo, isFullScreen && { width: '100%', height: '100%' }]}
                     useNativeControls
-                    shouldPlay={true}
-                    isLooping={true}
+                    shouldPlay={modalVisible}
+                    isLooping
                     isMuted={isMuted}
                     resizeMode="contain"
                   />
@@ -358,7 +391,6 @@ const onRefresh = async () => {
                 </TouchableOpacity>
               </View>
             </View>
-          </TouchableWithoutFeedback>
         </Modal>
       )}
 
@@ -416,12 +448,24 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     height: 3,
   },
+  // modalOverlay: {
+  //   flex: 1,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  // },
+
   modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
+  position: 'absolute',  // ✅ Needed for full-screen overlay
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 9999,           // ✅ Ensure it stays on top
+},
   modalContent: {
     width: '90%',
     height: '50%',
@@ -441,18 +485,39 @@ const styles = StyleSheet.create({
   maxRotateModelContent: { 
     width: '100%',
     height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     maxWidth: Dimensions.get('window').height,
     maxHeight: Dimensions.get('window').width,
     backgroundColor: 'black',
     padding: 10,
     },
+
+//   maxRotateModelContent: {
+//   position: 'absolute',
+//   top: 0,
+//   left: 0,
+//   right: 0,
+//   bottom: 0,
+//   width: Dimensions.get('window').height, // rotated
+//   height: Dimensions.get('window').width, // rotated
+//   backgroundColor: 'black',
+//   padding: 0, // No padding in fullscreen!
+//   zIndex: 9999,
+// },
+
   modalImage: {
     width: '100%',
     height: '100%',
+    resizeMode: 'contain',
   },
   modalVideo: {
     width: '100%',
     height: '100%',
+    resizeMode: 'contain',
   },
   controls: {
     position: 'absolute',
@@ -473,11 +538,12 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: 'black',
+    top: 5,
+    right: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,
     borderRadius: 5,
+    zIndex: 999,
   },
   closeButtonText: {
     color: 'red',
@@ -490,6 +556,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,
     borderRadius: 5,
+    zIndex: 999,
   },
   rotateButton: {
     position: 'absolute',
@@ -498,6 +565,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 5,
     borderRadius: 5,
+    zIndex: 999,
   },
   muteButtonText: {
     color: 'white',

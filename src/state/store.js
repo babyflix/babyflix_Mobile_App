@@ -4,6 +4,7 @@ import uiReducer from './slices/uiSlice';
 import mediaReducer from './slices/mediaSlice';
 import headerReducer from './slices/headerSlice';
 import streamReducer from './slices/streamSlice';
+import storagePlanReducer from './slices/storagePlanSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     mediaData: mediaReducer,
     header: headerReducer,
     stream: streamReducer,
+    storagePlan: storagePlanReducer,
   },
 });

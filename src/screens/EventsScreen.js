@@ -27,6 +27,7 @@ import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
 import * as Animatable from 'react-native-animatable';
 import { logError } from '../components/logError';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -173,9 +174,10 @@ const EventsScreen = () => {
   const [pageIndex, setPageIndex] = useState(0);
   const [hasMoreData, setHasMoreData] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
+  const [showPhoneInfo, setShowPhoneInfo] = useState(false);
 
   const user = useSelector((state) => state.auth);
+  const insets = useSafeAreaInsets();
 
   const fetchData = async (page = 0, isLoadMore = false) => {
     setIsLoading(true);
@@ -367,7 +369,7 @@ const EventsScreen = () => {
 
 
   return (
-    <View style={GlobalStyles.container}>
+    <View style={[GlobalStyles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <Header title="Events" />
 
       {isLoading ? (
@@ -583,6 +585,7 @@ const EventsScreen = () => {
                         onChangeText={(text) => handleUpdateMobileNumber(index, "mobileNumber", text)}
                         keyboardType="phone-pad"
                         maxLength={10}
+                        onFocus={() => setShowPhoneInfo(true)}
                       />
                     </View>
 
@@ -596,6 +599,18 @@ const EventsScreen = () => {
                 {mobileErrors ? (
                   <Text style={styles.errorText}>{mobileErrors}</Text>
                 ) : null}
+                {showPhoneInfo && (
+                <View style={{
+                  backgroundColor: 'lightyellow',
+                  padding: 8,
+                  borderRadius: 5,
+                  marginTop: 5,
+                }}>
+                  <Text style={{ fontSize: 12, color: 'black' }}>
+                    This number will only be used to send the event invite via SMS to your family or friends..
+                  </Text>
+                </View>
+              )}
               </ScrollView>
 
 
