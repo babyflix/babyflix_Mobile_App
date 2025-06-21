@@ -1,3 +1,15 @@
+support url : https://sites.google.com/view/babyflix-contact/home
+privacy policy url : https://sites.google.com/view/babyflix-privacy-policy/home 
+
+add in eas.json file 
+"ios" : {
+appleId : "jayeshrpatil20@gmail.com"
+ascAppId : "6746346632"
+appleTeamId : "V2R5DUK4JJ"
+}
+
+ eas submit -p ios --latest
+
 
 Expo iOS App: Build, Install, and Publish Guide on iPhone (via TestFlight & App Store)
 ----------------------------------------------------------------------------------------

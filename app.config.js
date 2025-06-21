@@ -4,7 +4,7 @@ export default ({ config }) => ({
   ...config,
   name: "BabyFlix",
   slug: "babyflix",
-  version: "1.0.3",
+  version: "1.0.4",
   scheme: "babyflix",
   extra: {
     eas: {
@@ -37,9 +37,14 @@ export default ({ config }) => ({
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight"
       ],
-      NSPhotoLibraryUsageDescription: "BabyFlix allows you to select baby ultrasound images and videos from your photo library to view them in the app.",
+      NSPhotoLibraryUsageDescription: "BabyFlix allows you to select baby ultrasound images and videos from your photo library to view them in the app",
       ITSAppUsesNonExemptEncryption: false,
       UIBackgroundModes: ["fetch", "remote-notification"],
+      CFBundleURLTypes: [ 
+        {
+          CFBundleURLSchemes: ["babyflix"]
+        }
+      ]
     }
   },
   android: {
@@ -55,6 +60,19 @@ export default ({ config }) => ({
       backgroundColor: "#ffffff"
     },
     //jsEngine: "hermes",
+    intentFilters: [ // ✅ Android deep linking
+      {
+        action: "VIEW",
+        data: [
+          {
+            scheme: "babyflix",
+            host: "*",
+            pathPrefix: "/"
+          }
+        ],
+        category: ["BROWSABLE", "DEFAULT"]
+      }
+    ],
     permissions: [
       "android.permission.READ_MEDIA_IMAGES",
       "android.permission.READ_MEDIA_VIDEO",
@@ -70,6 +88,7 @@ export default ({ config }) => ({
         photosPermission: "Allow BabyFlix to access your photo library to select baby-related images and videos.",
       }
     ],
+    "expo-web-browser",
     "expo-av",
     [
       "expo-build-properties",
@@ -83,6 +102,6 @@ export default ({ config }) => ({
         },
       }
     ],
-    "expo-font"
+    "expo-font",
   ],
 });

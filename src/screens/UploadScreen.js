@@ -258,7 +258,7 @@ const UploadScreen = () => {
                 source={{ uri: media.uri }}
                 style={styles.previewImage}
                 resizeMode="cover"
-                shouldPlay={false}
+                shouldPlay={true}
                 isLooping={false}
                 useNativeControls
                 onLoad={() => setVideoReady(true)}

@@ -493,7 +493,7 @@ const RegisterScreen = () => {
 
                     <View style={[styles.textInputIconView, styles.allMarginRight]}>
                       <TextInput
-                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
+                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 6 }]}
                         placeholder="DOB(Optional)"
                         value={formData.dob}
                         onFocus={() => {
@@ -706,7 +706,7 @@ const RegisterScreen = () => {
                         top: 15,
                       }}
                     />
-                    <TextInput
+                     <TextInput
                       style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
                       placeholder="Ph. No(Optional)"
                       value={formData.phone}

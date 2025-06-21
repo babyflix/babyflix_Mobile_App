@@ -176,7 +176,6 @@ const EventsScreen = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showPhoneInfo, setShowPhoneInfo] = useState(false);
 
-
   const user = useSelector((state) => state.auth);
   const insets = useSafeAreaInsets();
 

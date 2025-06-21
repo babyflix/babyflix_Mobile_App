@@ -68,7 +68,7 @@ const ProfileSettingsScreen = () => {
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
-  const [modalType, setModalType] = useState('success');
+  const [modalType, setModalType] = useState('success'); // or 'error'
 
   const modalContentHeight = showAdditionalInfo ? '95%' : '85%';
 
@@ -107,10 +107,10 @@ const ProfileSettingsScreen = () => {
   }, [countries]);
 
   const BabySex = [
-    { label: 'Male', value: 'male' },
-    { label: 'Female', value: 'female' },
-    { label: 'Other', value: 'other' },
-  ];
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
+  { label: 'Other', value: 'other' },
+];
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -131,7 +131,7 @@ const ProfileSettingsScreen = () => {
           setDueDate(response.data.dueDate || '');
           setDob(response.data.dob || '');
           setEmail(response.data.email || '')
-          setCountryCode(response.data.countryCode || 1 );
+          setCountryCode(response.data.countryCode || 1);
           setPhone(response.data.phone || '');
           setSpouseName(response.data.spouseFirstName || '');
           setBabyName(response.data.babyName || '');
@@ -178,7 +178,7 @@ const ProfileSettingsScreen = () => {
     const currentDate = selectedDate || dob;
     setShowDatePicker(false);
 
-    const formattedDate = currentDate.toLocaleDateString("en-US"); 
+    const formattedDate = currentDate.toLocaleDateString("en-US");
 
     if (dateField === 'dob' && formattedDate !== dob) {
       setDob(formattedDate);
@@ -299,11 +299,31 @@ const ProfileSettingsScreen = () => {
       }
     }
 
-    if (!firstName || !lastName) {
+    if (!firstName || !lastName ) {
       setErrorMessage('Please fill in all fields.');
       return;
     }
     console.log(`
+🔍 User Data to be Updated:
+First Name      : ${firstName}
+Last Name       : ${lastName}
+Email           : ${email}
+Phone           : ${phone}
+Country Code    : ${selectedCountry || countryCode }
+Due Date        : ${dueDate}
+Date of Birth   : ${dob}
+Company ID      : ${result.companyId}
+Location ID     : ${result.locationId}
+Machine ID      : ${result.machineId}
+User Groups     : ${JSON.stringify(result.userGroups)}
+Spouse Name     : ${spouseName}
+Baby Name       : ${babyName}
+Baby Sex        : ${babySex}
+UUID            : ${result.uuid}
+`);
+
+
+     console.log(`
 🔍 User Data to be Updated:
 First Name      : ${firstName}
 Last Name       : ${lastName}
@@ -357,8 +377,8 @@ UUID            : ${result.uuid}
         setSnackbarVisible(true);
       }
     } catch (error) {
-      setErrorMessage('Failed to reset password. Please try again.');
-      setSnackbarMessage(error.response?.data?.error || 'Failed to reset password. Please try again.');
+      setErrorMessage('Failed to Edit Profile. Please try again.');
+      setSnackbarMessage(error.response?.data?.error || 'Failed to Edit Profile. Please try again.');
       setSnackbarType('error');
       setSnackbarVisible(true);
       await logError({
@@ -732,7 +752,7 @@ UUID            : ${result.uuid}
 
               <CustomDropdown
                 selectedValue={selectedCountry}
-                onSelect={(item) => {
+                 onSelect={(item) => {
                   setSelectedCountry(item);           // full selected object (optional)
                   console.log('selectedCountry',item)
                 }}
