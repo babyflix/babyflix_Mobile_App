@@ -37,6 +37,13 @@ const videoExtensions = [
   "mp4", "webm", "ogg", "avi", "mov", "mkv", "flv", "wmv", "3gp"
 ];
 
+const getMimeType = (uri) => {
+  const ext = uri.split('.').pop().toLowerCase();
+  if (imageExtensions.includes(ext)) return `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+  if (videoExtensions.includes(ext)) return `video/${ext}`;
+  return 'application/octet-stream';
+};
+
 const isValidMediaFile = (file) => {
   if (!file || !file.uri) return false;
   const uri = file.uri;
@@ -68,7 +75,6 @@ const UploadScreen = () => {
   const insets = useSafeAreaInsets();
 
   const pickMedia = async () => {
-
     setPreviewLoad(true);
     const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -98,7 +104,15 @@ const UploadScreen = () => {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        const file = result.assets[0];
+        //const file = result.assets[0];
+        const asset = result.assets[0];
+          const info = await FileSystem.getInfoAsync(asset.uri);
+
+          const file = {
+            ...asset,
+            fileSize: info.size || 0,
+          };
+
 
         if (!isValidMediaFile(file)) {
           Alert.alert(
@@ -151,7 +165,7 @@ const UploadScreen = () => {
     const hostUrl = await getHostUrl();
 
     const details = {
-      machine_id: user.role === 'user' ? user.machineId : machineId,
+      machine_id: user.role === 'user' ? user.machineId : user.machineId,
       user_id: user.role === 'user' ? user.uuid : '',
       uploaded_by: user.role === 'user' ? "By Me" : "By Clinic",
       hostUrl,
@@ -370,7 +384,7 @@ const UploadScreen = () => {
               </Text>
               <TouchableOpacity
                 onPress={() => {
-                  setMedia(false)
+                  setMedia(null)
                   setShowSuccessModal(false);
                   router.push('/gallery');
                 }}

@@ -108,6 +108,7 @@
 
 // export default AuthLoader;
 
+
 import React, { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';

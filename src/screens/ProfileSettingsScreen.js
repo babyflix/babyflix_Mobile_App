@@ -70,7 +70,6 @@ const ProfileSettingsScreen = () => {
   const [modalMessage, setModalMessage] = useState('');
   const [modalType, setModalType] = useState('success'); // or 'error'
 
-
   const modalContentHeight = showAdditionalInfo ? '95%' : '85%';
 
   const user = useSelector((state) => state.auth);
@@ -112,7 +111,6 @@ const ProfileSettingsScreen = () => {
   { label: 'Female', value: 'female' },
   { label: 'Other', value: 'other' },
 ];
-
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -305,6 +303,25 @@ const ProfileSettingsScreen = () => {
       setErrorMessage('Please fill in all fields.');
       return;
     }
+    console.log(`
+🔍 User Data to be Updated:
+First Name      : ${firstName}
+Last Name       : ${lastName}
+Email           : ${email}
+Phone           : ${phone}
+Country Code    : ${selectedCountry || countryCode }
+Due Date        : ${dueDate}
+Date of Birth   : ${dob}
+Company ID      : ${result.companyId}
+Location ID     : ${result.locationId}
+Machine ID      : ${result.machineId}
+User Groups     : ${JSON.stringify(result.userGroups)}
+Spouse Name     : ${spouseName}
+Baby Name       : ${babyName}
+Baby Sex        : ${babySex}
+UUID            : ${result.uuid}
+`);
+
 
      console.log(`
 🔍 User Data to be Updated:

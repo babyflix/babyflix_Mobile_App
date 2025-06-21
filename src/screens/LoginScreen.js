@@ -147,12 +147,12 @@ const LoginScreen = () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={GlobalStyles.container}
+      style={[GlobalStyles.container]}
     >
-      <View style={GlobalStyles.container}>
-        <CommonSVG color={svgColor} />
+      <View style={[GlobalStyles.container]}>
+        <CommonSVG color={svgColor} />        
 
-        <ScrollView contentContainerStyle={[GlobalStyles.screenPadding, { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }]}
+        <ScrollView contentContainerStyle={[GlobalStyles.screenPadding, { flexGrow: 1, justifyContent: 'center', alignItems: 'center',}]}
           keyboardShouldPersistTaps="handled"
         >
           <View style={{ width: '100%' }}>
