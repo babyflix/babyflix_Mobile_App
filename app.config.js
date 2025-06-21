@@ -4,7 +4,7 @@ export default ({ config }) => ({
   ...config,
   name: "BabyFlix",
   slug: "babyflix",
-  version: "1.0.3",
+  version: "1.0.4",
   scheme: "babyflix",
   extra: {
     eas: {
@@ -37,8 +37,7 @@ export default ({ config }) => ({
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight"
       ],
-      NSPhotoLibraryUsageDescription: "This app requires access to your photo library.",
-      NSPhotoLibraryAddUsageDescription: "This app needs permission to save photos to your library.",
+      NSPhotoLibraryUsageDescription: "BabyFlix allows you to select baby ultrasound images and videos from your photo library to view them in the app",
       ITSAppUsesNonExemptEncryption: false,
       UIBackgroundModes: ["fetch", "remote-notification"],
       CFBundleURLTypes: [ 
@@ -90,7 +89,7 @@ export default ({ config }) => ({
     [
       "expo-image-picker",
       {
-        photosPermission: "Allow BabyFlix to access your photos",
+        photosPermission: "Allow BabyFlix to access your photo library to select baby-related images and videos.",
       }
     ],
     "expo-web-browser",
