@@ -315,7 +315,7 @@ const EventsScreen = () => {
   const handleAddMobileRow = () => {
     const last = mobileNumbers[mobileNumbers.length - 1];
     if (!last.countryCode || !last.mobileNumber) {
-      setMobileErrors("complete the current row before adding new");
+      setMobileErrors(" complete the current row before adding new");
       return;
     }
 

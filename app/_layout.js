@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { ErrorBoundary, Stack } from 'expo-router';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { store } from '../src/state/store';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -69,14 +69,18 @@ const LayoutContent = () => {
   }, [isConnected, dispatch]);
 
   useEffect(() => {
-    const requestPermissions = async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Please enable media access.');
+  const requestPermissions = async () => {
+    try {
+      const { status, granted, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted' && !granted && !canAskAgain) {
+        Alert.alert('Permission Required', 'Please enable media access in Settings.');
       }
-    };
-    if (isAuthenticated) requestPermissions();
-  }, [isAuthenticated]);
+    } catch (error) {
+      console.warn('Permission request failed:', error);
+    }
+  };
+  if (isAuthenticated) requestPermissions();
+}, [isAuthenticated]);   
 
    useEffect(() => {
     if (isAuthenticated && user?.email) {

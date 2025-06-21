@@ -483,7 +483,7 @@ const confirmDelete = async () => {
           onRequestClose={closeModal}
         >
             <View style={styles.modalOverlay}>
-              <View style={[styles.modalContent, isFullScreen && styles.maxRotateModelContent,isMaximized && styles.maxModalContent]}>
+              <View style={[styles.modalContent,isFullScreen && styles.maxRotateModelContent,isMaximized && styles.maxModalContent]}>
                 {previewItem.object_type === 'video' ? (
                   <Video
                     key={previewItem?.id}

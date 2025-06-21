@@ -79,7 +79,6 @@
 //   },
 // });
 
-
 import React, { useEffect, useState } from 'react';
 import { View, Image, StyleSheet, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';

@@ -2,10 +2,6 @@ import { StyleSheet, Platform } from 'react-native';
 import Colors from '../constants/Colors';
 
 export default StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
   safeArea: {
     flex: 1,
     backgroundColor: Colors.background,

@@ -15,7 +15,6 @@ import {
   Pressable,
   FlatList,
 } from 'react-native';
-import RNPickerSelect from 'react-native-picker-select';
 import { useRouter } from 'expo-router';
 import GlobalStyles from '../styles/GlobalStyles';
 import Colors from '../constants/Colors';
@@ -512,7 +511,7 @@ const RegisterScreen = () => {
 
                     <View style={[styles.textInputIconView, styles.allMarginLeft]}>
                       <TextInput
-                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 6 }]}
+                        style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
                         placeholder="Due Date"
                         value={formData.dueDate}
                         onFocus={() => {

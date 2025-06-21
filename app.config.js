@@ -9,7 +9,7 @@ export default ({ config }) => ({
   extra: {
     eas: {
       projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
-    }
+    },
   },
   updates: {
   fallbackToCacheTimeout: 0
@@ -48,10 +48,6 @@ export default ({ config }) => ({
     }
   },
   android: {
-    adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon2.png",
-      backgroundColor: "#ffffff"
-    },
     icon: "./assets/icon2.png", 
     adaptiveIcon: {
       foregroundImage: "./assets/icon-foreground.png", 
