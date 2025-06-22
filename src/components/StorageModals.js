@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, AppState } from 'react-native';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPO_PUBLIC_API_URL } from '@env';
@@ -53,7 +53,7 @@ const StorageModals = () => {
 
   useEffect(() => {
   const checkPaymentStatus = async () => {
-    const status = await AsyncStorage.getItem('payment_status');
+    const status = await AsyncStorage.getItem('payment_status 1');
     console.log('status',status)
     if (status === 'fail') {
       setIsVisible(true); // Show pending payment modal
@@ -78,13 +78,103 @@ const StorageModals = () => {
   }
 }, [openStorage2Directly]);
 
-useEffect(() => {
-  const handleUrl = async ({ url }) => {
-    console.log('Received deep link URL:', url);
-    const parsed = Linking.parse(url);
-    const status = parsed.queryParams?.status;
+// useEffect(() => {
+//   const handleUrl = async ({ url }) => {
+//     console.log('Received deep link URL:', url);
+//     const parsed = Linking.parse(url);
+//     const status = parsed.queryParams?.status;
 
-    if (status === 'success') {
+//     if (status === 'success') {
+//       try {
+//         await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+//           method: 'PUT',
+//           headers: { 'Content-Type': 'application/json' },
+//           body: JSON.stringify({
+//             userId: user.uuid,
+//             storagePlanId: selectedPlan,
+//             storagePlanPayment: 1,
+//           }),
+//         });
+
+//         await AsyncStorage.setItem('payment_status 1', 'done');
+//         setShowPaymentSuccess(true);
+//       } catch (e) {
+//         console.log('Update plan error', e);
+//         await AsyncStorage.setItem('payment_status 1', 'fail');
+//         setShowPaymentFailure(true);
+//       }
+//     } else if (status === 'failed') {
+//       await AsyncStorage.setItem('payment_status 1', 'fail');
+//       setShowPaymentFailure(true);
+//     }
+//   };
+
+//   const subscription = Linking.addEventListener('url', handleUrl);
+
+//   return () => subscription.remove();
+// }, []);
+
+// useEffect(() => {
+//   const checkPaymentStatus = async () => {
+//     const status = await AsyncStorage.getItem('payment_status');
+//     console.log('Payment status from storage:', status);
+
+//     if (status === 'fail') {
+//       setShowPaymentFailure(true);
+//       await AsyncStorage.setItem('payment_status 1', 'fail');
+//       await AsyncStorage.removeItem('payment_status');
+//     } else if (status === 'done') {
+//       setShowPaymentSuccess(true);
+//       await AsyncStorage.setItem('payment_status 1', 'done');
+//       // ✅ Optionally update backend only once here
+//       try {
+//         await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+//           method: 'PUT',
+//           headers: { 'Content-Type': 'application/json' },
+//           body: JSON.stringify({
+//             userId: user.uuid,
+//             storagePlanId: selectedPlan,
+//             storagePlanPayment: 1,
+//           }),
+//         });
+//         console.log('Plan updated after success');
+//       } catch (e) {
+//         console.log('Error updating plan after success', e);
+//       }
+
+//       await AsyncStorage.removeItem('payment_status');
+//     } else {
+//       setShowStorage1(true);
+//     }
+//   };
+
+//   if (!openStorage2Directly) {
+//     checkPaymentStatus(); // Initial call
+//   }
+
+//   const subscription = AppState.addEventListener('change', (state) => {
+//     if (state === 'active') {
+//       checkPaymentStatus(); // Call again when app resumes
+//     }
+//   });
+
+//   return () => subscription.remove();
+// }, []);
+
+  useEffect(() => {
+  const checkPaymentStatus = async () => {
+    const status = await AsyncStorage.getItem('payment_status');
+    console.log('Payment status:', status);
+    
+    if (status === 'fail') {
+      setShowPaymentFailure(true);
+      await AsyncStorage.setItem('payment_status 1', 'fail');
+      await AsyncStorage.removeItem('payment_status');
+      setShowStorage1(false);
+    } else if (status === 'done') {
+      setShowPaymentSuccess(true);
+      await AsyncStorage.setItem('payment_status 1', 'done');
+
       try {
         await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
           method: 'PUT',
@@ -95,87 +185,30 @@ useEffect(() => {
             storagePlanPayment: 1,
           }),
         });
-
-        await AsyncStorage.setItem('payment_status', 'done');
-        setShowPaymentSuccess(true);
+        console.log('Plan updated after success');
       } catch (e) {
-        console.log('Update plan error', e);
-        await AsyncStorage.setItem('payment_status', 'fail');
-        setShowPaymentFailure(true);
+        console.log('Plan update error after success', e);
       }
-    } else if (status === 'failed') {
-      await AsyncStorage.setItem('payment_status', 'fail');
-      setShowPaymentFailure(true);
+
+      await AsyncStorage.removeItem('payment_status');
+      setShowStorage1(false);
+    } else {
+      setShowStorage1(true); // Only show this if no status is stored
     }
   };
 
-  const subscription = Linking.addEventListener('url', handleUrl);
+  if (!openStorage2Directly) {
+    checkPaymentStatus(); // initial load
+  }
+
+  const subscription = AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      checkPaymentStatus(); // run again on resume
+    }
+  });
 
   return () => subscription.remove();
 }, []);
-
-//   useEffect(() => {
-//   const handleUrl = (event) => {
-//     const { url } = event;
-//     console.log('Incoming redirect URL:', url);
-
-//     // Extract query parameters from the URL
-//     const urlObj = new URL(url);
-//     const status = urlObj.searchParams.get('status'); // Get the 'status' param
-
-//     if (status === 'success') {
-//       fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
-//         method: 'PUT',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({
-//           userId: user.uuid,
-//           storagePlanId: selectedPlan,
-//           storagePlanPayment: 1,
-//         }),
-//       })
-//         .then(() => setShowPaymentSuccess(true))
-//         .catch(() => setShowPaymentFailure(true));
-//     } else if (status === 'failed') {
-//       setShowPaymentFailure(true);
-//     }
-//   };
-
-//   const subscription = Linking.addEventListener('url', handleUrl);
-
-//   return () => {
-//     subscription.remove();
-//   };
-// }, []);
-
-
-  // useEffect(() => {
-  //   const handleUrl = (event) => {
-  //     const { url } = event;
-  //     console.log('Incoming redirect URL:', url);
-
-  //     if (url.includes('psuccess')) {
-  //       fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
-  //         method: 'PUT',
-  //         headers: { 'Content-Type': 'application/json' },
-  //         body: JSON.stringify({
-  //           userId: user.uuid,
-  //           storagePlanId: selectedPlan,
-  //           storagePlanPayment: 1,
-  //         }),
-  //       })
-  //         .then(() => setShowPaymentSuccess(true))
-  //         .catch(() => setShowPaymentFailure(true));
-  //     } else if (url.includes('pfailer')) {
-  //       setShowPaymentFailure(true);
-  //     }
-  //   };
-
-  //   const subscription = Linking.addEventListener('url', handleUrl);
-
-  //   return () => {
-  //     subscription.remove();
-  //   };
-  // }, []);
 
   const handleProceedNow = () => {
     setShowStorage1(false);
@@ -225,23 +258,7 @@ useEffect(() => {
 
   const handlePayment = async () => {
     try {
-      // const updateRes = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     userId: user.uuid,
-      //     storagePlanId: selectedPlan,
-      //     storagePlanPayment: 0
-      //   }),
-      // });
-
-      // const responseData = await updateRes.json();
-      // console.log('Response:', updateRes.status, responseData);
-
-      // if (!updateRes.ok) {
-      //   throw new Error(responseData.message || responseData.error || 'Update plan failed');
-      // }
-      //await AsyncStorage.setItem('payment_status', 'paying');
+      //await AsyncStorage.setItem('payment_status 1', 'paying');
       console.log('selectedPlan', selectedPlan)
 
       const sessionRes = await axios.post(`${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`, {
@@ -264,10 +281,11 @@ useEffect(() => {
       const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
 
       console.log("Browser result:", result);
+      setShowStorage2(false);
 
     } catch (error) {
       console.error("Payment error:", error);
-      await AsyncStorage.setItem('payment_status', 'fail');
+      await AsyncStorage.setItem('payment_status 1', 'fail');
       setShowStorage2(false);
       setShowPaymentFailure(true);
     }
@@ -410,7 +428,7 @@ useEffect(() => {
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={() => {
                 setShowPaymentSuccess(false);
-                AsyncStorage.removeItem('payment_status');
+                AsyncStorage.removeItem('payment_status 1');
               }}
             >
               <Text style={styles.filledText}>OK GOT IT</Text>
