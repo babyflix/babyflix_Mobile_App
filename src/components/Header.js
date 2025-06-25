@@ -10,7 +10,7 @@ import { logout } from '../state/slices/authSlice';
 import babyflixLogo from '../../assets/BBF_logo.jpg';
 import { toggleDropdown, closeDropdown } from '../state/slices/headerSlice';
 import { EXPO_PUBLIC_API_URL } from '@env';
-import { triggerOpenStorage2 } from '../state/slices/storageUISlice';
+import { clearOpenStorage2, setForceOpenStorageModals, triggerOpenStorage2 } from '../state/slices/storageUISlice';
 import StorageModals from './StorageModals';
 
 const Header = ({ title, showMenu = true, showProfile = true }) => {
@@ -33,7 +33,6 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/getAllPlans`);
         const json = await response.json();
         if (json.actionStatus === 'success') {
-          console.log("getAllPlans", json)
           setPlans(json.data);
         } else {
           console.warn('Failed to fetch plans');
@@ -53,9 +52,6 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
           (plan) => plan.id ===  storagePlan.storagePlanId
         );
         setCurrentPlan(planToShow);
-        console.log('planToShow',planToShow)
-        console.log('storagePlanId',storagePlan.storagePlanId)
-        //console.log('openStorage2Directly',openStorage2Directly)
       }
     }, [plans, storagePlan.storagePlanId]);
 
@@ -63,6 +59,10 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     try {
       await AsyncStorage.removeItem('token');
   
+      await AsyncStorage.multiRemove(['storage_modal_triggered', 'payment_status', 'payment_status 1']);
+
+      dispatch(clearOpenStorage2());
+      dispatch(setForceOpenStorageModals(false));
       dispatch(closeDropdown());
       dispatch(logout());
 
@@ -82,13 +82,15 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     dispatch(closeDropdown());
   };
 
-  const handleChangeClick = () => {
-    dispatch(triggerOpenStorage2());  // 🔸 Set redux flag
-    setShowModal(true);               // 🔸 Show modal instantly
+  const handleChangeClick = async () => {
+    dispatch(triggerOpenStorage2());
+    await AsyncStorage.setItem('storage_modal_triggered', 'false');
+    router.push('/gallery?showStorageModal=true');
   };
 
-  const handleChooseClick = () => {
-    dispatch(triggerOpenStorage2());  // 🔸 Set redux flag
+  const handleChooseClick = async () => {
+    dispatch(triggerOpenStorage2()); 
+    await AsyncStorage.setItem('storage_modal_triggered', 'false');
   };
 
   return (
@@ -135,6 +137,8 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
               style={styles.dropdownItem}
               onPress={() => {
                 closeDropdownHandler();
+                dispatch(clearOpenStorage2());
+                dispatch(setForceOpenStorageModals(true));
                 setPlanModalVisible(true);
               }}
             >
@@ -221,7 +225,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
           </View>
         </View>
       </Modal>
-      {showModal && <StorageModals />}
+      {/* {showModal && <StorageModals />} */}
 
 {/* <View style={styles.planCard}>
   <TouchableOpacity onPress={() => setPlanModalVisible(false)} style={styles.closeIcon}>
@@ -490,7 +494,7 @@ chooseButton: {
   paddingHorizontal: 16,
   paddingVertical: 10,
   borderRadius: 8,
-  flexDirection: 'row',         // <-- to align icon and text horizontally
+  flexDirection: 'row',       
   alignItems: 'center', 
 },
 chooseButtonText: {
@@ -498,8 +502,6 @@ chooseButtonText: {
   fontWeight: '600',
   fontSize: 14,
 },
-
-
 });
 
 export default Header;

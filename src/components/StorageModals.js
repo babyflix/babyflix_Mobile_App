@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, AppState } from 'react-native';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,13 +7,14 @@ import { EXPO_PUBLIC_API_URL } from '@env';
 import { useDispatch, useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import axios from 'axios';
-import { clearOpenStorage2 } from '../state/slices/storageUISlice';
+import { clearOpenStorage2, setForceOpenStorageModals } from '../state/slices/storageUISlice';
+import { getStoragePlanDetails } from './getStoragePlanDetails';
 
-const StorageModals = () => {
+const StorageModals = ({ onClose, storageModalKey }) => {
   const [showStorage1, setShowStorage1] = useState(false);
   const [showStorage2, setShowStorage2] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(1); // or null initially
-  const [selectedPrice, setSelectedPrice] = useState(10); // $10 for basic
+  const [selectedPlan, setSelectedPlan] = useState(1);
+  const [selectedPrice, setSelectedPrice] = useState(10);
   const [skipCount, setSkipCount] = useState(0);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [showPaymentFailure, setShowPaymentFailure] = useState(false);
@@ -21,11 +22,13 @@ const StorageModals = () => {
   const [planPressed, setPlanPressed] = useState(false)
   const [plans, setPlans] = useState([]);
   const [closePlanes, setClosePlans] = useState(false);
+  const [wasTriggered, setWasTriggered] = useState(false);
 
   const user = useSelector((state) => state.auth);
   const { skippedPlanCount, storagePlanId, storagePlanPayment } =
     useSelector((state) => state.storagePlan || {});
   const openStorage2Directly = useSelector(state => state.storageUI.openStorage2Directly);
+  const forceOpenStorageModals = useSelector((state) => state.storageUI.forceOpenStorageModals);
   const dispatch = useDispatch();
 
   const fetchPlans = async () => {
@@ -33,7 +36,6 @@ const StorageModals = () => {
       const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/getAllPlans`);
       const json = await response.json();
       if (json.actionStatus === 'success') {
-        console.log("getAllPlans 1", json)
         setPlans(json.data);
       } else {
         console.warn('Failed to fetch plans');
@@ -47,168 +49,115 @@ const StorageModals = () => {
     fetchPlans();
   }, []);
 
-  // useEffect(() => {
-  //   setShowStorage1(true);
-  // }, []);
-
   useEffect(() => {
-  const checkPaymentStatus = async () => {
-    const status = await AsyncStorage.getItem('payment_status 1');
-    console.log('status',status)
-    if (status === 'fail') {
-      setIsVisible(true); // Show pending payment modal
-    } else {
-      console.log('calling')
-      setShowStorage1(true); // Show normal storage modal
-    }
-  };
-  if(openStorage2Directly == false){
-  checkPaymentStatus();
-}
-}, []);
+    const checkPaymentStatus = async () => {
+      const visited = await AsyncStorage.getItem('visited_after_redirect');
 
-  useEffect(() => {
-    console.log('openStorage2Directly',openStorage2Directly)
-  if (openStorage2Directly) {
-    setShowStorage1(false); // skip first modal
-    setIsVisible(false);
-    setShowStorage2(true);  // show second modal
-    setClosePlans(true);
-    dispatch(clearOpenStorage2()); // reset flag
-  }
-}, [openStorage2Directly]);
-
-// useEffect(() => {
-//   const handleUrl = async ({ url }) => {
-//     console.log('Received deep link URL:', url);
-//     const parsed = Linking.parse(url);
-//     const status = parsed.queryParams?.status;
-
-//     if (status === 'success') {
-//       try {
-//         await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
-//           method: 'PUT',
-//           headers: { 'Content-Type': 'application/json' },
-//           body: JSON.stringify({
-//             userId: user.uuid,
-//             storagePlanId: selectedPlan,
-//             storagePlanPayment: 1,
-//           }),
-//         });
-
-//         await AsyncStorage.setItem('payment_status 1', 'done');
-//         setShowPaymentSuccess(true);
-//       } catch (e) {
-//         console.log('Update plan error', e);
-//         await AsyncStorage.setItem('payment_status 1', 'fail');
-//         setShowPaymentFailure(true);
-//       }
-//     } else if (status === 'failed') {
-//       await AsyncStorage.setItem('payment_status 1', 'fail');
-//       setShowPaymentFailure(true);
-//     }
-//   };
-
-//   const subscription = Linking.addEventListener('url', handleUrl);
-
-//   return () => subscription.remove();
-// }, []);
-
-// useEffect(() => {
-//   const checkPaymentStatus = async () => {
-//     const status = await AsyncStorage.getItem('payment_status');
-//     console.log('Payment status from storage:', status);
-
-//     if (status === 'fail') {
-//       setShowPaymentFailure(true);
-//       await AsyncStorage.setItem('payment_status 1', 'fail');
-//       await AsyncStorage.removeItem('payment_status');
-//     } else if (status === 'done') {
-//       setShowPaymentSuccess(true);
-//       await AsyncStorage.setItem('payment_status 1', 'done');
-//       // ✅ Optionally update backend only once here
-//       try {
-//         await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
-//           method: 'PUT',
-//           headers: { 'Content-Type': 'application/json' },
-//           body: JSON.stringify({
-//             userId: user.uuid,
-//             storagePlanId: selectedPlan,
-//             storagePlanPayment: 1,
-//           }),
-//         });
-//         console.log('Plan updated after success');
-//       } catch (e) {
-//         console.log('Error updating plan after success', e);
-//       }
-
-//       await AsyncStorage.removeItem('payment_status');
-//     } else {
-//       setShowStorage1(true);
-//     }
-//   };
-
-//   if (!openStorage2Directly) {
-//     checkPaymentStatus(); // Initial call
-//   }
-
-//   const subscription = AppState.addEventListener('change', (state) => {
-//     if (state === 'active') {
-//       checkPaymentStatus(); // Call again when app resumes
-//     }
-//   });
-
-//   return () => subscription.remove();
-// }, []);
-
-  useEffect(() => {
-  const checkPaymentStatus = async () => {
-    const status = await AsyncStorage.getItem('payment_status');
-    console.log('Payment status:', status);
-    
-    if (status === 'fail') {
-      setShowPaymentFailure(true);
-      await AsyncStorage.setItem('payment_status 1', 'fail');
-      await AsyncStorage.removeItem('payment_status');
-      setShowStorage1(false);
-    } else if (status === 'done') {
-      setShowPaymentSuccess(true);
-      await AsyncStorage.setItem('payment_status 1', 'done');
-
-      try {
-        await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user.uuid,
-            storagePlanId: selectedPlan,
-            storagePlanPayment: 1,
-          }),
-        });
-        console.log('Plan updated after success');
-      } catch (e) {
-        console.log('Plan update error after success', e);
+      if (visited === 'true') {
+        await AsyncStorage.setItem('visited_after_redirect', 'false');
+        return;
       }
 
-      await AsyncStorage.removeItem('payment_status');
-      setShowStorage1(false);
-    } else {
-      setShowStorage1(true); // Only show this if no status is stored
+      const status = await AsyncStorage.getItem('payment_status 1');
+      if (status === 'fail') {
+        setIsVisible(true);
+      } else if (storageModalKey) {
+        setShowStorage2(true);
+      } else {
+        setShowStorage1(true);
+      }
+    };
+
+    if (!openStorage2Directly) {
+      checkPaymentStatus();
     }
-  };
+  }, []);
 
-  if (!openStorage2Directly) {
-    checkPaymentStatus(); // initial load
-  }
+  const triggeredRef = useRef(false);
+  useEffect(() => {
+    const checkIfTriggered = async () => {
+      if (triggeredRef.current) return;
 
-  const subscription = AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-      checkPaymentStatus(); // run again on resume
+      const triggered = await AsyncStorage.getItem('storage_modal_triggered');
+
+      if (openStorage2Directly && triggered !== 'true') {
+        triggeredRef.current = true;
+        setShowStorage1(false);
+        setIsVisible(false);
+        setShowStorage2(true);
+        setClosePlans(true);
+
+        dispatch(clearOpenStorage2());
+        await AsyncStorage.setItem('storage_modal_triggered', 'true');
+      }
+    };
+
+    if (openStorage2Directly) {
+      checkIfTriggered();
     }
-  });
+  }, [openStorage2Directly]);
 
-  return () => subscription.remove();
-}, []);
+  useEffect(() => {
+    let hasChecked = false;
+    const checkPaymentStatus = async () => {
+      if (hasChecked) return;
+      hasChecked = true;
+
+      const status = await AsyncStorage.getItem('payment_status');
+
+      if (status === 'fail') {
+        await AsyncStorage.setItem('payment_status 1', 'fail');
+        await AsyncStorage.removeItem('payment_status');
+        await AsyncStorage.setItem('storage_modal_triggered', 'false');
+        triggeredRef.current = false;
+        dispatch(setForceOpenStorageModals(false));
+        setShowStorage1(false);
+        setShowStorage2(false);
+        setShowPaymentFailure(true);
+      } else if (status === 'done') {
+        await AsyncStorage.setItem('payment_status 1', 'done');
+
+        try {
+          await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.uuid,
+              storagePlanId: selectedPlan,
+              storagePlanPayment: 1,
+            }),
+          });
+          setShowStorage1(false);
+          setShowStorage2(false);
+          setShowPaymentSuccess(true);
+          dispatch(setForceOpenStorageModals(false));
+        } catch (e) {
+          console.log('Plan update error after success', e);
+        }
+
+        await AsyncStorage.removeItem('payment_status');
+        await AsyncStorage.setItem('storage_modal_triggered', 'false');
+        triggeredRef.current = false;
+        setShowStorage1(false);
+      } else if (storageModalKey) {
+        setShowStorage2(true);
+      } else {
+        setShowStorage1(true);
+      }
+    };
+
+    if (!openStorage2Directly) {
+      checkPaymentStatus();
+    }
+
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        checkPaymentStatus();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   const handleProceedNow = () => {
     setShowStorage1(false);
@@ -220,7 +169,6 @@ const StorageModals = () => {
       setShowStorage1(false);
     }
 
-    console.log('userId', user.uuid)
     try {
       const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updateSkipPlan`, {
         method: 'PUT',
@@ -232,13 +180,10 @@ const StorageModals = () => {
           skippedPlanCount: skippedPlanCount + 1,
         }),
       });
-      console.log('raw response:', response);
 
       const data = await response.json();
-      console.log('parsed response:', data);
 
       if (data.actionStatus === 'success') {
-        console.log('Plan skipped successfully');
         setShowStorage2(false);
       } else {
         console.error('Skip failed:', data.message);
@@ -253,13 +198,12 @@ const StorageModals = () => {
   const handleBack = () => {
     setShowStorage2(false);
     setShowStorage1(true);
-    //setShowPaymentFailure(true)
   };
 
   const handlePayment = async () => {
     try {
-      //await AsyncStorage.setItem('payment_status 1', 'paying');
-      console.log('selectedPlan', selectedPlan)
+      onClose();
+      dispatch(clearOpenStorage2());
 
       const sessionRes = await axios.post(`${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`, {
         planId: selectedPlan,
@@ -271,17 +215,13 @@ const StorageModals = () => {
       });
 
       const sessionData = sessionRes.data;
-      console.log('sessionData', sessionData);
 
       if (!sessionData.sessionId) throw new Error("No session ID returned");
 
       const stripeUrl = sessionData.sessionUrl;
 
-      //const result = await WebBrowser.openBrowserAsync(stripeUrl);
-      const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
-
-      console.log("Browser result:", result);
       setShowStorage2(false);
+      const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
 
     } catch (error) {
       console.error("Payment error:", error);
@@ -299,6 +239,8 @@ const StorageModals = () => {
             <TouchableOpacity
               onPress={() => {
                 setShowStorage1(false);
+                setWasTriggered(false)
+                triggeredRef.current = false;
               }}
               style={styles.closeModel}
             >
@@ -310,7 +252,7 @@ const StorageModals = () => {
             </Text>
             <View style={[
               styles.buttonRow,
-              skippedPlanCount >= 3 && { justifyContent: 'center' } // center when skip is hidden
+              skippedPlanCount >= 3 && { justifyContent: 'center' }
             ]}
             >
               {skippedPlanCount < 3 && (
@@ -323,7 +265,7 @@ const StorageModals = () => {
               )}
               <TouchableOpacity style={[
                 styles.filledButton,
-                skippedPlanCount >= 3 && { width: '60%' } // make button bigger when centered (optional)
+                skippedPlanCount >= 3 && { width: '60%' }
               ]}
                 onPress={handleProceedNow}>
                 <View style={styles.iconButtonContent}>
@@ -340,17 +282,19 @@ const StorageModals = () => {
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
 
-          {closePlanes && (
-            <TouchableOpacity
-              onPress={() => {
-                setShowStorage2(false);
-                setClosePlans(false);
-              }}
-              style={styles.closeModel}
-            >
-              <MaterialIcons name="close" size={24} color="black" />
-            </TouchableOpacity>
-          )}
+            {closePlanes && (
+              <TouchableOpacity
+                onPress={() => {
+                  setShowStorage2(false);
+                  setClosePlans(false);
+                  setWasTriggered(false);
+                  triggeredRef.current = false;
+                }}
+                style={styles.closeModel}
+              >
+                <MaterialIcons name="close" size={24} color="black" />
+              </TouchableOpacity>
+            )}
 
             <View style={styles.modalHeader}>
               <Text style={[styles.title, { textAlign: 'center' }]}>Select Your Plan</Text>
@@ -368,7 +312,7 @@ const StorageModals = () => {
                 ]}
                 onPress={() => {
                   setSelectedPlan(plan.id);
-                  setSelectedPrice(plan.price_per_month); // use price from backend
+                  setSelectedPrice(plan.price_per_month);
                 }}
               >
                 <View style={styles.planRow}>
@@ -400,13 +344,6 @@ const StorageModals = () => {
 
               <TouchableOpacity
                 style={styles.filledButton}
-                // onPress={() => {
-                //   console.log("Selected Price for API:", selectedPrice, selectedPlan);
-                //   setShowStorage2(false);
-                //   //setShowPaymentSuccess(true);
-                //   setShowPaymentFailure(true);
-                //   //setIsVisible(true);
-                // }}
                 onPress={handlePayment}
               >
                 <View style={styles.iconButtonContent}>
@@ -426,9 +363,10 @@ const StorageModals = () => {
             <Text style={[styles.subtitle, {}]}>Thank you for your payment.</Text>
             <TouchableOpacity
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
-              onPress={() => {
+              onPress={async () => {
                 setShowPaymentSuccess(false);
                 AsyncStorage.removeItem('payment_status 1');
+                await getStoragePlanDetails(user.email, dispatch);
               }}
             >
               <Text style={styles.filledText}>OK GOT IT</Text>
@@ -446,8 +384,8 @@ const StorageModals = () => {
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={() => {
                 setShowPaymentFailure(false);
-                //setShowStorage2(true);
                 setIsVisible(true);
+                dispatch(clearOpenStorage2());
               }}
             >
               <Text style={styles.filledText}>TRY AGAIN</Text>
@@ -524,14 +462,10 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     marginBottom: 20,
-    //padding:20,
     marginTop: 10,
     fontFamily: 'Poppins_400Regular',
     color: '#444',
     textAlign: 'left',
-    // borderColor: Colors.primary,
-    // borderWidth: 1.5,
-    // borderRadius: 8,
   },
   subtitleText: {
     fontSize: 14,
@@ -563,7 +497,6 @@ const styles = StyleSheet.create({
   subtitleTextBox: {
     borderColor: Colors.gray,
     borderWidth: 2,
-    //backgroundColor: Colors.lightGray,
   },
   planRow: {
     flexDirection: 'row',

@@ -16,6 +16,7 @@ export default function PaymentResult() {
         await AsyncStorage.setItem('payment_status', 'fail');
       }
 
+      await AsyncStorage.setItem('visited_after_redirect', 'true');
       // Redirect to gallery or home screen
       router.replace('/gallery'); // or wherever you want to send the user
     };

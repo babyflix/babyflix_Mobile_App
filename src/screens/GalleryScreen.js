@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -29,7 +29,7 @@ import { defaultThumbnail } from '../../assets/images/Pause_video.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loader from '../components/Loader';
 import LiveStreamStatus from './LiveStreamStatus.js';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import moment from 'moment-timezone';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { setUnreadMessagesData, setUnreadMessagesCount } from '../state/slices/headerSlice';
@@ -42,6 +42,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { selectStoragePlan, setStoragePlanDetails } from '../state/slices/storagePlanSlice.js';
 import { Ionicons } from '@expo/vector-icons';
 import Snackbar from '../components/Snackbar.js';
+import { clearOpenStorage2 } from '../state/slices/storageUISlice.js';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -50,85 +51,58 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
 
   const formatCreatedAtToIST = (created_at) => {
     const istDate = moment.utc(created_at).tz('Asia/Kolkata');
-    const date = istDate.format('DD/MM/YYYY');  
+    const date = istDate.format('DD/MM/YYYY');
     const time = istDate.format('HH:mm');
     return `${date} | ${time}`;
   };
 
-  // const renderItem = ({ item }) => (
-  //   <TouchableOpacity
-  //     style={styles.mediaItem}
-  //     onPress={() => onPreview(item)}
-  //   >
-  //     {item.object_type === 'video' ? (
-  //       <Image
-  //         source={{ uri: item.thumbnail_url || defaultThumbnail }}
-  //         style={styles.mediaImage}
-  //         resizeMode="cover"
-  //       />
-  //     ) : (
-  //       <Image
-  //         source={{ uri: item.object_url }}
-  //         style={styles.mediaImage}
-  //         resizeMode="cover"
-  //       />
-  //     )}
-
-  //     {item.object_type === 'video' && (
-  //       <View style={styles.videoBadge}>
-  //         <Text style={styles.videoDuration}>{formatCreatedAtToIST(item.created_at)}</Text>
-  //       </View>
-  //     )}
-  //   </TouchableOpacity>
-  // );
-
   const toggleSelection = (item) => {
-  if (!selectionMode) {
-    setSelectionMode(true);
-    setSelectedItems([item.id]);
-  } else {
-    if (selectedItems.includes(item.id)) {
-      setSelectedItems(prev => prev.filter(id => id !== item.id));
-      if (selectedItems.length === 1) setSelectionMode(false);
+    if (!selectionMode) {
+      setSelectionMode(true);
+      setSelectedItems([item.id]);
     } else {
-      setSelectedItems(prev => [...prev, item.id]);
+      if (selectedItems.includes(item.id)) {
+        setSelectedItems(prev => prev.filter(id => id !== item.id));
+        if (selectedItems.length === 1) setSelectionMode(false);
+      } else {
+        setSelectedItems(prev => [...prev, item.id]);
+      }
     }
-  }
-};
+  };
 
-const renderItem = ({ item }) => {
-  const isSelected = selectedItems.includes(item.id);
+  const renderItem = ({ item }) => {
+    const isSelected = selectedItems.includes(item.id);
 
-  return (
-    <TouchableOpacity
-      style={[styles.mediaItem, isSelected && styles.selectedMediaItem]}
-      onLongPress={() => toggleSelection(item)}
-      onPress={() => {
-        if (selectionMode) {
-          toggleSelection(item);
-        } else {
-          onPreview(item);
-        }
-      }}
-    >
-      <Image
-        source={{ uri: item.object_type === 'video' ? item.thumbnail_url || defaultThumbnail : item.object_url }}
-        style={styles.mediaImage}
-        resizeMode="cover"
-      />
-      {item.object_type === 'video' && (
-        <View style={styles.videoBadge}>
-          <Text style={styles.videoDuration}>{formatCreatedAtToIST(item.created_at)}</Text>
-        </View>
-      )}
-      {isSelected && (
-        <View style={styles.selectionOverlay}>
-          <MaterialIcons name="check-circle" size={24} color={Colors.primary} />
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-};
+    return (
+      <TouchableOpacity
+        style={[styles.mediaItem, isSelected && styles.selectedMediaItem]}
+        onLongPress={() => toggleSelection(item)}
+        onPress={() => {
+          if (selectionMode) {
+            toggleSelection(item);
+          } else {
+            onPreview(item);
+          }
+        }}
+      >
+        <Image
+          source={{ uri: item.object_type === 'video' ? item.thumbnail_url || defaultThumbnail : item.object_url }}
+          style={styles.mediaImage}
+          resizeMode="cover"
+        />
+        {item.object_type === 'video' && (
+          <View style={styles.videoBadge}>
+            <Text style={styles.videoDuration}>{formatCreatedAtToIST(item.created_at)}</Text>
+          </View>
+        )}
+        {isSelected && (
+          <View style={styles.selectionOverlay}>
+            <MaterialIcons name="check-circle" size={24} color={Colors.primary} />
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
 
   return (
@@ -139,39 +113,39 @@ const renderItem = ({ item }) => {
       keyExtractor={item => item.id}
       contentContainerStyle={styles.gridContainer}
       ListEmptyComponent={<Text>No media available</Text>}
-      refreshing={refreshing} 
+      refreshing={refreshing}
       onRefresh={onRefresh}
     />
   );
 };
 
-const AllTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode}) => <MediaGrid data={data} 
-  type="all" 
-  onPreview={onPreview} 
-  refreshing={refreshing} 
-  onRefresh={onRefresh} 
+const AllTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode }) => <MediaGrid data={data}
+  type="all"
+  onPreview={onPreview}
+  refreshing={refreshing}
+  onRefresh={onRefresh}
   selectedItems={selectedItems}
   setSelectedItems={setSelectedItems}
   selectionMode={selectionMode}
-  setSelectionMode={setSelectionMode}/>;
-const ImagesTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode }) => <MediaGrid data={data} 
-  type="image" 
-  onPreview={onPreview} 
-  refreshing={refreshing} 
-  onRefresh={onRefresh} 
+  setSelectionMode={setSelectionMode} />;
+const ImagesTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode }) => <MediaGrid data={data}
+  type="image"
+  onPreview={onPreview}
+  refreshing={refreshing}
+  onRefresh={onRefresh}
   selectedItems={selectedItems}
   setSelectedItems={setSelectedItems}
   selectionMode={selectionMode}
-  setSelectionMode={setSelectionMode}/>;
-const VideosTab = ({ data, onPreview,refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode }) => <MediaGrid data={data} 
-  type="video" 
-  onPreview={onPreview} 
-  refreshing={refreshing} 
-  onRefresh={onRefresh} 
+  setSelectionMode={setSelectionMode} />;
+const VideosTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode }) => <MediaGrid data={data}
+  type="video"
+  onPreview={onPreview}
+  refreshing={refreshing}
+  onRefresh={onRefresh}
   selectedItems={selectedItems}
   setSelectedItems={setSelectedItems}
   selectionMode={selectionMode}
-  setSelectionMode={setSelectionMode}/>;
+  setSelectionMode={setSelectionMode} />;
 
 const GalleryScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -181,9 +155,8 @@ const GalleryScreen = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [isMaximized, setIsMaximized]= useState(false);
-  const [refreshing, setRefreshing] = useState(false); 
-  //const [storagePlanPayment, setStoragePlanPayment] = useState(null);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -191,26 +164,43 @@ const GalleryScreen = () => {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarType, setSnackbarType] = useState('success');
+  const [storageModelStart, setStorageModelStart] = useState(false);
+  const [wasTriggered, setWasTriggered] = useState(false);
+  const [storageModalKey, setStorageModalKey] = useState(0);
+  const [hasHandledParam, setHasHandledParam] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
-  //const storagePlan = useSelector(state => state.storagePlan)
   const { storagePlanPayment } = useSelector(selectStoragePlan);
-  console.log("storagePlanPayment",storagePlanPayment)
+  const openStorage2Directly = useSelector(state => state.storageUI.openStorage2Directly);
+  const forceOpenStorageModals = useSelector((state) => state.storageUI.forceOpenStorageModals);
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
+  const triggeredRef = useRef(false);
+  const hasHandledPaymentStatusRef = useRef(false);
+  const params = useLocalSearchParams();
 
-const onRefresh = async () => {
-  setRefreshing(true);
-  await fetchMediaData();
-  setRefreshing(false);
-};
-  
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchMediaData();
+    setRefreshing(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      triggeredRef.current = false;
+      return () => {
+
+      };
+    }, [forceOpenStorageModals])
+  );
+
+
   const fetchMediaData = async () => {
     setIsLoading(true);
     try {
       if (!user.email) {
-        return;        
+        return;
       }
 
       const res = await axios.get(
@@ -223,13 +213,6 @@ const onRefresh = async () => {
       );
       if (res.status === 200) {
         const data1 = res.data;
-        // setStoragePlanPayment(data1.storagePlanPayment)
-        // dispatch(setStoragePlanDetails({
-        //   skippedPlanCount: data1.skippedPlanCount,
-        //   storagePlanId: data1.storagePlanId,
-        //   storagePlanPayment: data1.storagePlanPayment,
-        // }));
-        // console.log("data1",data1)
         try {
           const response = await axios.get(
             EXPO_PUBLIC_CLOUD_API_URL + `/get-images/?machine_id=${user.machineId}&user_id=${user.uuid}&email=${user.email}`,
@@ -260,10 +243,10 @@ const onRefresh = async () => {
         } catch (error) {
 
           await logError({
-                  error: error,
-                  data: error.response,
-                  details: "Error in get-images API call on GalleryScreen"
-                });
+            error: error,
+            data: error.response,
+            details: "Error in get-images API call on GalleryScreen"
+          });
 
           setIsLoading(false);
         } finally {
@@ -289,31 +272,69 @@ const onRefresh = async () => {
     }
   }, [user]);
 
+  useFocusEffect(
+    useCallback(() => {
+      const checkTriggerOnce = async () => {
+        const hasTriggered = await AsyncStorage.getItem('storage_modal_triggered');
 
-//  useFocusEffect(
-//   useCallback(() => {
-//     StatusBar.setHidden(true); // Ensure it’s visible
-//   }, [])
-// ); 
+        const shouldOpenFromParam = params?.showStorageModal === 'true' && !hasHandledParam;
+        const shouldOpenFromRedux = openStorage2Directly && hasTriggered !== 'true' && !triggeredRef.current;
+
+        if (shouldOpenFromParam || shouldOpenFromRedux) {
+          setStorageModelStart(true);
+          setStorageModalKey(true);
+
+          if (shouldOpenFromParam) {
+            setHasHandledParam(true);
+          }
+
+          if (shouldOpenFromRedux) {
+            await AsyncStorage.setItem('storage_modal_triggered', 'true');
+            dispatch(clearOpenStorage2());
+            triggeredRef.current = true;
+          }
+        }
+      };
+
+      checkTriggerOnce();
+    }, [params?.showStorageModal, openStorage2Directly, hasHandledParam])
+  );
+
+
+  useFocusEffect(
+    useCallback(() => {
+      const checkPaymentStatus = async () => {
+        if (hasHandledPaymentStatusRef.current) return;
+
+        const status = await AsyncStorage.getItem('payment_status');
+        if (status === 'fail' || status === 'done') {
+          setStorageModelStart(true);
+          setStorageModalKey(true);
+          hasHandledPaymentStatusRef.current = true;
+        }
+      };
+
+      checkPaymentStatus();
+    }, [])
+  );
 
   useEffect(() => {
     const fetchUnreadChats = async () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-unread-chat-members`);
-        console.log('response',response.data)
         dispatch(setUnreadMessagesData(response.data));
         dispatch(setUnreadMessagesCount(response.data.unread_messages?.[0]?.unread_count || 0));
       } catch (error) {
         console.error('Error fetching unread chats:', error);
       }
     };
-  
+
     fetchUnreadChats();
 
-    const intervalId = setInterval(fetchUnreadChats, 5000); 
-  
+    const intervalId = setInterval(fetchUnreadChats, 5000);
+
     return () => clearInterval(intervalId);
-  }, []);  
+  }, []);
 
   const handlePreview = (item) => {
     if (!item.object_url) {
@@ -331,7 +352,6 @@ const onRefresh = async () => {
     setPreviewItem(null);
     setIsFullScreen(false);
     setIsMaximized(false);
-    //StatusBar.setHidden(false);
   };
 
   useEffect(() => {
@@ -340,7 +360,7 @@ const onRefresh = async () => {
     }
     StatusBar.setHidden(modalVisible);
   }, [modalVisible]);
-  
+
   const togglePlayPause = () => {
     setIsPaused(!isPaused);
   };
@@ -354,13 +374,12 @@ const onRefresh = async () => {
   };
 
   const enterFullScreen = async () => {
-    //StatusBar.setHidden(true);
     await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
     setIsFullScreen(true);
     <StatusBar hidden={modalVisible} />
     StatusBar.setHidden(false)
   };
-  
+
   const exitFullScreen = async () => {
     await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     setIsFullScreen(false);
@@ -368,69 +387,61 @@ const onRefresh = async () => {
   };
 
   const handleCancelSelection = () => {
-  setSelectionMode(false);
-  setSelectedItems([]);
-};
-
-const handleDeleteSelected = () => {
-  if (selectedItems.length > 0) {
-    setShowDeleteModal(true);
-  }
-};
-
-const confirmDelete = async () => {
-  try {
-    setIsDeleting(true);
-    // Combine images and videos into one array
-    const allMedia = [...mediaData.images, ...mediaData.videos];
-
-    // Filter only selected items
-    const selectedMediaObjects = allMedia.filter(item =>
-      selectedItems.includes(item.id)
-    );
-
-    // Loop through and send delete API calls
-    for (const item of selectedMediaObjects) {
-      const payload = {
-        id: item.id,
-        object_type: item.object_type,     // "image" or "video"
-        object_url: item.object_url, // make sure you're using the correct field
-        user_id: item.user_id,
-      };
-
-      console.log("Calling:", `${EXPO_PUBLIC_API_URL}/delete-contents/`);
-      console.log('Payload for delete:', payload);
-
-      const res = await axios.delete(`${EXPO_PUBLIC_CLOUD_API_URL}/delete-contents/`, {
-        data: payload,
-      });
-      console.log("Delete responce",res)
-    }
-
-    // Reset state after deletion
-    setSelectedItems([]);
     setSelectionMode(false);
-    fetchMediaData(); // Refresh media
-    setShowDeleteModal(false);
+    setSelectedItems([]);
+  };
 
-    setSnackbarMessage(`Selected ${selectedItems.length} media deleted successfully!`);
-    setSnackbarType('success');
-    setSnackbarVisible(true);
-  } catch (error) {
-    console.error('Delete error:', error);
-    setShowDeleteModal(false);
+  const handleDeleteSelected = () => {
+    if (selectedItems.length > 0) {
+      setShowDeleteModal(true);
+    }
+  };
 
-    setSnackbarMessage(`Failed to delete ${selectedItems.length} media. Please try again.`);
-    setSnackbarType('error');
-    setSnackbarVisible(true);
-  } finally {
-    setIsDeleting(false); // hide loader
-  }
-};
+  const confirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      const allMedia = [...mediaData.images, ...mediaData.videos];
+
+      const selectedMediaObjects = allMedia.filter(item =>
+        selectedItems.includes(item.id)
+      );
+
+      for (const item of selectedMediaObjects) {
+        const payload = {
+          id: item.id,
+          object_type: item.object_type,
+          object_url: item.object_url,
+          user_id: item.user_id,
+        };
+
+        const res = await axios.delete(`${EXPO_PUBLIC_CLOUD_API_URL}/delete-contents/`, {
+          data: payload,
+        });
+      }
+
+      setSelectedItems([]);
+      setSelectionMode(false);
+      fetchMediaData();
+      setShowDeleteModal(false);
+
+      setSnackbarMessage(`Selected ${selectedItems.length} media deleted successfully!`);
+      setSnackbarType('success');
+      setSnackbarVisible(true);
+    } catch (error) {
+      console.error('Delete error:', error);
+      setShowDeleteModal(false);
+
+      setSnackbarMessage(`Failed to delete ${selectedItems.length} media. Please try again.`);
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
 
   return (
-    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
+    <View style={[GlobalStyles.container, { marginBottom: 65 }, Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <LiveStreamStatus />
       <Header title="Gallery" />
       {isLoading ? (
@@ -447,15 +458,15 @@ const confirmDelete = async () => {
             new Date(b.created_at) - new Date(a.created_at))} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
             selectionMode={selectionMode}
-            setSelectionMode={setSelectionMode}/>} />
+            setSelectionMode={setSelectionMode} />} />
           <Tab.Screen name="Images" children={() => <ImagesTab data={mediaData.images} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
             selectionMode={selectionMode}
-            setSelectionMode={setSelectionMode}/>} />
+            setSelectionMode={setSelectionMode} />} />
           <Tab.Screen name="Videos" children={() => <VideosTab data={mediaData.videos} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
             selectionMode={selectionMode}
-            setSelectionMode={setSelectionMode}/>} />
+            setSelectionMode={setSelectionMode} />} />
         </Tab.Navigator>
       )}
 
@@ -472,44 +483,50 @@ const confirmDelete = async () => {
       )}
 
 
-<AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
-{storagePlanPayment !== 1 && <StorageModals />}
+      <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
+      {(storageModelStart || storagePlanPayment !== 1) && (
+        <StorageModals
+          onClose={() => setStorageModelStart(false)}
+          storageModalKey={storageModalKey}
+          setStorageModalKey={setStorageModalKey}
+        />
+      )}
 
       {previewItem && previewItem.object_url && (
-        <Modal 
+        <Modal
           animationType="fade"
           transparent={true}
           visible={modalVisible}
           onRequestClose={closeModal}
         >
-            <View style={styles.modalOverlay}>
-              <View style={[styles.modalContent,isFullScreen && styles.maxRotateModelContent,isMaximized && styles.maxModalContent]}>
-                {previewItem.object_type === 'video' ? (
-                  <Video
-                    key={previewItem?.id}
-                    source={{ uri: previewItem.object_url }}
-                    style={[styles.modalVideo, isFullScreen && { width: '100%', height: '100%' }]}
-                    useNativeControls
-                    shouldPlay={modalVisible}
-                    isLooping
-                    isMuted={isMuted}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <Image
-                    source={{ uri: previewItem.object_url }}
-                    style={[styles.modalImage,
-                      isMaximized && {
-                        width: "100%",
-                        height: "100%",
-                      }
-                    ]}
-                    resizeMode="contain"
-                  />
-                )}
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, isFullScreen && styles.maxRotateModelContent, isMaximized && styles.maxModalContent]}>
+              {previewItem.object_type === 'video' ? (
+                <Video
+                  key={previewItem?.id}
+                  source={{ uri: previewItem.object_url }}
+                  style={[styles.modalVideo, isFullScreen && { width: '100%', height: '100%' }]}
+                  useNativeControls
+                  shouldPlay={modalVisible}
+                  isLooping
+                  isMuted={isMuted}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Image
+                  source={{ uri: previewItem.object_url }}
+                  style={[styles.modalImage,
+                  isMaximized && {
+                    width: "100%",
+                    height: "100%",
+                  }
+                  ]}
+                  resizeMode="contain"
+                />
+              )}
 
-                {previewItem.object_type === 'video'? (
-                  <View style={styles.muteButton}>
+              {previewItem.object_type === 'video' ? (
+                <View style={styles.muteButton}>
                   <TouchableOpacity onPress={toggleMute} style={styles.muteButton}>
                     <View style={styles.muteButtonText}>
                       <MaterialIcons
@@ -519,45 +536,45 @@ const confirmDelete = async () => {
                       />
                     </View>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity onPress={isFullScreen ? exitFullScreen : enterFullScreen} style={styles.rotateButton}>
                     <View style={styles.muteButtonText}>
-                     <MaterialIcons
+                      <MaterialIcons
                         name={isFullScreen ? "stay-current-landscape" : "stay-current-portrait"}
                         size={20}
                         color="white"
                       />
                     </View>
                   </TouchableOpacity>
-                  </View>
-                ):(
+                </View>
+              ) : (
                 <View style={styles.muteButton}>
                   <TouchableOpacity onPress={toggleFullScreen} style={styles.muteButton}>
                     <View style={styles.muteButtonText}>
                       <MaterialIcons
-                        name={isFullScreen?isMaximized ? "fullscreen" : "fullscreen-exit":isMaximized ? "fullscreen-exit" : "fullscreen"}
+                        name={isFullScreen ? isMaximized ? "fullscreen" : "fullscreen-exit" : isMaximized ? "fullscreen-exit" : "fullscreen"}
                         size={20}
                         color="white"
                       />
                     </View>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity onPress={isFullScreen ? exitFullScreen : enterFullScreen} style={styles.rotateButton}>
                     <View style={styles.muteButtonText}>
-                     <MaterialIcons
+                      <MaterialIcons
                         name={isFullScreen ? "stay-current-landscape" : "stay-current-portrait"}
                         size={20}
                         color="white"
                       />
                     </View>
                   </TouchableOpacity>
-                  </View>)}
+                </View>)}
 
-                <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-                  <MaterialIcons name="close" size={30} color="white" />
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+                <MaterialIcons name="close" size={30} color="white" />
+              </TouchableOpacity>
             </View>
+          </View>
         </Modal>
       )}
 
@@ -616,7 +633,7 @@ const confirmDelete = async () => {
   );
 };
 
-const { width,height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const itemSize = (width - 45) / 3;
 
 const styles = StyleSheet.create({
@@ -659,30 +676,24 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     textTransform: 'none',
-    fontFamily:'Poppins_400Regular'
+    fontFamily: 'Poppins_400Regular'
   },
   tabIndicator: {
     backgroundColor: Colors.primary,
     height: 3,
   },
-  // modalOverlay: {
-  //   flex: 1,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  // },
 
   modalOverlay: {
-  position: 'absolute',  // ✅ Needed for full-screen overlay
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 9999,           // ✅ Ensure it stays on top
-},
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
   modalContent: {
     width: '90%',
     height: '50%',
@@ -699,7 +710,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     padding: 10,
   },
-  maxRotateModelContent: { 
+  maxRotateModelContent: {
     width: '100%',
     height: '100%',
     position: 'absolute',
@@ -711,21 +722,7 @@ const styles = StyleSheet.create({
     maxHeight: Dimensions.get('window').width,
     backgroundColor: 'black',
     padding: 10,
-    },
-
-//   maxRotateModelContent: {
-//   position: 'absolute',
-//   top: 0,
-//   left: 0,
-//   right: 0,
-//   bottom: 0,
-//   width: Dimensions.get('window').height, // rotated
-//   height: Dimensions.get('window').width, // rotated
-//   backgroundColor: 'black',
-//   padding: 0, // No padding in fullscreen!
-//   zIndex: 9999,
-// },
-
+  },
   modalImage: {
     width: '100%',
     height: '100%',
@@ -789,91 +786,91 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   selectedMediaItem: {
-  borderWidth: 2,
-  borderColor: Colors.primary,
-  opacity: 0.7,
-},
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    opacity: 0.7,
+  },
 
-selectionOverlay: {
-  position: 'absolute',
-  top: 5,
-  right: 5,
-  backgroundColor: 'rgba(0,0,0,0.6)',
-  borderRadius: 15,
-  padding: 2,
-},
-selectionHeader: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingHorizontal: 16,
-  paddingVertical: 10,
-  backgroundColor: '#f2f2f2',
-  borderBottomWidth: 1,
-  borderBottomColor: '#ddd',
-},
+  selectionOverlay: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 15,
+    padding: 2,
+  },
+  selectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#f2f2f2',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
 
-cancelText: {
-  fontSize: 16,
-  color: 'red',
-  fontWeight: '500',
-},
+  cancelText: {
+    fontSize: 16,
+    color: 'red',
+    fontWeight: '500',
+  },
 
-deleteText: {
-  fontSize: 16,
-  color: 'black',
-  fontWeight: '500',
-},
-delModalOverlay: {
-  flex: 1,
-  backgroundColor: 'rgba(0,0,0,0.5)',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  deleteText: {
+    fontSize: 16,
+    color: 'black',
+    fontWeight: '500',
+  },
+  delModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-delModalContainer: {
-  backgroundColor: 'white',
-  borderRadius: 14,
-  padding: 20,
-  width: '80%',
-  alignItems: 'center',
-},
+  delModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
 
-delModalTitle: {
-  fontSize: 20,
-  fontWeight: 'bold',
-  fontFamily: 'Poppins_600SemiBold',
-  marginBottom: 10,
-},
+  delModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins_600SemiBold',
+    marginBottom: 10,
+  },
 
-delModalMessage: {
-  fontSize: 14,
-  fontFamily: 'Poppins_400Regular',
-  textAlign: 'center',
-  marginBottom: 20,
-},
+  delModalMessage: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
 
-delModalButtons: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  width: '100%',
-},
+  delModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
 
-delModalButton: {
-  flex: 1,
-  marginHorizontal: 5,
-  paddingVertical: 10,
-  borderRadius: 8,
-  alignItems: 'center',
-  justifyContent: 'center'
-},
+  delModalButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
 
-delModalButtonText: {
-  color: 'white',
-  fontSize: 16,
-  fontWeight: 'bold',
-  fontFamily:'Poppins_500Medium',
-},
+  delModalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins_500Medium',
+  },
 
 });
 
