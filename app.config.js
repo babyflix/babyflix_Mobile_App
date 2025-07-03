@@ -77,7 +77,7 @@ export default ({ config }) => ({
       {
         ios: {
           jsEngine: "jsc",
-          turboModules: false,  // Disable TurboModules for iOS
+          turboModules: false,
         },
         android: {
           jsEngine: "hermes",
