@@ -17,8 +17,9 @@ export default function PaymentResult() {
       }
 
       await AsyncStorage.setItem('visited_after_redirect', 'true');
+      console.log('rrrrrrrrrrrrrrrrrrrrrrrrrrrrr')
       // Redirect to gallery or home screen
-      router.replace('/gallery'); // or wherever you want to send the user
+      router.replace('/(app)/gallery'); // or wherever you want to send the user
     };
 
     handleStatus();

@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import Constants from 'expo-constants';
 import Colors from '../constants/Colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
 
 const AppUpdateModal = ({ serverUrl }) => {
   const [visible, setVisible] = useState(false);
@@ -22,6 +24,14 @@ const AppUpdateModal = ({ serverUrl }) => {
   useEffect(() => {
     const checkForUpdate = async () => {
       try {
+        const skippedDate = await AsyncStorage.getItem('skippedUpdateDate');
+        const today = moment().format('YYYY-MM-DD'); // format: YYYY-MM-DD
+
+        if (skippedDate === today) {
+          console.log("Update skipped for today");
+          return;
+        }
+
         const response = await fetch(serverUrl);
         const data = await response.json();
 
@@ -67,7 +77,12 @@ const AppUpdateModal = ({ serverUrl }) => {
               {!forceUpdate && (
                 <TouchableOpacity
                   style={[styles.button, styles.skip]}
-                  onPress={() => setVisible(false)}
+                  onPress={async () => {
+                    const today = moment().format('YYYY-MM-DD');
+                    await AsyncStorage.setItem('skippedUpdateDate', today);
+                    setVisible(false);
+                  }}
+
                 >
                   <Text style={styles.buttonText}>Skip</Text>
                 </TouchableOpacity>

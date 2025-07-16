@@ -56,6 +56,7 @@ export const getStoragePlanDetails = async (email, dispatch) => {
         skippedPlanCount: data.skippedPlanCount,
         storagePlanId: data.storagePlanId,
         storagePlanPayment: data.storagePlanPayment,
+        isPlanDeleted: data.isPlanDeleted
       }));
     }
   } catch (error) {

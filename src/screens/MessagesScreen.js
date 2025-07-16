@@ -394,10 +394,22 @@ const MessagesScreen = () => {
     setLoading(true);
     try {
       const socket = getSocket();
+      // socket.emit('privateMessage', {
+      //   ...newMessage,
+      //   sender_uuid: user.uuid,
+      // });
+
       socket.emit('privateMessage', {
-        ...newMessage,
-        sender_uuid: user.uuid,
+        sender: user.uuid,
+        senderName: user.name,
+        receiver: uuid,
+        receiverName: chatHistory[0]?.name,
+        content: newMessage.content,
+        date: currentTimestamp,
+        status: 'sent',
+        message_uuid: messages_Uuid,
       });
+
 
       await axios.post(`${EXPO_PUBLIC_API_URL}/api/chats/send-message`, {
         recipientUuid: uuid,

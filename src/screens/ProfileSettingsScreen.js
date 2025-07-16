@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 import GlobalStyles from '../styles/GlobalStyles';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../state/slices/authSlice';
+import { logout, setLoggingOut } from '../state/slices/authSlice';
 import Header from '../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -27,6 +27,7 @@ import { logError } from '../components/logError';
 import CustomDropdown from '../components/CustomDropdown';
 import { closeDropdown } from '../state/slices/headerSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { clearOpenStorage2, setForceOpenStorageModals } from '../state/slices/storageUISlice';
 
 const ProfileSettingsScreen = () => {
   const dispatch = useDispatch();
@@ -160,17 +161,32 @@ const ProfileSettingsScreen = () => {
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('token');
-      
+      //await AsyncStorage.removeItem('token');
+      await AsyncStorage.setItem('logoutInProgress', 'true');
+
+      dispatch(setLoggingOut(true));
+  
+      await AsyncStorage.multiRemove([
+      'token',
+      'userData',
+      'tokenExpiry',
+      'storage_modal_triggered', 
+      'payment_status', 
+      'payment_status 1', 
+      'last_skipped_plan_date'
+    ]);
+
+      dispatch(clearOpenStorage2());
+      dispatch(setForceOpenStorageModals(false));
       dispatch(closeDropdown());
       dispatch(logout());
-
-      setTimeout(() => {
-        router.replace('login');
-      }, 100);
+      
+    setTimeout(() => {
+      router.replace('/login');
+    }, 100);
 
     } catch (error) {
-
+      dispatch(setLoggingOut(false));
     }
   };
 

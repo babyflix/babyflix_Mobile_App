@@ -89,6 +89,7 @@ export default ({ config }) => ({
       }
     ],
     "expo-web-browser",
+    //"expo-notifications",
     "expo-av",
     [
       "expo-build-properties",

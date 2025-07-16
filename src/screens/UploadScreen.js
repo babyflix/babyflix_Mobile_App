@@ -26,6 +26,7 @@ import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import { updateActionStatus } from '../state/slices/authSlice';
 import { logError } from '../components/logError';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { requestMediaLibraryPermission } from '../components/requestMediaPermission';
 
 const UPLOAD_API_URL = `${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`;
 const CHUNK_SIZE = 2 * 1024 * 1024;
@@ -76,24 +77,30 @@ const UploadScreen = () => {
 
   const pickMedia = async () => {
     setPreviewLoad(true);
-    const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    // const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (status !== 'granted') {
-      if (!canAskAgain) {
-        Alert.alert(
-          'Permission Required',
-          'Media access was denied and cannot be requested again. Please enable it manually in settings.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Open Settings', onPress: () => Linking.openSettings() }
-          ]
-        );
-      } else {
-        Alert.alert(
-          'Permission Required',
-          'Please allow access to your media to select files.'
-        );
-      }
+    // if (status !== 'granted') {
+    //   if (!canAskAgain) {
+    //     Alert.alert(
+    //       'Permission Required',
+    //       'Media access was denied and cannot be requested again. Please enable it manually in settings.',
+    //       [
+    //         { text: 'Cancel', style: 'cancel' },
+    //         { text: 'Open Settings', onPress: () => Linking.openSettings() }
+    //       ]
+    //     );
+    //   } else {
+    //     Alert.alert(
+    //       'Permission Required',
+    //       'Please allow access to your media to select files.'
+    //     );
+    //   }
+    //   return;
+    // }
+
+     const granted = await requestMediaLibraryPermission();
+    if (!granted) {
+      setPreviewLoad(false);
       return;
     }
 
@@ -123,12 +130,15 @@ const UploadScreen = () => {
         }
         setMedia(file);
         setVideoReady(false);
+        setPreviewLoad(false);
       }
     } catch (error) {
       console.error('Picker error:', error);
       Alert.alert('Error', 'Could not select media.');
-
-    }
+    } finally {
+    // ✅ Always stop the loader
+    setPreviewLoad(false);
+  }
   };
 
   const chunkFile = async (fileUri) => {

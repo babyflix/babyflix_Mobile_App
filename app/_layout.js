@@ -11,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { showSnackbar } from '../src/state/slices/uiSlice';
 import { Alert, Linking, Text, TextInput } from 'react-native';
 import Constants from 'expo-constants';
+import { HeaderActionProvider } from '../src/components/HeaderActionContext';
 
 import { useFonts } from 'expo-font';
 import {
@@ -20,6 +21,9 @@ import {
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
 import { getStoragePlanDetails } from '../src/components/getStoragePlanDetails';
+import { registerForPushNotificationsAsync } from '../src/components/notifications';
+import { requestMediaLibraryPermission } from '../src/components/requestMediaPermission';
+import { checkForPendingDownload } from '../src/components/resumeDownloadHelper';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
@@ -68,25 +72,45 @@ const LayoutContent = () => {
     return () => unsubscribe();
   }, [isConnected, dispatch]);
 
-  useEffect(() => {
+//   useEffect(() => {
+//   const requestPermissions = async () => {
+//     try {
+//       const { status, granted, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//       if (status !== 'granted' && !granted && !canAskAgain) {
+//         Alert.alert('Permission Required', 'Please enable media access in Settings.');
+//       }
+//     } catch (error) {
+//       console.warn('Permission request failed:', error);
+//     }
+//   };
+//   if (isAuthenticated) requestPermissions();
+// }, [isAuthenticated]);   
+
+useEffect(() => {
   const requestPermissions = async () => {
-    try {
-      const { status, granted, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted' && !granted && !canAskAgain) {
-        Alert.alert('Permission Required', 'Please enable media access in Settings.');
-      }
-    } catch (error) {
-      console.warn('Permission request failed:', error);
+    if (isAuthenticated) {
+      const granted = await requestMediaLibraryPermission();
+      // You don't need to do anything else here
     }
   };
-  if (isAuthenticated) requestPermissions();
-}, [isAuthenticated]);   
+  requestPermissions();
+}, [isAuthenticated]);
 
    useEffect(() => {
     if (isAuthenticated && user?.email) {
       getStoragePlanDetails(user.email, dispatch);
     }
   }, [isAuthenticated, user?.email]);
+
+//   useEffect(() => {
+//   if (user?.id) {
+//     registerForPushNotificationsAsync(user.id);
+//   }
+// }, []);
+
+useEffect(() => {
+    checkForPendingDownload();
+  }, []);
 
   return (
     <>
@@ -121,9 +145,11 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <SafeAreaProvider>
+        <HeaderActionProvider>
         <AuthLoader>
           <LayoutContent />
         </AuthLoader>
+        </HeaderActionProvider>
       </SafeAreaProvider>
     </Provider>
   );
