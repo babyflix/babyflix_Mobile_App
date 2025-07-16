@@ -1,77 +1,3 @@
-// import React, { useState } from 'react';
-// import { Modal, View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
-// import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-// import { modalStyles as styles } from '../../styles/GlobalStyles';
-// import Colors from '../../constants/Colors';
-
-// const ShareItemModal = ({ visible, selectedItems, onCancel, onShare, setSnackbarVisible,setSnackbarMessage,setSnackbarType }) => {
-//   const [isSharing, setIsSharing] = useState(false);
-
-//   const handleConfirmShare = async () => {
-//     setIsSharing(true);
-//     try {
-//       // Implement your share logic here (e.g. share via Share API or social media)
-//       console.log('Sharing:', selectedItems);
-//         setSnackbarMessage(`Selected ${selectedItems.length} media shared successfully!`);
-//         setSnackbarType('success');
-//         setSnackbarVisible(true);
-//       onShare();
-//       onCancel(); // Close modal after share
-//     } catch (e) {
-//       console.log(e);
-
-//       setSnackbarMessage(`Failed to share ${selectedItems.length} media. Please try again.`);
-//       setSnackbarType('error');
-//       setSnackbarVisible(true);
-//     } finally {
-//       setIsSharing(false);
-//     }
-//   };
-
-//   return (
-//     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-//       <View style={styles.delModalOverlay}>
-//         <View style={styles.delModalContainer}>
-//           <MaterialIcons name="share" size={48} color={Colors.primary} />
-//           <Text style={styles.delModalTitle}>Share Selected Media</Text>
-//           {selectedItems.length === 1 ? (
-//             <Text style={styles.delModalMessage}>
-//               Are you sure you want to share{' '}
-//               <Text style={{ fontWeight: 'bold' }}>{selectedItems[0]?.title}</Text>{' '}
-//               ({selectedItems[0]?.object_type})?
-//             </Text>
-//           ) : (
-//             <Text style={styles.delModalMessage}>
-//               Are you sure you want to share{' '}
-//               <Text style={{ fontWeight: 'bold' }}>{selectedItems.length}</Text> selected items?
-//             </Text>
-//           )}
-
-//           {isSharing ? (
-//             <View style={{ alignItems: 'center', marginVertical: 20 }}>
-//               <ActivityIndicator size="large" color="blue" />
-//               <Text style={{ marginTop: 10, fontSize: 16, color: 'blue', fontWeight: '600' }}>Sharing...</Text>
-//             </View>
-//           ) : (
-//             <View style={styles.delModalButtons}>
-//               <TouchableOpacity onPress={onCancel} style={[styles.delModalButton, { backgroundColor: '#ccc', flexDirection: 'row' }]}>
-//                 <Ionicons name="close-circle" size={20} color="white" style={{ marginRight: 5 }} />
-//                 <Text style={styles.delModalButtonText}>Cancel</Text>
-//               </TouchableOpacity>
-//               <TouchableOpacity onPress={handleConfirmShare} style={[styles.delModalButton, { backgroundColor: Colors.primary, flexDirection: 'row' }]}>
-//                 <MaterialIcons name="share" size={20} color="white" style={{ marginRight: 5 }} />
-//                 <Text style={styles.delModalButtonText}>Share</Text>
-//               </TouchableOpacity>
-//             </View>
-//           )}
-//         </View>
-//       </View>
-//     </Modal>
-//   );
-// };
-
-// export default ShareItemModal;
-
 import React, { useState } from 'react';
 import {
   Modal,
@@ -88,8 +14,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { modalStyles as styles } from '../../styles/GlobalStyles';
 import Colors from '../../constants/Colors';
 import GlobalStyles from '../../styles/GlobalStyles';
-//import Snackbar from '../../components/Snackbar'; // adjust if different
-import Loader from '../../components/Loader'; // adjust if different
+import Loader from '../../components/Loader';
 
 const ShareItemModal = ({
   visible,
@@ -108,32 +33,28 @@ const ShareItemModal = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirmShare = async () => {
-    setMobileModalVisible(true); // show the mobile modal instead of immediate share
+    setMobileModalVisible(true);
   };
 
   const handleAddMobileRow = () => {
-  // Check if any existing row is incomplete
-  const hasEmpty = mobileNumbers.some(item => !item.countryCode.trim() || !item.mobileNumber.trim());
-  if (hasEmpty) {
-    setMobileErrors("Please fill all existing fields before adding a new one.");
-    return;
-  }
-
-  // Check for duplicates (same countryCode + mobileNumber)
-  const seen = new Set();
-  for (const item of mobileNumbers) {
-    const key = `${item.countryCode}-${item.mobileNumber}`;
-    if (seen.has(key)) {
-      //setMobileErrors("Duplicate mobile numbers are not allowed.");
+    const hasEmpty = mobileNumbers.some(item => !item.countryCode.trim() || !item.mobileNumber.trim());
+    if (hasEmpty) {
+      setMobileErrors("Please fill all existing fields before adding a new one.");
       return;
     }
-    seen.add(key);
-  }
 
-  // Clear any previous error and add a new empty row
-  setMobileErrors('');
-  setMobileNumbers([...mobileNumbers, { countryCode: '', mobileNumber: '' }]);
-};
+    const seen = new Set();
+    for (const item of mobileNumbers) {
+      const key = `${item.countryCode}-${item.mobileNumber}`;
+      if (seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+    }
+
+    setMobileErrors('');
+    setMobileNumbers([...mobileNumbers, { countryCode: '', mobileNumber: '' }]);
+  };
 
 
   const handleRemoveMobileRow = (index) => {
@@ -142,34 +63,25 @@ const ShareItemModal = ({
     setMobileNumbers(updated);
   };
 
-  // const handleUpdateMobileNumber = (index, key, value) => {
-  //   const updated = [...mobileNumbers];
-  //   updated[index][key] = value;
-  //   setMobileNumbers(updated);
-  //   setMobileErrors(''); 
-  // };
-
   const handleUpdateMobileNumber = (index, field, value) => {
-  const updated = [...mobileNumbers];
-  updated[index][field] = value;
-  setMobileNumbers(updated);
+    const updated = [...mobileNumbers];
+    updated[index][field] = value;
+    setMobileNumbers(updated);
 
-  // Get current mobile number being typed
-  const currentMobile = updated[index].mobileNumber;
+    const currentMobile = updated[index].mobileNumber;
 
-  // Check for duplicate mobile numbers only (ignore country code)
-  const isDuplicate = updated.some((item, i) => {
-    return i !== index &&
-           item.mobileNumber &&
-           item.mobileNumber === currentMobile;
-  });
+    const isDuplicate = updated.some((item, i) => {
+      return i !== index &&
+        item.mobileNumber &&
+        item.mobileNumber === currentMobile;
+    });
 
-  if (isDuplicate) {
-    setMobileErrors('This mobile number already exists.');
-  } else {
-    setMobileErrors('');
-  }
-};
+    if (isDuplicate) {
+      setMobileErrors('This mobile number already exists.');
+    } else {
+      setMobileErrors('');
+    }
+  };
 
 
   const handleShareViaSMS = () => {
@@ -187,7 +99,6 @@ const ShareItemModal = ({
 
   return (
     <>
-      {/* Original Share Confirmation Modal */}
       <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
         <View style={styles.delModalOverlay}>
           <View style={styles.delModalContainer}>
@@ -227,7 +138,6 @@ const ShareItemModal = ({
         </View>
       </Modal>
 
-      {/* Share via SMS Modal */}
       {mobileModalVisible && (
         <Modal transparent={true} visible={mobileModalVisible} onRequestClose={() => setMobileModalVisible(false)}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

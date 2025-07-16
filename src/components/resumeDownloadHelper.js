@@ -1,5 +1,3 @@
-// utils/resumeDownloadHelper.js
-
 import { Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
