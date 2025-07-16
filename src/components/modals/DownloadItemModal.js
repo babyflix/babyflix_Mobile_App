@@ -310,6 +310,8 @@ const DownloadItemModal = ({
       const result = await downloadResumable.downloadAsync();
       await MediaLibrary.createAssetAsync(result.uri);
 
+      await showCompletionNotification(item.title);
+
       setSnackbarMessage(`${item.title} downloaded successfully.`);
       setSnackbarType('success');
       setSnackbarVisible(true);
