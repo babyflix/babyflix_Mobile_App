@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Modal, View, Text, TouchableOpacity, ActivityIndicator, Alert, AppState } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { modalStyles as styles } from '../../styles/GlobalStyles';
 import * as Progress from 'react-native-progress';
@@ -31,249 +31,96 @@ const DownloadItemModal = ({
   const [selectedQuality, setSelectedQuality] = useState('hd'); // "sd" or "hd"
   const [showConvertingMessage, setShowConvertingMessage] = useState(false);
   //const [activeDownloads, setActiveDownloads] = useState(0);
+  const [downloadResumable, setDownloadResumable] = useState(null);
 
   const hasLargeFiles = selectedItems?.some(item => item?.size > 5 * 1024 * 1024); // > 5MB
 
-  const simulateDownload = () => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 0.05;
-      if (progress >= 1) {
-        clearInterval(interval);
-        setDownloadProgress(1);
-        setTimeout(() => {
-          setSnackbarMessage(`Selected ${selectedItems[0]?.title} (${selectedItems[0]?.object_type}) downloaded successfully!`);
-          setSnackbarType('success');
-          setSnackbarVisible(true);
-          onDownload();
-          onCancel();
-          setIsDownloading(false);
-          setDownloadProgress(0);
-          setShowSizeInfo(false);
-        }, 500);
-      } else {
-        setDownloadProgress(progress);
-      }
-    }, 200);
-  };
-
-  // const handleConfirmDownload = async () => {
-  //   try {
-  //     setIsDownloading(true);
-  //     setShowSizeInfo(true); // Show download time info based on file size
-  //     simulateDownload();
-  //   } catch (e) {
-  //     console.log(e);
-  //     setSnackbarMessage(`Failed to download ${selectedItems[0]?.title} (${selectedItems[0]?.object_type}). Please try again.`);
-  //     setSnackbarType('error');
-  //     setSnackbarVisible(true);
-  //     setIsDownloading(false);
-  //     setShowSizeInfo(false);
-  //   }
-  // };
-
-const handleConfirmDownload = async () => {
-  setIsConverting(true);        // show spinner
-  setIsDownloading(false);
-  setDownloadProgress(0);
-  setShowSizeInfo(false);
-  setShowConvertingMessage(true);  
-
-  setDownloadingProgress(false);   // hide floating bar (just in case)
-  setProgressValue(0);
-  setDownloadTitle('');
-  
-  setTimeout(() => {
-    setIsConverting(false);          // stop showing "Converting..."
-    onCancel();                      // close the modal
-    setDownloadingProgress(true);    // show floating bar
-  }, 3000);
-  try {
-    const item = selectedItems[0];
-    //const endpoint = 'https://bf-d-cloud-run-ffmpeg-video-01-440716411130.us-east1.run.app/convert/hd';
-    const endpoint =
-    // selectedQuality === 'sd'
-    //   ? 'https://bf-d-cloud-run-ffmpeg-video-01-440716411130.us-east1.run.app/convert/sd'
-    //   : 'https://bf-d-cloud-run-ffmpeg-video-01-440716411130.us-east1.run.app/convert/hd';
-
-      selectedQuality === 'sd'
-      ? 'https://dev-fm-apis.babyflix.net/convert/sd'
-      : 'https://dev-fm-apis.babyflix.net/convert/hd';
-
-    // Step 1: API call to convert video
-    // const response = await axios.get(endpoint, {
-    //   params: {
-    //     path: item.object_url,
-    //     id: item.id,
-    //   }
-    // });
-
-    const fullUrl = `${endpoint}?path=${encodeURIComponent(item.object_url)}&id=${item.id}`;
-
-    const response = await axios.get(fullUrl);
-
-    const downloadUrl = response.data?.download_url;
-    if (!downloadUrl) throw new Error('Download URL missing from response');
-    await saveDownloadState({
-      downloadUrl,
-      title: item.title,
-      id: item.id,
-    });
-
-
-    // Step 2: Ask for permission
-    const { status } = await MediaLibrary.requestPermissionsAsync();
+  useEffect(() => {
+  const initNotifications = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') {
-      throw new Error('Permission denied to access media library');
+      const { status: newStatus } = await Notifications.requestPermissionsAsync();
+      if (newStatus !== 'granted') {
+        console.warn('Notification permission denied');
+        return;
+      }
     }
 
-    // Step 3: Start actual file download
-    setIsConverting(false);      // stop showing spinner
-    setIsDownloading(true); 
-    setDownloadingProgress(true);     // start progress bar
-    setShowSizeInfo(true);
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+  };
 
-    setDownloadTitle(item.title);      // show title
-    setProgressValue(0)
+  initNotifications();
+}, []);
 
-    onCancel();
-    const fileUri = FileSystem.documentDirectory + `${item.title || 'video'}.mp4`;
-
-    const downloadResumable = FileSystem.createDownloadResumable(
-      downloadUrl,
-      fileUri,
-      {},
-      (progress) => {
-        const percent = progress.totalBytesWritten / progress.totalBytesExpectedToWrite;
-        setDownloadProgress(percent);
-        setProgressValue(percent);
+useEffect(() => {
+  const subscription = AppState.addEventListener('change', async (state) => {
+    if (state === 'background' && downloadResumable) {
+      try {
+        await downloadResumable.pauseAsync();
+        await AsyncStorage.setItem(
+          'pausedDownload',
+          JSON.stringify({
+            url: downloadResumable._url,
+            fileUri: downloadResumable._fileUri,
+            title: downloadResumable?._fileUri?.split('/').pop() || 'file',
+          })
+        );
+        console.log('Download paused and saved to storage');
+      } catch (err) {
+        console.error('Failed to pause download', err);
       }
-    );
+    }
+  });
 
-    const downloadResult = await downloadResumable.downloadAsync();
+  return () => {
+    subscription.remove();
+  };
+}, [downloadResumable]);
 
-    const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
-    await MediaLibrary.createAlbumAsync('Download', asset, false);
+useEffect(() => {
+  const resumePausedDownload = async () => {
+    const saved = await AsyncStorage.getItem('pausedDownload');
+    if (saved) {
+      const { url, fileUri, title } = JSON.parse(saved);
+      const resumed = FileSystem.createDownloadResumable(
+        url,
+        fileUri,
+        {},
+        (progress) => {
+          const percent = progress.totalBytesWritten / progress.totalBytesExpectedToWrite;
+          setProgressValue(percent);
+        }
+      );
 
-    await clearDownloadState();
-    await showCompletionNotification(item.title);
+      setDownloadResumable(resumed);
 
-    setSnackbarMessage(`${item.title} downloaded successfully to your device.`);
-    setSnackbarType('success');
-    setSnackbarVisible(true);
-    onDownload();
-    onCancel();
+      try {
+        const result = await resumed.resumeAsync();
+        const asset = await MediaLibrary.createAssetAsync(result.uri);
+        await MediaLibrary.createAlbumAsync('Download', asset, false);
 
-    setDownloadingProgress(false);
-setProgressValue(0);
-setDownloadTitle('');
+        await AsyncStorage.removeItem('pausedDownload');
 
-  } catch (error) {
-    console.error('Download error:', error);
-    setSnackbarMessage(`Failed to download video. Please try again.`);
-    setSnackbarType('error');
-    setSnackbarVisible(true);
-    setDownloadingProgress(false);
-setProgressValue(0);
-setDownloadTitle('');
-  } finally {
-    setIsConverting(false);
-    setIsDownloading(false);
-    setShowSizeInfo(false);
-    setDownloadProgress(0);
-  }
-};
+        setSnackbarMessage(`${title} resumed and downloaded successfully.`);
+        setSnackbarType('success');
+        setSnackbarVisible(true);
+        setDownloadingProgress(false);
+        setProgressValue(0);
+        setDownloadTitle('');
+      } catch (err) {
+        console.log('Resume failed:', err);
+      }
+    }
+  };
 
-// const downloadImage = async (imageUrl, title = 'image') => {
-//   try {
-//     // Ask for media library permission
-//     const { status } = await MediaLibrary.requestPermissionsAsync();
-//     if (status !== 'granted') {
-//       Alert.alert('Permission Required', 'Please allow access to save the image.');
-//       return;
-//     }
-
-//     const filename = `${title || 'image'}.jpg`;
-//     const fileUri = FileSystem.documentDirectory + filename;
-
-//     // Download the image
-//     const downloadedFile = await FileSystem.downloadAsync(imageUrl, fileUri);
-
-//     // Save to gallery
-//     const asset = await MediaLibrary.createAssetAsync(downloadedFile.uri);
-//     await MediaLibrary.createAlbumAsync('Download', asset, false);
-
-    
-//     await showCompletionNotification(selectedItems[0].title);
-
-//     setSnackbarMessage(`${filename} downloaded successfully to your device.`);
-//     setSnackbarType('success');
-//     setSnackbarVisible(true);
-//   } catch (error) {
-//     console.error('Image Download Error:', error);
-//     setSnackbarMessage('Failed to download image. Please try again.');
-//     setSnackbarType('error');
-//     setSnackbarVisible(true);
-//   }
-// };
-
-// const downloadImageHandler = async (imageUrl, title = 'image') => {
-//   try {
-//     // 👇 Close the modal immediately
-//     onCancel();
-
-//     // 👇 Reset and show floating progress bar
-//     setProgressValue(0);
-//     setDownloadTitle(title);
-//     setDownloadingProgress(true);
-
-//     // Ask for media library permission
-//     const { status } = await MediaLibrary.requestPermissionsAsync();
-//     if (status !== 'granted') {
-//       Alert.alert('Permission Required', 'Please allow access to save the image.');
-//       setDownloadingProgress(false);
-//       return;
-//     }
-
-//     const filename = `${title || 'image'}.jpg`;
-//     const fileUri = FileSystem.documentDirectory + filename;
-
-//     // 👇 Create download with progress tracking
-//     const downloadResumable = FileSystem.createDownloadResumable(
-//       imageUrl,
-//       fileUri,
-//       {},
-//       (progress) => {
-//         const percent = progress.totalBytesWritten / progress.totalBytesExpectedToWrite;
-//         setProgressValue(percent);
-//       }
-//     );
-
-//     // Start download
-//     const downloadedFile = await downloadResumable.downloadAsync();
-
-//     // Save to gallery
-//     const asset = await MediaLibrary.createAssetAsync(downloadedFile.uri);
-//     await MediaLibrary.createAlbumAsync('Download', asset, false);
-
-//     await showCompletionNotification(title);
-
-//     setSnackbarMessage(`${filename} downloaded successfully to your device.`);
-//     setSnackbarType('success');
-//     setSnackbarVisible(true);
-//   } catch (error) {
-//     console.error('Image Download Error:', error);
-//     setSnackbarMessage('Failed to download image. Please try again.');
-//     setSnackbarType('error');
-//     setSnackbarVisible(true);
-//   } finally {
-//     // 👇 Hide the floating progress bar after finish
-//     setDownloadingProgress(false);
-//     setProgressValue(0);
-//     setDownloadTitle('');
-//     setActiveDownloads(prev => Math.max(0, prev - 1)); // when finished
-//   }
-// };
+  resumePausedDownload();
+}, []);
 
 const downloadImageHandler = async (item, options) => {
   const {
@@ -299,12 +146,15 @@ const downloadImageHandler = async (item, options) => {
     setDownloadingProgress(true);
 
     // Ask for media library permission
-    const { status } = await MediaLibrary.requestPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Please allow access to save the image.');
-      setDownloadingProgress(false);
-      return;
-    }
+    const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
+if (existingStatus !== 'granted') {
+  const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
+  if (newStatus !== 'granted') {
+    Alert.alert('Permission Required', 'Please allow access to save the image.');
+    setDownloadingProgress(false);
+    return;
+  }
+}
 
     const filename = `${title}.jpg`;
     const fileUri = FileSystem.documentDirectory + filename;
@@ -320,12 +170,16 @@ const downloadImageHandler = async (item, options) => {
       }
     );
 
+    setDownloadResumable(downloadResumable);
+
     // Start download
     const downloadedFile = await downloadResumable.downloadAsync();
 
     // Save to gallery
-    const asset = await MediaLibrary.createAssetAsync(downloadedFile.uri);
-    await MediaLibrary.createAlbumAsync('Download', asset, false);
+    //const asset = await MediaLibrary.createAssetAsync(downloadedFile.uri);
+    //await MediaLibrary.createAlbumAsync('Download', asset, false);
+    await MediaLibrary.createAssetAsync(downloadedFile.uri);
+
 
     await showCompletionNotification(title);
 
@@ -366,38 +220,6 @@ const showCompletionNotification = async (title) => {
   });
 };
 
-// const enqueueDownload = (item) => {
-//   DownloadQueue.addToQueue(item, {
-//     selectedQuality,
-//     downloadHandler: downloadVideoHandler,
-//     setSnackbarMessage,
-//     setSnackbarType,
-//     setSnackbarVisible,
-//     setDownloadTitle,
-//     setProgressValue,
-//     setDownloadingProgress,
-//     onDownload,
-//   });
-
-//   setSnackbarMessage(`"${item.title}" added to download queue.`);
-//   setSnackbarType('info');
-//   setSnackbarVisible(true);
-
-//   setActiveDownloads(prev => prev + 1)
-
-//   setIsConverting(true);        // show spinner
-//   setIsDownloading(false);
-//   //setDownloadProgress(0);
-//   //setShowSizeInfo(false);
-//   //setShowConvertingMessage(true);  
-  
-//   setTimeout(() => {
-//     setIsConverting(false);          // stop showing "Converting..."
-//     onCancel();                      // close the modal
-//     //setDownloadingProgress(true);    // show floating bar
-//   }, 3000);
-// };
-
 const enqueueDownload = (item) => {
   const isImage = item?.object_type === 'image';
 
@@ -425,6 +247,11 @@ const enqueueDownload = (item) => {
 
     setTimeout(() => {
       setIsConverting(false);
+      onCancel(); // close modal only for videos
+    }, 3000);
+  }else{
+     setTimeout(() => {
+      //setIsConverting(false);
       onCancel(); // close modal only for videos
     }, 3000);
   }
@@ -472,8 +299,11 @@ const downloadVideoHandler = async (item, options) => {
     const downloadUrl = response.data?.download_url;
     if (!downloadUrl) throw new Error('No download URL');
 
-    const { status } = await MediaLibrary.requestPermissionsAsync();
-    if (status !== 'granted') throw new Error('Permission denied');
+    const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
+if (existingStatus !== 'granted') {
+  const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
+  if (newStatus !== 'granted') throw new Error('Permission denied');
+}
 
     const fileUri = FileSystem.documentDirectory + `${item.title || 'video'}.mp4`;
 
@@ -490,10 +320,12 @@ const downloadVideoHandler = async (item, options) => {
         setProgressValue(percent);
       }
     );
+    setDownloadResumable(downloadResumable);
 
     const result = await downloadResumable.downloadAsync();
-    const asset = await MediaLibrary.createAssetAsync(result.uri);
-    await MediaLibrary.createAlbumAsync('Download', asset, false);
+    // const asset = await MediaLibrary.createAssetAsync(result.uri);
+    // await MediaLibrary.createAlbumAsync('Download', asset, false);
+    await MediaLibrary.createAssetAsync(result.uri);
 
     setSnackbarMessage(`${item.title} downloaded successfully.`);
     setSnackbarType('success');
