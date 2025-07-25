@@ -586,11 +586,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 24,
-    gap: 10,
+    gap: 6,
   },
   filledButton: {
     backgroundColor: Colors.primary,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     borderRadius: 8,
     height: 48,
     justifyContent: 'center',
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   outlinedButton: {
     borderWidth: 1.5,
     borderColor: Colors.primary,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     borderRadius: 8,
     height: 48,
     justifyContent: 'center',
