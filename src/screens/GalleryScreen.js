@@ -14,6 +14,7 @@ import {
   Platform,
   Alert,
   Button,
+  AppState,
 } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Header from '../components/Header';
@@ -50,6 +51,7 @@ import DeleteItemModal from '../components/modals/DeleteItemModal.js';
 import DownloadItemModal from '../components/modals/DownloadItemModal.js';
 import ShareItemModal from '../components/modals/ShareItemModal.js';
 import FloatingDownloadBar from '../components/FloatingDownloadBar.js';
+import Queue from '../components/DownloadQueue.js';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -64,21 +66,23 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
   };
 
   const toggleSelection = (item) => {
-    if (!selectionMode) {
-      setSelectionMode(true);
-      setSelectedItems([item.id]);
+  if (!selectionMode) {
+    setSelectionMode(true);
+    setSelectedItems([item]);
+  } else {
+    const exists = selectedItems.find(i => i.id === item.id);
+    if (exists) {
+      const updated = selectedItems.filter(i => i.id !== item.id);
+      setSelectedItems(updated);
+      if (updated.length === 0) setSelectionMode(false);
     } else {
-      if (selectedItems.includes(item.id)) {
-        setSelectedItems(prev => prev.filter(id => id !== item.id));
-        if (selectedItems.length === 1) setSelectionMode(false);
-      } else {
-        setSelectedItems(prev => [...prev, item.id]);
-      }
+      setSelectedItems(prev => [...prev, item]);
     }
-  };
+  }
+};
 
   const renderItem = ({ item }) => {
-    const isSelected = selectedItems.includes(item.id);
+    const isSelected = selectedItems.some(i => i.id === item.id);
     const isMenuVisible = activeMenuId === item.id;
 
     return (
@@ -124,26 +128,14 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
 
         {isMenuVisible && (
           <View style={styles.menuPopup}>
-            {/*<TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              setSelectedItem([item]);
-              setShowShareModal(true);
-              setActiveMenuId(null);
-              console.log("Share", item);
-            }}
-          >
-            <MaterialIcons name="share" size={18} color="#000" style={{marginRight: 8}} />
-            <Text style={styles.menuText}>Share</Text>
-          </TouchableOpacity>*/}
-
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
                 setSelectedItem([item]);
-                setShowDownloadModal(true);
+                setTimeout(() => {
+                  setShowDownloadModal(true); 
+                }, 150);
                 setActiveMenuId(null);
-                console.log("Download", item);
               }}
             >
               <MaterialIcons name="file-download" size={18} color="#000" style={{ marginRight: 8 }} />
@@ -154,13 +146,24 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
               style={styles.menuItem}
               onPress={() => {
                 setSelectedItem([item]);
-                setShowDeleteModal(true);
+                setTimeout(() => {
+                  setShowDeleteModal(true); 
+                }, 150);
                 setActiveMenuId(null);
-                console.log("Delete", item);
               }}
             >
               <MaterialIcons name="delete" size={18} color="red" style={{ marginRight: 8 }} />
               <Text style={[styles.menuText, { color: 'red' }]}>Delete</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              setActiveMenuId(null);
+            }}
+            >
+              <MaterialIcons name="close" size={18} color="#000" style={{marginRight: 8}} />
+              <Text style={styles.menuText}>Close</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -318,21 +321,14 @@ const GalleryScreen = () => {
         const today = moment();
         const storedDateMoment = moment(storedDate, 'DD-MM-YYYY', true);
 
-        console.log('Today:', today.format('DD-MM-YYYY'));
-        console.log('Stored:', storedDate);
-
         if (storagePlanPayment !== 1) {
           const isSameDay = storedDateMoment.isValid()
             ? storedDateMoment.isSame(today, 'day')
             : false;
 
-          console.log('isSameDay:', isSameDay);
-
           if (isSameDay) {
-            console.log("✅ Date same for skip");
             setShouldShowStorageModal(false);
           } else {
-            console.log("❌ Date different or invalid, show modal");
             setShouldShowStorageModal(true);
           }
         } else {
@@ -362,7 +358,6 @@ const GalleryScreen = () => {
 
         if (storagePlanId == null) {
           setMediaData({ images: [], videos: [] });
-          console.log('setMediaData empty')
           return
         };
 
@@ -370,8 +365,6 @@ const GalleryScreen = () => {
           const planStartDate = moment(storagePlanDate, 'MM-DD-YYYY HH:mm:ss', true);
           const today = moment();
           const daysSince = today.diff(planStartDate, 'days');
-
-          console.log(`Plan started ${daysSince} days ago`);
 
           if (daysSince >= 21) {
             dispatch(setPlanExpired(true));
@@ -440,21 +433,16 @@ const GalleryScreen = () => {
       const storedStatus = await AsyncStorage.getItem('payment_status');
       const storedPaying = await AsyncStorage.getItem('paying');
 
-      console.log('Fetched status:', storedStatus);
-      console.log('Fetched paying:', storedPaying);
-
       setStatus(storedStatus);
       setStatus1(storedPaying);
 
       if (!storedStatus && storedPaying === 'true') {
-        console.log("Force remount Gallery & Header: No status but paying true gallary");
         dispatch(clearOpenStorage2());
         await AsyncStorage.setItem('storage_modal_triggered', 'false');
         setStorageModelStart(true);
         triggeredRef.current = false;
 
         if (isAuthenticated) {
-          console.log('ggggggggggggggggggggggggggggggggggggg')
           router.push('/gallery');
         }
       }
@@ -465,7 +453,6 @@ const GalleryScreen = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('fetchMediaData open')
       fetchMediaData();
       dispatch(updateActionStatus(''));
       setWasTriggered(true)
@@ -474,7 +461,6 @@ const GalleryScreen = () => {
 
   useEffect(() => {
     if ((status === 'done' || status1 === 'true') && !hasHiddenModalRef.current) {
-      console.log('setShowPlanExpiredModal close')
       fetchMediaData();
       setShowPlanExpiredModal(false);
       setWasTriggered(false)
@@ -604,10 +590,35 @@ const GalleryScreen = () => {
   };
 
   const handleDeleteSelected = () => {
-    if (selectedItems.length > 0) {
-      setShowDeleteModal(true);
-    }
-  };
+  if (selectedItems.length > 0) {
+    setSelectedItem(selectedItems);
+    setSelectionMode(false);
+    setSelectedItems([]);
+    setTimeout(() => {
+      setShowDeleteModal(true); 
+    }, 150);
+  }
+};
+const handleDownloadSelected = () => {
+  if (selectedItems.length > 0) {
+    setSelectedItem(selectedItems);
+    setSelectionMode(false);
+    setSelectedItems([]);
+    setTimeout(() => {
+    setShowDownloadModal(true); 
+  }, 150);
+  }
+};
+const handleShareSelected = () => {
+  if (selectedItems.length > 0) {
+    setSelectedItem(selectedItems);
+    setSelectionMode(false);
+    setSelectedItems([]);
+    setTimeout(() => {
+      setShowShareModal(true);
+    }, 150);
+  }
+};
 
   const handleProccessCompleted = () => {
     setSelectedItems([]);
@@ -674,21 +685,25 @@ const GalleryScreen = () => {
         </Tab.Navigator>
       )}
 
-      {selectionMode && (
-        <View style={styles.selectionHeader}>
-          <TouchableOpacity onPress={handleCancelSelection}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
+     {selectionMode && (
+  <View style={styles.selectionHeader}>
+    <TouchableOpacity onPress={handleCancelSelection} style={styles.actionButton}>
+      <Ionicons name="close" size={24} color="#000" />
+    </TouchableOpacity>
 
-          <TouchableOpacity >
-            <Text style={[styles.downloadText]}>Download</Text>
-          </TouchableOpacity>
+    <TouchableOpacity onPress={handleDownloadSelected} style={styles.actionButton}>
+      <MaterialIcons name="file-download" size={24} color="#000" />
+    </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleDeleteSelected}>
-            <Text style={styles.deleteText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+    {/* <TouchableOpacity onPress={handleShareSelected} style={styles.actionButton}>
+      <MaterialIcons name="share" size={24} color="#000" />
+    </TouchableOpacity> */}
+
+    <TouchableOpacity onPress={handleDeleteSelected} style={styles.actionButton}>
+      <MaterialIcons name="delete" size={24} color="red" />
+    </TouchableOpacity>
+  </View>
+)}
 
       <DeleteItemModal
         visible={showDeleteModal}
@@ -734,7 +749,6 @@ const GalleryScreen = () => {
 
       <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
       {(storageModelStart || shouldShowStorageModal) && (
-        console.log('storageModelStart || shouldShowStorageModal', (storageModelStart || shouldShowStorageModal)),
         <StorageModals
           onClose={() => setStorageModelStart(false)}
           storageModalKey={storageModalKey}
@@ -1076,30 +1090,28 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   selectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: Colors.lightGray,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  cancelText: {
-    fontSize: 16,
-    color: 'red',
-    fontWeight: '500',
-  },
-  downloadText: {
-    fontSize: 16,
-    color: 'blue',
-    fontWeight: '500',
-  },
-  deleteText: {
-    fontSize: 16,
-    color: 'black',
-    fontWeight: '500',
-  },
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  alignItems: 'center',
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  backgroundColor: '#f1f1f1',
+  borderBottomWidth: 1,
+  borderColor: '#ddd',
+  elevation: 4,
+  zIndex: 10,
+},
+
+actionButton: {
+  padding: 10,
+  borderRadius: 50,
+  backgroundColor: '#ffffff',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.1,
+  shadowRadius: 2,
+  elevation: 2,
+},
   delModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -1113,6 +1125,8 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '80%',
     alignItems: 'center',
+    zIndex: 9999,
+    elevation: 10,
   },
 
   delModalTitle: {
@@ -1175,7 +1189,7 @@ const styles = StyleSheet.create({
   },
   menuPopup: {
     position: 'absolute',
-    bottom: -78,
+    bottom: -110,
     right: 5,
     backgroundColor: 'white',
     borderRadius: 6,

@@ -136,7 +136,6 @@ const UploadScreen = () => {
       console.error('Picker error:', error);
       Alert.alert('Error', 'Could not select media.');
     } finally {
-    // ✅ Always stop the loader
     setPreviewLoad(false);
   }
   };

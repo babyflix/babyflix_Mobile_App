@@ -193,6 +193,9 @@ export default StyleSheet.create({
   },
 });
 
+import { Dimensions } from 'react-native';
+const screenWidth = Dimensions.get('window').width;
+
 export const modalStyles = {
   delModalOverlay: {
     flex: 1,
@@ -207,6 +210,8 @@ export const modalStyles = {
     padding: 20,
     width: '80%',
     alignItems: 'center',
+    zIndex: 9999,
+    elevation: 10,
   },
 
   delModalTitle: {
@@ -330,5 +335,37 @@ export const modalStyles = {
     marginLeft: 5,
     marginTop: 10,
   },
+  preview: {
+  width: '100%',
+  height: 200,
+  alignItems: 'center',  // Center content horizontally
+  padding: 15,
+  borderRadius: 12,
+  backgroundColor: Colors.white,
+  ...Platform.select({
+    ios: {
+      shadowColor: Colors.black,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    android: {
+      elevation: 2,
+    },
+  }),
+},
+
+previewImage: {
+  width: '100%',
+  height: 100,
+  aspectRatio: 16 / 9,  // This gives 16:9 ratio (e.g., 300x168), works for both video & image
+  borderRadius: 8,
+},
+
+previewImages: {
+  width: screenWidth * 0.65,  // 80% of screen width
+  height: (screenWidth * 0.7) * 9 / 16,  // maintain 16:9 ratio
+  borderRadius: 8,
+},
 
 };

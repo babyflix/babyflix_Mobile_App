@@ -25,7 +25,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const [showModal, setShowModal] = useState(false); 
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarType, setSnackbarType] = useState(''); // 'success' | 'error'
+  const [snackbarType, setSnackbarType] = useState('');
   const [showDeletePlanModal, setShowDeletePlanModal] = useState(false);
   const [isDeletingPlan, setIsDeletingPlan] = useState(false);
 
@@ -72,7 +72,6 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
   const handleLogout = async () => {
     try {
-      //await AsyncStorage.removeItem('token');
       await AsyncStorage.setItem('logoutInProgress', 'true');
 
       dispatch(setLoggingOut(true));
@@ -114,24 +113,13 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     const storedStatus = await AsyncStorage.getItem('payment_status');
     const storedPaying = await AsyncStorage.getItem('paying');
     dispatch(clearOpenStorage2());
-
-    console.log('Fetched status1:', storedStatus);
-    console.log('Fetched paying1:', storedPaying);
-
      if (!storedStatus && storedPaying === 'true') {
-      console.log("Force remount Gallery & Header: No status but paying true Header");
       dispatch(clearOpenStorage2());
       await AsyncStorage.setItem('storage_modal_triggered', 'false');
 
-      // Reset paying to prevent infinite remount
-      //await AsyncStorage.removeItem('paying');
-
-      // ✅ Force remount: router.replace (will reload Gallery & Header)
     if (isAuthenticated) {
-      console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhh')
-      router.replace('/gallery');
+      //router.replace('/gallery');
     }
-  // Adjust to your actual route
     }
   };
 
@@ -145,32 +133,20 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     router.push('/gallery?showStorageModal=true');
   };
 
-  // const handleChooseClick = async () => {
-  //   dispatch(triggerOpenStorage2()); 
-  //   await AsyncStorage.setItem('storage_modal_triggered', 'false');
-  // };
-
-  //  useEffect(() => {
-  //   setHandleChooseClick(() => handleChooseClick); // register it
-  // }, []);
-
   const handleChooseClick = async () => {
     dispatch(triggerOpenStorage2());
     await AsyncStorage.setItem('storage_modal_triggered', 'false');
-    console.log('handleChooseClick')
-    console.log('openStorage2Directly',openStorage2Directly)
   };
 
   useEffect(() => {
-  // Re-register every mount
   setHandleChooseClick(() => handleChooseClick);
 
-  return () => setHandleChooseClick(null); // cleanup on unmount
+  return () => setHandleChooseClick(null); 
 }, []);
 
   const confirmPlanDelete = async () => {
   setIsDeletingPlan(true);
-  await handleDeletePlan(); // use the one we made with snackbar
+  await handleDeletePlan();
   setIsDeletingPlan(false);
   setShowDeletePlanModal(false);
 };
@@ -195,9 +171,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     const data = await response.json();
 
     if (response.ok && data.actionStatus === 'success') {
-      console.log('✅ Plan deleted successfully');
 
-      // ✅ Show success snackbar
       setSnackbarMessage(`${currentPlan.name} deleted successfully`);
       setSnackbarType('success');
       setSnackbarVisible(true);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
-import { liveStreamUpdate } from '../state/slices/streamSlice';
+import { liveStreamUpdate, setEventActualEndTime } from '../state/slices/streamSlice';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logError } from '../components/logError';
@@ -34,6 +34,7 @@ const getEventsData = async (user, dispatch, stream, intervalId, eventEndTime,) 
         if (firstEvent.startTime && firstEvent.endTime) {
           const eventStartMoment = moment(firstEvent.startTime, 'HH:mm:ss');
           const eventEndMoment = moment(firstEvent.endTime, 'HH:mm:ss');
+          dispatch(setEventActualEndTime(eventEndMoment.toISOString()));
           const response = await axios.get(
             EXPO_PUBLIC_CLOUD_API_URL +
             `/get-channel-details/?channel_name=${user.locationId}-${user.companyId}-${user.uuid}`

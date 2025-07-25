@@ -27,7 +27,7 @@ const DeleteItemModal = ({ visible, selectedItems, onCancel, onDeleted, fetchMed
         });
       }
 
-      onDeleted(); // parent should reset selectedItems, exit selection mode, etc.
+      onDeleted(); 
       fetchMediaData();
 
       setSnackbarMessage(`Selected ${selectedItems.length} media deleted successfully!`);
@@ -47,11 +47,25 @@ const DeleteItemModal = ({ visible, selectedItems, onCancel, onDeleted, fetchMed
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.delModalOverlay}>
-        <View style={styles.delModalContainer}>
+        <View style={[styles.delModalContainer,{padding: 23}]}>
           <Ionicons name="warning" size={48} color="red" />
           <Text style={styles.delModalTitle}>Delete Selected Media</Text>
-          <Text style={styles.delModalMessage}>
-            Are you sure you want to delete {selectedItems.length} selected item(s)?
+          <Text style={[styles.delModalMessage,{marginBottom: 10,}]}>
+            {selectedItems.length > 1 ? (
+              <>
+                Are you sure you want to delete{' '}
+                <Text style={{ fontWeight: 'bold' }}>{selectedItems.length}</Text> items?
+              </>
+            ) : (
+              <>
+                Are you sure you want to delete{' '}
+                <Text style={{ fontWeight: 'bold' }}>{selectedItems[0]?.title}</Text>{' '}
+                ({selectedItems[0]?.object_type})?
+              </>
+            )}
+          </Text>
+           <Text style={styles.delModalMessage}>
+            The deleted item cannot be recovered in the future, it is permanently deleted.    
           </Text>
 
           {isDeleting ? (

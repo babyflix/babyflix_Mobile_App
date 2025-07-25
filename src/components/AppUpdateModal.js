@@ -28,7 +28,6 @@ const AppUpdateModal = ({ serverUrl }) => {
         const today = moment().format('YYYY-MM-DD'); // format: YYYY-MM-DD
 
         if (skippedDate === today) {
-          console.log("Update skipped for today");
           return;
         }
 
@@ -37,10 +36,6 @@ const AppUpdateModal = ({ serverUrl }) => {
 
         const latestVersion = Platform.OS === 'android' ? data.latestVersion : data.appleLatestVersion;
         const currentVersion = Constants.expoConfig.version;
-
-        console.log('latestVersion:', latestVersion);
-        console.log('currentVersion:', currentVersion);
-        console.log('forceUpdate',data)
 
         if (latestVersion && latestVersion !== currentVersion) {
           setStoreLinks({ android: data.androidUrl, ios: data.iosUrl });

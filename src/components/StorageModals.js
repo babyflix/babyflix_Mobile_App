@@ -55,8 +55,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   useEffect(() => {
     fetchPlans();
-    console.log('setPlanExpired',setPlanExpired)
-    console.log('setUpgradeReminder',setUpgradeReminder)
   }, []);
 
   useEffect(() => {
@@ -64,22 +62,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const storedStatus = await AsyncStorage.getItem('payment_status');
       const storedPaying = await AsyncStorage.getItem('paying');
   
-      console.log('Fetched status2:', storedStatus);
-      console.log('Fetched paying2:', storedPaying);
-  
        if (!storedStatus && storedPaying === 'true') {
-        console.log("Force remount Gallery & Header: No status but paying true storageModel");
         dispatch(clearOpenStorage2());
         await AsyncStorage.setItem('storage_modal_triggered', 'false');
-        console.log('openStorage2Directly',openStorage2Directly)
         triggeredRef.current = false;
-  
-        // Reset paying to prevent infinite remount
-        //await AsyncStorage.removeItem('paying');
-  
-        // ✅ Force remount: router.replace (will reload Gallery & Header)
-        //router.replace('/gallary'); // Adjust to your actual route
-        console.log('there is happening')
       }
     };
   
@@ -98,16 +84,14 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const status = await AsyncStorage.getItem('payment_status 1');
       const storedPaying = await AsyncStorage.getItem('paying');
       if (status === 'fail') {
-        console.log('payment_status 1 in fail',storedPaying)
         if (storedPaying === 'false') {
-          console.log('setIsVisible');
           setIsVisible(true);
         }
       } else if (storageModalKey) {
         setShowStorage2(true);
       } else {
         if (!storagePlanId || storagePlanId === "null") {
-          console.log('storagePlanId', storagePlanId);
+          await AsyncStorage.removeItem('closePlans');
           setShowStorage1(true);
         }
       }
@@ -126,13 +110,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const triggered = await AsyncStorage.getItem('storage_modal_triggered');
 
       if (openStorage2Directly && triggered !== 'true') {
-        console.log('entered')
-        console.log('setPlanExpired',setPlanExpired)
-    console.log('setUpgradeReminder',setUpgradeReminder)
         triggeredRef.current = true;
         setShowStorage1(false);
         setIsVisible(false);
         setShowStorage2(true);
+        await AsyncStorage.setItem('closePlans', 'true');
         setClosePlans(true);
 
         dispatch(clearOpenStorage2());
@@ -166,7 +148,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         await AsyncStorage.setItem('payment_status 1', 'done');
         const storedPlanId = await AsyncStorage.getItem('selected_plan_id');
     const planIdToUse = storedPlanId ? parseInt(storedPlanId) : null;
-        console.log('planIdToUse',planIdToUse)
 
         try {
           await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
@@ -175,7 +156,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             body: JSON.stringify({
               userId: user.uuid,
               storagePlanId: planIdToUse,
-              //storagePlanId: 2,
               storagePlanPayment: 1,
             }),
           });
@@ -186,7 +166,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           dispatch(setPlanExpired(false));
           dispatch(setUpgradeReminder(false));
         } catch (e) {
-          console.log('Plan update error after success', e);
         }
 
         await AsyncStorage.removeItem('payment_status');
@@ -195,10 +174,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         setShowStorage1(false);
       } else if (storageModalKey) {
         setShowStorage2(true);
+        await AsyncStorage.setItem('closePlans', 'true');
+        setClosePlans(true);
       } else {
-        console.log('in else block',storagePlanId)
        if (!storagePlanId || storagePlanId === "null") {
-          console.log('storagePlanId', storagePlanId);
+          await AsyncStorage.removeItem('closePlans');
           setShowStorage1(true);
         }
       }
@@ -230,7 +210,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     try {
       const currentDate = moment().format('DD-MM-YYYY');
       await AsyncStorage.setItem('last_skipped_plan_date', currentDate);
-      console.log("plan skip for",currentDate)
 
       const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updateSkipPlan`, {
         method: 'PUT',
@@ -265,9 +244,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const handlePayment = async () => {
     try {
       await AsyncStorage.setItem('selected_plan_id', selectedPlan.toString());
-      console.log('selectedPlan',selectedPlan)
-      // dispatch(setUpgradeReminder(false));
-      // dispatch(setPlanExpired(false));
       onClose();
       dispatch(clearOpenStorage2());
       await AsyncStorage.setItem('storage_modal_triggered', 'false');
@@ -292,12 +268,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
       
       if (result.type === "cancel") {
-      console.log("User closed Stripe window manually");
-
-      // ✅ Force remount Gallery screen via Expo Router
-      //router.push('/gallery'); // Adjust path based on your folder structure
        if (isAuthenticated) {
-        console.log('sssssssssssssssssssssssssssssssssss')
         router.push('/gallary');
       }
     }
@@ -315,7 +286,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       <Modal visible={showStorage1} transparent animationType="fade">
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => {
                 setShowStorage1(false);
                 setWasTriggered(false)
@@ -324,7 +295,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               style={styles.closeModel}
             >
               <MaterialIcons name="close" size={24} color="black" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <Text style={[styles.title]}>Storage Management</Text>
             <Text style={[styles.planBox, styles.subtitleTextBox, styles.subtitleText]}>
               Please select an option for managing your storage.
@@ -363,9 +334,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
             {closePlanes && (
               <TouchableOpacity
-                onPress={() => {
+                onPress={async () => {
                   setShowStorage2(false);
                   setClosePlans(false);
+                  await AsyncStorage.removeItem('closePlans');
                   setWasTriggered(false);
                   triggeredRef.current = false;
                 }}
@@ -378,7 +350,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             <View style={styles.modalHeader}>
               <Text style={[styles.title, { textAlign: 'center' }]}>Select Your Plan</Text>
             </View>
-            {plans && console.log('condition chjeck for only proplan to show',isPlanExpired, showUpgradeReminder , storagePlanId, storagePlanPayment == 1, (isPlanDeleted) )}
             {plans
               .filter((plan) => !((isPlanExpired || showUpgradeReminder || storagePlanId || storagePlanPayment == 1 || isPlanDeleted == 1) && plan.id === 1)) 
               .map((plan) => (
@@ -463,13 +434,17 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             <Text style={styles.subtitleFailed}>Something went wrong with your Payment</Text>
             <TouchableOpacity
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
-              onPress={() => {
+              onPress={async () => {
                 setShowPaymentFailure(false);
-                setIsVisible(true);
+                const value = await AsyncStorage.getItem('closePlans');
+                if (!value) {
+                  setIsVisible(true);
+                }
                 dispatch(clearOpenStorage2());
+                await AsyncStorage.removeItem('closePlans');
               }}
             >
-              <Text style={styles.filledText}>TRY AGAIN</Text>
+              <Text style={styles.filledText}>OK I GOT IT</Text>
             </TouchableOpacity>
           </View>
         </View>

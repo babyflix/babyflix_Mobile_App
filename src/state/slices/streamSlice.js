@@ -8,6 +8,7 @@ const initialState = {
   eventEndTime: null,
   masterStreamUrl: null,
   reStart: null,
+  eventActualEndTime: null,
 };
 
 const streamSlice = createSlice({
@@ -25,9 +26,12 @@ const streamSlice = createSlice({
       state.masterStreamUrl = masterStreamUrl;
       state.reStart = reStart;
     },
+    setEventActualEndTime: (state, action) => {
+      state.eventActualEndTime = action.payload;
+    },
   },
 });
 
-export const { liveStreamUpdate } = streamSlice.actions;
+export const { liveStreamUpdate, setEventActualEndTime } = streamSlice.actions;
 
 export default streamSlice.reducer;

@@ -9,12 +9,16 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { modalStyles as styles } from '../../styles/GlobalStyles';
 import Colors from '../../constants/Colors';
 import GlobalStyles from '../../styles/GlobalStyles';
 import Loader from '../../components/Loader';
+import { Video } from 'expo-av';
+import { Dimensions } from 'react-native';
+const screenWidth = Dimensions.get('window').width;
 
 const ShareItemModal = ({
   visible,
@@ -31,8 +35,11 @@ const ShareItemModal = ({
   const [mobileErrors, setMobileErrors] = useState('');
   const [showPhoneInfo, setShowPhoneInfo] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [add, setAdd] = useState(false)
 
   const handleConfirmShare = async () => {
+    onCancel();
     setMobileModalVisible(true);
   };
 
@@ -42,6 +49,7 @@ const ShareItemModal = ({
       setMobileErrors("Please fill all existing fields before adding a new one.");
       return;
     }
+    setAdd(true);
 
     const seen = new Set();
     for (const item of mobileNumbers) {
@@ -58,6 +66,7 @@ const ShareItemModal = ({
 
 
   const handleRemoveMobileRow = (index) => {
+    setAdd(false)
     const updated = [...mobileNumbers];
     updated.splice(index, 1);
     setMobileNumbers(updated);
@@ -99,7 +108,7 @@ const ShareItemModal = ({
 
   return (
     <>
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      {/* <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
         <View style={styles.delModalOverlay}>
           <View style={styles.delModalContainer}>
             <MaterialIcons name="share" size={48} color={Colors.primary} />
@@ -136,7 +145,87 @@ const ShareItemModal = ({
             )}
           </View>
         </View>
-      </Modal>
+      </Modal> */}
+
+  <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+  <View style={styles.delModalOverlay}>
+    <View style={styles.delModalContainer}>
+      <MaterialIcons name="share" size={48} color={Colors.primary} />
+      <Text style={styles.delModalTitle}>Share Selected Media</Text>
+
+      {selectedItems.length === 1 ? (
+        <>
+          <Text style={styles.delModalMessage}>
+            Are you sure you want to share{' '}
+            <Text style={{ fontWeight: 'bold' }}>{selectedItems[0]?.title}</Text>{' '}
+            ({selectedItems[0]?.object_type})?
+          </Text>
+
+          {/* ✅ Preview Section */}
+          <View style={{ marginVertical: 10 }}>
+            <Text style={[styles.modalTitle, { fontSize: 18, marginBottom: 10, textAlign:'center' }]}>Preview</Text>
+            <View
+              style={styles.preview}
+            >
+              {selectedItems[0]?.object_type === 'video' ? (
+                <Video
+                  source={{ uri: selectedItems[0]?.object_url }}
+                  rate={1.0}
+                  volume={1.0}
+                  isMuted={false}
+                  //resizeMode="cover"
+                  resizeMode="contain"
+                  shouldPlay={true}
+                  isLooping={false}
+                  useNativeControls
+                  style={styles.previewImages}
+                />
+              ) : (
+                <Image
+                  source={{ uri: selectedItems[0]?.object_url }}
+                  style={styles.previewImages}
+                  //resizeMode="cover"
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </View>
+        </>
+      ) : (
+        <Text style={styles.delModalMessage}>
+          Are you sure you want to share{' '}
+          <Text style={{ fontWeight: 'bold' }}>{selectedItems.length}</Text> selected items?
+        </Text>
+      )}
+
+      {isSharing ? (
+        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+          <ActivityIndicator size="large" color="blue" />
+          <Text style={{ marginTop: 10, fontSize: 16, color: 'blue', fontWeight: '600' }}>
+            Sharing...
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.delModalButtons}>
+          <TouchableOpacity
+            onPress={onCancel}
+            style={[styles.delModalButton, { backgroundColor: '#ccc', flexDirection: 'row' }]}
+          >
+            <Ionicons name="close-circle" size={20} color="white" style={{ marginRight: 5 }} />
+            <Text style={styles.delModalButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleConfirmShare}
+            style={[styles.delModalButton, { backgroundColor: Colors.primary, flexDirection: 'row' }]}
+          >
+            <MaterialIcons name="share" size={20} color="white" style={{ marginRight: 5 }} />
+            <Text style={styles.delModalButtonText}>Share</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  </View>
+</Modal>
 
       {mobileModalVisible && (
         <Modal transparent={true} visible={mobileModalVisible} onRequestClose={() => setMobileModalVisible(false)}>
@@ -172,6 +261,9 @@ const ShareItemModal = ({
                           maxLength={10}
                           onFocus={() => setShowPhoneInfo(true)}
                         />
+                         <TouchableOpacity onPress={() => handlePickContact(index)} style={{ position: 'absolute',  right: add ? '6%' : '18%', top: '50%', transform: [{ translateY: -10 }] }}>
+                         <MaterialIcons name="contact-page" size={24} color={Colors.gray} />
+                        </TouchableOpacity>
                       </View>
                       {mobileNumbers.length > 1 && (
                         <TouchableOpacity onPress={() => handleRemoveMobileRow(index)}>
@@ -219,6 +311,7 @@ const ShareItemModal = ({
           /> */}
         </Modal>
       )}
+
     </>
   );
 };

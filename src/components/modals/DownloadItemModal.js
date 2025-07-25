@@ -10,6 +10,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import DownloadQueue from '../DownloadQueue';
+import { useDownloadQueueHandler } from '../useDownloadQueueHandler';
 
 const DownloadItemModal = ({
   visible,
@@ -31,6 +32,17 @@ const DownloadItemModal = ({
   const [selectedQuality, setSelectedQuality] = useState('hd');
   const [showConvertingMessage, setShowConvertingMessage] = useState(false);
   const [downloadResumable, setDownloadResumable] = useState(null);
+  const [downloadQueue, setDownloadQueue] = useState([]);
+   
+  const resumeDownload = (item) => {
+    if (item?.object_type === 'image') {
+      downloadImageHandler(item, { resume: true });
+    } else if (item?.object_type === 'video') {
+      downloadVideoHandler(item, { resume: true });
+    }
+  };
+
+  useDownloadQueueHandler(downloadQueue, resumeDownload);
 
   const hasLargeFiles = selectedItems?.some(item => item?.size > 5 * 1024 * 1024);
 
@@ -58,29 +70,22 @@ const DownloadItemModal = ({
   }, []);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', async (state) => {
-      if (state === 'background' && downloadResumable) {
-        try {
-          await downloadResumable.pauseAsync();
-          await AsyncStorage.setItem(
-            'pausedDownload',
-            JSON.stringify({
-              url: downloadResumable._url,
-              fileUri: downloadResumable._fileUri,
-              title: downloadResumable?._fileUri?.split('/').pop() || 'file',
-            })
-          );
-          console.log('Download paused and saved to storage');
-        } catch (err) {
-          console.error('Failed to pause download', err);
-        }
-      }
-    });
+  const loadAndResumeQueue = async () => {
+    const savedQueue = await AsyncStorage.getItem('downloadQueue');
+    if (savedQueue) {
+      const parsedQueue = JSON.parse(savedQueue);
+      setDownloadQueue(parsedQueue);
 
-    return () => {
-      subscription.remove();
-    };
-  }, [downloadResumable]);
+      parsedQueue.forEach(item => {
+        resumeDownload(item);
+      });
+
+      await AsyncStorage.removeItem('downloadQueue');
+    }
+  };
+
+  loadAndResumeQueue();
+}, []);
 
   useEffect(() => {
     const resumePausedDownload = async () => {
@@ -113,7 +118,6 @@ const DownloadItemModal = ({
           setProgressValue(0);
           setDownloadTitle('');
         } catch (err) {
-          console.log('Resume failed:', err);
         }
       }
     };
@@ -140,6 +144,14 @@ const DownloadItemModal = ({
       setProgressValue(0);
       setDownloadTitle(title);
       setDownloadingProgress(true);
+
+      await AsyncStorage.setItem(
+      'incompleteImageDownload',
+      JSON.stringify({
+        title,
+        imageUrl,
+      })
+    );
 
       const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
       if (existingStatus !== 'granted') {
@@ -170,17 +182,25 @@ const DownloadItemModal = ({
 
       await MediaLibrary.createAssetAsync(downloadedFile.uri);
 
-      await showCompletionNotification(title);
+      await showCompletionNotification(title, downloadedFile.uri, 'video/*');
 
       setSnackbarMessage(`${filename} downloaded successfully to your device.`);
       setSnackbarType('success');
       setSnackbarVisible(true);
+      setDownloadQueue(prev => {
+        const filteredQueue = prev.filter(q => q.id !== item.id);
+        AsyncStorage.setItem('downloadQueue', JSON.stringify(filteredQueue));
+        return filteredQueue;
+      });
       onDownload();
+
+      await AsyncStorage.removeItem('incompleteImageDownload');
     } catch (error) {
       console.error('Image Download Error:', error);
       setSnackbarMessage('Failed to download image. Please try again.');
       setSnackbarType('error');
       setSnackbarVisible(true);
+      await AsyncStorage.removeItem('incompleteImageDownload');
     } finally {
       setDownloadingProgress(false);
       setProgressValue(0);
@@ -199,18 +219,25 @@ const DownloadItemModal = ({
     await AsyncStorage.removeItem('incompleteDownload');
   };
 
-  const showCompletionNotification = async (title) => {
+  const showCompletionNotification = async (title, uri, mimeType = 'video/*') => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Download Complete",
         body: `${title} has been downloaded successfully.`,
+        data: { uri },
       },
       trigger: null,
     });
   };
 
-  const enqueueDownload = (item) => {
+  const enqueueDownload = async (item) => {
     const isImage = item?.object_type === 'image';
+
+    setDownloadQueue(prev => {
+    const updatedQueue = [...prev, item];
+    AsyncStorage.setItem('downloadQueue', JSON.stringify(updatedQueue)); 
+    return updatedQueue;
+  });
 
     DownloadQueue.addToQueue(item, {
       selectedQuality,
@@ -256,6 +283,16 @@ const DownloadItemModal = ({
       onDownload,
     } = options;
 
+    await AsyncStorage.setItem(
+    'pendingConversion',
+    JSON.stringify({
+      title: item.title,
+      id: item.id,
+      object_url: item.object_url,
+      selectedQuality,
+    })
+  );
+
     setIsConverting(true);
     setIsDownloading(false);
     setDownloadProgress(0);
@@ -275,14 +312,16 @@ const DownloadItemModal = ({
     try {
 
       const endpoint =
-        selectedQuality === 'sd'
-          ? 'https://dev-fm-apis.babyflix.net/convert/sd'
-          : 'https://dev-fm-apis.babyflix.net/convert/hd';
+         selectedQuality === 'sd'
+          ? 'https://fm-apis.babyflix.ai/convert/sd'
+          : 'https://fm-apis.babyflix.ai/convert/hd';
 
-      const fullUrl = `${endpoint}?path=${encodeURIComponent(item.object_url)}&id=${item.id}`;
+      const fullUrl = `${endpoint}?path=${item.object_url}&id=${item.id}`;
       const response = await axios.get(fullUrl);
       const downloadUrl = response.data?.download_url;
       if (!downloadUrl) throw new Error('No download URL');
+
+      await AsyncStorage.removeItem('pendingConversion');
 
       const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
       if (existingStatus !== 'granted') {
@@ -310,13 +349,19 @@ const DownloadItemModal = ({
       const result = await downloadResumable.downloadAsync();
       await MediaLibrary.createAssetAsync(result.uri);
 
-      await showCompletionNotification(item.title);
+      await showCompletionNotification(item.title, result.uri, 'image/*');
 
       setSnackbarMessage(`${item.title} downloaded successfully.`);
       setSnackbarType('success');
       setSnackbarVisible(true);
+      setDownloadQueue(prev => {
+        const filteredQueue = prev.filter(q => q.id !== item.id);
+        AsyncStorage.setItem('downloadQueue', JSON.stringify(filteredQueue));
+        return filteredQueue;
+      });
       onDownload();
     } catch (err) {
+      await AsyncStorage.removeItem('pendingConversion');
       throw err;
     } finally {
       setProgressValue(0);
@@ -327,7 +372,7 @@ const DownloadItemModal = ({
 
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} presentationStyle="overFullScreen">
       <View style={styles.delModalOverlay}>
         <View style={styles.delModalContainer}>
           <MaterialIcons name="file-download" size={48} color={Colors.primary} />
@@ -335,13 +380,21 @@ const DownloadItemModal = ({
             {isDownloading || isConverting ? 'Downloading Selected Media' : 'Download Selected Media'}
           </Text>
 
-          {/* Show confirmation only before download */}
           {!isDownloading && !isConverting && (
             <>
               <Text style={styles.delModalMessage}>
-                Are you sure you want to download{' '}
-                <Text style={{ fontWeight: 'bold' }}>{selectedItems[0]?.title}</Text>{' '}
-                ({selectedItems[0]?.object_type})?
+                {selectedItems.length > 1 ? (
+                  <>
+                    Are you sure you want to download{' '}
+                    <Text style={{ fontWeight: 'bold' }}>{selectedItems.length}</Text> items?
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to download{' '}
+                    <Text style={{ fontWeight: 'bold' }}>{selectedItems[0]?.title}</Text>{' '}
+                    ({selectedItems[0]?.object_type})?
+                  </>
+                )}
               </Text>
 
               {selectedItems[0]?.object_type === 'video' && (
@@ -478,3 +531,4 @@ const DownloadItemModal = ({
 };
 
 export default DownloadItemModal;
+

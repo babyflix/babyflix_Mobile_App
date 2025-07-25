@@ -1,4 +1,3 @@
-// app/payment-result.js
 import { useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,9 +16,7 @@ export default function PaymentResult() {
       }
 
       await AsyncStorage.setItem('visited_after_redirect', 'true');
-      console.log('rrrrrrrrrrrrrrrrrrrrrrrrrrrrr')
-      // Redirect to gallery or home screen
-      router.replace('/(app)/gallery'); // or wherever you want to send the user
+      router.replace('/(app)/gallery');
     };
 
     handleStatus();

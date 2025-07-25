@@ -28,11 +28,12 @@ const LiveStreamingScreen = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
 const [isMinimized, setIsMinimized] = useState(true);
 const [isRotated, setIsRotated] = useState(false);
-
+const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
 
   const videoRef = useRef(null);
   const dispatch = useDispatch();
   const streamState = useSelector(state => state.stream);
+  const eventActualEndTime = useSelector(state => state.stream.eventActualEndTime);
   const insets = useSafeAreaInsets();
 
   const streamingUrl = streamState.streamUrl || '';
@@ -80,6 +81,31 @@ const [isRotated, setIsRotated] = useState(false);
   
       return () => clearInterval(id);
     }, [streamState.streamState]);
+
+    useEffect(() => {
+  if (eventActualEndTime && streamState.streamState === 'live') {
+    const endTime = moment(eventActualEndTime);
+
+    const checkTime = () => {
+      const now = moment();
+      const diff = endTime.diff(now, 'minutes');
+
+      if (diff <= 2 && diff >= 0 && streamState.streamState === 'live') {
+        setShowBeforeEndMessage(true);
+      } else {
+        setShowBeforeEndMessage(false);
+      }
+    };
+
+    checkTime(); 
+    const timerId = setInterval(checkTime, 15000); 
+
+    return () => clearInterval(timerId);
+  } else {
+    setShowBeforeEndMessage(false);
+  }
+}, [eventActualEndTime, streamState.streamState]);
+
 
     const checkUrlStatus = async (url, dispatch) => {
       if (streamState.streamState !== 'live') {
@@ -137,7 +163,7 @@ const [isRotated, setIsRotated] = useState(false);
     
     const enterFullScreen = () => {
       setIsFullScreen(true);
-      setIsMinimized(false);
+      //setIsMinimized(false);
       setIsRotated(true);
     };
     
@@ -223,7 +249,7 @@ const [isRotated, setIsRotated] = useState(false);
             size={24}
             color="white"
           />
-        </TouchableOpacity>
+         </TouchableOpacity>
 
          <TouchableOpacity onPress={isFullScreen ? exitFullScreen : enterFullScreen} style={styles.rotateButton}>
             <View style={styles.muteButtonText}>
@@ -235,6 +261,12 @@ const [isRotated, setIsRotated] = useState(false);
             </View>
           </TouchableOpacity>
         </View>
+        {showBeforeEndMessage && streamState.streamState === 'live' && (
+            <View style={[styles.streamNoticeContainer,isMinimized ? {bottom:20}:{top:170}]}>
+              <MaterialIcons name="warning" size={20} color="#FFA500" style={{ paddingLeft: 6, backgroundColor: '#FFF3CD' ,paddingVertical: 5.46, borderTopLeftRadius:6, borderBottomLeftRadius:6 }} />
+              <Text style={styles.streamNoticeText}>This stream will end in 2 minutes</Text>
+            </View>
+          )}
       </View>
       ) : (
         <Text style={{ textAlign: 'center', color: 'gray', marginVertical: 20 }}>
@@ -361,7 +393,7 @@ const styles = StyleSheet.create({
   
   overlay: {
     position: 'absolute',
-    top: 10,
+    top: 6,
     left: 10,
     right: 10,
     flexDirection: 'row',
@@ -409,6 +441,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     padding: 10,
     },
+   streamNoticeContainer: {
+  position: 'absolute',
+  flexDirection: 'row',
+  bottom: 15,
+  left: 0,
+  right: 0,
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 999,
+},
+
+streamNoticeText: {
+  color: '#856404',
+  fontSize: 12,
+  fontFamily:'Poppins_400Regular',
+  fontWeight: '600',
+  backgroundColor: '#FFF3CD',
+  paddingHorizontal: 6,
+  paddingVertical: 6,
+  //borderRadius: 6,
+  borderTopRightRadius:6,
+  borderBottomRightRadius:6,
+},
 });
 
 export default LiveStreamingScreen;
