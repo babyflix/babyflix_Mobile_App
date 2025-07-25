@@ -192,3 +192,180 @@ export default StyleSheet.create({
     height: 55,
   },
 });
+
+import { Dimensions } from 'react-native';
+const screenWidth = Dimensions.get('window').width;
+
+export const modalStyles = {
+  delModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  delModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+    zIndex: 9999,
+    elevation: 10,
+  },
+
+  delModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins_600SemiBold',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: 'black', // override in modal if needed (e.g., red for delete)
+  },
+
+  delModalMessage: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#444',
+  },
+
+  delModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+
+  delModalButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 45,
+  },
+
+  delModalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins_500Medium',
+  },
+
+  closeIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 5,
+    zIndex: 1,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    padding: 20,
+    borderRadius: 8,
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    marginLeft: 10,
+  },
+  messageBox: {
+    borderWidth: 1,
+    borderColor: Colors.textSecondary,
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  listTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginLeft: 5,
+  },
+  mobileInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  countryCodeInput: {
+    width: 50,
+    height: 50,
+    borderWidth: 1,
+    borderColor: Colors.textSecondary,
+    padding: 8,
+    marginHorizontal: 5,
+    textAlign: "center",
+    borderRadius: 8,
+  },
+  mobileInput: {
+    height: 50,
+    width: 185,
+    borderWidth: 1,
+    borderColor: Colors.textSecondary,
+    padding: 8,
+    paddingLeft: 37,
+    borderRadius: 8,
+    marginRight: 5,
+  },
+  addMoreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  addMoreText: {
+    marginLeft: 5,
+    color: Colors.primary,
+    fontSize: 16,
+  },
+  errorText: {
+    color: Colors.error,
+    fontSize: 12,
+    marginLeft: 5,
+    marginTop: 10,
+  },
+  preview: {
+  width: '100%',
+  height: 200,
+  alignItems: 'center',  // Center content horizontally
+  padding: 15,
+  borderRadius: 12,
+  backgroundColor: Colors.white,
+  ...Platform.select({
+    ios: {
+      shadowColor: Colors.black,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    android: {
+      elevation: 2,
+    },
+  }),
+},
+
+previewImage: {
+  width: '100%',
+  height: 100,
+  aspectRatio: 16 / 9,  // This gives 16:9 ratio (e.g., 300x168), works for both video & image
+  borderRadius: 8,
+},
+
+previewImages: {
+  width: screenWidth * 0.65,  // 80% of screen width
+  height: (screenWidth * 0.7) * 9 / 16,  // maintain 16:9 ratio
+  borderRadius: 8,
+},
+
+};

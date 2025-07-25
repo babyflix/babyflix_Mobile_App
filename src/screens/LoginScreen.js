@@ -109,7 +109,7 @@ const LoginScreen = () => {
         setSnackbarVisible(true);
 
         setTimeout(() => {
-          router.replace('gallery');
+          router.replace('/gallery');
         }, 1000);
       } else {
         setSnackbarMessage(res.data.error || 'Login failed');

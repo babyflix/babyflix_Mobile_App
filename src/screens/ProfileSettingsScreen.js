@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 import GlobalStyles from '../styles/GlobalStyles';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../state/slices/authSlice';
+import { logout, setLoggingOut } from '../state/slices/authSlice';
 import Header from '../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -27,6 +27,7 @@ import { logError } from '../components/logError';
 import CustomDropdown from '../components/CustomDropdown';
 import { closeDropdown } from '../state/slices/headerSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { clearOpenStorage2, setForceOpenStorageModals } from '../state/slices/storageUISlice';
 
 const ProfileSettingsScreen = () => {
   const dispatch = useDispatch();
@@ -68,7 +69,7 @@ const ProfileSettingsScreen = () => {
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
-  const [modalType, setModalType] = useState('success'); // or 'error'
+  const [modalType, setModalType] = useState('success');
 
   const modalContentHeight = showAdditionalInfo ? '95%' : '85%';
 
@@ -160,17 +161,32 @@ const ProfileSettingsScreen = () => {
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('token');
-      
+      //await AsyncStorage.removeItem('token');
+      await AsyncStorage.setItem('logoutInProgress', 'true');
+
+      dispatch(setLoggingOut(true));
+  
+      await AsyncStorage.multiRemove([
+      'token',
+      'userData',
+      'tokenExpiry',
+      'storage_modal_triggered', 
+      'payment_status', 
+      'payment_status 1', 
+      'last_skipped_plan_date'
+    ]);
+
+      dispatch(clearOpenStorage2());
+      dispatch(setForceOpenStorageModals(false));
       dispatch(closeDropdown());
       dispatch(logout());
-
-      setTimeout(() => {
-        router.replace('login');
-      }, 100);
+      
+    setTimeout(() => {
+      router.replace('/login');
+    }, 100);
 
     } catch (error) {
-
+      dispatch(setLoggingOut(false));
     }
   };
 
@@ -262,16 +278,6 @@ const ProfileSettingsScreen = () => {
     }
 
     const phoneRegex = /^(?:\+1\s?)?(\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}$/;
-    // if (!phoneRegex.test(phone)) {
-    //   setErrorMessage('Please enter a valid USA phone number.');
-    //   return;
-    // }
-
-    // if (!dob) {
-    //   setErrorMessage('Please select a date of birth');
-    //   return;
-    // }
-
     if (!dueDate) {
       setErrorMessage('Please select a due date');
       return;
@@ -303,45 +309,6 @@ const ProfileSettingsScreen = () => {
       setErrorMessage('Please fill in all fields.');
       return;
     }
-    console.log(`
-🔍 User Data to be Updated:
-First Name      : ${firstName}
-Last Name       : ${lastName}
-Email           : ${email}
-Phone           : ${phone}
-Country Code    : ${selectedCountry || countryCode }
-Due Date        : ${dueDate}
-Date of Birth   : ${dob}
-Company ID      : ${result.companyId}
-Location ID     : ${result.locationId}
-Machine ID      : ${result.machineId}
-User Groups     : ${JSON.stringify(result.userGroups)}
-Spouse Name     : ${spouseName}
-Baby Name       : ${babyName}
-Baby Sex        : ${babySex}
-UUID            : ${result.uuid}
-`);
-
-
-     console.log(`
-🔍 User Data to be Updated:
-First Name      : ${firstName}
-Last Name       : ${lastName}
-Email           : ${email}
-Phone           : ${phone}
-Country Code    : ${selectedCountry || countryCode }
-Due Date        : ${dueDate}
-Date of Birth   : ${dob}
-Company ID      : ${result.companyId}
-Location ID     : ${result.locationId}
-Machine ID      : ${result.machineId}
-User Groups     : ${JSON.stringify(result.userGroups)}
-Spouse Name     : ${spouseName}
-Baby Name       : ${babyName}
-Baby Sex        : ${babySex}
-UUID            : ${result.uuid}
-`);
-
 
     try {
       const response = await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update`,
@@ -602,7 +569,7 @@ UUID            : ${result.uuid}
                 ]}
                 onPress={() => {
                   setStatusModalVisible(false);
-                  if (modalType === 'success') router.replace('login'); // Only redirect if success
+                  if (modalType === 'success') router.replace('login'); 
                 }}
               >
                 <Text style={styles.okButtonText}>OK</Text>
@@ -753,7 +720,7 @@ UUID            : ${result.uuid}
               <CustomDropdown
                 selectedValue={selectedCountry}
                  onSelect={(item) => {
-                  setSelectedCountry(item);           // full selected object (optional)
+                  setSelectedCountry(item);       
                   console.log('selectedCountry',item)
                 }}
                 options={FormattedCountries}

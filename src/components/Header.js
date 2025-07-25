@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Image, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Image, Modal, ActivityIndicator } from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
-import { logout } from '../state/slices/authSlice';
+import { logout, setLoggingOut  } from '../state/slices/authSlice';
 import babyflixLogo from '../../assets/BBF_logo.jpg';
 import { toggleDropdown, closeDropdown } from '../state/slices/headerSlice';
 import { EXPO_PUBLIC_API_URL } from '@env';
-import { triggerOpenStorage2 } from '../state/slices/storageUISlice';
+import { clearOpenStorage2, setForceOpenStorageModals, triggerOpenStorage2 } from '../state/slices/storageUISlice';
 import StorageModals from './StorageModals';
+import { useHeaderAction } from './HeaderActionContext';
+import Snackbar from './Snackbar';
+import { getStoragePlanDetails } from './getStoragePlanDetails';
+import moment from 'moment';
 
 const Header = ({ title, showMenu = true, showProfile = true }) => {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -19,6 +23,11 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const [plans, setPlans] = useState([]);
   const [currentPlan, setCurrentPlan] = useState([]);
   const [showModal, setShowModal] = useState(false); 
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarType, setSnackbarType] = useState('');
+  const [showDeletePlanModal, setShowDeletePlanModal] = useState(false);
+  const [isDeletingPlan, setIsDeletingPlan] = useState(false);
 
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -27,13 +36,18 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const showDropdown = useSelector((state) => state.header.showDropdown);
   const unreadMessagesCount = useSelector((state) => state.header.unreadMessagesCount);
   const storagePlan = useSelector(state => state.storagePlan)
+  const isPlanExpired = useSelector((state) => state.expiredPlan.isPlanExpired);
+  const showUpgradeReminder = useSelector((state) => state.expiredPlan.showUpgradeReminder);
+  const remainingDays = useSelector((state) => state.expiredPlan.remainingDays);
+  const openStorage2Directly = useSelector(state => state.storageUI.openStorage2Directly);
+   const { setHandleChooseClick } = useHeaderAction();
+   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const fetchPlans = async () => {
       try {
         const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/getAllPlans`);
         const json = await response.json();
         if (json.actionStatus === 'success') {
-          console.log("getAllPlans", json)
           setPlans(json.data);
         } else {
           console.warn('Failed to fetch plans');
@@ -53,24 +67,36 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
           (plan) => plan.id ===  storagePlan.storagePlanId
         );
         setCurrentPlan(planToShow);
-        console.log('planToShow',planToShow)
-        console.log('storagePlanId',storagePlan.storagePlanId)
-        //console.log('openStorage2Directly',openStorage2Directly)
       }
     }, [plans, storagePlan.storagePlanId]);
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('token');
+      await AsyncStorage.setItem('logoutInProgress', 'true');
+
+      dispatch(setLoggingOut(true));
   
+      await AsyncStorage.multiRemove([
+      'token',
+      'userData',
+      'tokenExpiry',
+      'storage_modal_triggered', 
+      'payment_status', 
+      'payment_status 1', 
+      'last_skipped_plan_date'
+    ]);
+
+      dispatch(clearOpenStorage2());
+      dispatch(setForceOpenStorageModals(false));
       dispatch(closeDropdown());
       dispatch(logout());
-
-      setTimeout(() => {
-        router.replace('login');
-      }, 100);
+      
+    setTimeout(() => {
+      router.replace('/login');
+    }, 100);
 
     } catch (error) {
+      dispatch(setLoggingOut(false));
     }
   };
 
@@ -82,14 +108,92 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     dispatch(closeDropdown());
   };
 
-  const handleChangeClick = () => {
-    dispatch(triggerOpenStorage2());  // 🔸 Set redux flag
-    setShowModal(true);               // 🔸 Show modal instantly
+  useEffect(() => {
+  const fetchStatusFromStorage = async () => {
+    const storedStatus = await AsyncStorage.getItem('payment_status');
+    const storedPaying = await AsyncStorage.getItem('paying');
+    dispatch(clearOpenStorage2());
+     if (!storedStatus && storedPaying === 'true') {
+      dispatch(clearOpenStorage2());
+      await AsyncStorage.setItem('storage_modal_triggered', 'false');
+
+    if (isAuthenticated) {
+      //router.replace('/gallery');
+    }
+    }
   };
 
-  const handleChooseClick = () => {
-    dispatch(triggerOpenStorage2());  // 🔸 Set redux flag
+  fetchStatusFromStorage();
+}, [user]); 
+
+
+  const handleChangeClick = async () => {
+    dispatch(triggerOpenStorage2());
+    await AsyncStorage.setItem('storage_modal_triggered', 'false');
+    router.push('/gallery?showStorageModal=true');
   };
+
+  const handleChooseClick = async () => {
+    dispatch(triggerOpenStorage2());
+    await AsyncStorage.setItem('storage_modal_triggered', 'false');
+  };
+
+  useEffect(() => {
+  setHandleChooseClick(() => handleChooseClick);
+
+  return () => setHandleChooseClick(null); 
+}, []);
+
+  const confirmPlanDelete = async () => {
+  setIsDeletingPlan(true);
+  await handleDeletePlan();
+  setIsDeletingPlan(false);
+  setShowDeletePlanModal(false);
+};
+
+
+  const handleDeletePlan = async () => {
+  try {
+    const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: user.uuid,
+        storagePlanId: null,
+        storagePlanPayment: null,
+        storagePlanDeleteDate: moment().format('DD-MM-YYYY hh:mm'),
+        isPlanDeleted : 1,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.actionStatus === 'success') {
+
+      setSnackbarMessage(`${currentPlan.name} deleted successfully`);
+      setSnackbarType('success');
+      setSnackbarVisible(true);
+
+      await getStoragePlanDetails(user.email, dispatch);
+      setPlanModalVisible(false)
+    } else {
+      console.error('❌ Failed to delete plan:', data.message);
+
+      setSnackbarMessage(data.message || 'Failed to delete plan');
+      setSnackbarType('error');
+      setSnackbarVisible(true);
+    }
+  } catch (error) {
+    console.error('❌ Error deleting plan:', error);
+
+    setSnackbarMessage('Something went wrong');
+    setSnackbarType('error');
+    setSnackbarVisible(true);
+  }
+};
+
 
   return (
     <View style={styles.header}>
@@ -135,6 +239,8 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
               style={styles.dropdownItem}
               onPress={() => {
                 closeDropdownHandler();
+                dispatch(clearOpenStorage2());
+                dispatch(setForceOpenStorageModals(true));
                 setPlanModalVisible(true);
               }}
             >
@@ -180,6 +286,8 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
           <Text style={styles.planSubtitle}>
             ₹{currentPlan.price_per_month} / Year • {currentPlan.storage_limit_gb} GB
           </Text>
+          {isPlanExpired && <Text style={[styles.expiryTitle]}>Expired</Text>}
+          {showUpgradeReminder && <Text style={[styles.expiryTitle]}>Expiring in {remainingDays} days</Text>}
 
           <View style={styles.separator} />
 
@@ -195,7 +303,10 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
               <Text style={[styles.actionText, { color: 'blue' }]}>Change</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity 
+              onPress={() =>setShowDeletePlanModal(true)}
+              style={styles.actionButton}
+            >
               <Ionicons name="trash" size={16} color="red" />
               <Text style={[styles.actionText, { color: 'red' }]}>Delete</Text>
             </TouchableOpacity>
@@ -219,9 +330,59 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         </>
       )}
           </View>
+          <Snackbar
+            visible={snackbarVisible}
+            message={snackbarMessage}
+            type={snackbarType}
+            onDismiss={() => setSnackbarVisible(false)}
+          />
         </View>
       </Modal>
-      {showModal && <StorageModals />}
+
+      <Modal
+  visible={showDeletePlanModal}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setShowDeletePlanModal(false)}
+>
+  <View style={styles.delModalOverlay}>
+    <View style={styles.delModalContainer}>
+      <Ionicons name="warning" size={48} color={Colors.error} />
+      <Text style={styles.delModalTitle}>Delete Current Plan</Text>
+      <Text style={styles.delModalMessage}>
+        Are you sure you want to delete your current plan? This action cannot be undone.
+      </Text>
+
+      {isDeletingPlan ? (
+        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+          <ActivityIndicator size="large" color="red" />
+          <Text style={{ marginTop: 10, fontSize: 16, color: 'red', fontWeight: '600' }}>
+            Deleting Plan...
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.delModalButtons}>
+          <TouchableOpacity
+            onPress={() => setShowDeletePlanModal(false)}
+            style={[styles.delModalButton, { backgroundColor: '#ccc', flexDirection: 'row' }]}
+          >
+            <Ionicons name="close-circle" size={20} color="white" style={{ marginRight: 5 }} />
+            <Text style={styles.delModalButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={confirmPlanDelete}
+            style={[styles.delModalButton, { backgroundColor: 'red', flexDirection: 'row' }]}
+          >
+            <MaterialIcons name="delete" size={20} color="white" style={{ marginRight: 5 }} />
+            <Text style={styles.delModalButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  </View>
+</Modal>
+
+      {/* {showModal && <StorageModals />} */}
 
 {/* <View style={styles.planCard}>
   <TouchableOpacity onPress={() => setPlanModalVisible(false)} style={styles.closeIcon}>
@@ -424,6 +585,12 @@ planTitle: {
   color: Colors.textPrimary,
   marginBottom: 4,
 },
+expiryTitle: {
+  fontSize: 15,
+  fontFamily: 'Poppins_700Bold',
+  color: 'red',
+  marginTop: 4,
+},
 planSubtitle: {
   fontSize: 13,
   fontFamily: 'Poppins_400Regular',
@@ -490,7 +657,7 @@ chooseButton: {
   paddingHorizontal: 16,
   paddingVertical: 10,
   borderRadius: 8,
-  flexDirection: 'row',         // <-- to align icon and text horizontally
+  flexDirection: 'row',       
   alignItems: 'center', 
 },
 chooseButtonText: {
@@ -498,8 +665,58 @@ chooseButtonText: {
   fontWeight: '600',
   fontSize: 14,
 },
+ delModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
+  delModalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 20,
+    width: '80%',
+    alignItems: 'center',
+  },
 
+  delModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins_600SemiBold',
+    marginBottom: 10,
+    textAlign: 'center'
+  },
+
+  delModalMessage: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+
+  delModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+
+  delModalButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height:45
+  },
+
+  delModalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins_500Medium',
+  },
 });
 
 export default Header;

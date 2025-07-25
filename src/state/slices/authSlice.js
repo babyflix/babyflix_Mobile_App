@@ -16,6 +16,7 @@ const initialState = {
   token: '',
   uuid: '',
   isAuthenticated: false,
+  isLoggingOut: false,
 };
 
 const authSlice = createSlice({
@@ -55,6 +56,7 @@ const authSlice = createSlice({
       state.token = token;
       state.uuid = uuid;
       state.isAuthenticated = !!token;
+      state.isLoggingOut = false;
     },
     logout: (state) => {
       state.actionStatus = '';
@@ -72,12 +74,16 @@ const authSlice = createSlice({
       state.token = '';
       state.uuid = '';
       state.isAuthenticated = false;
+      state.isLoggingOut = false; 
     },
     updateActionStatus: (state, action) => {
       state.actionStatus = action.payload;
-    },    
+    },  
+     setLoggingOut: (state, action) => {
+      state.isLoggingOut = action.payload;
+    },  
   },
 });
 
-export const { setCredentials, logout, updateActionStatus } = authSlice.actions;
+export const { setCredentials, logout, updateActionStatus, setLoggingOut  } = authSlice.actions;
 export default authSlice.reducer;

@@ -9,8 +9,11 @@ import AuthLoader from '../src/components/AuthLoader';
 import NetInfo from '@react-native-community/netinfo';
 import * as ImagePicker from 'expo-image-picker';
 import { showSnackbar } from '../src/state/slices/uiSlice';
-import { Alert, Linking, Text, TextInput } from 'react-native';
+import { Alert, Linking, Platform, Text, TextInput } from 'react-native';
 import Constants from 'expo-constants';
+import { HeaderActionProvider } from '../src/components/HeaderActionContext';
+import * as Notifications from 'expo-notifications';
+import * as IntentLauncher from 'expo-intent-launcher';
 
 import { useFonts } from 'expo-font';
 import {
@@ -20,6 +23,8 @@ import {
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
 import { getStoragePlanDetails } from '../src/components/getStoragePlanDetails';
+import { registerForPushNotificationsAsync } from '../src/components/notifications';
+import { requestMediaLibraryPermission } from '../src/components/requestMediaPermission';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
@@ -68,25 +73,65 @@ const LayoutContent = () => {
     return () => unsubscribe();
   }, [isConnected, dispatch]);
 
-  useEffect(() => {
+//   useEffect(() => {
+//   const requestPermissions = async () => {
+//     try {
+//       const { status, granted, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//       if (status !== 'granted' && !granted && !canAskAgain) {
+//         Alert.alert('Permission Required', 'Please enable media access in Settings.');
+//       }
+//     } catch (error) {
+//       console.warn('Permission request failed:', error);
+//     }
+//   };
+//   if (isAuthenticated) requestPermissions();
+// }, [isAuthenticated]);   
+
+useEffect(() => {
   const requestPermissions = async () => {
-    try {
-      const { status, granted, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted' && !granted && !canAskAgain) {
-        Alert.alert('Permission Required', 'Please enable media access in Settings.');
-      }
-    } catch (error) {
-      console.warn('Permission request failed:', error);
+    if (isAuthenticated) {
+      const granted = await requestMediaLibraryPermission();
+      // You don't need to do anything else here
     }
   };
-  if (isAuthenticated) requestPermissions();
-}, [isAuthenticated]);   
+  requestPermissions();
+}, [isAuthenticated]);
 
    useEffect(() => {
     if (isAuthenticated && user?.email) {
       getStoragePlanDetails(user.email, dispatch);
     }
   }, [isAuthenticated, user?.email]);
+
+//   useEffect(() => {
+//   if (user?.id) {
+//     registerForPushNotificationsAsync(user.id);
+//   }
+// }, []);
+
+useEffect(() => {
+  const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+    const { uri, mimeType } = response.notification.request.content.data;
+
+    if (uri) {
+      if (Platform.OS === 'android') {
+        try {
+          IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+            data: uri,
+            flags: 1,
+            type: mimeType || 'video/*',
+          });
+        } catch (e) {
+          console.warn('Failed to open file:', e.message);
+        }
+      } else if (Platform.OS === 'ios') {
+        Linking.openURL(uri);
+      }
+    }
+  });
+
+  return () => subscription.remove();
+}, []);
 
   return (
     <>
@@ -121,9 +166,11 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <SafeAreaProvider>
+        <HeaderActionProvider>
         <AuthLoader>
           <LayoutContent />
         </AuthLoader>
+        </HeaderActionProvider>
       </SafeAreaProvider>
     </Provider>
   );
