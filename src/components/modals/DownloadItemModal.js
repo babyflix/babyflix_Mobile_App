@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, ActivityIndicator, Alert, AppState } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, ActivityIndicator, Alert, AppState, Platform } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { modalStyles as styles } from '../../styles/GlobalStyles';
 import * as Progress from 'react-native-progress';
@@ -265,6 +265,7 @@ const DownloadItemModal = ({
         onCancel();
       }, 3000);
     } else {
+      setIsConverting(false);
       setTimeout(() => {
         onCancel();
       }, 3000);
@@ -316,7 +317,13 @@ const DownloadItemModal = ({
           ? 'https://fm-apis.babyflix.ai/convert/sd'
           : 'https://fm-apis.babyflix.ai/convert/hd';
 
-      const fullUrl = `${endpoint}?path=${item.object_url}&id=${item.id}`;
+          const encodedPath =
+            Platform.OS === 'ios'
+              ? encodeURIComponent(item.object_url)
+              : item.object_url;
+
+      //const fullUrl = `${endpoint}?path=${item.object_url}&id=${item.id}`;
+      const fullUrl = `${endpoint}?path=${encodedPath}&id=${item.id}`;
       const response = await axios.get(fullUrl);
       const downloadUrl = response.data?.download_url;
       if (!downloadUrl) throw new Error('No download URL');
