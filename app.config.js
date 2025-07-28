@@ -38,6 +38,7 @@ export default ({ config }) => ({
         "UIInterfaceOrientationLandscapeRight"
       ],
       NSPhotoLibraryUsageDescription: "BabyFlix allows you to select baby ultrasound images and videos from your photo library to view them in the app",
+      NSPhotoLibraryAddUsageDescription: "BabyFlix needs permission to save baby ultrasound videos and images to your Photos Library.",
       ITSAppUsesNonExemptEncryption: false,
       UIBackgroundModes: ["fetch", "remote-notification"],
       CFBundleURLTypes: [ 

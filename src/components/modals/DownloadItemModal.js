@@ -14,6 +14,7 @@ import { useDownloadQueueHandler } from '../useDownloadQueueHandler';
 
 const DownloadItemModal = ({
   visible,
+  setVisible,
   selectedItems,
   onCancel,
   onDownload,
@@ -140,7 +141,7 @@ const DownloadItemModal = ({
     const title = item.title || 'image';
 
     try {
-      onCancel();
+      //onCancel();
       setProgressValue(0);
       setDownloadTitle(title);
       setDownloadingProgress(true);
@@ -152,7 +153,7 @@ const DownloadItemModal = ({
         imageUrl,
       })
     );
-
+       console.log('Permission Required')
       const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
       if (existingStatus !== 'granted') {
         const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
@@ -162,6 +163,8 @@ const DownloadItemModal = ({
           return;
         }
       }
+
+      console.log('Permission Granted saving file in gallary of phone')
 
       const filename = `${title}.jpg`;
       const fileUri = FileSystem.documentDirectory + filename;
@@ -181,6 +184,10 @@ const DownloadItemModal = ({
       const downloadedFile = await downloadResumable.downloadAsync();
 
       await MediaLibrary.createAssetAsync(downloadedFile.uri);
+      // const asset = await MediaLibrary.createAssetAsync(downloadedFile.uri);
+      // await MediaLibrary.createAlbumAsync("Download", asset, false);
+
+      console.log('Photo save successfully')
 
       await showCompletionNotification(title, downloadedFile.uri, 'video/*');
 
@@ -193,6 +200,7 @@ const DownloadItemModal = ({
         return filteredQueue;
       });
       onDownload();
+      onCancel()
 
       await AsyncStorage.removeItem('incompleteImageDownload');
     } catch (error) {
@@ -206,20 +214,11 @@ const DownloadItemModal = ({
       setProgressValue(0);
       setDownloadTitle('');
       setActiveDownloads(prev => Math.max(0, prev - 1));
+      onCancel()
     }
   };
 
-
-
-  const saveDownloadState = async (info) => {
-    await AsyncStorage.setItem('incompleteDownload', JSON.stringify(info));
-  };
-
-  const clearDownloadState = async () => {
-    await AsyncStorage.removeItem('incompleteDownload');
-  };
-
-  const showCompletionNotification = async (title, uri, mimeType = 'video/*') => {
+  const showCompletionNotification = async (title, uri, mimeType = 'image/*') => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Download Complete",
@@ -231,6 +230,7 @@ const DownloadItemModal = ({
   };
 
   const enqueueDownload = async (item) => {
+    console.log('[enqueueDownload] Started');
     const isImage = item?.object_type === 'image';
 
     setDownloadQueue(prev => {
@@ -262,12 +262,14 @@ const DownloadItemModal = ({
 
       setTimeout(() => {
         setIsConverting(false);
-        onCancel();
+        setVisible(false);
+        //onCancel();
       }, 3000);
     } else {
       setIsConverting(false);
       setTimeout(() => {
-        onCancel();
+        //onCancel();
+        setVisible(false);
       }, 3000);
     }
   };
@@ -306,7 +308,7 @@ const DownloadItemModal = ({
 
     setTimeout(() => {
       setIsConverting(false);
-      onCancel();
+      //onCancel();
       setDownloadingProgress(true);
     }, 3000);
 
@@ -324,20 +326,26 @@ const DownloadItemModal = ({
 
       //const fullUrl = `${endpoint}?path=${item.object_url}&id=${item.id}`;
       const fullUrl = `${endpoint}?path=${encodedPath}&id=${item.id}`;
-      console.log('fullUrl',fullUrl)
+      console.log('iOS: Fetching converted video from URL:', fullUrl);
       const response = await axios.get(fullUrl);
       const downloadUrl = response.data?.download_url;
+      console.log('iOS: Conversion API response:', downloadUrl);
       if (!downloadUrl) throw new Error('No download URL');
 
       await AsyncStorage.removeItem('pendingConversion');
+
+      console.log('Permission Required')
 
       const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
       if (existingStatus !== 'granted') {
         const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
         if (newStatus !== 'granted') throw new Error('Permission denied');
       }
+       console.log('Permission Granted saving file in gallary of phone')
 
       const fileUri = FileSystem.documentDirectory + `${item.title || 'video'}.mp4`;
+
+      console.log('fileUri',fileUri)
 
       setDownloadTitle(item.title);
       setProgressValue(0);
@@ -356,8 +364,12 @@ const DownloadItemModal = ({
 
       const result = await downloadResumable.downloadAsync();
       await MediaLibrary.createAssetAsync(result.uri);
+      // const asset = await MediaLibrary.createAssetAsync(result.uri);
+      // await MediaLibrary.createAlbumAsync("Download", asset, false);
 
-      await showCompletionNotification(item.title, result.uri, 'image/*');
+      console.log('Video save successfully')
+
+      await showCompletionNotification(item.title, result.uri, 'video/*');
 
       setSnackbarMessage(`${item.title} downloaded successfully.`);
       setSnackbarType('success');
@@ -368,6 +380,7 @@ const DownloadItemModal = ({
         return filteredQueue;
       });
       onDownload();
+      onCancel()
     } catch (err) {
       await AsyncStorage.removeItem('pendingConversion');
       throw err;
@@ -375,6 +388,7 @@ const DownloadItemModal = ({
       setProgressValue(0);
       setDownloadingProgress(false);
       setActiveDownloads(prev => Math.max(0, prev - 1));
+      onCancel()
     }
   };
 

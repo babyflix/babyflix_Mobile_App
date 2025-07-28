@@ -6,6 +6,7 @@ import Colors from '../constants/Colors';
 const FloatingDownloadBar = ({ visible, progress, title , activeDownloads}) => {
   if (!visible) return null;
   if (activeDownloads == 0) return null;
+  console.log('in the FloatingDownloadBar')
 
   return (
     <View style={styles.container}>

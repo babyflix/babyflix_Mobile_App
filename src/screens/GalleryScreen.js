@@ -740,6 +740,7 @@ const handleShareSelected = () => {
 
       <DownloadItemModal
         visible={showDownloadModal}
+        setVisible={setShowDownloadModal}
         onCancel={() => setShowDownloadModal(false)}
         selectedItems={selectedItem}
         onDownload={handleProccessCompleted}
@@ -1222,7 +1223,7 @@ actionButton: {
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
-    zIndex: 10,
+    zIndex: 999,
   },
 
   menuItem: {
