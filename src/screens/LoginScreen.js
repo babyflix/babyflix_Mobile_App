@@ -80,6 +80,7 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
+      console.log('EXPO_PUBLIC_API_URL 1',EXPO_PUBLIC_API_URL)
       const timezone = await AsyncStorage.getItem('timezone');
 
       const res = await axios.post(

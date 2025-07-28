@@ -55,7 +55,7 @@ import Queue from '../components/DownloadQueue.js';
 
 const Tab = createMaterialTopTabNavigator();
 
-const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem }) => {
+const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem, disableMenuAndSelection }) => {
   const filteredData = type === 'all' ? data : data.filter(item => item.object_type === type);
 
   const formatCreatedAtToIST = (created_at) => {
@@ -66,6 +66,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
   };
 
   const toggleSelection = (item) => {
+  if (disableMenuAndSelection) return;
   if (!selectionMode) {
     setSelectionMode(true);
     setSelectedItems([item]);
@@ -89,7 +90,9 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
       <View style={{ position: 'relative' }}>
         <TouchableOpacity
           style={[styles.mediaItem, isSelected && styles.selectedMediaItem]}
-          onLongPress={() => toggleSelection(item)}
+          onLongPress={() => {
+            if (!disableMenuAndSelection) toggleSelection(item);
+          }}
           onPress={() => {
             if (selectionMode) {
               toggleSelection(item);
@@ -116,6 +119,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
         </TouchableOpacity>
 
         {/* 3-dot icon */}
+        {!disableMenuAndSelection && (
         <TouchableOpacity
           style={styles.menuIcon}
           onPress={() => {
@@ -125,6 +129,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
         >
           <MaterialIcons name="more-horiz" size={17} color="black" />
         </TouchableOpacity>
+        )}
 
         {isMenuVisible && (
           <View style={styles.menuPopup}>
@@ -185,7 +190,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
   );
 };
 
-const AllTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem }) => <MediaGrid data={data}
+const AllTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem, disableMenuAndSelection }) => <MediaGrid data={data}
   type="all"
   onPreview={onPreview}
   refreshing={refreshing}
@@ -202,8 +207,9 @@ const AllTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSele
   showDownloadModal={showDownloadModal}
   setShowShareModal={setShowShareModal}
   showShareModal={showShareModal}
-  setSelectedItem={setSelectedItem} />;
-const ImagesTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem }) => <MediaGrid data={data}
+  setSelectedItem={setSelectedItem}
+  disableMenuAndSelection={disableMenuAndSelection} />;
+const ImagesTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem, disableMenuAndSelection }) => <MediaGrid data={data}
   type="image"
   onPreview={onPreview}
   refreshing={refreshing}
@@ -220,8 +226,9 @@ const ImagesTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setS
   showDownloadModal={showDownloadModal}
   setShowShareModal={setShowShareModal}
   showShareModal={showShareModal}
-  setSelectedItem={setSelectedItem} />;
-const VideosTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem }) => <MediaGrid data={data}
+  setSelectedItem={setSelectedItem}
+  disableMenuAndSelection={disableMenuAndSelection} />;
+const VideosTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem, disableMenuAndSelection }) => <MediaGrid data={data}
   type="video"
   onPreview={onPreview}
   refreshing={refreshing}
@@ -238,7 +245,8 @@ const VideosTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setS
   showDownloadModal={showDownloadModal}
   setShowShareModal={setShowShareModal}
   showShareModal={showShareModal}
-  setSelectedItem={setSelectedItem} />;
+  setSelectedItem={setSelectedItem}
+  disableMenuAndSelection={disableMenuAndSelection} />;
 
 const GalleryScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -276,6 +284,7 @@ const GalleryScreen = () => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadTitle, setDownloadTitle] = useState('');
   const [activeDownloads, setActiveDownloads] = useState(0);
+  const [disableMenuAndSelection, setDisableMenuAndSelection] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -326,6 +335,8 @@ const GalleryScreen = () => {
             ? storedDateMoment.isSame(today, 'day')
             : false;
 
+            console.log('isSameDay',isSameDay)
+
           if (isSameDay) {
             setShouldShowStorageModal(false);
           } else {
@@ -344,6 +355,8 @@ const GalleryScreen = () => {
 
   const fetchMediaData = async () => {
     setIsLoading(true);
+    
+        console.log('EXPO_PUBLIC_API_URL',EXPO_PUBLIC_API_URL)
     try {
       if (!user.email) return;
 
@@ -357,9 +370,12 @@ const GalleryScreen = () => {
         const { storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId } = data1;
 
         if (storagePlanId == null) {
-          setMediaData({ images: [], videos: [] });
-          return
-        };
+          //setMediaData({ images: [], videos: [] });
+          //return
+          setDisableMenuAndSelection(true);
+        } else {
+          setDisableMenuAndSelection(false);
+        }
 
         if (storagePlanPrice === '0.00' && storagePlanDate) {
           const planStartDate = moment(storagePlanDate, 'MM-DD-YYYY HH:mm:ss', true);
@@ -390,10 +406,13 @@ const GalleryScreen = () => {
         }
 
         try {
+          console.log('innnn')
           const response = await axios.get(
             EXPO_PUBLIC_CLOUD_API_URL + `/get-images/?machine_id=${user.machineId}&user_id=${user.uuid}&email=${user.email}`,
             { headers: { 'Content-Type': 'application/json' } }
           );
+
+          //console.log('response',response)
 
           if (response.status === 200) {
             const images = [], videos = [];
@@ -655,7 +674,8 @@ const handleShareSelected = () => {
             showDownloadModal={showDownloadModal}
             setShowShareModal={setShowShareModal}
             showShareModal={showShareModal}
-            setSelectedItem={setSelectedItem} />} />
+            setSelectedItem={setSelectedItem}
+            disableMenuAndSelection={disableMenuAndSelection} />} />
           <Tab.Screen name="Images" children={() => <ImagesTab data={mediaData.images} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
             selectionMode={selectionMode}
@@ -668,7 +688,8 @@ const handleShareSelected = () => {
             showDownloadModal={showDownloadModal}
             setShowShareModal={setShowShareModal}
             showShareModal={showShareModal}
-            setSelectedItem={setSelectedItem} />} />
+            setSelectedItem={setSelectedItem}
+            disableMenuAndSelection={disableMenuAndSelection} />} />
           <Tab.Screen name="Videos" children={() => <VideosTab data={mediaData.videos} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
             selectionMode={selectionMode}
@@ -681,7 +702,8 @@ const handleShareSelected = () => {
             showDownloadModal={showDownloadModal}
             setShowShareModal={setShowShareModal}
             showShareModal={showShareModal}
-            setSelectedItem={setSelectedItem} />} />
+            setSelectedItem={setSelectedItem}
+            disableMenuAndSelection={disableMenuAndSelection} />} />
         </Tab.Navigator>
       )}
 

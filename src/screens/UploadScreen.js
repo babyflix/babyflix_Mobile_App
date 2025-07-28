@@ -139,6 +139,7 @@ const UploadScreen = () => {
     setPreviewLoad(false);
   }
   };
+  
 
   const chunkFile = async (fileUri) => {
     const fileInfo = await FileSystem.getInfoAsync(fileUri);

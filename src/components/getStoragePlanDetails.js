@@ -15,6 +15,8 @@ export const getStoragePlanDetails = async (email, dispatch) => {
     if (res.status === 200) {
       const data = res.data;
 
+      console.log('data',data)
+
       dispatch(setStoragePlanDetails({
         skippedPlanCount: data.skippedPlanCount,
         storagePlanId: data.storagePlanId,

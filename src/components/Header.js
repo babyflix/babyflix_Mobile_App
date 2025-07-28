@@ -168,6 +168,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       }),
     });
 
+
     const data = await response.json();
 
     if (response.ok && data.actionStatus === 'success') {
@@ -350,7 +351,8 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       <Ionicons name="warning" size={48} color={Colors.error} />
       <Text style={styles.delModalTitle}>Delete Current Plan</Text>
       <Text style={styles.delModalMessage}>
-        Are you sure you want to delete your current plan? This action cannot be undone.
+        Are you sure you want to delete your current plan? This action cannot be undone.{"\n\n"}
+        You cannot download or delete your videos and images.
       </Text>
 
       {isDeletingPlan ? (

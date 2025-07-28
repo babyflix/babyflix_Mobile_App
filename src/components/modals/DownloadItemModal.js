@@ -324,6 +324,7 @@ const DownloadItemModal = ({
 
       //const fullUrl = `${endpoint}?path=${item.object_url}&id=${item.id}`;
       const fullUrl = `${endpoint}?path=${encodedPath}&id=${item.id}`;
+      console.log('fullUrl',fullUrl)
       const response = await axios.get(fullUrl);
       const downloadUrl = response.data?.download_url;
       if (!downloadUrl) throw new Error('No download URL');

@@ -190,6 +190,7 @@ const RegisterScreen = () => {
     try {
       const timezone = await AsyncStorage.getItem('timezone');
       const token = await AsyncStorage.getItem('token');
+      console.log(`${EXPO_PUBLIC_API_URL}/api/auth/register`)
       const response = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/register`,
         {

@@ -183,6 +183,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         }
       }
     };
+    
 
     if (!openStorage2Directly) {
       checkPaymentStatus();

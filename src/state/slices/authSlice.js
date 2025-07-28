@@ -19,6 +19,7 @@ const initialState = {
   isLoggingOut: false,
 };
 
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
