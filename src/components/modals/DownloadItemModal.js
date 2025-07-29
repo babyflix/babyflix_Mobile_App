@@ -316,8 +316,7 @@ const DownloadItemModal = ({
 
       const endpoint =
          selectedQuality === 'sd'
-          ? 'https://fm-apis.babyflix.ai/convert/sd'
-          : 'https://fm-apis.babyflix.ai/convert/hd';
+          ? 'https://fm-apis.babyflix.ai/convert/sd' : 'https://fm-apis.babyflix.ai/convert/hd';
 
           const encodedPath =
             Platform.OS === 'ios'

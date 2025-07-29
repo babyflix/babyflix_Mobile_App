@@ -86,6 +86,8 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
     const isSelected = selectedItems.some(i => i.id === item.id);
     const isMenuVisible = activeMenuId === item.id;
 
+    console.log("Rendering item:", item.id, "Menu visible:", isMenuVisible);
+
     return (
       <View style={{ position: 'relative' }}>
         <TouchableOpacity
@@ -124,14 +126,19 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
           style={styles.menuIcon}
           onPress={() => {
             setActiveMenuId(isMenuVisible ? null : item.id);
-          }
-          }
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <MaterialIcons name="more-horiz" size={17} color="black" />
         </TouchableOpacity>
         )}
 
         {isMenuVisible && (
+          <>
+          <TouchableWithoutFeedback onPress={() => setActiveMenuId(null)}>
+            <View style={[StyleSheet.absoluteFillObject, { zIndex: 1 }]} />
+          </TouchableWithoutFeedback>
+          
           <View style={styles.menuPopup}>
             <TouchableOpacity
               style={styles.menuItem}
@@ -171,6 +178,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
               <Text style={styles.menuText}>Close</Text>
             </TouchableOpacity>
           </View>
+          </>
         )}
       </View>
     );
@@ -181,7 +189,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
       data={filteredData}
       renderItem={renderItem}
       numColumns={3}
-      keyExtractor={item => item.id}
+      keyExtractor={(item) => item.id?.toString()}
       contentContainerStyle={styles.gridContainer}
       ListEmptyComponent={<Text>No media available</Text>}
       refreshing={refreshing}
@@ -321,6 +329,14 @@ const GalleryScreen = () => {
       };
     }, [forceOpenStorageModals])
   );
+
+  useFocusEffect(
+  useCallback(() => {
+    return () => {
+      setActiveMenuId(null); // ✅ Close all open menus when leaving gallery
+    };
+  }, [])
+);
 
   useEffect(() => {
     const checkSkipDate = async () => {
@@ -1209,6 +1225,8 @@ actionButton: {
     paddingHorizontal: 5,
     borderBottomRightRadius: 6,
     borderBottomLeftRadius: 6,
+    zIndex: 5, 
+    elevation: 5,
   },
   menuPopup: {
     position: 'absolute',

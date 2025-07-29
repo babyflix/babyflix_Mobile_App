@@ -828,6 +828,37 @@ const RegisterScreen = () => {
               )
             )}
 
+            {/* {Platform.OS === 'ios' ? (
+              showDatePicker && (
+                <View style={styles.iosPickerWrapper}>
+                  <DateTimePicker
+                    value={tempDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={(event, selectedDate) => {
+                      if (selectedDate) setTempDate(selectedDate);
+                    }}
+                    style={styles.iosPicker}
+                  />
+                  <TouchableOpacity onPress={() => {
+                    handleDateChange(null, tempDate);
+                    setShowDatePicker(false);
+                  }} style={styles.doneButton}>
+                    <Text style={{ color: Colors.primary, fontWeight: '600' }}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              )
+            ) : (
+              showDatePicker && (
+                <DateTimePicker
+                  value={tempDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                />
+              )
+            )} */}
+
             </ScrollView>
             {isLoading && <Loader loading={true} />}
 
@@ -982,7 +1013,28 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#eee',
   },
-  
+
+//   iosPickerWrapper: {
+//   backgroundColor: '#fff',
+//   padding: 20,
+//   borderTopLeftRadius: 20,
+//   borderTopRightRadius: 20,
+//   position: 'absolute',
+//   bottom: 0,
+//   width: '100%',
+//   shadowColor: '#000',
+//   shadowOffset: { width: 0, height: -3 },
+//   shadowOpacity: 0.2,
+//   shadowRadius: 4,
+//   elevation: 10,
+// },
+// iosPicker: {
+//   height: 200,
+// },
+// doneButton: {
+//   marginTop: 10,
+//   alignSelf: 'flex-end',
+// },  
 });
 
 export default RegisterScreen;
