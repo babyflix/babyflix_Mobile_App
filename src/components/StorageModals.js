@@ -290,8 +290,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   const handleBack = () => {
     setShowStorage2(false);
-    //setShowStorage1(true);
-    setShowStorage1(false);
+    setShowStorage1(true);
+    //setShowStorage1(false);
   };
 
   const handlePayment = async () => {
