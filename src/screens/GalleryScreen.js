@@ -898,7 +898,12 @@ const handleShareSelected = () => {
               <View style={styles.expModalButtons}>
                 <TouchableOpacity
                   onPress={() => {
-                    if (handleChooseClick) handleChooseClick();
+                    if (Platform.OS === 'ios') {
+                      setShowUpgradeReminderModal(false)
+                    }
+                     setTimeout(() => {
+                      if (handleChooseClick) handleChooseClick();
+                    }, 200);
                   }}
                   style={[styles.delModalButton, { backgroundColor: Colors.primary, flexDirection: 'row' }]}
                 >
@@ -933,7 +938,12 @@ const handleShareSelected = () => {
             <View style={styles.expModalButtons}>
               <TouchableOpacity
                 onPress={() => {
-                  if (handleChooseClick) handleChooseClick();
+                  if (Platform.OS === 'ios') {
+                    setShowUpgradeReminderModal(false)
+                  }
+                   setTimeout(() => {
+                      if (handleChooseClick) handleChooseClick();
+                    }, 200);
                 }}
                 style={[styles.delModalButton, { backgroundColor: Colors.primary, flexDirection: 'row' }]}
               >

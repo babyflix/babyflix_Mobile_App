@@ -11,8 +11,10 @@ export default function PaymentResult() {
     const handleStatus = async () => {
       if (status === 'success') {
         await AsyncStorage.setItem('payment_status', 'done');
+        console.log('Payment successful, status set to done', status);
       } else {
         await AsyncStorage.setItem('payment_status', 'fail');
+        console.log('Payment failed, status set to fail', status);
       }
 
       await AsyncStorage.setItem('visited_after_redirect', 'true');
