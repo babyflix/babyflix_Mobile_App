@@ -288,11 +288,14 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     }
   };
 
-  const handleBack = () => {
-    setShowStorage2(false);
+ const handleBack = () => {
+  setShowStorage2(false);
+
+  setTimeout(() => {
     setShowStorage1(true);
-    //setShowStorage1(false);
-  };
+  }, 2000); // 2-second delay
+};
+
 
   const handlePayment = async () => {
     try {
@@ -318,12 +321,21 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const stripeUrl = sessionData.sessionUrl;
 
       setShowStorage2(false);
-      const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+      //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+
+      if (Platform.OS === 'ios') {
+      await Linking.openURL(stripeUrl);
+    } else {
+      // Android (or fallback): use WebBrowser
+      const result = await WebBrowser.openAuthSessionAsync(
+        stripeUrl,
+        "babyflix://"
+      );
       
       if (result.type === "cancel") {
        if (isAuthenticated) {
         router.push('/gallary');
-      }
+      }}
     }
 
     } catch (error) {
@@ -514,11 +526,20 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             </Text>
 
             <View style={[styles.buttonRow, { justifyContent: 'flex-end', gap: 10 }]}>
-              <TouchableOpacity style={styles.outlinedButton} onPress={() => { setShowStorage1(true), setIsVisible(false) }}>
+              <TouchableOpacity style={styles.outlinedButton} onPress={() => { setIsVisible(false)  
+              setTimeout(() => {
+                      setShowStorage1(true)
+                    }, 2000); }} >
                 <Text style={styles.outlinedText}>← GO BACK</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.filledButton} onPress={() => { setShowStorage2(true) }}>
+              <TouchableOpacity style={styles.filledButton} onPress={() => {
+                    setIsVisible(false);
+
+                    setTimeout(() => {
+                      setShowStorage2(true);
+                    }, 2000);
+                  }}>
                 <Text style={styles.filledText}>▶ PROCEED NOW</Text>
               </TouchableOpacity>
             </View>
