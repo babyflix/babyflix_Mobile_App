@@ -133,6 +133,9 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       setPlanModalVisible(false)
     }
     setTimeout(() => {
+      router.replace('/gallery');
+    }, 200);
+    setTimeout(() => {
     dispatch(triggerOpenStorage2());
   }, 100);
     await AsyncStorage.setItem('storage_modal_triggered', 'false');
@@ -144,6 +147,9 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     if (Platform.OS === 'ios') {
       setPlanModalVisible(false)
     }
+     setTimeout(() => {
+      router.replace('/gallery');
+    }, 200);
     setTimeout(() => {
     dispatch(triggerOpenStorage2());
   }, 100);
