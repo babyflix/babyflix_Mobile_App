@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, AppState } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, AppState, Platform } from 'react-native';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPO_PUBLIC_API_URL } from '@env';
@@ -61,8 +61,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     const fetchStatusFromStorage = async () => {
       const storedStatus = await AsyncStorage.getItem('payment_status');
       const storedPaying = await AsyncStorage.getItem('paying');
+
+      console.log('[StorageModals] fetchStatusFromStorage:', storedStatus, storedPaying );
   
        if (!storedStatus && storedPaying === 'true') {
+        console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');
         dispatch(clearOpenStorage2());
         await AsyncStorage.setItem('storage_modal_triggered', 'false');
         triggeredRef.current = false;
@@ -75,22 +78,28 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   useEffect(() => {
     const checkPaymentStatus = async () => {
       const visited = await AsyncStorage.getItem('visited_after_redirect');
+      console.log('[StorageModals] visited_after_redirect:', visited);
 
       if (visited === 'true') {
+         console.log('[StorageModals] Visited after redirect - skipping modal show');
         await AsyncStorage.setItem('visited_after_redirect', 'false');
         return;
       }
 
       const status = await AsyncStorage.getItem('payment_status 1');
       const storedPaying = await AsyncStorage.getItem('paying');
+      console.log('[StorageModals] Initial checkPaymentStatus:', { status, storedPaying });
       if (status === 'fail') {
         if (storedPaying === 'false') {
+           console.log('[StorageModals] Showing payment failure modal due to fail status');
           setIsVisible(true);
         }
       } else if (storageModalKey) {
+        console.log('[StorageModals] Showing storage2 directly due to storageModalKey');
         setShowStorage2(true);
       } else {
         if (!storagePlanId || storagePlanId === "null") {
+           console.log('[StorageModals] No plan found, showing storage1');
           await AsyncStorage.removeItem('closePlans');
           setShowStorage1(true);
         }
@@ -98,6 +107,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     };
 
     if (!openStorage2Directly) {
+       console.log('[StorageModals] Checking payment status because openStorage2Directly is false');
       checkPaymentStatus();
     }
   }, []);
@@ -105,15 +115,23 @@ const StorageModals = ({ onClose, storageModalKey }) => {
  
   useEffect(() => {
     const checkIfTriggered = async () => {
-      if (triggeredRef.current) return;
+      if (Platform.OS === 'android' && triggeredRef.current) {
+        console.log('[StorageModals] Already triggered. Skipping... (Android only)');
+        return;
+      }
 
       const triggered = await AsyncStorage.getItem('storage_modal_triggered');
+      console.log('[StorageModals] openStorage2Directly:', openStorage2Directly, 'triggered:', triggered);
 
       if (openStorage2Directly && triggered !== 'true') {
+        console.log('[StorageModals] Triggering storage2 modal');
         triggeredRef.current = true;
         setShowStorage1(false);
         setIsVisible(false);
-        setShowStorage2(true);
+        setTimeout(() => {
+          console.log("Opening second modal now 3");
+          setShowStorage2(true);
+        }, 200);
         await AsyncStorage.setItem('closePlans', 'true');
         setClosePlans(true);
 
@@ -123,6 +141,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     };
 
     if (openStorage2Directly) {
+      console.log('[StorageModals] Running checkIfTriggered because openStorage2Directly is true');
       checkIfTriggered();
     }
   }, [openStorage2Directly]);
@@ -134,8 +153,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       hasChecked = true;
 
       const status = await AsyncStorage.getItem('payment_status');
+      console.log('[StorageModals] Final checkPaymentStatus:', status);
 
       if (status === 'fail') {
+        console.log('[StorageModals] Status is fail');
         await AsyncStorage.setItem('payment_status 1', 'fail');
         await AsyncStorage.removeItem('payment_status');
         await AsyncStorage.setItem('storage_modal_triggered', 'false');
@@ -143,8 +164,13 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         dispatch(setForceOpenStorageModals(false));
         setShowStorage1(false);
         setShowStorage2(false);
-        setShowPaymentFailure(true);
+        //setShowPaymentFailure(true);
+        setTimeout(() => {
+          console.log("PaymentFailure modal now");
+          setShowPaymentFailure(true);
+        }, 200);
       } else if (status === 'done') {
+        console.log('[StorageModals] Status is done. Updating plan...');
         await AsyncStorage.setItem('payment_status 1', 'done');
         const storedPlanId = await AsyncStorage.getItem('selected_plan_id');
         const planIdToUse = storedPlanId ? parseInt(storedPlanId) : null;
@@ -160,13 +186,19 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               storagePlanPayment: 1,
             }),
           });
+          console.log('[StorageModals] Plan updated successfully');
           setShowStorage1(false);
           setShowStorage2(false);
-          setShowPaymentSuccess(true);
+          //setShowPaymentSuccess(true);
+          setTimeout(() => {
+            console.log("PaymentSuccess modal now");
+            setShowPaymentSuccess(true);
+          }, 200);
           dispatch(setForceOpenStorageModals(false));
           dispatch(setPlanExpired(false));
           dispatch(setUpgradeReminder(false));
         } catch (e) {
+           console.log('[StorageModals] Error updating plan:', e);
         }
 
         await AsyncStorage.removeItem('payment_status');
@@ -174,11 +206,13 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         triggeredRef.current = false;
         setShowStorage1(false);
       } else if (storageModalKey) {
+        console.log('[StorageModals] Showing storage2 due to storageModalKey in final check');
         setShowStorage2(true);
         await AsyncStorage.setItem('closePlans', 'true');
         setClosePlans(true);
       } else {
        if (!storagePlanId || storagePlanId === "null") {
+        console.log('[StorageModals] No plan id - showing storage1 in final check');
           await AsyncStorage.removeItem('closePlans');
           setShowStorage1(true);
         }
@@ -187,22 +221,39 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     
 
     if (!openStorage2Directly) {
+      console.log('[StorageModals] Final payment status check starting...');
       checkPaymentStatus();
     }
 
     const subscription = AppState.addEventListener('change', (state) => {
+      console.log('[StorageModals] AppState changed:', state);
       if (state === 'active') {
+        console.log('[StorageModals] App resumed - rechecking payment status');
         checkPaymentStatus();
       }
     });
 
-    return () => subscription.remove();
+    return () => {
+    subscription.remove();
+    console.log('[StorageModals] Cleaned up AppState subscription');
+  };
   }, []);
 
+  // const handleProceedNow = () => {
+  //   //setShowStorage1(false);
+  //   setShowStorage2(true);
+  // };
+
   const handleProceedNow = () => {
-    //setShowStorage1(false);
+  console.log("PROCEED NOW tapped 1");
+  if (Platform.OS === 'ios') {
+    setShowStorage1(false);
+  }
+  setTimeout(() => {
+    console.log("Opening second modal now");
     setShowStorage2(true);
-  };
+  }, 200);
+};
 
   const handleSkip = async () => {
     if (skippedPlanCount < 3) {
@@ -271,12 +322,21 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const stripeUrl = sessionData.sessionUrl;
 
       setShowStorage2(false);
-      const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+      //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+
+      if (Platform.OS === 'ios') {
+      await Linking.openURL(stripeUrl);
+    } else {
+      // Android (or fallback): use WebBrowser
+      const result = await WebBrowser.openAuthSessionAsync(
+        stripeUrl,
+        "babyflix://"
+      );
       
       if (result.type === "cancel") {
        if (isAuthenticated) {
         router.push('/gallary');
-      }
+      }}
     }
 
     } catch (error) {
@@ -287,9 +347,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     }
   };
 
+  console.log('Rendering showStorage2 modal:', showStorage2);
+
   return (
     <>
-      <Modal visible={showStorage1} transparent animationType="fade">
+      <Modal visible={showStorage1} transparent animationType="fade" onRequestClose={() => setShowStorage1(false)}>
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             {/* <TouchableOpacity
@@ -335,9 +397,9 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       </Modal>
 
       <Modal visible={showStorage2} transparent animationType="fade">
-        <View style={styles.modalBackground}>
+        <View style={[styles.modalBackground,{zIndex: 999}]}>
           <View style={styles.modalContainer}>
-
+            
             {closePlanes && (
               <TouchableOpacity
                 onPress={async () => {
@@ -431,8 +493,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         </View>
       </Modal>
 
-      <Modal visible={showPaymentSuccess} transparent animationType="fade">
-        <View style={styles.modalBackground}>
+      <Modal visible={showPaymentSuccess} transparent animationType="fade" onRequestClose={() => setShowStorage2(false)}>
+        <View style={[styles.modalBackground, { zIndex: 999 }]}>
           <View style={[styles.modalContainerStatus, { borderColor: "green" }]}>
             <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>🎉 Payment Successful</Text>
             <Text style={[styles.subtitle, {}]}>Thank you for your payment.</Text>
@@ -451,7 +513,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       </Modal>
 
       <Modal visible={showPaymentFailure} transparent animationType="fade">
-        <View style={styles.modalBackground}>
+        <View style={[styles.modalBackground, { zIndex: 999 }]}>
           <View style={[styles.modalContainerStatus, { borderColor: Colors.error, }]}>
             <Text style={[styles.title, { color: Colors.error, textAlign: 'center' }]}>❌ Payment Failed</Text>
             <Text style={styles.subtitleFailed}>Something went wrong with your Payment</Text>
@@ -482,11 +544,20 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             </Text>
 
             <View style={[styles.buttonRow, { justifyContent: 'flex-end', gap: 10 }]}>
-              <TouchableOpacity style={styles.outlinedButton} onPress={() => { setShowStorage1(true), setIsVisible(false) }}>
+              <TouchableOpacity style={styles.outlinedButton} onPress={() => { setIsVisible(false)  
+              setTimeout(() => {
+                      setShowStorage1(true)
+                    }, 2000); }} >
                 <Text style={styles.outlinedText}>← GO BACK</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.filledButton} onPress={() => { setShowStorage2(true) }}>
+              <TouchableOpacity style={styles.filledButton} onPress={() => {
+                    setIsVisible(false);
+
+                    setTimeout(() => {
+                      setShowStorage2(true);
+                    }, 2000);
+                  }}>
                 <Text style={styles.filledText}>▶ PROCEED NOW</Text>
               </TouchableOpacity>
             </View>
@@ -504,6 +575,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 99,
   },
   modalContainer: {
     backgroundColor: '#fff',
@@ -515,6 +587,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
+    zIndex: 99
   },
   modalContainerStatus: {
     width: '90%',

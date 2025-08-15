@@ -267,13 +267,31 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
 
   const handleChangeClick = async () => {
+    console.log('Change plan clicked');
+    if (Platform.OS === 'ios') {
+      setPlanModalVisible(false)
+    }
+    setTimeout(() => {
+      router.replace('/gallery');
+    }, 200);
+    setTimeout(() => {
     dispatch(triggerOpenStorage2());
+  }, 100);
     await AsyncStorage.setItem('storage_modal_triggered', 'false');
     router.push('/gallery?showStorageModal=true');
   };
 
   const handleChooseClick = async () => {
+    console.log('Choose plan clicked');
+    if (Platform.OS === 'ios') {
+      setPlanModalVisible(false)
+    }
+     setTimeout(() => {
+      router.replace('/gallery');
+    }, 200);
+    setTimeout(() => {
     dispatch(triggerOpenStorage2());
+  }, 100);
     await AsyncStorage.setItem('storage_modal_triggered', 'false');
   };
 
