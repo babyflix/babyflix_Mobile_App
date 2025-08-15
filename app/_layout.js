@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ErrorBoundary, Stack } from 'expo-router';
+import { ErrorBoundary, Stack, useRouter } from 'expo-router';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { store } from '../src/state/store';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -12,8 +12,10 @@ import { showSnackbar } from '../src/state/slices/uiSlice';
 import { Alert, Linking, Platform, Text, TextInput } from 'react-native';
 import Constants from 'expo-constants';
 import { HeaderActionProvider } from '../src/components/HeaderActionContext';
+import { NotificationProvider } from '../src/constants/NotificationContext';
 import * as Notifications from 'expo-notifications';
 import * as IntentLauncher from 'expo-intent-launcher';
+import * as Device from "expo-device";
 
 import { useFonts } from 'expo-font';
 import {
@@ -25,6 +27,7 @@ import {
 import { getStoragePlanDetails } from '../src/components/getStoragePlanDetails';
 import { registerForPushNotificationsAsync } from '../src/components/notifications';
 import { requestMediaLibraryPermission } from '../src/components/requestMediaPermission';
+import sendDeviceUserInfo from '../src/components/deviceInfo';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
@@ -33,6 +36,12 @@ const LayoutContent = () => {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const [isConnected, setIsConnected] = useState(null);
   const [isUpdatePromptShown, setIsUpdatePromptShown] = useState(false);
+
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   sendDeviceUserInfo(user);
+  // }, [user]);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -103,11 +112,30 @@ useEffect(() => {
     }
   }, [isAuthenticated, user?.email]);
 
-//   useEffect(() => {
-//   if (user?.id) {
-//     registerForPushNotificationsAsync(user.id);
-//   }
-// }, []);
+  useEffect(() => {
+  if (user?.uuid) {
+    registerForPushNotificationsAsync(user?.uuid);
+  }
+}, []);
+//  useEffect(() => {
+//     registerForPushNotificationsAsync();
+//   }, []);
+
+useEffect(() => {
+  const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+    const { data } = response.notification.request.content;
+
+    if (data?.screen === 'LiveStream' && data?.userId) {
+      router.push({
+        pathname: '/gallery',
+        query: { userId: data.userId }, // ✅ use query, not params
+      });
+    }
+  });
+
+  return () => subscription.remove();
+}, []);
+
 
 useEffect(() => {
   const subscription = Notifications.addNotificationResponseReceivedListener(response => {
@@ -132,6 +160,30 @@ useEffect(() => {
 
   return () => subscription.remove();
 }, []);
+
+// useEffect(() => {
+//     Linking.getInitialURL().then((url) => {
+//       if (url) {
+//         console.log("Initial URL:", url); // ✅ Log it!
+//         const parsed = Linking.parse(url);
+//         console.log("Parsed deep link:", parsed); // ✅ Show parsed path & query
+
+//         if (parsed.path === 'payment-redirect') {
+//           router.replace('/(app)/payment-redirect');
+//         }
+//       }
+//     });
+
+//     const sub = Linking.addEventListener('url', (event) => {
+//       const parsed = Linking.parse(event.url);
+//       console.log("URL event:", parsed); // ✅ Debug log
+//       if (parsed.path === 'payment-redirect') {
+//         router.replace('/(app)/payment-redirect');
+//       }
+//     });
+
+//     return () => sub.remove();
+//   }, []);
 
   return (
     <>
@@ -166,11 +218,13 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <SafeAreaProvider>
+        <NotificationProvider>
         <HeaderActionProvider>
         <AuthLoader>
           <LayoutContent />
         </AuthLoader>
         </HeaderActionProvider>
+        </NotificationProvider>
       </SafeAreaProvider>
     </Provider>
   );

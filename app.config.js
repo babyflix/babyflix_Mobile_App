@@ -4,12 +4,15 @@ export default ({ config }) => ({
   ...config,
   name: "BabyFlix",
   slug: "babyflix",
-  version: "1.1.4",
+  version: "1.1.5",
   scheme: "babyflix",
   extra: {
     eas: {
       projectId: "e45a100e-0d86-40a2-9119-4d54a93e0cf3"
     },
+    "expo-router": {
+      origin: "babyflix://"
+    }
   },
   updates: {
   fallbackToCacheTimeout: 0

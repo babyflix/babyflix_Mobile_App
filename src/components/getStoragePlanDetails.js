@@ -21,7 +21,8 @@ export const getStoragePlanDetails = async (email, dispatch) => {
         skippedPlanCount: data.skippedPlanCount,
         storagePlanId: data.storagePlanId,
         storagePlanPayment: data.storagePlanPayment,
-        isPlanDeleted: data.isPlanDeleted
+        isPlanDeleted: data.isPlanDeleted,
+        storagePlanPrice: data.storagePlanPrice,
       }));
     }
   } catch (error) {

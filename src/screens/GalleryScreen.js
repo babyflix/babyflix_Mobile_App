@@ -86,7 +86,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
     const isSelected = selectedItems.some(i => i.id === item.id);
     const isMenuVisible = activeMenuId === item.id;
 
-    console.log("Rendering item:", item.id, "Menu visible:", isMenuVisible);
+    //console.log("Rendering item:", item.id, "Menu visible:", isMenuVisible);
 
     return (
       <View style={{ position: 'relative' }}>
@@ -140,6 +140,22 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
           </TouchableWithoutFeedback>
           
           <View style={styles.menuPopup}>
+
+            {/* <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              //setActiveMenuId(null);
+              setSelectedItem([item]);
+              setTimeout(() => {
+                setShowShareModal(true); 
+              }, 150);
+              setActiveMenuId(null);
+            }}
+            >
+              <MaterialIcons name="share" size={18} color="#000" style={{marginRight: 8}} />
+              <Text style={styles.menuText}>Share</Text>
+            </TouchableOpacity> */}
+
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -293,6 +309,7 @@ const GalleryScreen = () => {
   const [downloadTitle, setDownloadTitle] = useState('');
   const [activeDownloads, setActiveDownloads] = useState(0);
   const [disableMenuAndSelection, setDisableMenuAndSelection] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState('');
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -398,27 +415,51 @@ const GalleryScreen = () => {
           const today = moment();
           const daysSince = today.diff(planStartDate, 'days');
 
-          if (daysSince >= 21) {
+          if (daysSince >= 31) {
             dispatch(setPlanExpired(true));
             setMediaData({ images: [], videos: [] });
             setShowUpgradeReminderModal(false);
-            setShowPlanExpiredModal(true);
+            setTimeout(() => {
+              setShowPlanExpiredModal(true);
+            }, 200);
             setExpiredPlanName(storagePlanName);
             setIsLoading(false);
+            setBannerMessage(
+            `Your "${storagePlanName}" plan is expired please upgrade.`
+          );
             return;
           }
 
-          if (daysSince >= 18 && daysSince <= 20) {
+         if (daysSince === 18) {
+          const remainingDays = 30 - daysSince;
+          dispatch(setRemainingDays(remainingDays));
 
-            const remainingDays = 21 - daysSince;
+          const message = `Your "${storagePlanName}" plan is expiring in ${remainingDays} day${remainingDays > 1 ? 's' : ''}.`;
+          setUpgradeReminderMessage(
+            `${message} After that, you won't be able to view or download media.`
+          );
+          setBannerMessage(message);
 
-            dispatch(setUpgradeReminder(true));
-            dispatch(setRemainingDays(remainingDays));
-            setUpgradeReminderMessage(
-              `Your "${storagePlanName}" plan will expire in ${remainingDays} day${remainingDays > 1 ? 's' : ''}. After that, you won't be able to view or download media.`
-            );
-            setShowUpgradeReminderModal(true);
-          }
+        } else if (daysSince >= 28 && daysSince < 30) {
+          const remainingDays = 30 - daysSince;
+          dispatch(setUpgradeReminder(true));
+          dispatch(setRemainingDays(remainingDays));
+
+          const message = `Your "${storagePlanName}" plan is expiring in ${remainingDays} day${remainingDays > 1 ? 's' : ''}.`;
+          setUpgradeReminderMessage(
+            `${message} After that, you won't be able to view or download media.`
+          );
+          setBannerMessage(message);
+          setShowUpgradeReminderModal(true);
+
+        } else if (daysSince === 30) {
+          setBannerMessage(`Your "${storagePlanName}" plan expires today.`);
+          dispatch(setRemainingDays(0)); // ✅ Plan expires today
+
+        } else if (daysSince > 30) {
+          setBannerMessage(`Your "${storagePlanName}" has already expired.`);
+          dispatch(setRemainingDays(-1)); // ✅ Plan already expired
+        }
         }
 
         try {
@@ -735,13 +776,42 @@ const handleShareSelected = () => {
 
     {/* <TouchableOpacity onPress={handleShareSelected} style={styles.actionButton}>
       <MaterialIcons name="share" size={24} color="#000" />
-    </TouchableOpacity> */}
+    </TouchableOpacity>  */}
 
     <TouchableOpacity onPress={handleDeleteSelected} style={styles.actionButton}>
       <MaterialIcons name="delete" size={24} color="red" />
     </TouchableOpacity>
   </View>
 )}
+
+{bannerMessage ? (
+  <View
+    style={{
+      backgroundColor: '#f8ea9bff',
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    }}
+  >
+    <Text
+      style={{
+        color: '#000',
+        fontWeight: 'bold',
+        flex: 1,
+        flexWrap: 'wrap',
+        marginRight: 10,
+      }}
+    >
+      {bannerMessage}
+    </Text>
+
+    <TouchableOpacity onPress={() => setBannerMessage('')}>
+      <Ionicons name="close" size={20} color="#000" />
+    </TouchableOpacity>
+  </View>
+) : null}
 
       <DeleteItemModal
         visible={showDeleteModal}
@@ -893,7 +963,7 @@ const handleShareSelected = () => {
               </TouchableOpacity>
 
               <Text style={styles.delModalTitle}>No images and videos available</Text>
-              <Text style={[styles.delModalMessage]}>Your "{expiredPlanName}" plan has expired. Please upgrade a new plan to view/download videos and images.</Text>
+              <Text style={[styles.delModalMessage]}>Your "{expiredPlanName}" plan has expired. Please upgrade to pro plan to view/download videos and images.</Text>
 
               <View style={styles.expModalButtons}>
                 <TouchableOpacity

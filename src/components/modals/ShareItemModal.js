@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   View,
@@ -18,6 +18,10 @@ import GlobalStyles from '../../styles/GlobalStyles';
 import Loader from '../../components/Loader';
 import { Video } from 'expo-av';
 import { Dimensions } from 'react-native';
+import * as Contacts from 'expo-contacts';
+//import * as Permissions from 'expo-permissions';
+import { EXPO_PUBLIC_API_URL } from '@env';
+import axios from 'axios';
 const screenWidth = Dimensions.get('window').width;
 
 const ShareItemModal = ({
@@ -37,6 +41,42 @@ const ShareItemModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [add, setAdd] = useState(false)
+  const [contactList, setContactList] = useState([]);
+  const [contactPickerVisible, setContactPickerVisible] = useState(false);
+  const [selectedContactIndex, setSelectedContactIndex] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredContacts, setFilteredContacts] = useState([]);
+  const [isContactLoading, setIsContactLoading] = useState(false);
+
+useEffect(() => {
+  if (searchQuery.trim() === '') {
+    setFilteredContacts(contactList);
+  } else {
+    const lowerQuery = searchQuery.toLowerCase();
+
+    const filtered = contactList
+      .filter(contact =>
+        contact.name?.toLowerCase().includes(lowerQuery) ||
+        contact.phoneNumbers?.some(num => num.number?.replace(/\D/g, '').includes(searchQuery))
+      )
+      .sort((a, b) => {
+        const aName = a.name?.toLowerCase() || '';
+        const bName = b.name?.toLowerCase() || '';
+
+        const aStartsWith = aName.startsWith(lowerQuery) ? 0 : 1;
+        const bStartsWith = bName.startsWith(lowerQuery) ? 0 : 1;
+
+        if (aStartsWith !== bStartsWith) {
+          return aStartsWith - bStartsWith;
+        }
+
+        // Optional: fallback sort alphabetically
+        return aName.localeCompare(bName);
+      });
+
+    setFilteredContacts(filtered);
+  }
+}, [searchQuery, contactList]);
 
   const handleConfirmShare = async () => {
     onCancel();
@@ -93,18 +133,122 @@ const ShareItemModal = ({
   };
 
 
-  const handleShareViaSMS = () => {
+  const handleShareViaSMS = async () => {
+  try {
     setIsLoading(true);
-    setTimeout(() => {
-      setSnackbarMessage(`Shared successfully via SMS`);
-      setSnackbarType('success');
-      setSnackbarVisible(true);
-      onShare();
-      setIsLoading(false);
-      setMobileModalVisible(false);
-      onCancel();
-    }, 2000);
-  };
+
+    const invitePayload = {
+      inviteType: "mobile",
+      data: mobileNumbers.map(item => ({
+        countryCode: item.countryCode.replace("+", "").trim(),
+        mobileNumber: item.mobileNumber.trim(),
+      })),
+      message: ``,
+      isMediaShare: true,
+      mediaItem: selectedItems[0],
+    };
+
+    console.log('invitePayload',invitePayload)
+
+    const { status, data } = await axios.post(
+      `${EXPO_PUBLIC_API_URL}/api/gallery/sendSms`,
+      invitePayload
+    );
+
+    console.log('SMS response:', data);
+
+    setSnackbarMessage(data?.message || "SMS sent successfully");
+    setSnackbarType(status === 200 ? "success" : "error");
+    setSnackbarVisible(true);
+
+    setMobileModalVisible(false);
+    onShare(); // callback after success
+  } catch (error) {
+    console.error("Error sending SMS:", error);
+    setSnackbarMessage(
+      error.response?.data?.message || "Failed to send SMS"
+    );
+    setSnackbarType("error");
+    setSnackbarVisible(true);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+//   const handlePickContact = async (index) => {
+//   const { status } = await Contacts.requestPermissionsAsync();
+//   if (status === 'granted') {
+//     const { data } = await Contacts.getContactsAsync({
+//       fields: [Contacts.Fields.PhoneNumbers],
+//     });
+
+//     if (data.length > 0) {
+//       // Optional: Open a modal/list to let the user choose a contact.
+//       const contact = data.find(contact => contact.phoneNumbers && contact.phoneNumbers.length > 0);
+
+//       if (contact) {
+//         const number = contact.phoneNumbers[0].number.replace(/\s|-/g, ''); // clean format
+//         const updated = [...mobileNumbers];
+//         updated[index].mobileNumber = number;
+//         setMobileNumbers(updated);
+//       } else {
+//         setSnackbarMessage('No valid phone number found in contact');
+//         setSnackbarType('error');
+//         setSnackbarVisible(true);
+//       }
+//     }
+//   } else {
+//     setSnackbarMessage('Permission to access contacts was denied');
+//     setSnackbarType('error');
+//     setSnackbarVisible(true);
+//   }
+// };
+
+// const handlePickContact = async (index) => {
+//   const { status } = await Contacts.requestPermissionsAsync();
+//   if (status === 'granted') {
+//     const { data } = await Contacts.getContactsAsync({
+//       fields: [Contacts.Fields.PhoneNumbers],
+//     });
+
+//     const contactsWithPhones = data.filter(contact => contact.phoneNumbers && contact.phoneNumbers.length > 0);
+    
+//     setContactList(contactsWithPhones);
+//     setSelectedContactIndex(index);
+//     setContactPickerVisible(true);
+//   } else {
+//     setSnackbarMessage('Permission to access contacts was denied');
+//     setSnackbarType('error');
+//     setSnackbarVisible(true);
+//   }
+// };
+
+const handlePickContact = async (index) => {
+  setIsContactLoading(true);
+  setSelectedContactIndex(index);
+  setContactPickerVisible(true); // Show modal immediately
+
+  const { status } = await Contacts.requestPermissionsAsync();
+  if (status === 'granted') {
+    // Optional: Show a loading indicator inside modal here
+
+    const { data } = await Contacts.getContactsAsync({
+      fields: [Contacts.Fields.PhoneNumbers],
+    });
+
+    const contactsWithPhones = data.filter(
+      contact => contact.phoneNumbers && contact.phoneNumbers.length > 0
+    );
+
+    setContactList(contactsWithPhones);
+  } else {
+    setSnackbarMessage('Permission to access contacts was denied');
+    setSnackbarType('error');
+    setSnackbarVisible(true);
+    setContactPickerVisible(false); // Hide modal if permission denied
+  }
+   setIsContactLoading(false);
+};
 
   return (
     <>
@@ -311,6 +455,139 @@ const ShareItemModal = ({
           /> */}
         </Modal>
       )}
+
+      {/* {contactPickerVisible && (
+  <Modal visible={contactPickerVisible} transparent animationType="slide">
+    <TouchableWithoutFeedback onPress={() => setContactPickerVisible(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContent, { height: '60%' }]}>
+          <Text style={styles.modalTitle}>Select a Contact</Text>
+          <ScrollView>
+            {contactList.map((contact, i) => (
+              <TouchableOpacity
+                key={i}
+                style={{ paddingVertical: 10, borderBottomWidth: 1, borderColor: '#eee' }}
+                // onPress={() => {
+                //   const selectedNumber = contact.phoneNumbers[0]?.number?.replace(/[\s\-\(\)]+/g, '');
+                //   const updated = [...mobileNumbers];
+                //   updated[selectedContactIndex].mobileNumber = selectedNumber;
+                //   setMobileNumbers(updated);
+                //   setContactPickerVisible(false);
+                // }}
+                onPress={() => {
+                const rawNumber = contact.phoneNumbers[0]?.number?.replace(/[\s\-\(\)]+/g, '').trim();
+
+                let countryCode = '';
+                let mobileNumber = '';
+
+                if (rawNumber) {
+                  const digitsOnly = rawNumber.replace(/\D/g, ''); // remove all non-digits
+                  const totalLength = digitsOnly.length;
+
+                  if (totalLength > 10) {
+                    mobileNumber = digitsOnly.slice(-10);                      // Last 10 digits
+                    countryCode = digitsOnly.slice(0, totalLength - 10);       // All before that — digits only
+                  } else {
+                    mobileNumber = digitsOnly;
+                  }
+                }
+
+                const updated = [...mobileNumbers];
+                updated[selectedContactIndex] = {
+                  countryCode,    // will be like '91', '1', '44' — without +
+                  mobileNumber,   // clean 10-digit number
+                };
+                setMobileNumbers(updated);
+                setContactPickerVisible(false);
+              }}
+              >
+                <Text style={{ fontWeight: 'bold' }}>{contact.name}</Text>
+                <Text style={{ color: 'gray' }}>{contact.phoneNumbers[0]?.number}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    </TouchableWithoutFeedback>
+  </Modal>
+)} */}
+
+{contactPickerVisible && (
+  <Modal visible={contactPickerVisible} transparent animationType="slide">
+    <TouchableWithoutFeedback onPress={() => setContactPickerVisible(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContent, { height: '70%', backgroundColor: 'white', borderRadius: 12, padding: 16 }]}>
+          <Text style={styles.modalTitle}>Select a Contact</Text>
+
+          {/* Search Bar */}
+          <TextInput
+            placeholder="Search by name or number"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={{
+              paddingVertical: 10,
+              paddingHorizontal: 12,
+              borderColor: '#ccc',
+              borderWidth: 1,
+              borderRadius: 8,
+              marginBottom: 10,
+              fontSize: 16,
+            }}
+          />
+          
+          {isContactLoading ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" color="#000" />
+              <Text>Loading contacts...</Text>
+            </View>
+          ) : (
+          <ScrollView>
+            {filteredContacts.map((contact, i) => (
+              <TouchableOpacity
+                key={i}
+                style={{
+                  paddingVertical: 12,
+                  paddingHorizontal: 10,
+                  borderBottomWidth: 1,
+                  borderColor: '#eee',
+                }}
+                onPress={() => {
+                  const rawNumber = contact.phoneNumbers[0]?.number?.replace(/[\s\-\(\)]+/g, '').trim();
+                  let countryCode = '';
+                  let mobileNumber = '';
+
+                  if (rawNumber) {
+                    const digitsOnly = rawNumber.replace(/\D/g, '');
+                    const totalLength = digitsOnly.length;
+
+                    if (totalLength > 10) {
+                      mobileNumber = digitsOnly.slice(-10);
+                      countryCode = digitsOnly.slice(0, totalLength - 10);
+                    } else {
+                      mobileNumber = digitsOnly;
+                    }
+                  }
+
+                  const updated = [...mobileNumbers];
+                  updated[selectedContactIndex] = {
+                    countryCode,
+                    mobileNumber,
+                  };
+                  setMobileNumbers(updated);
+                  setContactPickerVisible(false);
+                }}
+              >
+                <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{contact.name}</Text>
+                <Text style={{ color: '#666', fontSize: 14 }}>{contact.phoneNumbers[0]?.number}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          )}
+        </View>
+      </View>
+    </TouchableWithoutFeedback>
+  </Modal>
+)}
 
     </>
   );

@@ -147,9 +147,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       } else if (status === 'done') {
         await AsyncStorage.setItem('payment_status 1', 'done');
         const storedPlanId = await AsyncStorage.getItem('selected_plan_id');
-    const planIdToUse = storedPlanId ? parseInt(storedPlanId) : null;
+        const planIdToUse = storedPlanId ? parseInt(storedPlanId) : null;
 
         try {
+          //const storagePlanIdToSend = (planIdToUse === 3) ? 2 : planIdToUse;
           await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -239,7 +240,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   const handleBack = () => {
     setShowStorage2(false);
+    
+    setTimeout(() => {
     setShowStorage1(true);
+  }, 2000);
+    //setShowStorage1(false);
   };
 
   const handlePayment = async () => {
@@ -352,8 +357,25 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               <Text style={[styles.title, { textAlign: 'center' }]}>Select Your Plan</Text>
             </View>
             {plans
-              .filter((plan) => !((isPlanExpired || showUpgradeReminder || storagePlanId || storagePlanPayment == 1 || isPlanDeleted == 1) && plan.id === 1)) 
-              .map((plan) => (
+            .filter((plan) => {
+              if (isPlanExpired) {
+                // Only show plan 3 when expired
+                return plan.id === 3;
+              }
+              // When NOT expired → hide plan 3
+              if (plan.id === 3) {
+                return false;
+              }
+              // Your original filter for other plans
+              return !(
+                (showUpgradeReminder ||
+                  storagePlanId ||
+                  storagePlanPayment == 1 ||
+                  isPlanDeleted == 1) &&
+                plan.id === 1
+              );
+            })
+            .map((plan) => (
               <TouchableOpacity
                 key={plan.id}
                 onPressIn={() => setPlanPressed(true)}

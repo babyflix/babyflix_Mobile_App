@@ -279,6 +279,7 @@ export const modalStyles = {
     fontWeight: 'bold',
     marginBottom: 10,
     marginLeft: 10,
+    textAlign: 'center',
   },
   messageBox: {
     borderWidth: 1,

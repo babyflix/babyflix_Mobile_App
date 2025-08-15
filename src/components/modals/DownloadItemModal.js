@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import DownloadQueue from '../DownloadQueue';
 import { useDownloadQueueHandler } from '../useDownloadQueueHandler';
+import { useSelector } from 'react-redux';
 
 const DownloadItemModal = ({
   visible,
@@ -30,10 +31,11 @@ const DownloadItemModal = ({
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [showSizeInfo, setShowSizeInfo] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
-  const [selectedQuality, setSelectedQuality] = useState('hd');
+  const [selectedQuality, setSelectedQuality] = useState('');
   const [showConvertingMessage, setShowConvertingMessage] = useState(false);
   const [downloadResumable, setDownloadResumable] = useState(null);
   const [downloadQueue, setDownloadQueue] = useState([]);
+  const { storagePlanId, storagePlanPrice } = useSelector((state) => state.storagePlan || {});
    
   const resumeDownload = (item) => {
     if (item?.object_type === 'image') {
@@ -43,7 +45,7 @@ const DownloadItemModal = ({
     }
   };
 
-  useDownloadQueueHandler(downloadQueue, resumeDownload);
+  //useDownloadQueueHandler(downloadQueue, resumeDownload);
 
   const hasLargeFiles = selectedItems?.some(item => item?.size > 5 * 1024 * 1024);
 
@@ -71,22 +73,32 @@ const DownloadItemModal = ({
   }, []);
 
   useEffect(() => {
-  const loadAndResumeQueue = async () => {
-    const savedQueue = await AsyncStorage.getItem('downloadQueue');
-    if (savedQueue) {
-      const parsedQueue = JSON.parse(savedQueue);
-      setDownloadQueue(parsedQueue);
+    console.log('Setting selected quality to SD due to free plan 1',storagePlanId,storagePlanPrice);
+  if (storagePlanId === 1 && storagePlanPrice === '0.00') {
+    console.log('Setting selected quality to SD due to free plan',storagePlanId,storagePlanPrice);
+    setSelectedQuality('sd');
+  } else if (storagePlanId > 1 && storagePlanPrice > '0.00') {
+    setSelectedQuality('hd');
+  }
+}, [storagePlanId, storagePlanPrice]);
 
-      parsedQueue.forEach(item => {
-        resumeDownload(item);
-      });
+//   useEffect(() => {
+//   const loadAndResumeQueue = async () => {
+//     const savedQueue = await AsyncStorage.getItem('downloadQueue');
+//     if (savedQueue) {
+//       const parsedQueue = JSON.parse(savedQueue);
+//       setDownloadQueue(parsedQueue);
 
-      await AsyncStorage.removeItem('downloadQueue');
-    }
-  };
+//       parsedQueue.forEach(item => {
+//         resumeDownload(item);
+//       });
 
-  loadAndResumeQueue();
-}, []);
+//       await AsyncStorage.removeItem('downloadQueue');
+//     }
+//   };
+
+//   loadAndResumeQueue();
+// }, []);
 
   useEffect(() => {
     const resumePausedDownload = async () => {
@@ -215,6 +227,7 @@ const DownloadItemModal = ({
       setDownloadTitle('');
       setActiveDownloads(prev => Math.max(0, prev - 1));
       onCancel()
+      setIsConverting(false);
     }
   };
 
@@ -257,6 +270,7 @@ const DownloadItemModal = ({
     setActiveDownloads(prev => prev + 1);
 
     if (!isImage) {
+      console.log('[enqueueDownload] Video download started');
       setIsConverting(true);
       setIsDownloading(false);
 
@@ -295,7 +309,7 @@ const DownloadItemModal = ({
       selectedQuality,
     })
   );
-
+    console.log('in downloadVideoHandler')
     setIsConverting(true);
     setIsDownloading(false);
     setDownloadProgress(0);
@@ -388,6 +402,7 @@ const DownloadItemModal = ({
       setDownloadingProgress(false);
       setActiveDownloads(prev => Math.max(0, prev - 1));
       onCancel()
+      setIsConverting(false);
     }
   };
 
@@ -440,9 +455,11 @@ const DownloadItemModal = ({
                     </TouchableOpacity>
 
                     <TouchableOpacity
+                      disabled={storagePlanId === 1 && storagePlanPrice === '0.00'}
                       onPress={() => setSelectedQuality('hd')}
                       style={{
                         backgroundColor: selectedQuality === 'hd' ? Colors.primary : '#ddd',
+                        opacity: storagePlanId === 1 && storagePlanPrice === '0.00' ? 0.5 : 1,
                         paddingVertical: 12,
                         paddingHorizontal: 24,
                         borderTopRightRadius: 10,

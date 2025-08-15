@@ -173,7 +173,8 @@ const ProfileSettingsScreen = () => {
       'storage_modal_triggered', 
       'payment_status', 
       'payment_status 1', 
-      'last_skipped_plan_date'
+      'last_skipped_plan_date',
+      'notifications'
     ]);
 
       dispatch(clearOpenStorage2());

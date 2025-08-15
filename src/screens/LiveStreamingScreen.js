@@ -50,7 +50,7 @@ const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
   }, []);
 
    useEffect(() => {
-    console.log('useEffect 3')
+    console.log('useEffect 3 ')
 
       const playVideo = async () => {
         if (videoRef.current && streamState.streamState == 'live') {

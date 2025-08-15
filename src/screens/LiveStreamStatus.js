@@ -97,7 +97,7 @@ const checkUrlStatus = async (url, dispatch, intervalId) => {
       method: 'GET',
     });
      
-    console.log('response.ok',response.ok)
+    console.log('response.okk',response.ok)
 
     if (response.ok) {
       dispatch(liveStreamUpdate({ streamUrl: url, isStreamStarted: true, streamState: 'live' }));

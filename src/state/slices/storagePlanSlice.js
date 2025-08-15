@@ -4,6 +4,7 @@ const initialState = {
   skippedPlanCount: null,
   storagePlanId: null,
   storagePlanPayment: null,
+  storagePlanPrice: null,
   isPlanDeleted: false, // ✅ added new field
 };
 
@@ -16,18 +17,21 @@ const storagePlanSlice = createSlice({
         skippedPlanCount,
         storagePlanId,
         storagePlanPayment,
+        storagePlanPrice, // ✅ accept from payload
         isPlanDeleted = false, // ✅ default to false if not provided
       } = action.payload;
 
       state.skippedPlanCount = skippedPlanCount;
       state.storagePlanId = storagePlanId;
       state.storagePlanPayment = storagePlanPayment;
+      state.storagePlanPrice = storagePlanPrice; // ✅ set value
       state.isPlanDeleted = isPlanDeleted;
     },
     clearStoragePlanDetails: (state) => {
       state.skippedPlanCount = null;
       state.storagePlanId = null;
       state.storagePlanPayment = null;
+      state.storagePlanPrice = null; // ✅ reset value
       state.isPlanDeleted = false; // ✅ reset to false
     },
     setIsPlanDeleted: (state, action) => {
