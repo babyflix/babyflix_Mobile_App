@@ -18,7 +18,7 @@ import GlobalStyles from '../../styles/GlobalStyles';
 import Loader from '../../components/Loader';
 import { Video } from 'expo-av';
 import { Dimensions } from 'react-native';
-import * as Contacts from 'expo-contacts';
+//import * as Contacts from 'expo-contacts';
 //import * as Permissions from 'expo-permissions';
 import { EXPO_PUBLIC_API_URL } from '@env';
 import axios from 'axios';

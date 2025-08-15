@@ -153,6 +153,7 @@ const DownloadItemModal = ({
     const title = item.title || 'image';
 
     try {
+      setVisible(false);
       //onCancel();
       setProgressValue(0);
       setDownloadTitle(title);
