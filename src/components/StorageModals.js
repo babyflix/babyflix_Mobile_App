@@ -7,7 +7,7 @@ import { EXPO_PUBLIC_API_URL } from '@env';
 import { useDispatch, useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import axios from 'axios';
-import { clearOpenStorage2, setForceOpenStorageModals } from '../state/slices/storageUISlice';
+import { clearOpenStorage2, setDeepLinkHandled, setForceOpenStorageModals } from '../state/slices/storageUISlice';
 import { getStoragePlanDetails } from './getStoragePlanDetails';
 import moment from 'moment';
 import { setPlanExpired, setUpgradeReminder } from '../state/slices/expiredPlanSlice';
@@ -38,6 +38,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
    const triggeredRef = useRef(false);
    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
    const router = useRouter();
+   const handledRef = useRef(false);
 
   const fetchPlans = async () => {
     try {
@@ -299,6 +300,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   };
 
   const handlePayment = async () => {
+     dispatch(setDeepLinkHandled(false));
     try {
       await AsyncStorage.setItem('selected_plan_id', selectedPlan.toString());
       onClose();
@@ -324,20 +326,25 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       setShowStorage2(false);
       //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
 
-      if (Platform.OS === 'ios') {
-      await Linking.openURL(stripeUrl);
-    } else {
-      // Android (or fallback): use WebBrowser
+      //if (Platform.OS === 'ios') {
+      //await Linking.openURL(stripeUrl);
       const result = await WebBrowser.openAuthSessionAsync(
-        stripeUrl,
-        "babyflix://"
+        stripeUrl, // Stripe checkout URL
+        "babyflix://payment-redirect"
       );
+
+    // } else {
+    //   // Android (or fallback): use WebBrowser
+    //   const result = await WebBrowser.openAuthSessionAsync(
+    //     stripeUrl,
+    //     "babyflix://"
+    //   );
       
       if (result.type === "cancel") {
        if (isAuthenticated) {
         router.push('/gallary');
       }}
-    }
+    //}
 
     } catch (error) {
       console.error("Payment error:", error);
@@ -419,25 +426,26 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               <Text style={[styles.title, { textAlign: 'center' }]}>Select Your Plan</Text>
             </View>
             {plans
-            .filter((plan) => {
-              if (isPlanExpired) {
-                // Only show plan 3 when expired
-                return plan.id === 3;
-              }
-              // When NOT expired → hide plan 3
-              if (plan.id === 3) {
-                return false;
-              }
-              // Your original filter for other plans
-              return !(
-                (showUpgradeReminder ||
-                  storagePlanId ||
-                  storagePlanPayment == 1 ||
-                  isPlanDeleted == 1) &&
-                plan.id === 1
-              );
-            })
-            .map((plan) => (
+              .filter((plan) => {
+                const planId = Number(plan.id); // ensure number
+                const payment = Number(storagePlanPayment);
+                const deleted = Number(isPlanDeleted);
+
+                if (isPlanExpired) {
+                  return planId === 3;
+                }
+                if (planId === 3) {
+                  return false;
+                }
+                return !(
+                  (showUpgradeReminder ||
+                    storagePlanId ||
+                    payment === 1 ||
+                    deleted === 1) &&
+                  planId === 1
+                );
+              })
+              .map((plan) => (
               <TouchableOpacity
                 key={plan.id}
                 onPressIn={() => setPlanPressed(true)}

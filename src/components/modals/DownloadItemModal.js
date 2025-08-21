@@ -12,6 +12,7 @@ import * as Notifications from 'expo-notifications';
 import DownloadQueue from '../DownloadQueue';
 import { useDownloadQueueHandler } from '../useDownloadQueueHandler';
 import { useSelector } from 'react-redux';
+//import sendDeviceUserInfo, { USERACTIONS } from '../deviceInfo';
 
 const DownloadItemModal = ({
   visible,
@@ -207,6 +208,10 @@ const DownloadItemModal = ({
       setSnackbarMessage(`${filename} downloaded successfully to your device.`);
       setSnackbarType('success');
       setSnackbarVisible(true);
+      // sendDeviceUserInfo({
+      //   action_type: USERACTIONS.DOWNLOAD,
+      //   action_description: `User downloaded ${item}`,
+      // });
       setDownloadQueue(prev => {
         const filteredQueue = prev.filter(q => q.id !== item.id);
         AsyncStorage.setItem('downloadQueue', JSON.stringify(filteredQueue));
@@ -388,6 +393,10 @@ const DownloadItemModal = ({
       setSnackbarMessage(`${item.title} downloaded successfully.`);
       setSnackbarType('success');
       setSnackbarVisible(true);
+      // sendDeviceUserInfo({
+      //   action_type: USERACTIONS.DOWNLOAD,
+      //   action_description: "User downloaded ",item,
+      // });
       setDownloadQueue(prev => {
         const filteredQueue = prev.filter(q => q.id !== item.id);
         AsyncStorage.setItem('downloadQueue', JSON.stringify(filteredQueue));

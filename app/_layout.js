@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ErrorBoundary, Stack, useRouter } from 'expo-router';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { store } from '../src/state/store';
@@ -27,20 +27,27 @@ import {
 import { getStoragePlanDetails } from '../src/components/getStoragePlanDetails';
 import { registerForPushNotificationsAsync } from '../src/components/notifications';
 import { requestMediaLibraryPermission } from '../src/components/requestMediaPermission';
-import sendDeviceUserInfo from '../src/components/deviceInfo';
+//import sendDeviceUserInfo from '../src/components/deviceInfo';
+import { setDeepLinkHandled } from '../src/state/slices/storageUISlice';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
   const { loading, snackbar } = useSelector((state) => state.ui);
   const user = useSelector((state) => state.auth);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const deepLinkHandled = useSelector((state) => state.storageUI.deepLinkHandled);
   const [isConnected, setIsConnected] = useState(null);
   const [isUpdatePromptShown, setIsUpdatePromptShown] = useState(false);
 
   const router = useRouter();
+  const handledRef = useRef(false);
 
   // useEffect(() => {
-  //   sendDeviceUserInfo(user);
+  //   //sendDeviceUserInfo(user);
+  //   sendDeviceUserInfo({
+  //     action_type: "APP_OPENED",
+  //     action_description: "User opened the app",
+  //   });
   // }, [user]);
 
   useEffect(() => {
@@ -184,6 +191,49 @@ useEffect(() => {
 
 //     return () => sub.remove();
 //   }, []);
+
+// useEffect(() => {
+//   const sub = Linking.addEventListener("url", ({ url }) => {
+//     if (url.includes("payment-redirect")) {
+//       console.log("Deep link URL:", url); // ✅ Log it
+//       router.replace(url.replace("babyflix://", "/"));
+//     }
+//   });
+//   return () => sub.remove();
+// }, []);
+
+// useEffect(() => {
+//     const handleDeepLink = ({ url }) => {
+//       if (url.includes("payment-redirect") && !handledRef.current) {
+//         handledRef.current = true; // ✅ block further calls
+//         console.log("Deep link URL (handled once):", url);
+
+//         // Navigate only once
+//         router.replace(url.replace("babyflix://", "/"));
+//       }
+//     };
+
+//     const subscription = Linking.addEventListener("url", handleDeepLink);
+
+//     return () => {
+//       subscription.remove();
+//     };
+//   }, []);
+
+useEffect(() => {
+  const sub = Linking.addEventListener("url", ({ url }) => {
+    if (url.includes("payment-redirect")) {
+      if (!deepLinkHandled) { // ✅ check redux flag
+        console.log("Deep link URL:", url);
+        dispatch(setDeepLinkHandled(true)); // mark as handled
+        router.replace(url.replace("babyflix://", "/"));
+      }
+    }
+  });
+
+  return () => sub.remove();
+}, [deepLinkHandled, dispatch, router]);
+
 
   return (
     <>

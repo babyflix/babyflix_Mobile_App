@@ -28,6 +28,7 @@ import axios from 'axios';
 import LiveStreamStatus from './LiveStreamStatus';
 import { logError } from '../components/logError';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+//import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -108,6 +109,11 @@ const LoginScreen = () => {
         setSnackbarMessage('Login successful!');
         setSnackbarType('success');
         setSnackbarVisible(true);
+
+        // sendDeviceUserInfo({
+        //   action_type: USERACTIONS.LOGIN,
+        //   action_description: USERACTIONS.LOGINDESC,
+        // });
 
         setTimeout(() => {
           router.replace('/gallery');

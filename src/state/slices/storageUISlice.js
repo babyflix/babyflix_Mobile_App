@@ -5,6 +5,7 @@ const storageUISlice = createSlice({
   initialState: {
     openStorage2Directly: false,
     forceOpenStorageModals: false,
+    deepLinkHandled: false,
   },
   reducers: {
     triggerOpenStorage2: (state) => {
@@ -16,6 +17,9 @@ const storageUISlice = createSlice({
     setForceOpenStorageModals: (state, action) => {
       state.forceOpenStorageModals = action.payload;
     },
+    setDeepLinkHandled: (state, action) => {
+      state.deepLinkHandled = action.payload; // true or false
+    },
   },
 });
 
@@ -23,6 +27,7 @@ export const {
   triggerOpenStorage2,
   clearOpenStorage2,
   setForceOpenStorageModals,
+  setDeepLinkHandled,
 } = storageUISlice.actions;
 
 export default storageUISlice.reducer;
