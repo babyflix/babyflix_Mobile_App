@@ -307,10 +307,12 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       dispatch(clearOpenStorage2());
       await AsyncStorage.setItem('storage_modal_triggered', 'false');
       await AsyncStorage.setItem('paying', 'true');
+      console.log('platform.os',Platform.OS);
 
       const sessionRes = await axios.post(`${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`, {
         planId: selectedPlan,
         email: user.email,
+        platform: Platform.OS,
       }, {
         headers: {
           'Content-Type': 'application/json',
