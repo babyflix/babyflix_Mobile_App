@@ -115,11 +115,13 @@ export default function PaymentRedirect() {
       setStatus(statusParam);
 
       if (statusParam === 'success') {
+        console.log('Payment successful Old');
         await AsyncStorage.setItem('payment_status', 'done');
-        console.log('Payment successful');
+        //console.log('Payment successful');
       } else {
+        console.log('Payment failed Old');
         await AsyncStorage.setItem('payment_status', 'fail');
-        console.log('Payment failed');
+        //console.log('Payment failed');
       }
 
       await AsyncStorage.setItem('visited_after_redirect', 'true');
@@ -138,6 +140,7 @@ export default function PaymentRedirect() {
     const getInitialUrl = async () => {
       const initialUrl = await Linking.getInitialURL();
       if (initialUrl) {
+        console.log('Initial URL Old:', initialUrl);
         const parsed = new URL(initialUrl);
         const s = parsed.searchParams.get('status');
         if (s) handleStatus(s);
