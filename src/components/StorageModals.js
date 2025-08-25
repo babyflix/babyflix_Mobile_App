@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, AppState, Platform } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, AppState, Platform, BackHandler } from 'react-native';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPO_PUBLIC_API_URL } from '@env';
@@ -58,6 +58,21 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   useEffect(() => {
     fetchPlans();
+  }, []);
+
+   useEffect(() => {
+    if (Platform.OS === 'android') {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          console.log('Back button pressed in StorageModals');
+          return true; // block back butto
+        }
+      );
+
+      // cleanup: restore back button when component unmounts
+      return () => backHandler.remove();
+    }
   }, []);
 
   useEffect(() => {
@@ -305,10 +320,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const handleBack = () => {
     setShowStorage2(false);
     
-    // setTimeout(() => {
-    //   setShowStorage1(true);
-    // }, 2000);
-    setShowStorage1(false);
+    setTimeout(() => {
+      setShowStorage1(true);
+    }, 2000);
+    //setShowStorage1(false);
   };
 
   const handlePayment = async () => {
@@ -372,7 +387,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   return (
     <>
-      <Modal visible={showStorage1} transparent animationType="fade" onRequestClose={() => setShowStorage1(false)}>
+      <Modal visible={showStorage1} transparent animationType="fade" {...(Platform.OS === 'ios' ? { onRequestClose: () => setShowStorage1(false) } : {})}>
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             {/* <TouchableOpacity

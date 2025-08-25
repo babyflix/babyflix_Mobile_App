@@ -15,6 +15,7 @@ import {
   Alert,
   Button,
   AppState,
+  BackHandler,
 } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Header from '../components/Header';
@@ -331,6 +332,21 @@ const GalleryScreen = () => {
       router.replace('/login');
     }
   }, []);
+
+  useEffect(() => {
+      if (Platform.OS === 'android') {
+        const backHandler = BackHandler.addEventListener(
+          'hardwareBackPress',
+          () => {
+            console.log('Back button pressed');
+            return true; // block back button
+          }
+        );
+  
+        // cleanup: restore back button when component unmounts
+        return () => backHandler.remove();
+      }
+    }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
