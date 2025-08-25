@@ -355,25 +355,25 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       setShowStorage2(false);
       //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
 
-      //if (Platform.OS === 'ios') {
-      //await Linking.openURL(stripeUrl);
-      const result = await WebBrowser.openAuthSessionAsync(
-        stripeUrl, // Stripe checkout URL
-        "babyflix://payment-redirect"
-      );
+      if (Platform.OS === 'ios') {
+      await Linking.openURL(stripeUrl);
+      // const result = await WebBrowser.openAuthSessionAsync(
+      //   stripeUrl, // Stripe checkout URL
+      //   "babyflix://payment/redirect"
+      // );
 
-    // } else {
-    //   // Android (or fallback): use WebBrowser
-    //   const result = await WebBrowser.openAuthSessionAsync(
-    //     stripeUrl,
-    //     "babyflix://"
-    //   );
+    } else {
+      // Android (or fallback): use WebBrowser
+      const result = await WebBrowser.openAuthSessionAsync(
+        stripeUrl,
+        "babyflix://"
+      );
       
       if (result.type === "cancel") {
        if (isAuthenticated) {
         router.push('/gallary');
       }}
-    //}
+    }
 
     } catch (error) {
       console.error("Payment error:", error);

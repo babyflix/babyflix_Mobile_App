@@ -107,6 +107,11 @@ export default function PaymentRedirect() {
   const [status, setStatus] = useState<string | null>(null);
   const handledOnce = useRef(false); // ✅ make sure we only handle once
 
+  const getStatusFromUrl = (url: string) => {
+    const match = url.match(/[?&]status=([^&]+)/);
+    return match ? match[1] : null;
+  };
+
   useEffect(() => {
     const handleStatus = async (statusParam: string) => {
       console.log('Handling status:', statusParam);
@@ -124,7 +129,7 @@ export default function PaymentRedirect() {
       } else {
         console.log('Payment failed Old 2');
         await AsyncStorage.setItem('payment_status', 'fail');
-        alert
+        alert('Payment failed');
         //console.log('Payment failed');
       }
 
@@ -145,31 +150,22 @@ export default function PaymentRedirect() {
     }
 
     // 2️⃣ Deep link (iOS cold start)
-    const getInitialUrl = async () => {
+     const checkInitialUrl = async () => {
       const initialUrl = await Linking.getInitialURL();
       if (initialUrl) {
-        console.log('Initial URL Old:', initialUrl);
-        const parsed = new URL(initialUrl);
-        const s = parsed.searchParams.get('status');
-        //if (s) alert('handleStatus call from getInitialUrl: ' + s);
-        if (s) handleStatus(s);
+        const status = getStatusFromUrl(initialUrl);
+        if (status) handleStatus(status);
       }
     };
+    checkInitialUrl();
 
-    getInitialUrl();
-
-    // 3️⃣ Listener for when app is already open (foreground)
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      if (url.includes('payment/redirect')) {
-        console.log('Received URL:', url);
-        const parsed = new URL(url);
-        const s = parsed.searchParams.get('status');
-        //if (s) alert('handleStatus call from Linking Listener: ' + s);
-        if (s) handleStatus(s);
-      }
+    // 3️⃣ Foreground listener
+    const subscription = Linking.addListener('url', ({ url }) => {
+      const status = getStatusFromUrl(url);
+      if (status) handleStatus(status);
     });
 
-    return () => sub.remove();
+    return () => subscription.remove();
   }, [localParams, router]);
 
   return (
