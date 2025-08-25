@@ -26,6 +26,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const [plans, setPlans] = useState([]);
   const [closePlanes, setClosePlans] = useState(false);
   const [wasTriggered, setWasTriggered] = useState(false);
+  const [ShowStorage1Call, setShowStorage1Call] = useState(false);
 
   const user = useSelector((state) => state.auth);
   const { skippedPlanCount, storagePlanId, storagePlanPayment, isPlanDeleted,storagePlanPrice } =
@@ -39,6 +40,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
    const router = useRouter();
    const handledRef = useRef(false);
+   const showStorage1Ref = useRef(false);
 
   const fetchPlans = async () => {
     try {
@@ -101,6 +103,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       } else {
         if (!storagePlanId || storagePlanId === "null") {
            console.log('[StorageModals] No plan found, showing storage1');
+           showStorage1Ref.current = true;
           await AsyncStorage.removeItem('closePlans');
           setShowStorage1(true);
         }
@@ -109,6 +112,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
     if (!openStorage2Directly) {
        console.log('[StorageModals] Checking payment status because openStorage2Directly is false');
+       console.log('showStorage1Ref.current',{showStorage1Ref});
       checkPaymentStatus();
     }
   }, []);
@@ -153,6 +157,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       if (hasChecked) return;
       hasChecked = true;
 
+      setTimeout(async () => {
       const status = await AsyncStorage.getItem('payment_status');
       console.log('[StorageModals] Final checkPaymentStatus:', status);
 
@@ -212,12 +217,18 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         await AsyncStorage.setItem('closePlans', 'true');
         setClosePlans(true);
       } else {
-       if (!storagePlanId || storagePlanId === "null") {
+      const status = await AsyncStorage.getItem('payment_status 1');
+      const storedPaying = await AsyncStorage.getItem('paying');
+      setTimeout(async () => {
+      console.log('[StorageModals] Rechecking storagePlanId and paying status:', { storagePlanId, status, storedPaying, showStorage1Ref });
+       if ((!storagePlanId || storagePlanId === "null") && status !== 'fail' && storedPaying !== 'false' && !showStorage1Ref.current) {
         console.log('[StorageModals] No plan id - showing storage1 in final check');
           await AsyncStorage.removeItem('closePlans');
           setShowStorage1(true);
         }
+        }, 2000);
       }
+      }, 1000);
     };
     
 
@@ -230,7 +241,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       console.log('[StorageModals] AppState changed:', state);
       if (state === 'active') {
         console.log('[StorageModals] App resumed - rechecking payment status');
-        checkPaymentStatus();
+        //checkPaymentStatus();
+        setTimeout(checkPaymentStatus, 1000);
       }
     });
 
@@ -293,10 +305,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const handleBack = () => {
     setShowStorage2(false);
     
-    setTimeout(() => {
-    setShowStorage1(true);
-  }, 2000);
-    //setShowStorage1(false);
+    // setTimeout(() => {
+    //   setShowStorage1(true);
+    // }, 2000);
+    setShowStorage1(false);
   };
 
   const handlePayment = async () => {

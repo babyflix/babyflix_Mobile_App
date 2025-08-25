@@ -99,7 +99,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator, StyleSheet, View, Linking, Platform } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, Linking, Platform, Alert } from 'react-native';
 
 export default function PaymentRedirect() {
   const router = useRouter();
@@ -109,7 +109,8 @@ export default function PaymentRedirect() {
 
   useEffect(() => {
     const handleStatus = async (statusParam: string) => {
-        console.log('Handling status:', statusParam);
+      console.log('Handling status:', statusParam);
+      alert('Handling status: ' + statusParam);
       if (handledOnce.current) return;
       handledOnce.current = true;
 
@@ -118,21 +119,27 @@ export default function PaymentRedirect() {
       if (statusParam === 'success') {
         console.log('Payment successful Old 2');
         await AsyncStorage.setItem('payment_status', 'done');
+        alert('Payment successful');
         //console.log('Payment successful');
       } else {
         console.log('Payment failed Old 2');
         await AsyncStorage.setItem('payment_status', 'fail');
+        alert
         //console.log('Payment failed');
       }
 
       await AsyncStorage.setItem('visited_after_redirect', 'true');
 
       // Navigate to gallery or wherever needed
-      router.replace('/(app)/gallery');
+      //router.replace('/(app)/gallery');
+      setTimeout(() => {
+        router.replace('/(app)/gallery');
+      }, 2000);
     };
 
     // 1️⃣ Local params (works when app already open)
     if (localParams?.status) {
+      //alert('handleStatus call from Local params status: ' + localParams.status);
       handleStatus(localParams.status as string);
       return;
     }
@@ -144,6 +151,7 @@ export default function PaymentRedirect() {
         console.log('Initial URL Old:', initialUrl);
         const parsed = new URL(initialUrl);
         const s = parsed.searchParams.get('status');
+        //if (s) alert('handleStatus call from getInitialUrl: ' + s);
         if (s) handleStatus(s);
       }
     };
@@ -152,10 +160,11 @@ export default function PaymentRedirect() {
 
     // 3️⃣ Listener for when app is already open (foreground)
     const sub = Linking.addEventListener('url', ({ url }) => {
-      if (url.includes('payment-redirect')) {
+      if (url.includes('payment/redirect')) {
         console.log('Received URL:', url);
         const parsed = new URL(url);
         const s = parsed.searchParams.get('status');
+        //if (s) alert('handleStatus call from Linking Listener: ' + s);
         if (s) handleStatus(s);
       }
     });
