@@ -322,7 +322,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     
     setTimeout(() => {
       setShowStorage1(true);
-    }, 2000);
+    }, 1000);
     //setShowStorage1(false);
   };
 

@@ -99,7 +99,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator, StyleSheet, View, Linking, Platform, Alert } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, Linking, Platform } from 'react-native';
 
 export default function PaymentRedirect() {
   const router = useRouter();
@@ -115,7 +115,6 @@ export default function PaymentRedirect() {
   useEffect(() => {
     const handleStatus = async (statusParam: string) => {
       console.log('Handling status:', statusParam);
-      alert('Handling status: ' + statusParam);
       if (handledOnce.current) return;
       handledOnce.current = true;
 
@@ -124,13 +123,9 @@ export default function PaymentRedirect() {
       if (statusParam === 'success') {
         console.log('Payment successful Old 2');
         await AsyncStorage.setItem('payment_status', 'done');
-        alert('Payment successful');
-        //console.log('Payment successful');
       } else {
         console.log('Payment failed Old 2');
         await AsyncStorage.setItem('payment_status', 'fail');
-        alert('Payment failed');
-        //console.log('Payment failed');
       }
 
       await AsyncStorage.setItem('visited_after_redirect', 'true');
