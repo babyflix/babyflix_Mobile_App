@@ -643,6 +643,7 @@ const MessagesScreen = () => {
           <TouchableOpacity style={styles.closeButton} onPress={() => {
             console.log('Back pressed');
             setSelectedMessageId(null);
+            getChatMembers();
             setSelectedChat(null)}}>
             <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>

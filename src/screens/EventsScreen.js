@@ -437,7 +437,7 @@ useEffect(() => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={[styles.modalTitle]}>{t('eventsScreen.shareEvent')}</Text>
-              <Text style={styles.modalTitle}>{previewItem.eventName}</Text>
+              <Text style={styles.modalTitle}>{useDynamicTranslate(previewItem.eventName)}</Text>
               <View style={{ marginLeft: 10 }}>
                 <Text>{previewItem.eventDateConverted}</Text>
                 <Text>{previewItem.eventTime}</Text>
