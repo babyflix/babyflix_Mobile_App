@@ -12,6 +12,8 @@ import * as Notifications from 'expo-notifications';
 import DownloadQueue from '../DownloadQueue';
 import { useDownloadQueueHandler } from '../useDownloadQueueHandler';
 import { useSelector } from 'react-redux';
+import { useDynamicTranslate } from '../../constants/useDynamicTranslate';
+import { useTranslation } from 'react-i18next';
 
 const DownloadItemModal = ({
   visible,
@@ -36,6 +38,8 @@ const DownloadItemModal = ({
   const [downloadResumable, setDownloadResumable] = useState(null);
   const [downloadQueue, setDownloadQueue] = useState([]);
   const { storagePlanId, storagePlanPrice } = useSelector((state) => state.storagePlan || {});
+
+  const { t } = useTranslation();
    
   const resumeDownload = (item) => {
     if (item?.object_type === 'image') {
@@ -124,7 +128,7 @@ const DownloadItemModal = ({
 
           await AsyncStorage.removeItem('pausedDownload');
 
-          setSnackbarMessage(`${title} resumed and downloaded successfully.`);
+          setSnackbarMessage(t('downloadModal.snackbar.downloadResume', { title: await useDynamicTranslate(`${item.title}`) }));
           setSnackbarType('success');
           setSnackbarVisible(true);
           setDownloadingProgress(false);
@@ -171,7 +175,7 @@ const DownloadItemModal = ({
       if (existingStatus !== 'granted') {
         const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
         if (newStatus !== 'granted') {
-          Alert.alert('Permission Required', 'Please allow access to save the image.');
+          Alert.alert(t('downloadModal.permissionRequired'), t('downloadModal.allowAccess'));
           setDownloadingProgress(false);
           return;
         }
@@ -204,7 +208,7 @@ const DownloadItemModal = ({
 
       await showCompletionNotification(title, downloadedFile.uri, 'video/*');
 
-      setSnackbarMessage(`${filename} downloaded successfully to your device.`);
+      setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await useDynamicTranslate(`${filename}`) }));
       setSnackbarType('success');
       setSnackbarVisible(true);
       setDownloadQueue(prev => {
@@ -218,7 +222,7 @@ const DownloadItemModal = ({
       await AsyncStorage.removeItem('incompleteImageDownload');
     } catch (error) {
       console.error('Image Download Error:', error);
-      setSnackbarMessage('Failed to download image. Please try again.');
+      setSnackbarMessage(t('downloadModal.snackbar.downloadFail'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       await AsyncStorage.removeItem('incompleteImageDownload');
@@ -235,8 +239,8 @@ const DownloadItemModal = ({
   const showCompletionNotification = async (title, uri, mimeType = 'image/*') => {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "Download Complete",
-        body: `${title} has been downloaded successfully.`,
+        title: t('downloadModal.downloadComplete'),
+        body: t("downloadModal.downloadSuccess", { title: title }),
         data: { uri },
       },
       trigger: null,
@@ -265,7 +269,7 @@ const DownloadItemModal = ({
       onDownload,
     });
 
-    setSnackbarMessage(`"${item.title}" added to download queue.`);
+    setSnackbarMessage(t('downloadModal.snackbar.addedQueue', { title: await useDynamicTranslate(`${item.title}`) }));
     setSnackbarType('info');
     setSnackbarVisible(true);
     setActiveDownloads(prev => prev + 1);
@@ -344,7 +348,7 @@ const DownloadItemModal = ({
       const response = await axios.get(fullUrl);
       const downloadUrl = response.data?.download_url;
       console.log('iOS: Conversion API response:', downloadUrl);
-      if (!downloadUrl) throw new Error('No download URL');
+      if (!downloadUrl) throw new Error(t('downloadModal.noDownloadUrl'));
 
       await AsyncStorage.removeItem('pendingConversion');
 
@@ -353,7 +357,7 @@ const DownloadItemModal = ({
       const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
       if (existingStatus !== 'granted') {
         const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
-        if (newStatus !== 'granted') throw new Error('Permission denied');
+        if (newStatus !== 'granted') throw new Error(t('downloadModal.permissionDenied'));
       }
        console.log('Permission Granted saving file in gallary of phone')
 
@@ -385,7 +389,7 @@ const DownloadItemModal = ({
 
       await showCompletionNotification(item.title, result.uri, 'video/*');
 
-      setSnackbarMessage(`${item.title} downloaded successfully.`);
+      setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await useDynamicTranslate(`${item.title}`) }));
       setSnackbarType('success');
       setSnackbarVisible(true);
       setDownloadQueue(prev => {
@@ -414,7 +418,7 @@ const DownloadItemModal = ({
         <View style={styles.delModalContainer}>
           <MaterialIcons name="file-download" size={48} color={Colors.primary} />
           <Text style={styles.delModalTitle}>
-            {isDownloading || isConverting ? 'Downloading Selected Media' : 'Download Selected Media'}
+            {isDownloading || isConverting ? t('downloadModal.titleDownloading') : t('downloadModal.titleDownload')}
           </Text>
 
           {!isDownloading && !isConverting && (
@@ -422,14 +426,14 @@ const DownloadItemModal = ({
               <Text style={styles.delModalMessage}>
                 {selectedItems.length > 1 ? (
                   <>
-                    Are you sure you want to download{' '}
-                    <Text style={{ fontWeight: 'bold' }}>{selectedItems.length}</Text> items?
+                    {t('downloadModal.confirmDownload')}{' '}
+                    <Text style={{ fontWeight: 'bold' }}>{selectedItems.length}</Text> {t("deleteModal.items")}
                   </>
                 ) : (
                   <>
-                    Are you sure you want to download{' '}
-                    <Text style={{ fontWeight: 'bold' }}>{selectedItems[0]?.title}</Text>{' '}
-                    ({selectedItems[0]?.object_type})?
+                    {t('downloadModal.confirmDownload')}{' '}
+                    <Text style={{ fontWeight: 'bold' }}>{useDynamicTranslate(`${selectedItems[0]?.title || ''}`)}</Text>{' '}
+                    ({useDynamicTranslate(`${selectedItems[0]?.object_type}`)})?
                   </>
                 )}
               </Text>
@@ -437,7 +441,7 @@ const DownloadItemModal = ({
               {selectedItems[0]?.object_type === 'video' && (
                 <>
                   <Text style={{ fontFamily: 'Poppins_500Medium', fontSize: 17, fontWeight: 'bold' }}>
-                    Choose Quality
+                    {t('downloadModal.chooseQuality')}
                   </Text>
 
                   <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 10 }}>
@@ -452,7 +456,7 @@ const DownloadItemModal = ({
                         marginHorizontal: 0,
                       }}
                     >
-                      <Text style={{ color: selectedQuality === 'sd' ? 'white' : 'black' }}>SD</Text>
+                      <Text style={{ color: selectedQuality === 'sd' ? 'white' : 'black' }}>{t('downloadModal.sd')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -468,7 +472,7 @@ const DownloadItemModal = ({
                         marginHorizontal: 0,
                       }}
                     >
-                      <Text style={{ color: selectedQuality === 'hd' ? 'white' : 'black' }}>HD</Text>
+                      <Text style={{ color: selectedQuality === 'hd' ? 'white' : 'black' }}>{t('downloadModal.hd')}</Text>
                     </TouchableOpacity>
                   </View>
                 </>
@@ -479,8 +483,8 @@ const DownloadItemModal = ({
           {isDownloading && showSizeInfo && (
             <Text style={[styles.delModalMessage, { color: 'gray', marginTop: 5 }]}>
               {hasLargeFiles
-                ? 'Files are larger than 5MB. Please be patient, downloading may take some time.'
-                : 'Selected file are being downloading. Please wait...'}
+                ? t('downloadModal.filesLarge')
+                : t('downloadModal.filesSmall')}
             </Text>
           )}
 
@@ -522,7 +526,7 @@ const DownloadItemModal = ({
             <View style={{ alignItems: 'center', marginVertical: 20 }}>
               <ActivityIndicator size="large" color={Colors.primary} />
               <Text style={{ marginTop: 10, fontSize: 16, color: Colors.primary, fontWeight: '600' }}>
-                Converting video. Please wait do not close app...
+                {t('downloadModal.convertingVideo')}
               </Text>
             </View>
           ) : isDownloading ? (
@@ -537,7 +541,7 @@ const DownloadItemModal = ({
                 borderRadius={5}
               />
               <Text style={{ marginTop: 10, fontSize: 16, color: 'green', fontWeight: '600' }}>
-                {Math.round(downloadProgress * 100)}% Downloaded
+                {t('downloadModal.percentDownloaded', { percent: Math.round(downloadProgress * 100) })}
               </Text>
             </View>
           ) : (
@@ -547,7 +551,7 @@ const DownloadItemModal = ({
                 style={[styles.delModalButton, { backgroundColor: '#ccc', flexDirection: 'row' }]}
               >
                 <Ionicons name="close-circle" size={20} color="white" style={{ marginRight: 5 }} />
-                <Text style={styles.delModalButtonText}>Cancel</Text>
+                <Text style={styles.delModalButtonText}>{t('downloadModal.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
@@ -558,7 +562,7 @@ const DownloadItemModal = ({
                 style={[styles.delModalButton, { backgroundColor: Colors.primary, flexDirection: 'row' }]}
               >
                 <MaterialIcons name="file-download" size={20} color="white" style={{ marginRight: 5 }} />
-                <Text style={styles.delModalButtonText}>Download</Text>
+                <Text style={styles.delModalButtonText}>{t('downloadModal.download')}</Text>
               </TouchableOpacity>
 
             </View>

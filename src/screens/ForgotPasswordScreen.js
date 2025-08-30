@@ -20,6 +20,8 @@ import CommonSVG from '../components/commonSvg';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logError } from '../components/logError';
+import { useTranslation } from 'react-i18next';
+import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const router = useRouter();
@@ -30,10 +32,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarType, setSnackbarType] = useState('success');
   const [svgColor, setSvgColor] = useState(Colors.primary);
+  const { t } = useTranslation();
+
+  const translateMessage = useDynamicTranslate;
 
   const handleSubmit = async () => {
     if (!email) {
-      setSnackbarMessage('Please enter your email');
+      const msg =t('forgotPassword.errors.emptyEmail');
+      setSnackbarMessage(msg);
       setSnackbarType('error');
       setSnackbarVisible(true);
       return;
@@ -41,7 +47,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
-      setSnackbarMessage('Please enter a valid email');
+      setSnackbarMessage(t('forgotPassword.errors.invalidEmail'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       return;
@@ -66,7 +72,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         const data = res.data;
 
         if (data.actionStatus === "success") {
-          setSnackbarMessage('Reset password link sent to your email');
+          setSnackbarMessage(t('forgotPassword.success.linkSent'));
           setSnackbarType('success');
           setSnackbarVisible(true);
 
@@ -74,18 +80,18 @@ const ForgotPasswordScreen = ({ navigation }) => {
             router.replace('login');
           }, 1000);
         } else {
-          setSnackbarMessage(data.error || 'Failed to send reset link');
+          setSnackbarMessage(t('forgotPassword.errors.sendLinkFailed'));
           setSnackbarType('error');
           setSnackbarVisible(true);
         }
       } else {
-        setSnackbarMessage('Failed to send reset link. Please try again.');
+        setSnackbarMessage(t('forgotPassword.errors.sendLinkFailed'));
         setSnackbarType('error');
         setSnackbarVisible(true);
       }
     } catch (error) {
       console.error('Error:', error);
-      setSnackbarMessage('Failed to send reset link. Please try again.');
+      setSnackbarMessage(t('forgotPassword.errors.sendLinkFailed'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       await logError({
@@ -124,16 +130,16 @@ const ForgotPasswordScreen = ({ navigation }) => {
         <ScrollView contentContainerStyle={GlobalStyles.screenPadding}>
           <View style={{ marginTop: 100 }}>
             <View style={{ alignItems: 'center' }}>
-              <Text style={GlobalStyles.title}>Forgot Password</Text>
+              <Text style={GlobalStyles.title}>{t('forgotPassword.title')}</Text>
             </View>
             <Text style={GlobalStyles.subtitle}>
-              Enter your email to receive password reset instructions
+              {t('forgotPassword.subtitle')}
             </Text>
 
             <View style={{ position: 'relative' }}>
               <TextInput
                 style={[GlobalStyles.input, { paddingLeft: 40 }]}
-                placeholder="Email"
+                placeholder={t('forgotPassword.emailPlaceholder')}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -151,7 +157,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
               onPress={handleSubmit}
             >
               <Icon name="link" size={20} color={Colors.white} style={{ marginRight: 5 }} />
-              <Text style={GlobalStyles.buttonText}>Send Reset Link</Text>
+              <Text style={GlobalStyles.buttonText}>{t('forgotPassword.sendResetLink')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -160,7 +166,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
             >
               <Icon name="arrow-back" size={20} color={Colors.primary} style={{ marginRight: 5 }} />
               <Text style={[GlobalStyles.buttonText, { color: Colors.primary }]}>
-                Back to Login
+                {t('forgotPassword.backToLogin')}
               </Text>
             </TouchableOpacity>
           </View>

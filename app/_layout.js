@@ -28,6 +28,10 @@ import { getStoragePlanDetails } from '../src/components/getStoragePlanDetails';
 import { registerForPushNotificationsAsync } from '../src/components/notifications';
 import { requestMediaLibraryPermission } from '../src/components/requestMediaPermission';
 import sendDeviceUserInfo from '../src/components/deviceInfo';
+import LanguageModal from '../src/constants/LanguageModal';
+import "../src/constants/i18n"; // Ensure i18n is initialized
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setupI18n } from '../src/constants/i18n';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
@@ -36,12 +40,27 @@ const LayoutContent = () => {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const [isConnected, setIsConnected] = useState(null);
   const [isUpdatePromptShown, setIsUpdatePromptShown] = useState(false);
+  const [ready, setReady] = useState(false);
+  //  const [showLangModal, setShowLangModal] = useState(false);
 
   const router = useRouter();
 
   // useEffect(() => {
   //   sendDeviceUserInfo(user);
   // }, [user]);
+
+  // useEffect(() => {
+  //   const checkLanguage = async () => {
+  //     const lang = await AsyncStorage.getItem("appLanguage");
+  //     console.log('Language from storage:', lang);
+  //     if (!lang) {
+  //       setShowLangModal(true); // show modal if not selected
+  //     } else {
+  //       i18n.changeLanguage(lang); // apply saved language
+  //     }
+  //   };
+  //   checkLanguage();
+  // }, []);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -121,45 +140,46 @@ useEffect(() => {
 //     registerForPushNotificationsAsync();
 //   }, []);
 
-useEffect(() => {
-  const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-    const { data } = response.notification.request.content;
 
-    if (data?.screen === 'LiveStream' && data?.userId) {
-      router.push({
-        pathname: '/gallery',
-        query: { userId: data.userId }, // ✅ use query, not params
-      });
-    }
-  });
+// useEffect(() => {
+//   const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+//     const { data } = response.notification.request.content;
 
-  return () => subscription.remove();
-}, []);
+//     if (data?.screen === 'LiveStream' && data?.userId) {
+//       router.push({
+//         pathname: '/gallery',
+//         query: { userId: data.userId }, // ✅ use query, not params
+//       });
+//     }
+//   });
+
+//   return () => subscription.remove();
+// }, []);
 
 
-useEffect(() => {
-  const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-    const { uri, mimeType } = response.notification.request.content.data;
+// useEffect(() => {
+//   const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+//     const { uri, mimeType } = response.notification.request.content.data;
 
-    if (uri) {
-      if (Platform.OS === 'android') {
-        try {
-          IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-            data: uri,
-            flags: 1,
-            type: mimeType || 'video/*',
-          });
-        } catch (e) {
-          console.warn('Failed to open file:', e.message);
-        }
-      } else if (Platform.OS === 'ios') {
-        Linking.openURL(uri);
-      }
-    }
-  });
+//     if (uri) {
+//       if (Platform.OS === 'android') {
+//         try {
+//           IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+//             data: uri,
+//             flags: 1,
+//             type: mimeType || 'video/*',
+//           });
+//         } catch (e) {
+//           console.warn('Failed to open file:', e.message);
+//         }
+//       } else if (Platform.OS === 'ios') {
+//         Linking.openURL(uri);
+//       }
+//     }
+//   });
 
-  return () => subscription.remove();
-}, []);
+//   return () => subscription.remove();
+// }, []);
 
 // useEffect(() => {
 //     Linking.getInitialURL().then((url) => {
@@ -195,6 +215,7 @@ useEffect(() => {
       </Stack>
       <Snackbar {...snackbar} />
       <Loader loading={loading} />
+      {/* <LanguageModal visible={showLangModal} onClose={() => setShowLangModal(false)} /> */}
     </>
   );
 };

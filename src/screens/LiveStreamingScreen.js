@@ -20,6 +20,7 @@ import moment from 'moment';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 const LiveStreamingScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -35,6 +36,7 @@ const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
   const streamState = useSelector(state => state.stream);
   const eventActualEndTime = useSelector(state => state.stream.eventActualEndTime);
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const streamingUrl = streamState.streamUrl || '';
 
@@ -203,10 +205,10 @@ const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
 
   return (
     <View style={[GlobalStyles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
-      {!isFullScreen &&<Header title="Live Streaming" />}
+      {!isFullScreen &&<Header title={t('liveStreaming.title')} />}
 
    <ScrollView contentContainerStyle={styles.container}>
-   {!isFullScreen && <Text style={styles.liveTitle}>Video Streaming is Live</Text>}
+   {!isFullScreen && <Text style={styles.liveTitle}>{t('liveStreaming.videoLive')}</Text>}
 
       {streamState.streamState === 'live' && streamingUrl?.startsWith('https') ? (
       <View
@@ -230,7 +232,7 @@ const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
         // }}
       />
       <View style={styles.overlay}>
-          <Text style={styles.liveLabel}>LIVE</Text>
+          <Text style={styles.liveLabel}>{t('liveStreaming.liveLabel')}</Text>
 
           <View style={styles.controls}>
             {isMinimized ? (
@@ -264,13 +266,13 @@ const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
         {showBeforeEndMessage && streamState.streamState === 'live' && (
             <View style={[styles.streamNoticeContainer,isMinimized ? {bottom:20}:{top:170}]}>
               <MaterialIcons name="warning" size={20} color="#FFA500" style={{ paddingLeft: 6, backgroundColor: '#FFF3CD' ,paddingVertical: 5.46, borderTopLeftRadius:6, borderBottomLeftRadius:6 }} />
-              <Text style={styles.streamNoticeText}>This stream will end in 2 minutes</Text>
+              <Text style={styles.streamNoticeText}>{t('liveStreaming.streamEndingSoon')}</Text>
             </View>
           )}
       </View>
       ) : (
         <Text style={{ textAlign: 'center', color: 'gray', marginVertical: 20 }}>
-          Waiting for live stream...
+          {t('liveStreaming.waiting')}
         </Text>
       )}
     </ScrollView>
@@ -284,10 +286,10 @@ const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Stopped</Text>
-            <Text style={styles.modalMessage}>Live streaming is stopped now, please try again when started.</Text>
+            <Text style={styles.modalTitle}>{t('liveStreaming.stoppedTitle')}</Text>
+            <Text style={styles.modalMessage}>{t('liveStreaming.stoppedMessage')}</Text>
             <TouchableOpacity style={styles.modalButton} onPress={handleModalClose}>
-              <Text style={styles.modalButtonText}>Close</Text>
+              <Text style={styles.modalButtonText}>{t('liveStreaming.close')}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -27,6 +27,7 @@ import { updateActionStatus } from '../state/slices/authSlice';
 import { logError } from '../components/logError';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { requestMediaLibraryPermission } from '../components/requestMediaPermission';
+import { useTranslation } from 'react-i18next';
 
 const UPLOAD_API_URL = `${EXPO_PUBLIC_CLOUD_API_URL}/upload-files/`;
 const CHUNK_SIZE = 2 * 1024 * 1024;
@@ -74,6 +75,7 @@ const UploadScreen = () => {
   const router = useRouter();
   const dispatch = useDispatch();  
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const pickMedia = async () => {
     setPreviewLoad(true);
@@ -238,26 +240,210 @@ const UploadScreen = () => {
   };
 
 
-  return (
-    <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
-      <Header title="Upload" />
+  // return (
+  //   <View style={[GlobalStyles.container,{marginBottom:65},Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
+  //     <Header title="Upload" />
+  //     <ScrollView contentContainerStyle={styles.content}>
+  //       <Text style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', textAlign: 'center' }}>
+  //         Pick and upload image or video.
+  //       </Text>
+
+  //       <View style={styles.uploadOptions}>
+  //         <TouchableOpacity style={styles.uploadButton} onPress={pickMedia}>
+  //           <Ionicons name="image" size={42} color={Colors.primary} />
+  //           <Text style={styles.uploadButtonText}>Upload Media</Text>
+  //         </TouchableOpacity>
+  //       </View>
+
+  //       {media ? (
+  //         <View style={styles.preview}>
+  //           <Text style={styles.previewTitle}>Preview</Text>
+
+  //           {media.type.startsWith('image') ? (
+  //             <Image
+  //               source={{ uri: media.uri }}
+  //               style={styles.previewImage}
+  //               resizeMode="cover"
+  //             />
+  //           ) : (
+  //             <Video
+  //               source={{ uri: media.uri }}
+  //               style={styles.previewImage}
+  //               resizeMode="cover"
+  //               shouldPlay={true}
+  //               isLooping={false}
+  //               useNativeControls
+  //               onLoad={() => setVideoReady(true)}
+  //               onError={(e) => console.log('Video error:', e)}
+  //             />
+  //           )}
+
+  //           {/* Show loader only while video is loading */}
+  //           {media.type.startsWith('video') && !videoReady && (
+  //             <View style={{ marginVertical: 10, alignItems: 'center' }}>
+  //               <ActivityIndicator size="large" color={Colors.primary} />
+  //               <Text>Loading video preview...</Text>
+  //             </View>
+  //           )}
+
+  //           <Text style={styles.mediaName}>{media.fileName}</Text>
+  //           <Text style={styles.mediaSize}>{(media.fileSize / 1024).toFixed(2)} KB</Text>
+
+  //           <TouchableOpacity style={styles.closeIcon} onPress={() => setShowDeleteModal(true)}>
+  //             <Ionicons name="close-circle" size={32} color={Colors.error} />
+  //           </TouchableOpacity>
+
+  //           <TouchableOpacity
+  //             style={GlobalStyles.button}
+  //             onPress={handleUpload}
+  //             disabled={loading}
+  //           >
+  //             <Text style={GlobalStyles.buttonText}>{loading ? 'Uploading...' : 'Upload'}</Text>
+  //           </TouchableOpacity>
+  //         </View>
+  //       ) : previewLoad ? (
+  //         <View style={{ marginVertical: 20, alignItems: 'center' }}>
+  //           <ActivityIndicator size="large" color={Colors.primary} />
+  //           <Text>Loading media preview...</Text>
+  //         </View>
+  //       ) : null}
+  //     </ScrollView>
+
+  //     {/* Delete Confirmation Modal */}
+  //     <Modal
+  //       visible={showDeleteModal}
+  //       transparent
+  //       animationType="fade"
+  //       onRequestClose={() => setShowDeleteModal(false)}
+  //     >
+  //       <View style={styles.modalBackground}>
+  //         <View style={[styles.modalContainer, { padding: 24, borderRadius: 20 }]}>
+  //           <View style={{ alignItems: 'center', marginBottom: 16 }}>
+  //             <Ionicons name="warning" size={48} color={Colors.error} />
+  //             <Text style={[styles.modalTitle, { marginTop: 12, fontSize: 20 }]}>
+  //               Confirm Delete
+  //             </Text>
+  //             <Text style={{ textAlign: 'center', marginTop: 6, color: '#666', fontSize: 15, fontFamily: 'Poppins_400Regular' }}>
+  //               Are you sure you want to delete this media? This action cannot be undone.
+  //             </Text>
+  //           </View>
+
+  //           <View style={styles.modalActions}>
+  //             <TouchableOpacity
+  //               style={[
+  //                 styles.modalButton,
+  //                 {
+  //                   backgroundColor: '#f0f0f0',
+  //                   borderColor: '#ccc',
+  //                   borderWidth: 1,
+  //                   borderRadius: 12,
+  //                   paddingVertical: 10,
+  //                   flex: 1,
+  //                   marginRight: 10,
+  //                 },
+  //               ]}
+  //               onPress={() => setShowDeleteModal(false)}
+  //             >
+  //               <Text style={{ color: '#333', fontSize: 15, fontFamily: 'Poppins_600SemiBold', }}>Cancel</Text>
+  //             </TouchableOpacity>
+  //             <TouchableOpacity
+  //               style={[
+  //                 styles.modalButton,
+  //                 {
+  //                   backgroundColor: Colors.error,
+  //                   borderRadius: 12,
+  //                   paddingVertical: 10,
+  //                   flex: 1,
+  //                   marginLeft: 10,
+  //                 },
+  //               ]}
+  //               onPress={handleDeleteMedia}
+  //             >
+  //               <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Poppins_600SemiBold' }}>Delete</Text>
+  //             </TouchableOpacity>
+  //           </View>
+  //         </View>
+  //       </View>
+  //     </Modal>
+
+
+  //     {/* Upload Progress Modal */}
+  //     {loading && (
+  //       <Modal visible={loading} transparent animationType="fade">
+  //         <View style={styles.modalBackground}>
+  //           <View style={styles.modalContainer}>
+  //             <Text>Uploading...</Text>
+  //             <Text>{uploadProgress}%</Text>
+  //             <View style={{ width: '100%', height: 10, backgroundColor: '#f0f0f0', borderRadius: 5, marginTop: 10 }}>
+  //               <View style={{ width: `${uploadProgress}%`, height: '100%', backgroundColor: '#46d157', borderRadius: 5 }} />
+  //             </View>
+  //           </View>
+  //         </View>
+  //       </Modal>
+  //     )}
+
+  //     {/* Success Modal */}
+  //     {showSuccessModal && (
+  //       <Modal visible={showSuccessModal} transparent animationType="fade" onRequestClose={() => setShowSuccessModal(false)}>
+  //         <View style={styles.modalBackground}>
+  //           <View style={styles.successModalContainer}>
+  //             <View style={styles.successHeader}>
+  //               <MaterialIcons name="check-circle" size={40} color="#28a745" />
+  //               <Text style={styles.successTitle}>Upload Successful</Text>
+  //             </View>
+  //             <Text style={styles.successMessage}>
+  //               Please check gallery after 5 minutes.
+  //             </Text>
+  //             <TouchableOpacity
+  //               onPress={() => {
+  //                 setMedia(null)
+  //                 setShowSuccessModal(false);
+  //                 router.push('/gallery');
+  //               }}
+  //               style={[styles.modalButton, { backgroundColor: Colors.primary }]}
+  //             >
+  //               <Text style={{ color: Colors.white, fontFamily: 'Poppins_500Medium', }}>OK</Text>
+  //             </TouchableOpacity>
+  //           </View>
+  //         </View>
+  //       </Modal>
+  //     )}
+  //   </View>
+  // );
+    return (
+    <View
+      style={[
+        GlobalStyles.container,
+        { marginBottom: 65 },
+        Platform.OS === "android" ? { paddingTop: insets.top } : null,
+      ]}
+    >
+      <Header title={t("upload.header")} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', textAlign: 'center' }}>
-          Pick and upload image or video.
+        <Text
+          style={{
+            fontSize: 16,
+            fontFamily: "Poppins_600SemiBold",
+            textAlign: "center",
+          }}
+        >
+          {t("upload.pickMessage")}
         </Text>
 
         <View style={styles.uploadOptions}>
           <TouchableOpacity style={styles.uploadButton} onPress={pickMedia}>
             <Ionicons name="image" size={42} color={Colors.primary} />
-            <Text style={styles.uploadButtonText}>Upload Media</Text>
+            <Text style={styles.uploadButtonText}>
+              {t("upload.uploadMedia")}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {media ? (
           <View style={styles.preview}>
-            <Text style={styles.previewTitle}>Preview</Text>
+            <Text style={styles.previewTitle}>{t("upload.preview")}</Text>
 
-            {media.type.startsWith('image') ? (
+            {media.type.startsWith("image") ? (
               <Image
                 source={{ uri: media.uri }}
                 style={styles.previewImage}
@@ -272,22 +458,26 @@ const UploadScreen = () => {
                 isLooping={false}
                 useNativeControls
                 onLoad={() => setVideoReady(true)}
-                onError={(e) => console.log('Video error:', e)}
+                onError={(e) => console.log("Video error:", e)}
               />
             )}
 
-            {/* Show loader only while video is loading */}
-            {media.type.startsWith('video') && !videoReady && (
-              <View style={{ marginVertical: 10, alignItems: 'center' }}>
+            {media.type.startsWith("video") && !videoReady && (
+              <View style={{ marginVertical: 10, alignItems: "center" }}>
                 <ActivityIndicator size="large" color={Colors.primary} />
-                <Text>Loading video preview...</Text>
+                <Text>{t("upload.loadingVideo")}</Text>
               </View>
             )}
 
             <Text style={styles.mediaName}>{media.fileName}</Text>
-            <Text style={styles.mediaSize}>{(media.fileSize / 1024).toFixed(2)} KB</Text>
+            <Text style={styles.mediaSize}>
+              {(media.fileSize / 1024).toFixed(2)} KB
+            </Text>
 
-            <TouchableOpacity style={styles.closeIcon} onPress={() => setShowDeleteModal(true)}>
+            <TouchableOpacity
+              style={styles.closeIcon}
+              onPress={() => setShowDeleteModal(true)}
+            >
               <Ionicons name="close-circle" size={32} color={Colors.error} />
             </TouchableOpacity>
 
@@ -296,13 +486,15 @@ const UploadScreen = () => {
               onPress={handleUpload}
               disabled={loading}
             >
-              <Text style={GlobalStyles.buttonText}>{loading ? 'Uploading...' : 'Upload'}</Text>
+              <Text style={GlobalStyles.buttonText}>
+                {loading ? t("upload.uploading") : t("upload.upload")}
+              </Text>
             </TouchableOpacity>
           </View>
         ) : previewLoad ? (
-          <View style={{ marginVertical: 20, alignItems: 'center' }}>
+          <View style={{ marginVertical: 20, alignItems: "center" }}>
             <ActivityIndicator size="large" color={Colors.primary} />
-            <Text>Loading media preview...</Text>
+            <Text>{t("upload.loadingMedia")}</Text>
           </View>
         ) : null}
       </ScrollView>
@@ -316,64 +508,55 @@ const UploadScreen = () => {
       >
         <View style={styles.modalBackground}>
           <View style={[styles.modalContainer, { padding: 24, borderRadius: 20 }]}>
-            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <View style={{ alignItems: "center", marginBottom: 16 }}>
               <Ionicons name="warning" size={48} color={Colors.error} />
               <Text style={[styles.modalTitle, { marginTop: 12, fontSize: 20 }]}>
-                Confirm Delete
+                {t("upload.delete.title")}
               </Text>
-              <Text style={{ textAlign: 'center', marginTop: 6, color: '#666', fontSize: 15, fontFamily: 'Poppins_400Regular' }}>
-                Are you sure you want to delete this media? This action cannot be undone.
+              <Text
+                style={{
+                  textAlign: "center",
+                  marginTop: 6,
+                  color: "#666",
+                  fontSize: 15,
+                  fontFamily: "Poppins_400Regular",
+                }}
+              >
+                {t("upload.delete.message")}
               </Text>
             </View>
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  {
-                    backgroundColor: '#f0f0f0',
-                    borderColor: '#ccc',
-                    borderWidth: 1,
-                    borderRadius: 12,
-                    paddingVertical: 10,
-                    flex: 1,
-                    marginRight: 10,
-                  },
-                ]}
+                style={[styles.modalButton, { backgroundColor: "#f0f0f0", borderColor: "#ccc", borderWidth: 1, borderRadius: 12, paddingVertical: 10, flex: 1, marginRight: 10 }]}
                 onPress={() => setShowDeleteModal(false)}
               >
-                <Text style={{ color: '#333', fontSize: 15, fontFamily: 'Poppins_600SemiBold', }}>Cancel</Text>
+                <Text style={{ color: "#333", fontSize: 15, fontFamily: "Poppins_600SemiBold" }}>
+                  {t("upload.delete.cancel")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  {
-                    backgroundColor: Colors.error,
-                    borderRadius: 12,
-                    paddingVertical: 10,
-                    flex: 1,
-                    marginLeft: 10,
-                  },
-                ]}
+                style={[styles.modalButton, { backgroundColor: Colors.error, borderRadius: 12, paddingVertical: 10, flex: 1, marginLeft: 10 }]}
                 onPress={handleDeleteMedia}
               >
-                <Text style={{ color: '#fff', fontSize: 15, fontFamily: 'Poppins_600SemiBold' }}>Delete</Text>
+                <Text style={{ color: "#fff", fontSize: 15, fontFamily: "Poppins_600SemiBold" }}>
+                  {t("upload.delete.confirm")}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-
       {/* Upload Progress Modal */}
       {loading && (
         <Modal visible={loading} transparent animationType="fade">
           <View style={styles.modalBackground}>
             <View style={styles.modalContainer}>
-              <Text>Uploading...</Text>
+              <Text>{t("upload.uploading")}</Text>
               <Text>{uploadProgress}%</Text>
-              <View style={{ width: '100%', height: 10, backgroundColor: '#f0f0f0', borderRadius: 5, marginTop: 10 }}>
-                <View style={{ width: `${uploadProgress}%`, height: '100%', backgroundColor: '#46d157', borderRadius: 5 }} />
+              <View style={{ width: "100%", height: 10, backgroundColor: "#f0f0f0", borderRadius: 5, marginTop: 10 }}>
+                <View style={{ width: `${uploadProgress}%`, height: "100%", backgroundColor: "#46d157", borderRadius: 5 }} />
               </View>
             </View>
           </View>
@@ -382,25 +565,30 @@ const UploadScreen = () => {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <Modal visible={showSuccessModal} transparent animationType="fade" onRequestClose={() => setShowSuccessModal(false)}>
+        <Modal
+          visible={showSuccessModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowSuccessModal(false)}
+        >
           <View style={styles.modalBackground}>
             <View style={styles.successModalContainer}>
               <View style={styles.successHeader}>
                 <MaterialIcons name="check-circle" size={40} color="#28a745" />
-                <Text style={styles.successTitle}>Upload Successful</Text>
+                <Text style={styles.successTitle}>{t("upload.success.title")}</Text>
               </View>
-              <Text style={styles.successMessage}>
-                Please check gallery after 5 minutes.
-              </Text>
+              <Text style={styles.successMessage}>{t("upload.success.message")}</Text>
               <TouchableOpacity
                 onPress={() => {
-                  setMedia(null)
+                  setMedia(null);
                   setShowSuccessModal(false);
-                  router.push('/gallery');
+                  router.push("/gallery");
                 }}
                 style={[styles.modalButton, { backgroundColor: Colors.primary }]}
               >
-                <Text style={{ color: Colors.white, fontFamily: 'Poppins_500Medium', }}>OK</Text>
+                <Text style={{ color: Colors.white, fontFamily: "Poppins_500Medium" }}>
+                  {t("upload.success.ok")}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

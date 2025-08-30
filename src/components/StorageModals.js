@@ -12,6 +12,8 @@ import { getStoragePlanDetails } from './getStoragePlanDetails';
 import moment from 'moment';
 import { setPlanExpired, setUpgradeReminder } from '../state/slices/expiredPlanSlice';
 import { useRouter } from 'expo-router';
+import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { useTranslation } from 'react-i18next';
 
 const StorageModals = ({ onClose, storageModalKey }) => {
   const [showStorage1, setShowStorage1] = useState(false);
@@ -38,13 +40,24 @@ const StorageModals = ({ onClose, storageModalKey }) => {
    const triggeredRef = useRef(false);
    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
    const router = useRouter();
+    const { t } = useTranslation();
 
   const fetchPlans = async () => {
     try {
       const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/getAllPlans`);
       const json = await response.json();
       if (json.actionStatus === 'success') {
-        setPlans(json.data);
+        //setPlans(json.data);
+        const plan = json.data;
+        const translatedPlans = await Promise.all(
+          plan.map(async (plan) => ({
+            ...plan,
+            name: await useDynamicTranslate(plan.name),
+            description: await useDynamicTranslate(plan.description),
+          }))
+        );
+        //console.log('translatedPlans:', translatedPlans);
+        setPlans(translatedPlans);
       } else {
         console.warn('Failed to fetch plans');
       }
@@ -281,11 +294,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         setShowStorage2(false);
       } else {
         console.error('Skip failed:', data.message);
-        Alert.alert('Failed to Skip', data.message);
+        //Alert.alert('Failed to Skip', data.message);
       }
     } catch (error) {
       console.error('Error skipping plan:', error);
-      Alert.alert('Error', 'Something went wrong while skipping the plan.');
+      //Alert.alert('Error', 'Something went wrong while skipping the plan.');
     }
   };
 
@@ -364,9 +377,9 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             >
               <MaterialIcons name="close" size={24} color="black" />
             </TouchableOpacity> */}
-            <Text style={[styles.title]}>Storage Management</Text>
+            <Text style={[styles.title]}>{t('storage.title')}</Text>
             <Text style={[styles.planBox, styles.subtitleTextBox, styles.subtitleText]}>
-              Please select an option for managing your storage.
+              {t('storage.subtitle')}
             </Text>
             <View style={[
               styles.buttonRow,
@@ -377,7 +390,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 <TouchableOpacity style={styles.outlinedButton} onPress={handleSkip}>
                   <View style={styles.iconButtonContent}>
                     <MaterialIcons name="skip-next" size={20} color={Colors.primary} style={{ marginRight: 6 }} />
-                    <Text style={styles.outlinedText}>SKIP FOR LATER</Text>
+                    <Text style={styles.outlinedText}>{t('storage.skip')}</Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -388,7 +401,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 onPress={handleProceedNow}>
                 <View style={styles.iconButtonContent}>
                   <MaterialIcons name="arrow-forward" size={20} color="#fff" style={{ marginRight: 6 }} />
-                  <Text style={styles.filledText}>PROCEED NOW</Text>
+                  <Text style={styles.filledText}>{t('storage.proceed')}</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -416,28 +429,29 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             )}
 
             <View style={styles.modalHeader}>
-              <Text style={[styles.title, { textAlign: 'center' }]}>Select Your Plan</Text>
+              <Text style={[styles.title, { textAlign: 'center' }]}>{t('storage.selectPlan')}</Text>
             </View>
             {plans
-            .filter((plan) => {
-              if (isPlanExpired) {
-                // Only show plan 3 when expired
-                return plan.id === 3;
-              }
-              // When NOT expired → hide plan 3
-              if (plan.id === 3) {
-                return false;
-              }
-              // Your original filter for other plans
-              return !(
-                (showUpgradeReminder ||
-                  storagePlanId ||
-                  storagePlanPayment == 1 ||
-                  isPlanDeleted == 1) &&
-                plan.id === 1
-              );
-            })
-            .map((plan) => (
+              .filter((plan) => {
+                const planId = Number(plan.id); // ensure number
+                const payment = Number(storagePlanPayment);
+                const deleted = Number(isPlanDeleted);
+
+                if (isPlanExpired) {
+                  return planId === 3;
+                }
+                if (planId === 3) {
+                  return false;
+                }
+                return !(
+                  (showUpgradeReminder ||
+                    storagePlanId ||
+                    payment === 1 ||
+                    deleted === 1) &&
+                  planId === 1
+                );
+              })
+              .map((plan) => (
               <TouchableOpacity
                 key={plan.id}
                 onPressIn={() => setPlanPressed(true)}
@@ -475,7 +489,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               <TouchableOpacity style={styles.outlinedButton} onPress={handleBack}>
                 <View style={styles.iconButtonContent}>
                   <MaterialIcons name="arrow-back" size={20} color="#b53bb7" style={{ marginRight: 6 }} />
-                  <Text style={styles.outlinedText}>BACK</Text>
+                  <Text style={styles.outlinedText}>{t('storage.back')}</Text>
                 </View>
               </TouchableOpacity>
 
@@ -485,7 +499,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               >
                 <View style={styles.iconButtonContent}>
                   <MaterialIcons name="payment" size={20} color="#fff" style={{ marginRight: 6 }} />
-                  <Text style={styles.filledText}>CONTINUE TO PAYMENT</Text>
+                  <Text style={styles.filledText}>{t('storage.continuePayment')}</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -496,8 +510,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       <Modal visible={showPaymentSuccess} transparent animationType="fade" onRequestClose={() => setShowStorage2(false)}>
         <View style={[styles.modalBackground, { zIndex: 999 }]}>
           <View style={[styles.modalContainerStatus, { borderColor: "green" }]}>
-            <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>🎉 Payment Successful</Text>
-            <Text style={[styles.subtitle, {}]}>Thank you for your payment.</Text>
+            <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>{t('storage.paymentSuccess')}</Text>
+            <Text style={[styles.subtitle, {}]}>{t('storage.thankYou')}</Text>
             <TouchableOpacity
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={async () => {
@@ -506,7 +520,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 await getStoragePlanDetails(user.email, dispatch);
               }}
             >
-              <Text style={styles.filledText}>OK GOT IT</Text>
+              <Text style={styles.filledText}>{t('storage.okGotIt')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -515,8 +529,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       <Modal visible={showPaymentFailure} transparent animationType="fade">
         <View style={[styles.modalBackground, { zIndex: 999 }]}>
           <View style={[styles.modalContainerStatus, { borderColor: Colors.error, }]}>
-            <Text style={[styles.title, { color: Colors.error, textAlign: 'center' }]}>❌ Payment Failed</Text>
-            <Text style={styles.subtitleFailed}>Something went wrong with your Payment</Text>
+            <Text style={[styles.title, { color: Colors.error, textAlign: 'center' }]}>{t('storage.paymentFailed')}</Text>
+            <Text style={styles.subtitleFailed}>{t('storage.paymentError')}</Text>
             <TouchableOpacity
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={async () => {
@@ -529,7 +543,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 await AsyncStorage.removeItem('closePlans');
               }}
             >
-              <Text style={styles.filledText}>OK I GOT IT</Text>
+              <Text style={styles.filledText}>{t('storage.okIGotIt')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -538,9 +552,9 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       <Modal visible={isVisible} transparent animationType="fade">
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
-            <Text style={[styles.title]}>Storage Management - Payment Pending</Text>
+            <Text style={[styles.title]}>{t('storage.pendingTitle')}</Text>
             <Text style={[styles.planBox, styles.subtitleTextBox, styles.subtitleText]}>
-              Looks like your payment to purchase plan was unsuccessful.
+              {t('storage.pendingMessage')}
             </Text>
 
             <View style={[styles.buttonRow, { justifyContent: 'flex-end', gap: 10 }]}>
@@ -548,7 +562,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               setTimeout(() => {
                       setShowStorage1(true)
                     }, 2000); }} >
-                <Text style={styles.outlinedText}>← GO BACK</Text>
+                <Text style={styles.outlinedText}>{t('storage.goBack')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.filledButton} onPress={() => {
@@ -558,7 +572,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                       setShowStorage2(true);
                     }, 2000);
                   }}>
-                <Text style={styles.filledText}>▶ PROCEED NOW</Text>
+                <Text style={styles.filledText}>▶ {t('storage.proceed')}</Text>
               </TouchableOpacity>
             </View>
           </View>

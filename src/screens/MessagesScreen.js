@@ -13,15 +13,20 @@ import Loader from '../components/Loader';
 import { connectSocket, getSocket } from '../services/socket';
 import dayjs from 'dayjs';
 import calendar from 'dayjs/plugin/calendar';
+import 'dayjs/locale/es';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useKeyboardTabBarEffect from '../hooks/useKeyboardTabBarEffect';
 import { logError } from '../components/logError';
+import { useTranslation } from 'react-i18next';
+import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+//const { t } = useTranslation();
 
 dayjs.extend(calendar);
 
-const buildTimedFeed = (msgs = []) => {
+const buildTimedFeed = (msgs = [],t,lang = 'en') => {
   const feed = [];
   let lastDay = null;
 
@@ -32,9 +37,9 @@ const buildTimedFeed = (msgs = []) => {
       feed.push({
         _type: 'separator',
         id: `sep-${dayKey}`,
-        label: dayjs(m.date).calendar(undefined, {
-          sameDay: '[Today]',
-          lastDay: '[Yesterday]',
+        label: dayjs(m.date).locale(lang).calendar(undefined, {
+          sameDay: `[${t('messagesScreen.today')}]`,
+          lastDay: `[${t('messagesScreen.yesterday')}]`,
           lastWeek: 'ddd, D MMM YYYY',
           sameElse: 'D MMM YYYY',
         }),
@@ -82,7 +87,9 @@ const MessagesScreen = () => {
   const [inputMarginBottom, setInputMarginBottom] = useState(15);
   const [selectedChat, setSelectedChat] = useState(null);
 
-  const timeline = useMemo(() => buildTimedFeed(messages), [messages]);
+  const { t,i18n } = useTranslation();
+
+  const timeline = useMemo(() => buildTimedFeed(messages,t,i18n.language), [messages,t,i18n.language]);
 
   const chatMembersRef = useRef();
   const scrollViewRef = useRef(null);
@@ -94,6 +101,8 @@ const MessagesScreen = () => {
   const unreadMessages = useSelector((state) => state.header.unreadMessages);
   const user = useSelector((state) => state.auth);
   const insets = useSafeAreaInsets();
+  const translate = useDynamicTranslate;
+  const lang = (AsyncStorage.getItem('appLanguage')) || 'en';
   
   useFocusEffect(
     useCallback(() => {
@@ -171,9 +180,10 @@ const MessagesScreen = () => {
     };
   }, []);
 
-  const normalizeMsg = (raw) => ({
+  const normalizeMsg = async (raw) => ({
     message_uuid: raw.message_uuid || raw.messageId,
-    content: raw.content,
+    //content: raw.content,
+    content: await translate(raw.content),
     date: raw.date,
     sender_uuid: raw.senderId,
     sender: raw.sender,
@@ -186,11 +196,14 @@ const MessagesScreen = () => {
     const socket = getSocket();
     if (!socket) return;
 
-    socket.on("privateMessage", (raw) => {
-      const msg = normalizeMsg(raw);
+    socket.on("privateMessage", async (raw) => {
+      console.log("Received privateMessage:", raw);
+      const msg = await normalizeMsg(raw);
       const isInCurrentChat =
         msg.sender_uuid === selectedMessageId ||
         msg.receiverName === selectedMessageId;
+
+        console.log('msg:', msg);
 
       if (isInCurrentChat) {
         setMessages((prev) =>
@@ -266,12 +279,32 @@ const MessagesScreen = () => {
     try {
       const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-chat-members`);
       if (response.data) {
-        setChatMembers(response.data);
+        const translatedMembers = await Promise.all(
+    response.data.map(async (m) => {
+      const translatedContent = m.last_message_content
+        ? await translate(m.last_message_content)
+        : '';
+      const translatedName = m.name ? await translate(m.name) : '';
+      const translatedRole = m.role ? await translate(m.role) : '';
+
+      return {
+        ...m,
+        last_message_content: translatedContent,
+        name: translatedName,
+        role: translatedRole
+      };
+    })
+  );
+
+  console.log('Translated chat members:', translatedMembers);
+  setChatMembers(translatedMembers);
+        // console.log('Chat members:', response.data);
+        // setChatMembers(response.data);
         chatMembersRef.current = response.data;
         setLoading(false);
       }
     } catch (err) {
-      setError('Error fetching chat members');
+      setError(t('messagesScreen.errorChatMembers'));
       setLoading(false);
       await logError({
         error: err,
@@ -291,18 +324,38 @@ const MessagesScreen = () => {
     if (chatMembers.length > 0) {
       getChatHistory(messageLimit);
     }
-  }, [chatMembers, messageLimit, unreadMessagesCount, messages]);
+  }, [chatMembers, messageLimit, unreadMessagesCount]);
 
   const getChatHistory = async (limit = 10) => {
     try {
-      const histories = await Promise.all(
-        chatMembers.map(async (member) => {
-          const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-chat-history?recipientUuid=${member.uuid}&limit=${limit}`);
-          return response.data;
-        })
-      );
+      // const histories = await Promise.all(
+      //   chatMembers.map(async (member) => {
+      //     const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-chat-history?recipientUuid=${member.uuid}&limit=${limit}`);
+      //     return response.data;
+      //   })
+      // );
+
+       const histories = await Promise.all(
+      chatMembers.map(async (member) => {
+        const response = await axios.get(
+          `${EXPO_PUBLIC_API_URL}/api/chats/get-chat-history?recipientUuid=${member.uuid}&limit=${limit}`
+        );
+
+        // 🔑 translate each message before returning
+        const translated = await Promise.all(
+          response.data.map(async (msg) => ({
+            ...msg,
+            content: await translate(msg.content || ""),
+            sender: await translate(msg.sender || "")
+          }))
+        );
+
+        return translated;
+      })
+    );
 
       const flattenedHistories = histories.flat();
+      //console.log('Fetched chat histories:', flattenedHistories);
       setChatHistories(prevHistories => {
         const newMessages = flattenedHistories.filter(msg => !prevHistories.some(prev => prev.message_uuid === msg.message_uuid));
         const combined = [...prevHistories, ...newMessages];
@@ -325,7 +378,7 @@ const MessagesScreen = () => {
       setLoading(false);
       setIsFetchingMore(false);
     } catch (err) {
-      setError('Error fetching chat history');
+      setError(t('messagesScreen.errorChatHistory'));
       setLoading(false);
       await logError({
         error: err,
@@ -460,8 +513,52 @@ const MessagesScreen = () => {
     }
   };
 
+  useEffect(() => {
+  const retranslateData = async () => {
+    // 1️⃣ Retranslate chat members
+    if (chatMembersRef.current) {
+      const translatedMembers = await Promise.all(
+        chatMembersRef.current.map(async (m) => ({
+          ...m,
+          last_message_content: m.last_message_content
+            ? await translate(m.last_message_content)
+            : '',
+          name: m.name ? await translate(m.name) : '',
+          role: m.role ? await translate(m.role) : ''
+        }))
+      );
+      setChatMembers(translatedMembers);
+    }
+
+    // 2️⃣ Retranslate chat histories
+    if (chatHistories.length > 0) {
+      const translatedHistory = await Promise.all(
+        chatHistories.map(async (msg) => ({
+          ...msg,
+          content: await translate(msg.content || ""),
+          sender: await translate(msg.sender || "")
+        }))
+      );
+      setChatHistories(translatedHistory);
+
+      // Update selected chat messages if a chat is open
+      if (selectedMessageId) {
+        const updatedMessages = translatedHistory.filter(
+          (msg) =>
+            msg.sender_uuid === selectedMessageId ||
+            msg.recipient_uuid === selectedMessageId
+        );
+        setMessages(updatedMessages);
+      }
+    }
+  };
+
+  retranslateData();
+}, [i18n.language]);
+
 
   const renderMessage = ({ item }) => {
+    console.log('Rendering chat member:', item);
     const senderInitials = item.name ? item.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
 
     const isOnline = Array.isArray(onlineUsers)
@@ -493,7 +590,7 @@ const MessagesScreen = () => {
               ]}
               numberOfLines={2}
             >
-              {isTypingForThisUser ? 'Typing...' : item.last_message_content}
+              {isTypingForThisUser ? t('messagesScreen.typing') : item.last_message_content}
             </Text>
           </View>
           {item.unread_count !== 0 && <View style={styles.unreadDot} />}
@@ -538,8 +635,8 @@ const MessagesScreen = () => {
                 },
               ]}
             >
-              {isReceiverTyping ? 'Typing…'
-                : partnerOnline ? 'Online' : ''}
+              {isReceiverTyping ? t('messagesScreen.typing')
+                : partnerOnline ? t('messagesScreen.online') : ''}
             </Text>
           </View>
 
@@ -574,7 +671,7 @@ const MessagesScreen = () => {
 
           {isFetchingMore && (
             <View style={{ alignItems: 'center', paddingVertical: 10 }}>
-              <Text style={{ color: Colors.textPrimary, fontFamily: 'Poppins_500Medium', }}>Loading messages...</Text>
+              <Text style={{ color: Colors.textPrimary, fontFamily: 'Poppins_500Medium', }}>{t('messagesScreen.loadingMessages')}</Text>
             </View>
           )}
 
@@ -620,7 +717,7 @@ const MessagesScreen = () => {
           <TextInput
             ref={inputRef}
             style={styles.input}
-            placeholder="Type a message"
+            placeholder={t('messagesScreen.typePlaceholder')}
             value={message}
             onChangeText={(text) => {
               setMessage(text);
@@ -641,7 +738,7 @@ const MessagesScreen = () => {
 
     return (
       <View style={[styles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
-        <Header title="Messages" />
+        <Header title={t('messagesScreen.header')} />
         <FlatList
           data={chatMembers}
           renderItem={renderMessage}

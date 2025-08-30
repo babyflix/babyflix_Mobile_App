@@ -18,6 +18,11 @@ import { getStoragePlanDetails } from './getStoragePlanDetails';
 import moment from 'moment';
 import * as Notifications from 'expo-notifications';
 import { useNotifications } from '../constants/NotificationContext';
+import i18n from '../constants/i18n';
+import LanguageModal from '../constants/LanguageModal';
+import { useTranslation } from 'react-i18next';
+import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import 'moment/locale/es';
 
 const NOTIFICATIONS_KEY = 'APP_NOTIFICATIONS';
 
@@ -42,7 +47,12 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const [snackbarType, setSnackbarType] = useState('');
   const [showDeletePlanModal, setShowDeletePlanModal] = useState(false);
   const [isDeletingPlan, setIsDeletingPlan] = useState(false);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   //const [notifications, setNotifications] = useState([]);
+  const [translatedUserName, setTranslatedUserName] = useState('');
+  const [translatedCurrentPlan, setTranslatedCurrentPlan] = useState('');
+  const [translatedDescription, setTranslatedDescription] = useState('');
 
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -57,6 +67,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const openStorage2Directly = useSelector(state => state.storageUI.openStorage2Directly);
   const { setHandleChooseClick } = useHeaderAction();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+   const { t } = useTranslation();
 
   //const NOTIFICATION_STORAGE_KEY = 'APP_NOTIFICATIONS';
 
@@ -126,20 +137,20 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     //const message = `Your storage plan expires in ${remainingDay} day${remainingDay > 1 ? 's' : ''}.`;
     let message = '';
       if (remainingDays > 1) {
-        message = `Your storage plan expires in ${remainingDays} days.`;
+        message = t('header.planExpiresDays', { count: remainingDays });
       } else if (remainingDays === 1) {
-        message = `Your storage plan expires tomorrow.`;
+        message = t('header.planExpiresTomorrow');
       } else if (remainingDays === 0) {
-        message = `Your storage plan expires today.`;
+        message = t('header.planExpiresToday');
       } else if (remainingDays < 0) {
-        message = `Your storage plan has expired.`;
+        message = t('header.planExpired');
       }
 
       console.log('message', message);
 
     const newNotification = {
       id: Date.now().toString(),
-      title: 'Plan Expiring soon...',
+      title: t('header.planExpiringSoon'),
       message,
       type: 'plan',
       date,
@@ -330,7 +341,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
       if (response.ok && data.actionStatus === 'success') {
 
-        setSnackbarMessage(`${currentPlan.name} deleted successfully`);
+        setSnackbarMessage(`${translatedCurrentPlan} t('header.deletedSuccessfully')`);
         setSnackbarType('success');
         setSnackbarVisible(true);
 
@@ -339,26 +350,28 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       } else {
         console.error('❌ Failed to delete plan:', data.message);
 
-        setSnackbarMessage(data.message || 'Failed to delete plan');
+        setSnackbarMessage(t('header.failedToDeletePlan'));
         setSnackbarType('error');
         setSnackbarVisible(true);
       }
     } catch (error) {
       console.error('❌ Error deleting plan:', error);
 
-      setSnackbarMessage('Something went wrong');
+      setSnackbarMessage(t('header.somethingWentWrong'));
       setSnackbarType('error');
       setSnackbarVisible(true);
     }
   };
 
-  const formatNotificationDate = (dateString) => {
+  const formatNotificationDate = async (dateString) => {
+    const lang = (await AsyncStorage.getItem('appLanguage')) || 'en';
+    moment.locale(lang);
     const date = moment(dateString, 'D/M/YYYY, h:mm:ss a'); // Match your format
 
     if (moment().isSame(date, 'day')) {
-      return 'Today';
+      return t('header.today');
     } else if (moment().subtract(1, 'day').isSame(date, 'day')) {
-      return 'Yesterday';
+      return t('header.yesterday');
     } else {
       return date.format('DD MMM YYYY'); // like 01 Aug 2025
     }
@@ -405,9 +418,12 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   // console.log('updated handleNotificationPress', updated);
   // await saveNotificationsToStorage(updated);
     markAsRead(clickedItem);
+    setShowModal(false);
 
+    setTimeout(() => {
     if (clickedItem.type === 'plan') handleChooseClick();
     if (clickedItem.type === 'event') router.push('/event');
+    }, 1000);
   };
 
   const closeModalAndMarkAllRead = async () => {
@@ -420,6 +436,28 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     markAllAsRead();
     setShowModal(false);
 };
+
+useEffect(() => {
+  const translateDynamicTexts = async () => {
+    if (user?.firstName && user?.lastName) {
+      const fullName = `${user.firstName} ${user.lastName}`;
+      const translated = await useDynamicTranslate(fullName);
+      setTranslatedUserName(translated);
+    }
+
+    if (currentPlan?.name) {
+      const translatedPlan = await useDynamicTranslate(currentPlan.name);
+      setTranslatedCurrentPlan(translatedPlan);
+    }
+
+     if (currentPlan?.description) {
+      const translatedDescription = await useDynamicTranslate(currentPlan.description);
+      setTranslatedDescription(translatedDescription);
+    }
+  };
+
+  translateDynamicTexts();
+}, [user, currentPlan, snackbarMessage]);
 
   return (
     <View style={styles.header}>
@@ -460,7 +498,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
           {showDropdown && (
             <View style={styles.dropdown}>
               <Text style={styles.dropdownItemFirst}>
-                👋 Hello! {user.firstName + ' ' + user.lastName}
+                👋 {t('header.hello')} {translatedUserName}
               </Text>
 
               <TouchableOpacity
@@ -471,7 +509,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 }}
               >
                 <Ionicons name="settings-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
-                <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>Profile Settings</Text>
+                <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>{t('header.profileSettings')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -486,14 +524,36 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 <Ionicons name="cloud-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
                 {storagePlan?.storagePlanId === 1 || storagePlan?.storagePlanId === 2 ? (
                   <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>
-                    Storage Plan
+                    {t('header.storagePlan')}
                   </Text>
                 ) : (
                   <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>
-                    No plan selected
+                    {t('header.noPlanSelected')}
                   </Text>
                 )}
 
+              </TouchableOpacity>
+
+              {/* <TouchableOpacity
+                style={styles.dropdownItem}
+                onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}
+              >
+                <Ionicons name="language-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
+                <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>
+                  Language
+                </Text>
+              </TouchableOpacity> */}
+              <TouchableOpacity
+                style={styles.dropdownItem}
+                onPress={() => {
+                  closeDropdownHandler();      // close profile dropdown
+                  setShowLanguageModal(true);  // open language modal
+                }}
+              >
+                <Ionicons name="language-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
+                <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>
+                  {t('header.language')}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -501,12 +561,40 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 onPress={handleLogout}
               >
                 <Ionicons name="log-out-outline" size={20} color={Colors.error} style={styles.icon} />
-                <Text style={styles.logoutText}>Logout</Text>
+                <Text style={styles.logoutText}>{t('header.logout')}</Text>
               </TouchableOpacity>
+              {showLanguageDropdown && (
+                <View style={styles.subDropdown}>
+                  <TouchableOpacity
+                    style={styles.subDropdownItem}
+                    onPress={() => {
+                      setShowLanguageDropdown(false);
+                      i18n.changeLanguage("en"); // ✅ switch to English
+                    }}
+                  >
+                    <Text style={styles.subDropdownText}>English</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.subDropdownItem}
+                    onPress={() => {
+                      setShowLanguageDropdown(false);
+                      i18n.changeLanguage("es"); // ✅ switch to Spanish
+                    }}
+                  >
+                    <Text style={styles.subDropdownText}>Español</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           )}
         </View>
       )}
+      <LanguageModal
+        visible={showLanguageModal}
+        onClose={() => setShowLanguageModal(false)}
+      />
+
       <Modal
         visible={isPlanModalVisible}
         animationType="fade"
@@ -521,26 +609,26 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
             {currentPlan ? (
               <>
-                <Text style={styles.planTitle}>{currentPlan.name}</Text>
+                <Text style={styles.planTitle}>{translatedCurrentPlan }</Text>
                 <Text style={styles.planSubtitle}>
-                  ₹{currentPlan.price_per_month} / Year • {currentPlan.storage_limit_gb} GB
+                  ${currentPlan.price_per_month} / {t('header.year')} • {currentPlan.storage_limit_gb} {t('header.gb')}
                 </Text>
-                {isPlanExpired && <Text style={[styles.expiryTitle]}>Expired</Text>}
-                {showUpgradeReminder && <Text style={[styles.expiryTitle]}>Expiring in {remainingDays} days</Text>}
+                {isPlanExpired && <Text style={[styles.expiryTitle]}>{t('header.expired')}</Text>}
+                {showUpgradeReminder && <Text style={[styles.expiryTitle]}>{t('header.expiringIn')} {remainingDays} {t('header.days')}</Text>}
 
                 <View style={styles.separator} />
 
-                <Text style={styles.featureTitle}>Features</Text>
+                <Text style={styles.featureTitle}>{t('header.features')}</Text>
                 <View style={styles.featureItem}>
                   <Ionicons name="checkmark-circle" size={18} color="green" />
-                  <Text style={styles.featureText}>{currentPlan.description}</Text>
+                  <Text style={styles.featureText}>{translatedDescription}</Text>
                 </View>
 
                 <View style={styles.actionRow}>
                   {remainingDays >= 0 && (
                     <TouchableOpacity style={styles.actionButton} onPress={handleChangeClick}>
                       <Ionicons name="pencil" size={16} color="blue" />
-                      <Text style={[styles.actionText, { color: 'blue' }]}>Change</Text>
+                      <Text style={[styles.actionText, { color: 'blue' }]}>{t('header.change')}</Text>
                     </TouchableOpacity>
                   )}
 
@@ -549,23 +637,23 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                     style={styles.actionButton}
                   >
                     <Ionicons name="trash" size={16} color="red" />
-                    <Text style={[styles.actionText, { color: 'red' }]}>Delete</Text>
+                    <Text style={[styles.actionText, { color: 'red' }]}>{t('header.delete')}</Text>
                   </TouchableOpacity>
                 </View>
               </>
             ) : (
               <>
-                <Text style={styles.planTitle}>No Plan Selected</Text>
-                <Text style={styles.planSubtitle}>You haven't chosen any storage plan yet.</Text>
+                <Text style={styles.planTitle}>{t('header.noPlanSelected')}</Text>
+                <Text style={styles.planSubtitle}>{t('header.noPlanChosen')}</Text>
 
                 <View style={styles.separator} />
 
-                <Text style={styles.featureText}>To store files and media, please choose a plan.</Text>
+                <Text style={styles.featureText}>{t('header.choosePlanPrompt')}</Text>
 
                 <View style={[styles.actionRow, { justifyContent: 'center' }]}>
                   <TouchableOpacity style={styles.chooseButton} onPress={handleChooseClick}>
                     <Ionicons name="add-circle-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
-                    <Text style={styles.chooseButtonText}>Choose Plan</Text>
+                    <Text style={styles.chooseButtonText}>{t('header.choosePlan')}</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -589,17 +677,16 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         <View style={styles.delModalOverlay}>
           <View style={styles.delModalContainer}>
             <Ionicons name="warning" size={48} color={Colors.error} />
-            <Text style={styles.delModalTitle}>Delete Current Plan</Text>
+            <Text style={styles.delModalTitle}>{t('header.deletePlanTitle')}</Text>
             <Text style={styles.delModalMessage}>
-              Are you sure you want to delete your current plan? This action cannot be undone.{"\n\n"}
-              You cannot download or delete your videos and images.
+             {t('header.deletePlanMessage')}
             </Text>
 
             {isDeletingPlan ? (
               <View style={{ alignItems: 'center', marginVertical: 20 }}>
                 <ActivityIndicator size="large" color="red" />
                 <Text style={{ marginTop: 10, fontSize: 16, color: 'red', fontWeight: '600' }}>
-                  Deleting Plan...
+                  {t('header.deletingPlan')}
                 </Text>
               </View>
             ) : (
@@ -609,14 +696,14 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                   style={[styles.delModalButton, { backgroundColor: '#ccc', flexDirection: 'row' }]}
                 >
                   <Ionicons name="close-circle" size={20} color="white" style={{ marginRight: 5 }} />
-                  <Text style={styles.delModalButtonText}>Cancel</Text>
+                  <Text style={styles.delModalButtonText}>{t('eventsScreen.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={confirmPlanDelete}
                   style={[styles.delModalButton, { backgroundColor: 'red', flexDirection: 'row' }]}
                 >
                   <MaterialIcons name="delete" size={20} color="white" style={{ marginRight: 5 }} />
-                  <Text style={styles.delModalButtonText}>Delete</Text>
+                  <Text style={styles.delModalButtonText}>{t('header.delete')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -685,7 +772,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   <View style={styles.modalBackdrop}>
     <View style={styles.modalBox}>
       <View style={styles.modalHeader}>
-        <Text style={styles.modalTitle}>Notifications</Text>
+        <Text style={styles.modalTitle}>{t('header.notifications')}</Text>
         <TouchableOpacity onPress={closeModalAndMarkAllRead}>
           <Ionicons name="close" size={24} color="#333" />
         </TouchableOpacity>
@@ -719,7 +806,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
               );
             })
         ) : (
-          <Text style={styles.noNotifications}>No new notifications</Text>
+          <Text style={styles.noNotifications}>{t('header.noNotifications')}</Text>
         )}
       </ScrollView>
     </View>
@@ -766,7 +853,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 15,
-    width: 220,
+    width: 230,
     zIndex: 10,
     elevation: 10,
     shadowColor: '#000',
@@ -1187,6 +1274,27 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0
   },
+  subDropdown: {
+  marginLeft: 40, // shift inside
+  backgroundColor: "#fff",
+  borderRadius: 8,
+  paddingVertical: 4,
+  marginTop: 4,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+},
+subDropdownItem: {
+  paddingVertical: 8,
+  paddingHorizontal: 12,
+},
+subDropdownText: {
+  fontFamily: 'Poppins_400Regular',
+  fontSize: 14,
+  color: Colors.textPrimary,
+},
+
 
 });
 

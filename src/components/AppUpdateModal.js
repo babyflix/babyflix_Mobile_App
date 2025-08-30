@@ -13,6 +13,8 @@ import Constants from 'expo-constants';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
+import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { useTranslation } from 'react-i18next';
 
 const AppUpdateModal = ({ serverUrl }) => {
   const [visible, setVisible] = useState(false);
@@ -20,6 +22,7 @@ const AppUpdateModal = ({ serverUrl }) => {
   const [updateMessage, setUpdateMessage] = useState('');
   const [storeLinks, setStoreLinks] = useState({ android: '', ios: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkForUpdate = async () => {
@@ -40,7 +43,7 @@ const AppUpdateModal = ({ serverUrl }) => {
         if (latestVersion && latestVersion !== currentVersion) {
           setStoreLinks({ android: data.androidUrl, ios: data.iosUrl });
           setForceUpdate(data.forceUpdate);
-          setUpdateMessage(data.message || "A new version is available. Please update to continue.");
+          setUpdateMessage(await useDynamicTranslate(`${data.message}`) || t('appUpdate.message'));
           setVisible(true);
         }
       } catch (err) {
@@ -62,7 +65,7 @@ const AppUpdateModal = ({ serverUrl }) => {
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.title}>{forceUpdate ? "Update Now!" : "Update Available"}</Text>
+          <Text style={styles.title}>{forceUpdate ? t('appUpdate.title.force') : t('appUpdate.title.optional')}</Text>
           <Text style={styles.message}>{updateMessage}</Text>
 
           {isLoading ? (
@@ -79,7 +82,7 @@ const AppUpdateModal = ({ serverUrl }) => {
                   }}
 
                 >
-                  <Text style={styles.buttonText}>Skip</Text>
+                  <Text style={styles.buttonText}>{t('appUpdate.buttons.skip')}</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
@@ -94,7 +97,7 @@ const AppUpdateModal = ({ serverUrl }) => {
                   }, 2000);
                 }}
               >
-                <Text style={styles.buttonText}>Update Now</Text>
+                <Text style={styles.buttonText}>{t('appUpdate.buttons.updateNow')}</Text>
               </TouchableOpacity>
             </View>
           )}

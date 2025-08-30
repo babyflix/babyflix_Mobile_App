@@ -28,6 +28,8 @@ import CustomDropdown from '../components/CustomDropdown';
 import { closeDropdown } from '../state/slices/headerSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clearOpenStorage2, setForceOpenStorageModals } from '../state/slices/storageUISlice';
+import { useTranslation } from 'react-i18next';
+import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 
 const ProfileSettingsScreen = () => {
   const dispatch = useDispatch();
@@ -70,19 +72,23 @@ const ProfileSettingsScreen = () => {
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
   const [modalType, setModalType] = useState('success');
+  const [translatedData,setTranslatedData] = useState({});
 
   const modalContentHeight = showAdditionalInfo ? '95%' : '85%';
 
   const user = useSelector((state) => state.auth);
   const insets = useSafeAreaInsets();
 
+  const { t } = useTranslation();
+
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/locations/getAllCountries`);
         setCountries(response.data);
+        console.log('Countries fetched:', response.data);
       } catch (err) {
-        setError('Failed to fetch countries: ' + err);
+        setError(t('registration.failedFetchCountries') + err);
         await logError({
           error: err,
           data: err.response?.data || response.data.error,
@@ -93,24 +99,75 @@ const ProfileSettingsScreen = () => {
     fetchCountries();
   }, []);
 
+  // useEffect(() => {
+  //   if (countries.length > 0 && Array.isArray(countries)) {
+
+  //     const formatted = countries.map((country) => ({
+        
+  //       label: `+${country.phonecode} ${country.country_name}`,
+  //       value: `${country.phonecode}`,
+  //     }));
+
+  //     setFormattedCountries(formatted);
+  //   } else {
+  //     console.log("")
+  //   }
+  // }, [countries]);
+
   useEffect(() => {
-    if (countries.length > 0 && Array.isArray(countries)) {
+  if (countries.length > 0 && Array.isArray(countries)) {
 
-      const formatted = countries.map((country) => ({
-        label: `+${country.phonecode} ${country.country_name}`,
-        value: `${country.phonecode}`,
-      }));
-
+    const translateCountries = async () => {
+      const formatted = await Promise.all(
+        countries.map(async (country) => {
+          const translatedName = await useDynamicTranslate(country.country_name);
+          console.log('Translating country:', country.country_name, '->', translatedName);
+          return {
+            label: `+${country.phonecode} ${translatedName}`,
+            value: `${country.phonecode}`,
+          };
+        })
+      );
       setFormattedCountries(formatted);
-    } else {
-      console.log("")
-    }
-  }, [countries]);
+    };
+
+    translateCountries();
+
+  } else {
+    console.log("No countries available");
+  }
+}, [countries]);
+
+//   useEffect(() => {
+//   const translateCountries = async () => {
+//     if (countries.length > 0 && Array.isArray(countries)) {
+//       try {
+//         const lang = await AsyncStorage.getItem("appLanguage") || "en";
+
+//         // Translate each country name asynchronously
+//         const formattedPromises = countries.map(async (country) => {
+//           const translatedName = await translateText(country.country_name, lang);
+//           return {
+//             label: `+${country.phonecode} ${translatedName}`,
+//             value: `${country.phonecode}`,
+//           };
+//         });
+
+//         const formattedTranslated = await Promise.all(formattedPromises);
+//         setFormattedCountries(formattedTranslated);
+//       } catch (error) {
+//         console.log("Country translation error:", error);
+//       }
+//     }
+//   };
+
+//   translateCountries();
+// }, [countries]);
 
   const BabySex = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Other', value: 'other' },
+  { label: t('profileSettings.gender.male'), value: 'male' },
+  { label: t('profileSettings.gender.female'), value: 'female' },
+  { label: t('profileSettings.gender.other'), value: 'other' },
 ];
 
   useEffect(() => {
@@ -127,6 +184,30 @@ const ProfileSettingsScreen = () => {
         })
         if (response.data) {
           setResult(response.data)
+
+          const translatedName = await useDynamicTranslate(response.data.firstname + ' ' + response.data.lastname);
+          const translatedDueDate = await useDynamicTranslate(response.data.dueDate);
+          const translatedDob = await useDynamicTranslate(response.data.dob);
+          const translatedEmail = await useDynamicTranslate(response.data.email);
+          const translatedPhone = await useDynamicTranslate(response.data.countryCode + ' ' + response.data.phone);
+          const translatedBabyName = await useDynamicTranslate(response.data.babyName);
+          const translatedBabySex = await useDynamicTranslate(response.data.babySex);
+          const translatedCompanyName = await useDynamicTranslate(response.data.companyName);
+          const translatedLocationName = await useDynamicTranslate(response.data.locationName);
+          const translatedMachineName = await useDynamicTranslate(response.data.machineName);
+
+          setTranslatedData({
+            translatedName,
+            translatedDueDate,
+            translatedDob,
+            translatedEmail,
+            translatedPhone,
+            translatedBabyName,
+            translatedBabySex,
+            translatedCompanyName,
+            translatedLocationName,
+            translatedMachineName
+          });
           setFirstName(response.data.firstname || '');
           setLastName(response.data.lastname || '');
           setDueDate(response.data.dueDate || '');
@@ -138,12 +219,12 @@ const ProfileSettingsScreen = () => {
           setBabyName(response.data.babyName || '');
           setBabySex(response.data.babySex || '');
         } else {
-          setSnackbarMessage(response.data.error || 'Data Fatching failed');
+          setSnackbarMessage(t('profileSettings.snackbar.dataFetchFailed'));
           setSnackbarType('error');
           setSnackbarVisible(true);
         }
       } catch (error) {
-        setSnackbarMessage(error.response?.data?.error || 'Data Fatching failed. Please try again.');
+        setSnackbarMessage(t('profileSettings.snackbar.dataFetchFailed'));
         setSnackbarType('error');
         setSnackbarVisible(true);
         await logError({
@@ -206,18 +287,18 @@ const ProfileSettingsScreen = () => {
 
   const handleResetPassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      setErrorMessage('Please fill in all fields.');
+      setErrorMessage(t('profileSettings.snackbar.missingFields'));
       return;
     }
 
     const passRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]:;"'<>,.?/-]).{6,}$/;
     if (!passRegex.test(newPassword)) {
-      setErrorMessage('Password must be at least 6 characters, include one uppercase letter, one number, and one special character');
+      setErrorMessage(t('profileSettings.snackbar.passwordInvalid'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage('New password and confirm password do not match!');
+      setErrorMessage(t('profileSettings.snackbar.passwordMismatch'));
       return;
     }
 
@@ -234,26 +315,26 @@ const ProfileSettingsScreen = () => {
       if (response.data.actionStatus === "success") {
         setResetPasswordModalVisible(false);
         setErrorMessage('');
-        setSnackbarMessage(response.data.message);
+        setSnackbarMessage(useDynamicTranslate(response.data.message));
         setSnackbarType('success');
         setSnackbarVisible(true);
         setResetPasswordModalVisible(false);
       }else {
         setResetPasswordModalVisible(false);
         setErrorMessage('');
-        setSnackbarMessage(response.data.message);
+        setSnackbarMessage(useDynamicTranslate(response.data.message));
         setSnackbarType('error');
         setSnackbarVisible(true);
       }
     } catch (error) {
       if (error === "Error comparing passwords") {
-        setErrorMessage("Error comparing passwords");
-        setSnackbarMessage(response.data.error || 'Error comparing passwords');
+        setErrorMessage(t('profileSettings.snackbar.errorComparingPasswords'));
+        setSnackbarMessage(t('profileSettings.snackbar.errorComparingPasswords'));
         setSnackbarType('error');
         setSnackbarVisible(true);
       } else {
-        setErrorMessage('Failed to reset password. Please try again.');
-        setSnackbarMessage(error.response?.data?.error || 'Failed to reset password. Please try again.');
+        setErrorMessage(t('profileSettings.snackbar.resetPasswordFailed'));
+        setSnackbarMessage(t('profileSettings.snackbar.resetPasswordFailed'));
         setSnackbarType('error');
         setSnackbarVisible(true);
       }
@@ -274,13 +355,13 @@ const ProfileSettingsScreen = () => {
 
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!emailRegex.test(email)) {
-      setErrorMessage('Please enter a valid email');
+      setErrorMessage(t('profileSettings.snackbar.invalidEmail'));
       return;
     }
 
     const phoneRegex = /^(?:\+1\s?)?(\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}$/;
     if (!dueDate) {
-      setErrorMessage('Please select a due date');
+      setErrorMessage(t('profileSettings.snackbar.pleaseSelectDueDate'));
       return;
     }
 
@@ -290,7 +371,7 @@ const ProfileSettingsScreen = () => {
       const formattedDueDate = new Date(`${dueYear}-${dueMonth}-${dueDay}`);
 
       if (formattedDueDate < currentDueDate) {
-        setErrorMessage('Due date cannot be in the past');
+        setErrorMessage(t('profileSettings.snackbar.dueDateCannotBePast'));
         return;
       }
     }
@@ -301,13 +382,13 @@ const ProfileSettingsScreen = () => {
       const formattedDueDate = new Date(`${dobYear}-${dobMonth}-${dobDay}`);
 
       if (formattedDueDate > currentDate) {
-        setErrorMessage('Birth date cannot be in the future');
+        setErrorMessage(t('profileSettings.snackbar.birthDateCannotBeFuture'));
         return;
       }
     }
 
     if (!firstName || !lastName ) {
-      setErrorMessage('Please fill in all fields.');
+      setErrorMessage(t('profileSettings.snackbar.missingFields'));
       return;
     }
 
@@ -340,13 +421,13 @@ const ProfileSettingsScreen = () => {
       if (response.status === 200) {
         setResetPasswordModalVisible(false);
         setErrorMessage('');
-        setSnackbarMessage('Edit Profile successful');
+        setSnackbarMessage(t('profileSettings.snackbar.editProfileSuccess'));
         setSnackbarType('success');
         setSnackbarVisible(true);
       }
     } catch (error) {
-      setErrorMessage('Failed to Edit Profile. Please try again.');
-      setSnackbarMessage(error.response?.data?.error || 'Failed to Edit Profile. Please try again.');
+      setErrorMessage(t('profileSettings.snackbar.editProfileFailed'));
+      setSnackbarMessage(t('profileSettings.snackbar.editProfileFailed'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       await logError({
@@ -406,23 +487,23 @@ const ProfileSettingsScreen = () => {
     if (response.data.actionStatus === 'success') {
       await AsyncStorage.removeItem('token');
       dispatch(logout());
-      setModalTitle('Account Deleted');
-      setModalMessage(response.data.message || 'Your account has been deleted successfully.');
+      setModalTitle(t('profileSettings.snackbar.accountDeleted'));
+      setModalMessage(t('profileSettings.snackbar.accountDeletionSuccess'));
       setModalType('success');
       setStatusModalVisible(true);
       //router.replace('login');
       //console.log("account deleted successfully")
     } else {
-      setModalTitle('Deletion Failed');
-      setModalMessage(response.data.message || 'Something went wrong while deleting your account.');
+      setModalTitle(t('profileSettings.snackbar.deletionFailed'));
+      setModalMessage(t('profileSettings.snackbar.accountDeletionFailed'));
       setModalType('error');
       setStatusModalVisible(true);
-      setSnackbarMessage(response.data.message || 'Account deletion failed.');
+      setSnackbarMessage(t('profileSettings.snackbar.accountDeletionFailed'));
       setSnackbarType('error');
       setSnackbarVisible(true);
     }
   } catch (error) {
-    setSnackbarMessage(error.response?.data?.error || 'Something went wrong while deleting your account.');
+    setSnackbarMessage(t('profileSettings.snackbar.accountDeletionFailed'));
     setSnackbarType('error');
     setSnackbarVisible(true);
     await logError({
@@ -433,10 +514,9 @@ const ProfileSettingsScreen = () => {
   }
 };
 
-
   return (
     <View style={[GlobalStyles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
-      <Header title="Profile Settings" showMenu={false} />
+      <Header title={t('profileSettings.title')} showMenu={false} />
       <ScrollView style={[GlobalStyles.container, { padding: 10,marginBottom:65 }]}>
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
@@ -449,45 +529,45 @@ const ProfileSettingsScreen = () => {
               onPress={() => setResetPasswordModalVisible(true)}
             >
               <Ionicons name="lock-closed" size={16} color={Colors.gray} />
-              <Text style={[GlobalStyles.buttonText, { color: Colors.primary }]}>Reset_Password</Text>
+              <Text style={[GlobalStyles.buttonText, { color: Colors.primary }]}>{t('profileSettings.resetPassword')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[GlobalStyles.button, styles.editButton]}
               onPress={() => setEditProfileModalVisible(true)}
             >
               <Ionicons name="create" size={16} color={Colors.white} />
-              <Text style={[GlobalStyles.buttonText]}> Edit Profile</Text>
+              <Text style={[GlobalStyles.buttonText]}> {t('profileSettings.editProfile')}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.infoSectionAll}>
           <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>Personal Information</Text>
+            <Text style={styles.sectionTitle}>{t('profileSettings.personalInfo')}</Text>
             <View style={styles.line} />
-            <Text style={styles.infoText}><Text style={styles.insideInfoText}>Name :</Text> {result.firstname + ' ' + result.lastname || "N/A"}</Text>
-            <Text style={styles.infoText}><Text style={styles.insideInfoText}>Due Date :</Text> {result.dueDate || "N/A"}</Text>
-            <Text style={styles.infoText}><Text style={styles.insideInfoText}>Date of Birth :</Text> {result.dob || "N/A"}</Text>
-            <Text style={styles.infoText}><Text style={styles.insideInfoText}>Email :</Text> {result.email || "N/A"}</Text>
-            <Text style={styles.infoText}><Text style={styles.insideInfoText}>Phone :</Text> {result.countryCode + ' ' + result.phone || "N/A"}</Text>
+            <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.name')} :</Text> {result.firstname + ' ' + result.lastname || "N/A"}</Text>
+            <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.dueDate')} :</Text> {result.dueDate || "N/A"}</Text>
+            <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.dob')} :</Text> {result.dob || "N/A"}</Text>
+            <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.email')} :</Text> {result.email || "N/A"}</Text>
+            <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.phone')} :</Text> {result.countryCode + ' ' + result.phone || "N/A"}</Text>
           </View>
 
           {result.dob && (
             <View style={styles.infoSection}>
               <View style={styles.line} />
-              <Text style={styles.sectionTitle}>Baby Information</Text>
+              <Text style={styles.sectionTitle}>{t('profileSettings.babyInfo')}</Text>
               <View style={styles.line} />
-              <Text style={styles.infoText}><Text style={styles.insideInfoText}>Baby Name :</Text> {result.babyName || "N/A"} </Text>
-              <Text style={styles.infoText}><Text style={styles.insideInfoText}>Baby Sex :</Text> {result.babySex || "N/A"}</Text>
+              <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.babyName')} :</Text> {translatedData.translatedBabyName || "N/A"} </Text>
+              <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.babySex')} :</Text> {translatedData.translatedBabySex || "N/A"}</Text>
             </View>)}
 
           <View style={styles.infoSection}>
             <View style={styles.line} />
-            <Text style={styles.sectionTitle}>Clinic Information</Text>
+            <Text style={styles.sectionTitle}>{t('profileSettings.clinicInfo')}</Text>
             <View style={styles.line} />
-            <Text style={styles.infoText}><Text style={styles.insideInfoText}>Name :</Text> {result.companyName || "N/A"}</Text>
-            <Text style={styles.infoText}><Text style={styles.insideInfoText}>Location :</Text> {result.locationName || "N/A"}</Text>
-            <Text style={styles.infoText}><Text style={styles.insideInfoText}>Machine Name :</Text> {result.machineName || "N/A"}</Text>
+            <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.companyName')} :</Text> {translatedData.translatedCompanyName || "N/A"}</Text>
+            <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.locationName')} :</Text> {translatedData.translatedLocationName || "N/A"}</Text>
+            <Text style={styles.infoText}><Text style={styles.insideInfoText}>{t('profileSettings.machineName')} :</Text> {translatedData.translatedMachineName || "N/A"}</Text>
           </View>
         </View>
 
@@ -496,7 +576,7 @@ const ProfileSettingsScreen = () => {
           onPress={handleLogout}
         >
           <Ionicons name="log-out" size={20} color={Colors.white} />
-          <Text style={[GlobalStyles.buttonText]}> Logout</Text>
+          <Text style={[GlobalStyles.buttonText]}> {t('profileSettings.logout')}</Text>
         </TouchableOpacity>
 
        <TouchableOpacity
@@ -504,7 +584,7 @@ const ProfileSettingsScreen = () => {
           onPress={() => setDeleteModalVisible(true)}
         >
           <Ionicons name="trash-bin" size={20} color={Colors.white} />
-          <Text style={[GlobalStyles.buttonText]}>Delete Account</Text>
+          <Text style={[GlobalStyles.buttonText]}>{t('profileSettings.deleteAccount')}</Text>
         </TouchableOpacity>
 
         <Modal
@@ -517,9 +597,9 @@ const ProfileSettingsScreen = () => {
             <View style={styles.modalContent}>
               <View style={styles.iconContainer}>
                 <Ionicons name="warning" size={48} color={Colors.error} />
-                <Text style={styles.modalTitle}>Confirm Deletion</Text>
+                <Text style={styles.modalTitle}>{t('profileSettings.confirmDeletionTitle')}</Text>
                 <Text style={styles.modalMessage}>
-                   Are you sure you want to permanently delete your account? This action cannot be undone.
+                   {t('profileSettings.confirmDeletionMessage')}
                 </Text>
               </View>
 
@@ -528,7 +608,7 @@ const ProfileSettingsScreen = () => {
                   style={styles.cancelButton}
                   onPress={() => setDeleteModalVisible(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>{t('profileSettings.cancel')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -538,7 +618,7 @@ const ProfileSettingsScreen = () => {
                     handleDeleteAccount();
                   }}
                 >
-                  <Text style={styles.deleteButtonText}>Delete</Text>
+                  <Text style={styles.deleteButtonText}>{t('profileSettings.delete')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -573,7 +653,7 @@ const ProfileSettingsScreen = () => {
                   if (modalType === 'success') router.replace('login'); 
                 }}
               >
-                <Text style={styles.okButtonText}>OK</Text>
+                <Text style={styles.okButtonText}>{t('profileSettings.ok')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -586,12 +666,12 @@ const ProfileSettingsScreen = () => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Reset Password</Text>
+              <Text style={styles.modalTitle}>{t('profileSettings.resetPasswordModalTitle')}</Text>
 
               <View style={styles.inputContainer}>
                 <TextInput
                   style={[GlobalStyles.input,{fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined}]}
-                  placeholder="Old Password"
+                  placeholder={t('profileSettings.oldPasswordPlaceholder')}
                   secureTextEntry
                   value={oldPassword}
                   onChangeText={setOldPassword}
@@ -604,7 +684,7 @@ const ProfileSettingsScreen = () => {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={[GlobalStyles.input,{fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined}]}
-                  placeholder="New Password"
+                  placeholder={t('profileSettings.newPasswordPlaceholder')}
                   secureTextEntry
                   value={newPassword}
                   onChangeText={setNewPassword}
@@ -617,7 +697,7 @@ const ProfileSettingsScreen = () => {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={[GlobalStyles.input,{fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined}]}
-                  placeholder="Confirm New Password"
+                  placeholder={t('profileSettings.confirmPasswordPlaceholder')}
                   secureTextEntry
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
@@ -635,7 +715,7 @@ const ProfileSettingsScreen = () => {
                   style={[GlobalStyles.resetButton, GlobalStyles.allMarginRight, { marginBottom: 15, padding: 12 }]}
                 >
                   <Ionicons name="close-circle-outline" size={20} color={Colors.black} style={{ marginRight: 5 }} />
-                  <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>Close</Text>
+                  <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>{t('profileSettings.close')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -643,7 +723,7 @@ const ProfileSettingsScreen = () => {
                   style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft, { marginBottom: 15, padding: 12 }]}
                 >
                   <Ionicons name="refresh" size={20} color={Colors.white} style={{ marginRight: 5 }} />
-                  <Text style={GlobalStyles.buttonText}>Reset</Text>
+                  <Text style={GlobalStyles.buttonText}>{t('profileSettings.reset')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -655,7 +735,7 @@ const ProfileSettingsScreen = () => {
         <Modal visible={isEditProfileModalVisible} transparent>
           <View style={styles.modalContainer}>
             <ScrollView style={[styles.modalContent, { maxHeight: modalContentHeight }]}>
-              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <Text style={styles.modalTitle}>{t('profileSettings.editProfileModalTitle')}</Text>
 
               {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
@@ -663,7 +743,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={firstName}
                   onChangeText={setFirstName}
-                  placeholder="First Name"
+                  placeholder={t('profileSettings.firstNamePlaceholder')}
                   style={GlobalStyles.input}
                 />
                 <Ionicons name="person-outline" size={20} color="#888" style={styles.icon} />
@@ -673,7 +753,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={lastName}
                   onChangeText={setLastName}
-                  placeholder="Last Name"
+                  placeholder={t('profileSettings.lastNamePlaceholder')}
                   style={GlobalStyles.input}
                 />
                 <Ionicons name="id-card-outline" size={20} color="#888" style={styles.icon} />
@@ -683,7 +763,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={dueDate}
                   onChangeText={setDueDate}
-                  placeholder="Due Date"
+                  placeholder={t('profileSettings.dueDatePlaceholder')}
                   style={GlobalStyles.input}
                   onFocus={() => {
                     setDateField('dueDate');
@@ -697,7 +777,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={dob}
                   onChangeText={setDob}
-                  placeholder="DOB(Optional)"
+                  placeholder={t('profileSettings.dobPlaceholder')}
                   style={GlobalStyles.input}
                   onFocus={() => {
                     setDateField('dob');
@@ -711,7 +791,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="Email"
+                  placeholder={t('profileSettings.emailPlaceholder')}
                   keyboardType="email-address"
                   style={GlobalStyles.input}
                 />
@@ -725,7 +805,7 @@ const ProfileSettingsScreen = () => {
                   console.log('selectedCountry',item)
                 }}
                 options={FormattedCountries}
-                placeholder="Country Code"
+                placeholder={t('profileSettings.countryCodePlaceholder')}
                 iconName="globe-outline"
               />
 
@@ -733,7 +813,7 @@ const ProfileSettingsScreen = () => {
                 <TextInput
                   value={phone}
                   onChangeText={(text) => setPhone(formatPhoneNumber(text))}
-                  placeholder="Phone Number(Optional)"
+                  placeholder={t('profileSettings.phonePlaceholder')}
                   keyboardType="phone-pad"
                   style={GlobalStyles.input}
                 />
@@ -742,7 +822,7 @@ const ProfileSettingsScreen = () => {
 
               <TouchableOpacity onPress={() => setShowAdditionalInfo(!showAdditionalInfo)}>
                 <Text style={styles.showAdditionalInfoText}>
-                  {showAdditionalInfo ? 'Hide Additional Info' : 'Show Additional Info'}
+                  {showAdditionalInfo ? t('profileSettings.hideAdditionalInfo') : t('profileSettings.showAdditionalInfo')}
                 </Text>
               </TouchableOpacity>
 
@@ -752,7 +832,7 @@ const ProfileSettingsScreen = () => {
                     <TextInput
                       value={spouseName}
                       onChangeText={setSpouseName}
-                      placeholder="Spouse Name"
+                      placeholder={t('profileSettings.spouseNamePlaceholder')}
                       style={GlobalStyles.input}
                     />
                     <Ionicons name="person-outline" size={20} color="#888" style={styles.icon} />
@@ -762,7 +842,7 @@ const ProfileSettingsScreen = () => {
                     <TextInput
                       value={babyName}
                       onChangeText={setBabyName}
-                      placeholder="Baby Name"
+                      placeholder={t('profileSettings.babyNamePlaceholder')}
                       style={GlobalStyles.input}
                     />
                     <Ionicons name="person-add-outline" size={20} color="#888" style={styles.icon} />
@@ -772,7 +852,7 @@ const ProfileSettingsScreen = () => {
                   selectedValue={babySex}
                   onSelect={setBabySex}
                   options={BabySex}
-                  placeholder="Baby Sex"
+                  placeholder={t('profileSettings.babySexPlaceholder')}
                   iconName="male-female"
                 />
                 </>
@@ -785,7 +865,7 @@ const ProfileSettingsScreen = () => {
                   style={[GlobalStyles.resetButton, GlobalStyles.allMarginRight, { marginBottom: 15, padding: 12 }]}
                 >
                   <Ionicons name="close-circle-outline" size={20} color={Colors.black} style={{ marginRight: 5 }} />
-                  <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>Cancel</Text>
+                  <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>{t('profileSettings.cancelButton')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -793,7 +873,7 @@ const ProfileSettingsScreen = () => {
                   style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft, { marginBottom: 15 }]}
                 >
                   <Ionicons name="checkmark" size={20} color={Colors.white} style={{ marginRight: 5 }} />
-                  <Text style={GlobalStyles.buttonText}>Save</Text>
+                  <Text style={GlobalStyles.buttonText}>{t('profileSettings.save')}</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>

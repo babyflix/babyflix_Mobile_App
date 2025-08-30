@@ -28,6 +28,8 @@ import axios from 'axios';
 import LiveStreamStatus from './LiveStreamStatus';
 import { logError } from '../components/logError';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import LanguageModal from '../constants/LanguageModal';
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -42,9 +44,11 @@ const LoginScreen = () => {
   const [token, setToken] = useState('');
   const [svgColor, setSvgColor] = useState(Colors.primary);
   const [isStreamStart, setIsStreamStart] = useState(false);
+  const [showLangModal, setShowLangModal] = useState(false);
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
   const appVersion = Constants.expoConfig.version;
+  const { t } = useTranslation();
 
   useEffect(() => {
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -53,9 +57,22 @@ const LoginScreen = () => {
     AsyncStorage.setItem('timezone', userTimezone);
   }, []);
 
+  useEffect(() => {
+      const checkLanguage = async () => {
+        const lang = await AsyncStorage.getItem("appLanguage");
+        console.log('Language from storage:', lang);
+        if (!lang) {
+          setShowLangModal(true); // show modal if not selected
+        } else {
+          i18n.changeLanguage(lang); // apply saved language
+        }
+      };
+      checkLanguage();
+    }, []);
+
   const handleLogin = async () => {
     if (!email || !password) {
-      setSnackbarMessage('Please fill in all fields');
+      setSnackbarMessage(t('loginPage.messages.fillAllFields'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       return;
@@ -63,7 +80,7 @@ const LoginScreen = () => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
-      setSnackbarMessage('Please enter a valid email');
+      setSnackbarMessage(t('loginPage.messages.invalidEmail'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       return;
@@ -71,7 +88,7 @@ const LoginScreen = () => {
 
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]:;"'<>,.?/-]).{6,}$/;
     if (!password || !passwordRegex.test(password)) {
-      setSnackbarMessage('Password must be at least 6 characters, include one uppercase letter, one number, and one special character');
+      setSnackbarMessage(t('loginPage.messages.invalidPassword'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       return;
@@ -105,7 +122,7 @@ const LoginScreen = () => {
         dispatch(setCredentials(res.data));
         setToken(res.data.token);
 
-        setSnackbarMessage('Login successful!');
+        setSnackbarMessage(t('loginPage.messages.loginSuccess'));
         setSnackbarType('success');
         setSnackbarVisible(true);
 
@@ -113,12 +130,12 @@ const LoginScreen = () => {
           router.replace('/gallery');
         }, 1000);
       } else {
-        setSnackbarMessage(res.data.error || 'Login failed');
+        setSnackbarMessage(res.data.error || t('loginPage.messages.loginFailed'));
         setSnackbarType('error');
         setSnackbarVisible(true);
       }
     } catch (error) {
-      setSnackbarMessage(error.res?.data?.error || 'Login failed. Please try again.');
+      setSnackbarMessage(error.res?.data?.error || t('loginPage.messages.loginFailedTryAgain'));
       setSnackbarType('error');
       setSnackbarVisible(true);
     } finally {
@@ -151,12 +168,13 @@ const LoginScreen = () => {
       style={[GlobalStyles.container]}
     >
       <View style={[GlobalStyles.container]}>
-        <CommonSVG color={svgColor} />        
+        <CommonSVG color={svgColor} />      
 
         <ScrollView contentContainerStyle={[GlobalStyles.screenPadding, { flexGrow: 1, justifyContent: 'center', alignItems: 'center',}]}
           keyboardShouldPersistTaps="handled"
         >
           <View style={{ width: '100%' }}>
+            <LanguageModal visible={showLangModal} onClose={() => setShowLangModal(false)} />
             <View style={{ alignItems: 'center' }}>
               <Image source={babyflixLogo} style={{ width: 180, height: 40, marginBottom: 50 }} />
             </View>
@@ -164,7 +182,7 @@ const LoginScreen = () => {
             <View style={{ position: 'relative' }}>
               <TextInput
                 style={[GlobalStyles.input]}
-                placeholder="Email"
+                placeholder={t('loginPage.email')}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -181,7 +199,7 @@ const LoginScreen = () => {
             <View style={{ position: 'relative', marginTop: 0 }}>
               <TextInput
                 style={[GlobalStyles.input]}
-                placeholder="Password"
+                placeholder={t('loginPage.password')}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!isPasswordVisible}
@@ -206,7 +224,7 @@ const LoginScreen = () => {
 
             <TouchableOpacity onPress={() => router.push('forgot-password')}>
               <Text style={[GlobalStyles.link, { textAlign: 'right' }]}>
-                Forgot Password?
+                {t('loginPage.forgotPassword')}
               </Text>
             </TouchableOpacity>
 
@@ -215,20 +233,20 @@ const LoginScreen = () => {
               onPress={handleLogin}
             >
               <Icon name="login" size={20} color={Colors.white} style={{ marginRight: 10 }} />
-              <Text style={GlobalStyles.buttonText}>Login</Text>
+              <Text style={GlobalStyles.buttonText}>{t('loginPage.loginButton')}</Text>
             </TouchableOpacity>
 
             <View style={[GlobalStyles.row, GlobalStyles.center, { marginTop: 20 }]}>
               <Text style={{ color: Colors.textSecondary }}>
-                Don't have an account?{' '}
+                {t('loginPage.dontHaveAccount')}{' '}
               </Text>
               <TouchableOpacity onPress={() => router.push('register')}>
-                <Text style={GlobalStyles.link}>Sign Up</Text>
+                <Text style={GlobalStyles.link}>{t('loginPage.signUp')}</Text>
               </TouchableOpacity>
             </View>
           </View>
           <Text style={{ marginTop: 20, color: 'white', fontSize: 12, position: 'absolute', bottom: 15 }}>
-            Version: {appVersion}
+            {t('loginPage.version')}: {appVersion}
           </Text>
         </ScrollView>
 

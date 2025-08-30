@@ -52,11 +52,19 @@ import DownloadItemModal from '../components/modals/DownloadItemModal.js';
 import ShareItemModal from '../components/modals/ShareItemModal.js';
 import FloatingDownloadBar from '../components/FloatingDownloadBar.js';
 import Queue from '../components/DownloadQueue.js';
+//import LanguageModal from '../constants/LanguageModal.js'
+import i18n from '../constants/i18n.js';
+import { useTranslation } from 'react-i18next';
+import LanguageModal from '../constants/LanguageModal.js';
+import { useDynamicTranslate } from '../constants/useDynamicTranslate.js';
+
+//const { t } = useTranslation();
 
 const Tab = createMaterialTopTabNavigator();
 
-const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem, disableMenuAndSelection }) => {
+const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, setShowDeleteModal, setShowDownloadModal, setShowShareModal, setSelectedItem, disableMenuAndSelection,tL }) => {
   const filteredData = type === 'all' ? data : data.filter(item => item.object_type === type);
+  const { t } = useTranslation();
 
   const formatCreatedAtToIST = (created_at) => {
     const istDate = moment.utc(created_at).tz('Asia/Kolkata');
@@ -167,7 +175,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
               }}
             >
               <MaterialIcons name="file-download" size={18} color="#000" style={{ marginRight: 8 }} />
-              <Text style={styles.menuText}>Download</Text>
+              <Text style={styles.menuText}>{t('gallery.menu.download')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -181,7 +189,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
               }}
             >
               <MaterialIcons name="delete" size={18} color="red" style={{ marginRight: 8 }} />
-              <Text style={[styles.menuText, { color: 'red' }]}>Delete</Text>
+              <Text style={[styles.menuText, { color: 'red' }]}>{t('gallery.menu.delete')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -191,7 +199,7 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
             }}
             >
               <MaterialIcons name="close" size={18} color="#000" style={{marginRight: 8}} />
-              <Text style={styles.menuText}>Close</Text>
+              <Text style={styles.menuText}>{t('gallery.menu.close')}</Text>
             </TouchableOpacity>
           </View>
           </>
@@ -207,14 +215,14 @@ const MediaGrid = ({ data, type = 'all', onPreview, refreshing, onRefresh, selec
       numColumns={3}
       keyExtractor={(item) => item.id?.toString()}
       contentContainerStyle={styles.gridContainer}
-      ListEmptyComponent={<Text>No media available</Text>}
+      ListEmptyComponent={<Text>{t('gallery.noMedia')}</Text>}
       refreshing={refreshing}
       onRefresh={onRefresh}
     />
   );
 };
 
-const AllTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem, disableMenuAndSelection }) => <MediaGrid data={data}
+const AllTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, setShowDeleteModal, setShowDownloadModal, setShowShareModal, setSelectedItem, disableMenuAndSelection,tL }) => <MediaGrid data={data}
   type="all"
   onPreview={onPreview}
   refreshing={refreshing}
@@ -226,14 +234,12 @@ const AllTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSele
   setActiveMenuId={setActiveMenuId}
   activeMenuId={activeMenuId}
   setShowDeleteModal={setShowDeleteModal}
-  showDeleteModal={showDeleteModal}
   setShowDownloadModal={setShowDownloadModal}
-  showDownloadModal={showDownloadModal}
   setShowShareModal={setShowShareModal}
-  showShareModal={showShareModal}
   setSelectedItem={setSelectedItem}
-  disableMenuAndSelection={disableMenuAndSelection} />;
-const ImagesTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem, disableMenuAndSelection }) => <MediaGrid data={data}
+  disableMenuAndSelection={disableMenuAndSelection}
+  tL={tL} />;
+const ImagesTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, setShowDeleteModal, setShowDownloadModal, setShowShareModal, setSelectedItem, disableMenuAndSelection,tL }) => <MediaGrid data={data}
   type="image"
   onPreview={onPreview}
   refreshing={refreshing}
@@ -245,14 +251,12 @@ const ImagesTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setS
   setActiveMenuId={setActiveMenuId}
   activeMenuId={activeMenuId}
   setShowDeleteModal={setShowDeleteModal}
-  showDeleteModal={showDeleteModal}
   setShowDownloadModal={setShowDownloadModal}
-  showDownloadModal={showDownloadModal}
   setShowShareModal={setShowShareModal}
-  showShareModal={showShareModal}
   setSelectedItem={setSelectedItem}
-  disableMenuAndSelection={disableMenuAndSelection} />;
-const VideosTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, showDeleteModal, setShowDeleteModal, showDownloadModal, setShowDownloadModal, showShareModal, setShowShareModal, setSelectedItem, disableMenuAndSelection }) => <MediaGrid data={data}
+  disableMenuAndSelection={disableMenuAndSelection}
+  tL={tL} />;
+const VideosTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setSelectedItems, selectionMode, setSelectionMode, activeMenuId, setActiveMenuId, setShowDeleteModal, setShowDownloadModal, setShowShareModal, setSelectedItem, disableMenuAndSelection,tL }) => <MediaGrid data={data}
   type="video"
   onPreview={onPreview}
   refreshing={refreshing}
@@ -264,13 +268,11 @@ const VideosTab = ({ data, onPreview, refreshing, onRefresh, selectedItems, setS
   setActiveMenuId={setActiveMenuId}
   activeMenuId={activeMenuId}
   setShowDeleteModal={setShowDeleteModal}
-  showDeleteModal={showDeleteModal}
   setShowDownloadModal={setShowDownloadModal}
-  showDownloadModal={showDownloadModal}
   setShowShareModal={setShowShareModal}
-  showShareModal={showShareModal}
   setSelectedItem={setSelectedItem}
-  disableMenuAndSelection={disableMenuAndSelection} />;
+  disableMenuAndSelection={disableMenuAndSelection}
+  tL={tL} />;
 
 const GalleryScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -310,6 +312,8 @@ const GalleryScreen = () => {
   const [activeDownloads, setActiveDownloads] = useState(0);
   const [disableMenuAndSelection, setDisableMenuAndSelection] = useState(false);
   const [bannerMessage, setBannerMessage] = useState('');
+  const [tL,setT] = useState(null);
+  const [showLangModal, setShowLangModal] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -325,11 +329,14 @@ const GalleryScreen = () => {
   const hasHiddenModalRef = useRef(false);
   const router = useRouter();
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+  const { t } = useTranslation();
+  //setT(t);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/login');
     }
+    setT(t);
   }, []);
 
   const onRefresh = async () => {
@@ -354,6 +361,19 @@ const GalleryScreen = () => {
     };
   }, [])
 );
+
+  useEffect(() => {
+      const checkLanguage = async () => {
+        const lang = await AsyncStorage.getItem("appLanguage");
+        console.log('Language from storage:', lang);
+        if (!lang) {
+          setShowLangModal(true); // show modal if not selected
+        } else {
+          i18n.changeLanguage(lang); // apply saved language
+        }
+      };
+      checkLanguage();
+    }, []);
 
   useEffect(() => {
     const checkSkipDate = async () => {
@@ -415,6 +435,12 @@ const GalleryScreen = () => {
           const today = moment();
           const daysSince = today.diff(planStartDate, 'days');
 
+          //const planKey = storagePlanName.toLowerCase() === 'basic' ? 'gallery.plan.basic' : 'gallery.plan.pro';
+          console.log('storagePlanName',storagePlanName)
+          const translatedPlanName = await useDynamicTranslate(`${storagePlanName}`);
+          console.log('translatedPlanName',translatedPlanName,daysSince);
+
+
           if (daysSince >= 31) {
             dispatch(setPlanExpired(true));
             setMediaData({ images: [], videos: [] });
@@ -422,10 +448,10 @@ const GalleryScreen = () => {
             setTimeout(() => {
               setShowPlanExpiredModal(true);
             }, 200);
-            setExpiredPlanName(storagePlanName);
+            setExpiredPlanName(translatedPlanName);
             setIsLoading(false);
             setBannerMessage(
-            `Your "${storagePlanName}" plan is expired please upgrade.`
+            t('gallery.plan.expired', { plan: translatedPlanName })
           );
             return;
           }
@@ -434,10 +460,13 @@ const GalleryScreen = () => {
           const remainingDays = 30 - daysSince;
           dispatch(setRemainingDays(remainingDays));
 
-          const message = `Your "${storagePlanName}" plan is expiring in ${remainingDays} day${remainingDays > 1 ? 's' : ''}.`;
-          setUpgradeReminderMessage(
-            `${message} After that, you won't be able to view or download media.`
-          );
+          const message = t('gallery.plan.expiring', { 
+            plan: translatedPlanName, 
+            days: remainingDays, 
+            plural: remainingDays > 1 ? 's' : '' 
+          });
+          setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
+
           setBannerMessage(message);
 
         } else if (daysSince >= 28 && daysSince < 30) {
@@ -445,19 +474,21 @@ const GalleryScreen = () => {
           dispatch(setUpgradeReminder(true));
           dispatch(setRemainingDays(remainingDays));
 
-          const message = `Your "${storagePlanName}" plan is expiring in ${remainingDays} day${remainingDays > 1 ? 's' : ''}.`;
-          setUpgradeReminderMessage(
-            `${message} After that, you won't be able to view or download media.`
-          );
+         const message = t('gallery.plan.expiring', { 
+            plan: translatedPlanName, 
+            days: remainingDays, 
+            plural: remainingDays > 1 ? 's' : '' 
+          });
+          setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
           setBannerMessage(message);
           setShowUpgradeReminderModal(true);
 
         } else if (daysSince === 30) {
-          setBannerMessage(`Your "${storagePlanName}" plan expires today.`);
+          setBannerMessage(t('gallery.plan.expiresToday', { plan: translatedPlanName }));
           dispatch(setRemainingDays(0)); // ✅ Plan expires today
 
         } else if (daysSince > 30) {
-          setBannerMessage(`Your "${storagePlanName}" has already expired.`);
+          setBannerMessage(t('gallery.plan.expiredAlready', { plan: translatedPlanName }));
           dispatch(setRemainingDays(-1)); // ✅ Plan already expired
         }
         }
@@ -707,7 +738,7 @@ const handleShareSelected = () => {
   return (
     <View style={[GlobalStyles.container, { marginBottom: 65 }, Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <LiveStreamStatus />
-      <Header title="Gallery" />
+      <Header title={t("gallery.header")} />
       {isLoading ? (
         <ActivityIndicator size="large" color={Colors.white} />
       ) : (
@@ -718,7 +749,7 @@ const handleShareSelected = () => {
             tabBarIndicatorStyle: styles.tabIndicator,
           }}
         >
-          <Tab.Screen name="All" children={() => <AllTab data={[...mediaData.images, ...mediaData.videos].sort((a, b) =>
+          <Tab.Screen name={t('gallery.tabs.all')} children={() => <AllTab data={[...mediaData.images, ...mediaData.videos].sort((a, b) =>
             new Date(b.created_at) - new Date(a.created_at))} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
             selectionMode={selectionMode}
@@ -726,41 +757,35 @@ const handleShareSelected = () => {
             setActiveMenuId={setActiveMenuId}
             activeMenuId={activeMenuId}
             setShowDeleteModal={setShowDeleteModal}
-            showDeleteModal={showDeleteModal}
             setShowDownloadModal={setShowDownloadModal}
-            showDownloadModal={showDownloadModal}
             setShowShareModal={setShowShareModal}
-            showShareModal={showShareModal}
             setSelectedItem={setSelectedItem}
-            disableMenuAndSelection={disableMenuAndSelection} />} />
-          <Tab.Screen name="Images" children={() => <ImagesTab data={mediaData.images} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
+            disableMenuAndSelection={disableMenuAndSelection}
+            tL={tL} />} />
+          <Tab.Screen name={t('gallery.tabs.images')} children={() => <ImagesTab data={mediaData.images} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
             selectionMode={selectionMode}
             setSelectionMode={setSelectionMode}
             setActiveMenuId={setActiveMenuId}
             activeMenuId={activeMenuId}
             setShowDeleteModal={setShowDeleteModal}
-            showDeleteModal={showDeleteModal}
             setShowDownloadModal={setShowDownloadModal}
-            showDownloadModal={showDownloadModal}
             setShowShareModal={setShowShareModal}
-            showShareModal={showShareModal}
             setSelectedItem={setSelectedItem}
-            disableMenuAndSelection={disableMenuAndSelection} />} />
-          <Tab.Screen name="Videos" children={() => <VideosTab data={mediaData.videos} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
+            disableMenuAndSelection={disableMenuAndSelection}
+            tL={tL} />} />
+          <Tab.Screen name={t('gallery.tabs.videos')} children={() => <VideosTab data={mediaData.videos} onPreview={handlePreview} refreshing={refreshing} onRefresh={onRefresh} selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
             selectionMode={selectionMode}
             setSelectionMode={setSelectionMode}
             setActiveMenuId={setActiveMenuId}
             activeMenuId={activeMenuId}
             setShowDeleteModal={setShowDeleteModal}
-            showDeleteModal={showDeleteModal}
             setShowDownloadModal={setShowDownloadModal}
-            showDownloadModal={showDownloadModal}
             setShowShareModal={setShowShareModal}
-            showShareModal={showShareModal}
             setSelectedItem={setSelectedItem}
-            disableMenuAndSelection={disableMenuAndSelection} />} />
+            disableMenuAndSelection={disableMenuAndSelection}
+            tL={tL} />} />
         </Tab.Navigator>
       )}
 
@@ -855,6 +880,8 @@ const handleShareSelected = () => {
         title={downloadTitle}
         activeDownloads={activeDownloads}
       />
+
+      <LanguageModal visible={showLangModal} onClose={() => setShowLangModal(false)} />
 
       <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
       {(storageModelStart || shouldShowStorageModal) && (
@@ -962,8 +989,8 @@ const handleShareSelected = () => {
                 <MaterialIcons name="close" size={24} color="black" />
               </TouchableOpacity>
 
-              <Text style={styles.delModalTitle}>No images and videos available</Text>
-              <Text style={[styles.delModalMessage]}>Your "{expiredPlanName}" plan has expired. Please upgrade to pro plan to view/download videos and images.</Text>
+              <Text style={styles.delModalTitle}>{t("gallery.noMediaAvailable")}</Text>
+              <Text style={[styles.delModalMessage]}>{t("gallery.planExpiredMessage", { expiredPlanName })}</Text>
 
               <View style={styles.expModalButtons}>
                 <TouchableOpacity
@@ -978,7 +1005,7 @@ const handleShareSelected = () => {
                   style={[styles.delModalButton, { backgroundColor: Colors.primary, flexDirection: 'row' }]}
                 >
                   <MaterialIcons name="arrow-upward" size={20} color="white" style={{ marginRight: 5 }} />
-                  <Text style={styles.delModalButtonText}>Upgrade Now</Text>
+                  <Text style={styles.delModalButtonText}>{t("gallery.upgradeNow")}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -1002,7 +1029,7 @@ const handleShareSelected = () => {
               <MaterialIcons name="close" size={24} color="black" />
             </TouchableOpacity>
             <Ionicons name="information-circle" size={48} color={Colors.error} />
-            <Text style={styles.delModalTitle}>Upgrade Plan Reminder</Text>
+            <Text style={styles.delModalTitle}>{t("gallery.upgradePlanReminder")}</Text>
             <Text style={styles.delModalMessage}>{upgradeReminderMessage}</Text>
 
             <View style={styles.expModalButtons}>
@@ -1018,7 +1045,7 @@ const handleShareSelected = () => {
                 style={[styles.delModalButton, { backgroundColor: Colors.primary, flexDirection: 'row' }]}
               >
                 <MaterialIcons name="arrow-upward" size={20} color="white" style={{ marginRight: 5 }} />
-                <Text style={styles.delModalButtonText}>Upgrade Now</Text>
+                <Text style={styles.delModalButtonText}>{t("gallery.upgradeNow")}</Text>
               </TouchableOpacity>
             </View>
           </View>

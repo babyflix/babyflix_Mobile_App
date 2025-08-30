@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import * as Progress from 'react-native-progress';
 import Colors from '../constants/Colors';
+import { useTranslation } from 'react-i18next';
 
 const FloatingDownloadBar = ({ visible, progress, title , activeDownloads}) => {
+  const { t } = useTranslation();
   if (!visible) return null;
   if (activeDownloads == 0) return null;
   console.log('in the FloatingDownloadBar')
@@ -12,7 +14,7 @@ const FloatingDownloadBar = ({ visible, progress, title , activeDownloads}) => {
     <View style={styles.container}>
       <View style={styles.inner}>
         <Text style={styles.downloadingText}>
-          {activeDownloads} {activeDownloads <= 1 ? 'item' : 'items'} Downloading...
+          {activeDownloads} {activeDownloads <= 1 ? t('floatingDownloadBar.item') : t('floatingDownloadBar.items')} {t('floatingDownloadBar.downloading')}
         </Text>
 
         <Progress.Bar

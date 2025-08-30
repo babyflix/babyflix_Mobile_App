@@ -27,6 +27,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loader from '../components/Loader';
 import Snackbar from '../components/Snackbar';
 import { logError } from '../components/logError';
+import { useTranslation } from 'react-i18next';
+import i18n from '../constants/i18n';
+import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 
 const RegisterScreen = () => {
   const router = useRouter();
@@ -60,13 +63,16 @@ const RegisterScreen = () => {
   const [tempDate, setTempDate] = useState(new Date());
   const [showPhoneInfo, setShowPhoneInfo] = useState(false);
 
+  const { t } = useTranslation();
+
   useEffect(() => {
     const fetchCountries = async () => {
+      console.log('i18n.language:', i18n.language);
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/locations/getAllCountries`);
         setCountries(response.data);
       } catch (err) {
-        setError('Failed to fetch countries: ' + err);
+        setError(t('registration.failedFetchCountries') + err);
          await logError({
           error: err,
           data: err.response?.data.error || response.data.error,
@@ -87,21 +93,42 @@ const RegisterScreen = () => {
     }
   }, [formData.accountType]);
 
+  // useEffect(() => {
+  //   if (countries.length > 0) {
+
+  //     const formatted = countries.map((country) => ({
+  //       label: `+${country.phonecode} ${country.country_name}`,
+  //       value: `${country.phonecode}_${country.country_name}`,
+  //     }));
+
+  //     setFormattedCountries(formatted);
+  //   }
+  // }, [countries]);
+
   useEffect(() => {
-    if (countries.length > 0) {
-
-      const formatted = countries.map((country) => ({
-        label: `+${country.phonecode} ${country.country_name}`,
-        value: `${country.phonecode}_${country.country_name}`,
-      }));
-
+  if (countries.length > 0) {
+    console.log('countries:', countries);
+    const translateCountries = async () => {
+      const formatted = await Promise.all(
+        countries.map(async (country) => {
+          const translatedName = await useDynamicTranslate(country.country_name);
+          console.log('Translated country name:', country.country_name, '->', translatedName);
+          return {
+            label: `+${country.phonecode} ${translatedName}`,
+            value: `${country.phonecode}_${country.country_name}`,
+          };
+        })
+      );
       setFormattedCountries(formatted);
-    }
-  }, [countries]);
+    };
+
+    translateCountries();
+  }
+}, [countries]);
 
   const accountType = [
-    { label: 'Patient', value: 'patient' },
-    { label: 'patient-family', value: 'patient-family' },
+    { label: t('registration.patient'), value: 'patient' },
+    { label: t('registration.patient-family'), value: 'patient-family' },
   ];
 
   const handleRegister = async () => {
@@ -110,29 +137,29 @@ const RegisterScreen = () => {
     setError('');
 
     if (!firstName || !lastName || !email || !password || !confirmPassword ) {
-      setError('Please fill in all fields');
+      setError(t('registration.pleaseFillAllFields'));
       return;
     }
 
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email');
+      setError(t('registration.invalidEmail'));
       return;
     }
 
     const passRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]:;"'<>,.?/-]).{6,}$/;
     if (!passRegex.test(password)) {
-      setError('Password must be at least 6 characters, include one uppercase letter, one number, and one special character');
+      setError(t('registration.invalidPassword'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('registration.passwordsDoNotMatch'));
       return;
     }
 
     if (!termsAccepted) {
-      setError('You must accept the Terms and Conditions');
+      setError(t('registration.acceptTerms'));
       return;
     }
 
@@ -148,7 +175,7 @@ const RegisterScreen = () => {
     // }
 
     if (accountType === 'patient' && !dueDate) {
-      setError('Please select a due date');
+      setError(t('registration.selectDueDate'));
       return;
     }
 
@@ -158,7 +185,7 @@ const RegisterScreen = () => {
       const formattedDueDate = new Date(`${dueYear}-${dueMonth}-${dueDay}`);
 
       if (formattedDueDate < currentDueDate) {
-        setError('Due date cannot be in the past');
+        setError(t('registration.dueDatePast'));
         return;
       }
     }
@@ -169,18 +196,18 @@ const RegisterScreen = () => {
       const formattedDobDate = new Date(`${dobYear}-${dobMonth}-${dobDay}`);
 
       if (formattedDobDate > currentDate) {
-        setError('Birth date cannot be in the future');
+        setError(t('registration.dobFuture'));
         return;
       }
     }
 
     if (accountType === 'family' && !familyOf) {
-      setError('Please enter a family email address');
+      setError(t('registration.enterFamilyEmail'));
       return;
     }
 
     if (accountType === 'family' && !emailRegex.test(familyOf)) {
-      setError('Please enter a valid family email address');
+      setError(t('registration.invalidFamilyEmail'));
       return;
     }
 
@@ -215,14 +242,14 @@ const RegisterScreen = () => {
         }
       );
       if (response.data.actionStatus == "success") {
-        setSnackbarMessage('Registration successful!');
+        setSnackbarMessage(t('registration.registrationSuccess'));
         setSnackbarType('success');
         setSnackbarVisible(true);
         setTimeout(() => {
           router.replace('/login');
         }, 3000)
       } else {
-        setSnackbarMessage(response.data.error || 'Registration failed. Please try again.');
+        setSnackbarMessage(response.data.error || t('registration.registrationFailed'));
         setSnackbarType('error');
         setSnackbarVisible(true);
         await logError({
@@ -232,7 +259,7 @@ const RegisterScreen = () => {
         });
       }
     } catch (error) {
-      setSnackbarMessage(response.data.error || 'An error occurred. Please try again later.');
+      setSnackbarMessage(response.data.error || t('registration.genericError'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       await logError({
@@ -332,7 +359,7 @@ const RegisterScreen = () => {
 
 
             <View style={{ alignItems: 'center' }}>
-              <Text style={[GlobalStyles.title, { marginTop: 100 }]}>Create Account</Text>
+              <Text style={[GlobalStyles.title, { marginTop: 100 }]}>{t('registration.title')}</Text>
             </View>
 
             <ScrollView
@@ -347,7 +374,7 @@ const RegisterScreen = () => {
                   <View style={[styles.textInputIconView, styles.allMarginRight, { position: 'relative', justifyContent: 'center' }]}>
                     <TextInput
                       style={[{ paddingLeft: 38, fontFamily: 'Poppins_400Regular', color: 'black' }]}
-                      placeholder="First Name"
+                      placeholder={t('registration.placeholders.firstName')}
                       value={formData.firstName}
                       onChangeText={(text) => setFormData({ ...formData, firstName: text })}
                     />
@@ -362,7 +389,7 @@ const RegisterScreen = () => {
                   <View style={[styles.textInputIconView, styles.allMarginLeft, { position: 'relative', justifyContent: 'center' }]}>
                     <TextInput
                       style={[{ paddingLeft: 38, fontFamily: 'Poppins_400Regular', color: 'black' }]}
-                      placeholder="Last Name"
+                      placeholder={t('registration.placeholders.lastName')}
                       value={formData.lastName}
                       onChangeText={(text) => setFormData({ ...formData, lastName: text })}
                     />
@@ -378,7 +405,7 @@ const RegisterScreen = () => {
                 <View style={{ position: 'relative' }}>
                   <TextInput
                     style={[GlobalStyles.input, { paddingLeft: 38, color: 'black' }]}
-                    placeholder="Email"
+                    placeholder={t('registration.placeholders.email')}
                     value={formData.email}
                     onChangeText={(text) => setFormData({ ...formData, email: text })}
                     keyboardType="email-address"
@@ -437,7 +464,7 @@ const RegisterScreen = () => {
                       >
                         {formData.accountType
                           ? accountType.find((opt) => opt.value === formData.accountType)?.label
-                          : 'Account Type'}
+                          : t('registration.placeholders.accountType')}
                       </Text>
                     </TouchableOpacity>
 
@@ -495,7 +522,7 @@ const RegisterScreen = () => {
                     <View style={[styles.textInputIconView, styles.allMarginRight]}>
                       <TextInput
                         style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 6 }]}
-                        placeholder="DOB(Optional)"
+                        placeholder={t('registration.placeholders.dob')}
                         value={formData.dob}
                         onFocus={() => {
                           setDateField('dob');
@@ -513,7 +540,7 @@ const RegisterScreen = () => {
                     <View style={[styles.textInputIconView, styles.allMarginLeft]}>
                       <TextInput
                         style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
-                        placeholder="Due Date"
+                        placeholder={t('registration.placeholders.dueDate')}
                         value={formData.dueDate}
                         onFocus={() => {
                           setDateField('dueDate');
@@ -534,7 +561,7 @@ const RegisterScreen = () => {
                   <View style={{ position: 'relative' }}>
                     <TextInput
                       style={[GlobalStyles.input, { paddingLeft: 38, color: 'black', marginTop: 3 }]}
-                      placeholder="Patient Email id"
+                      placeholder={t('registration.placeholders.patientEmail')}
                       value={formData.familyOf}
                       onChangeText={(text) => setFormData({ ...formData, familyOf: text })}
                       keyboardType="email-address"
@@ -553,7 +580,7 @@ const RegisterScreen = () => {
                   <View style={[styles.textInputIconView, styles.allMarginRight, { justifyContent: 'center' }]}>
                     <TextInput
                       style={[GlobalStyles.textInputIcon, { paddingLeft: 37, fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined, marginTop: 5, color: 'black' }]}
-                      placeholder="Password"
+                      placeholder={t('registration.placeholders.password')}
                       value={formData.password}
                       onChangeText={(text) => setFormData({ ...formData, password: text })}
                       secureTextEntry
@@ -571,7 +598,7 @@ const RegisterScreen = () => {
                   <View style={[styles.textInputIconView, styles.allMarginLeft, { justifyContent: 'center' }]}>
                     <TextInput
                       style={[GlobalStyles.textInputIcon, { paddingLeft: 35, fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined, marginTop: 5, color: 'black' }]}
-                      placeholder="Confirm Pass.."
+                      placeholder={t('registration.placeholders.confirmPassword')}
                       value={formData.confirmPassword}
                       onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
                       secureTextEntry
@@ -635,7 +662,7 @@ const RegisterScreen = () => {
                         {
                           formData.countryCode
                             ? FormattedCountries.find((c) => c.value === formData.countryCode)?.label
-                            : 'Country Code'
+                            : t('registration.placeholders.countryCode')
                         }
                       </Text>
                     </TouchableOpacity>
@@ -709,7 +736,7 @@ const RegisterScreen = () => {
                     />
                      <TextInput
                       style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
-                      placeholder="Ph. No(Optional)"
+                      placeholder={t('registration.placeholders.phone')} 
                       value={formData.phone}
                       onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
                       keyboardType="phone-pad"
@@ -728,7 +755,7 @@ const RegisterScreen = () => {
                     marginBottom:5,
                   }}>
                     <Text style={{ fontSize: 12, color: 'black' }}>
-                      Providing your phone number is optional, but it helps us to improve your experience. We do not use it for login or marketing purposes.
+                     {t('registration.phoneInfo')}
                     </Text>
                   </View>
                 )}
@@ -742,12 +769,12 @@ const RegisterScreen = () => {
                   </View>
 
                   <Text style={[styles.termsText, { fontFamily: 'Poppins_400Regular' }]}>
-                    I accept the{' '}
+                    {t('registration.terms.accept')}{" "}
                     <Text
                       style={[styles.termsLink, { fontFamily: 'Poppins_400Regular' }]}
                       onPress={() => Linking.openURL('https://babyflix.ai/terms')}
                     >
-                      Terms and Conditions
+                      {t('registration.terms.link')}
                     </Text>
                   </Text>
                 </View>
@@ -760,7 +787,7 @@ const RegisterScreen = () => {
                   >
                     <Icon name="refresh" size={20} color={Colors.black} style={{ marginRight: 5 }} />
                     <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>
-                      Reset
+                      {t('registration.buttons.reset')}
                     </Text>
                   </TouchableOpacity>
 
@@ -769,16 +796,16 @@ const RegisterScreen = () => {
                     onPress={handleRegister}
                   >
                     <Icon name="done" size={20} color={Colors.white} style={{ marginRight: 5 }} />
-                    <Text style={GlobalStyles.buttonText}>Register</Text>
+                    <Text style={GlobalStyles.buttonText}>{t('registration.buttons.register')}</Text>
                   </TouchableOpacity>
                 </View>
 
                 <View style={[GlobalStyles.row, GlobalStyles.center, { marginTop: 0 }]}>
                   <Text style={{ color: Colors.textSecondary, fontFamily: 'Poppins_400Regular' }}>
-                    Already have an account?{' '}
+                    {t('registration.alreadyHaveAccount')}{' '}
                   </Text>
                   <TouchableOpacity onPress={() => router.push('login')}>
-                    <Text style={[GlobalStyles.link, { fontFamily: 'Poppins_400Regular' }]}>Sign In</Text>
+                    <Text style={[GlobalStyles.link, { fontFamily: 'Poppins_400Regular' }]}>{t('registration.signIn')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -847,7 +874,7 @@ const RegisterScreen = () => {
         }}
         style={styles.doneButton}
       >
-        <Text style={styles.doneText}>Done</Text>
+        <Text style={styles.doneText}>{t('registration.done')}</Text>
       </TouchableOpacity>
     </View>
   )
@@ -858,6 +885,7 @@ const RegisterScreen = () => {
       mode="date"
       display="default"
       onChange={handleDateChange}
+      locale={i18n.language === 'es' ? 'es-ES' : 'en-US'}
     />
   )
 )}

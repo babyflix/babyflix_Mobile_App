@@ -4,12 +4,14 @@ import { useSelector } from 'react-redux';
 import Colors from '../../src/constants/Colors';
 import { TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function AppLayout() {
   const { isStreamStarted,streamState } = useSelector((state) => state.stream);
 
     const [blinkColor, setBlinkColor] = useState("red");
     const [isBlinking, setIsBlinking] = useState(false); 
+    const { t } = useTranslation();
   
     useEffect(() => {
       let intervalId;
@@ -46,7 +48,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="gallery"
         options={{
-          title: 'Gallery',
+          title: t("gallery.header"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="images-outline" size={size} color={color} />
           ),
@@ -55,7 +57,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="upload"
         options={{
-          title: 'Upload',
+          title: t("upload.header"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cloud-upload-outline" size={size} color={color} />
           ),
@@ -64,7 +66,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="events"
         options={{
-          title: 'Events',
+          title: t('eventsScreen.title'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
@@ -73,7 +75,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="live"
         options={{
-          title: 'Live',
+          title: t('liveStreaming.label'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="videocam-outline"
@@ -100,7 +102,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Messages',
+          title: t('messagesScreen.header'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles-outline" size={size} color={color} />
           ),
@@ -109,7 +111,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('profileSettings.label'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-circle" size={size} color={color} />
           ),
