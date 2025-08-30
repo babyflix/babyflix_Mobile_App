@@ -232,6 +232,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         'storage_modal_triggered',
         'payment_status',
         'payment_status 1',
+        'paying',
         'last_skipped_plan_date',
         'notifications'
       ]);

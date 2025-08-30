@@ -15,6 +15,7 @@ import {
   Alert,
   Button,
   AppState,
+  BackHandler,
 } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Header from '../components/Header';
@@ -339,6 +340,21 @@ const GalleryScreen = () => {
     setT(t);
   }, []);
 
+  useEffect(() => {
+      if (Platform.OS === 'android') {
+        const backHandler = BackHandler.addEventListener(
+          'hardwareBackPress',
+          () => {
+            console.log('Back button pressed');
+            return true; // block back button
+          }
+        );
+  
+        // cleanup: restore back button when component unmounts
+        return () => backHandler.remove();
+      }
+    }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchMediaData();
@@ -605,23 +621,63 @@ const GalleryScreen = () => {
   );
 
 
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     const checkPaymentStatus = async () => {
+  //       if (hasHandledPaymentStatusRef.current) return;
+
+  //       const status = await AsyncStorage.getItem('payment_status');
+  //       if (status === 'fail' || status === 'done') {
+  //         setStorageModelStart(true);
+  //         setStorageModalKey(true);
+  //         hasHandledPaymentStatusRef.current = true;
+  //         await AsyncStorage.setItem('paying', 'false');
+  //       }
+  //     };
+
+  //     checkPaymentStatus();
+  //   }, [])
+  // );
+
   useFocusEffect(
-    useCallback(() => {
-      const checkPaymentStatus = async () => {
-        if (hasHandledPaymentStatusRef.current) return;
+  useCallback(() => {
+    let isActive = true; // track if component is still mounted
 
-        const status = await AsyncStorage.getItem('payment_status');
-        if (status === 'fail' || status === 'done') {
-          setStorageModelStart(true);
-          setStorageModalKey(true);
-          hasHandledPaymentStatusRef.current = true;
-          await AsyncStorage.setItem('paying', 'false');
-        }
-      };
+    const checkPaymentStatus = async () => {
+      if (!isActive) return;
 
-      checkPaymentStatus();
-    }, [])
-  );
+      const status = await AsyncStorage.getItem('payment_status');
+      const paying = await AsyncStorage.getItem('paying');
+
+      if ((status === 'done' || status === 'fail') && paying !== 'false') {
+        console.log('calling storage modal from appstate');
+        setStorageModelStart(true);
+        setStorageModalKey(true);
+
+        hasHandledPaymentStatusRef.current = true;
+
+        // mark as handled and clean storage
+        await AsyncStorage.setItem('paying', 'false');
+        //await AsyncStorage.removeItem('payment_status');
+      }
+    };
+
+    // check immediately
+    checkPaymentStatus();
+
+    // also listen to AppState changes (for cold start)
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        checkPaymentStatus();
+      }
+    });
+
+    return () => {
+      isActive = false;
+      subscription.remove();
+    };
+  }, [])
+);
 
   useEffect(() => {
     const fetchUnreadChats = async () => {

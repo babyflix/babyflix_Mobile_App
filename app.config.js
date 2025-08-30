@@ -24,6 +24,7 @@ export default ({ config }) => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.babyflix.mobile.app",
+    "associatedDomains": ["applinks:babyflix.ai"],
     icon: "./assets/icon.png",
     splash: {
       image: "./assets/icon-foreground.png", 

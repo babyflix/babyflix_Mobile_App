@@ -1,13 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, AppState, Platform } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, AppState, Platform, BackHandler } from 'react-native';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPO_PUBLIC_API_URL } from '@env';
 import { useDispatch, useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import axios from 'axios';
-import { clearOpenStorage2, setForceOpenStorageModals } from '../state/slices/storageUISlice';
+import { clearOpenStorage2, setDeepLinkHandled, setForceOpenStorageModals } from '../state/slices/storageUISlice';
 import { getStoragePlanDetails } from './getStoragePlanDetails';
 import moment from 'moment';
 import { setPlanExpired, setUpgradeReminder } from '../state/slices/expiredPlanSlice';
@@ -28,6 +28,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const [plans, setPlans] = useState([]);
   const [closePlanes, setClosePlans] = useState(false);
   const [wasTriggered, setWasTriggered] = useState(false);
+  const [ShowStorage1Call, setShowStorage1Call] = useState(false);
 
   const user = useSelector((state) => state.auth);
   const { skippedPlanCount, storagePlanId, storagePlanPayment, isPlanDeleted,storagePlanPrice } =
@@ -41,6 +42,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
    const router = useRouter();
     const { t } = useTranslation();
+   const handledRef = useRef(false);
+   const showStorage1Ref = useRef(false);
 
   const fetchPlans = async () => {
     try {
@@ -68,6 +71,21 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   useEffect(() => {
     fetchPlans();
+  }, []);
+
+   useEffect(() => {
+    if (Platform.OS === 'android') {
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          console.log('Back button pressed in StorageModals');
+          return true; // block back butto
+        }
+      );
+
+      // cleanup: restore back button when component unmounts
+      return () => backHandler.remove();
+    }
   }, []);
 
   useEffect(() => {
@@ -113,6 +131,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       } else {
         if (!storagePlanId || storagePlanId === "null") {
            console.log('[StorageModals] No plan found, showing storage1');
+           showStorage1Ref.current = true;
           await AsyncStorage.removeItem('closePlans');
           setShowStorage1(true);
         }
@@ -121,6 +140,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
     if (!openStorage2Directly) {
        console.log('[StorageModals] Checking payment status because openStorage2Directly is false');
+       console.log('showStorage1Ref.current',{showStorage1Ref});
       checkPaymentStatus();
     }
   }, []);
@@ -165,6 +185,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       if (hasChecked) return;
       hasChecked = true;
 
+      setTimeout(async () => {
       const status = await AsyncStorage.getItem('payment_status');
       console.log('[StorageModals] Final checkPaymentStatus:', status);
 
@@ -224,12 +245,18 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         await AsyncStorage.setItem('closePlans', 'true');
         setClosePlans(true);
       } else {
-       if (!storagePlanId || storagePlanId === "null") {
+      const status = await AsyncStorage.getItem('payment_status 1');
+      const storedPaying = await AsyncStorage.getItem('paying');
+      setTimeout(async () => {
+      console.log('[StorageModals] Rechecking storagePlanId and paying status:', { storagePlanId, status, storedPaying, showStorage1Ref });
+       if ((!storagePlanId || storagePlanId === "null") && status !== 'fail' && storedPaying !== 'false' && !showStorage1Ref.current) {
         console.log('[StorageModals] No plan id - showing storage1 in final check');
           await AsyncStorage.removeItem('closePlans');
           setShowStorage1(true);
         }
+        }, 2000);
       }
+      }, 1000);
     };
     
 
@@ -242,7 +269,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       console.log('[StorageModals] AppState changed:', state);
       if (state === 'active') {
         console.log('[StorageModals] App resumed - rechecking payment status');
-        checkPaymentStatus();
+        //checkPaymentStatus();
+        setTimeout(checkPaymentStatus, 1000);
       }
     });
 
@@ -306,22 +334,25 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     setShowStorage2(false);
     
     setTimeout(() => {
-    setShowStorage1(true);
-  }, 2000);
+      setShowStorage1(true);
+    }, 1000);
     //setShowStorage1(false);
   };
 
   const handlePayment = async () => {
+     dispatch(setDeepLinkHandled(false));
     try {
       await AsyncStorage.setItem('selected_plan_id', selectedPlan.toString());
       onClose();
       dispatch(clearOpenStorage2());
       await AsyncStorage.setItem('storage_modal_triggered', 'false');
       await AsyncStorage.setItem('paying', 'true');
+      console.log('platform.os',Platform.OS);
 
       const sessionRes = await axios.post(`${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`, {
         planId: selectedPlan,
         email: user.email,
+        platform: Platform.OS,
       }, {
         headers: {
           'Content-Type': 'application/json',
@@ -339,6 +370,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
       if (Platform.OS === 'ios') {
       await Linking.openURL(stripeUrl);
+      // const result = await WebBrowser.openAuthSessionAsync(
+      //   stripeUrl, // Stripe checkout URL
+      //   "babyflix://payment/redirect"
+      // );
+
     } else {
       // Android (or fallback): use WebBrowser
       const result = await WebBrowser.openAuthSessionAsync(
@@ -364,7 +400,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   return (
     <>
-      <Modal visible={showStorage1} transparent animationType="fade" onRequestClose={() => setShowStorage1(false)}>
+      <Modal visible={showStorage1} transparent animationType="fade" {...(Platform.OS === 'ios' ? { onRequestClose: () => setShowStorage1(false) } : {})}>
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             {/* <TouchableOpacity

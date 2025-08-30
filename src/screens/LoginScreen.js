@@ -30,7 +30,7 @@ import { logError } from '../components/logError';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import LanguageModal from '../constants/LanguageModal';
-
+//import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
 const LoginScreen = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -125,6 +125,11 @@ const LoginScreen = () => {
         setSnackbarMessage(t('loginPage.messages.loginSuccess'));
         setSnackbarType('success');
         setSnackbarVisible(true);
+
+        // sendDeviceUserInfo({
+        //   action_type: USERACTIONS.LOGIN,
+        //   action_description: USERACTIONS.LOGINDESC,
+        // });
 
         setTimeout(() => {
           router.replace('/gallery');

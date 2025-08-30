@@ -14,6 +14,7 @@ import { useDownloadQueueHandler } from '../useDownloadQueueHandler';
 import { useSelector } from 'react-redux';
 import { useDynamicTranslate } from '../../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
+//import sendDeviceUserInfo, { USERACTIONS } from '../deviceInfo';
 
 const DownloadItemModal = ({
   visible,
@@ -211,6 +212,10 @@ const DownloadItemModal = ({
       setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await useDynamicTranslate(`${filename}`) }));
       setSnackbarType('success');
       setSnackbarVisible(true);
+      // sendDeviceUserInfo({
+      //   action_type: USERACTIONS.DOWNLOAD,
+      //   action_description: `User downloaded ${item}`,
+      // });
       setDownloadQueue(prev => {
         const filteredQueue = prev.filter(q => q.id !== item.id);
         AsyncStorage.setItem('downloadQueue', JSON.stringify(filteredQueue));
@@ -392,6 +397,10 @@ const DownloadItemModal = ({
       setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await useDynamicTranslate(`${item.title}`) }));
       setSnackbarType('success');
       setSnackbarVisible(true);
+      // sendDeviceUserInfo({
+      //   action_type: USERACTIONS.DOWNLOAD,
+      //   action_description: "User downloaded ",item,
+      // });
       setDownloadQueue(prev => {
         const filteredQueue = prev.filter(q => q.id !== item.id);
         AsyncStorage.setItem('downloadQueue', JSON.stringify(filteredQueue));
