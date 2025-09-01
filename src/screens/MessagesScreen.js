@@ -579,8 +579,20 @@ const MessagesScreen = () => {
           </View>
           <View style={styles.messageContent}>
             <View style={styles.messageHeader}>
-              <Text style={styles.senderName}>{item.name}</Text>
-              <Text style={styles.messageTime}>{item.role}</Text>
+               <Text
+                style={styles.senderName}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {item.name}
+              </Text>
+              <Text
+                style={styles.messageTime}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {item.role}
+              </Text>
             </View>
             <Text
               style={[
@@ -806,11 +818,13 @@ const styles = StyleSheet.create({
   },
   messageHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap', 
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   senderName: {
     fontSize: 16,
+    flex: 1, 
     fontFamily: 'Poppins_700Bold',
     color: Colors.black,
   },
@@ -877,6 +891,7 @@ const styles = StyleSheet.create({
     color: Colors.messageBlack,
   },
   messageTime: {
+    flex: 1,
     fontSize: 12,
     fontFamily: 'Poppins_400Regular',
     color: Colors.messageBlack,
