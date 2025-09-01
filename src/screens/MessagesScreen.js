@@ -346,7 +346,7 @@ const MessagesScreen = () => {
           response.data.map(async (msg) => ({
             ...msg,
             content: await translate(msg.content || ""),
-            sender: await translate(msg.sender || "")
+            //sender: await translate(msg.sender || "")
           }))
         );
 
@@ -536,7 +536,7 @@ const MessagesScreen = () => {
         chatHistories.map(async (msg) => ({
           ...msg,
           content: await translate(msg.content || ""),
-          sender: await translate(msg.sender || "")
+          //sender: await translate(msg.sender || "")
         }))
       );
       setChatHistories(translatedHistory);

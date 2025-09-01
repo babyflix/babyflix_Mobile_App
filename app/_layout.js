@@ -149,45 +149,45 @@ useEffect(() => {
 //   }, []);
 
 
-// useEffect(() => {
-//   const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-//     const { data } = response.notification.request.content;
+useEffect(() => {
+  const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+    const { data } = response.notification.request.content;
 
-//     if (data?.screen === 'LiveStream' && data?.userId) {
-//       router.push({
-//         pathname: '/gallery',
-//         query: { userId: data.userId }, // ✅ use query, not params
-//       });
-//     }
-//   });
+    if (data?.screen === 'LiveStream' && data?.userId) {
+      router.push({
+        pathname: '/gallery',
+        query: { userId: data.userId }, // ✅ use query, not params
+      });
+    }
+  });
 
-//   return () => subscription.remove();
-// }, []);
+  return () => subscription.remove();
+}, []);
 
 
-// useEffect(() => {
-//   const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-//     const { uri, mimeType } = response.notification.request.content.data;
+useEffect(() => {
+  const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+    const { uri, mimeType } = response.notification.request.content.data;
 
-//     if (uri) {
-//       if (Platform.OS === 'android') {
-//         try {
-//           IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-//             data: uri,
-//             flags: 1,
-//             type: mimeType || 'video/*',
-//           });
-//         } catch (e) {
-//           console.warn('Failed to open file:', e.message);
-//         }
-//       } else if (Platform.OS === 'ios') {
-//         Linking.openURL(uri);
-//       }
-//     }
-//   });
+    if (uri) {
+      if (Platform.OS === 'android') {
+        try {
+          IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+            data: uri,
+            flags: 1,
+            type: mimeType || 'video/*',
+          });
+        } catch (e) {
+          console.warn('Failed to open file:', e.message);
+        }
+      } else if (Platform.OS === 'ios') {
+        Linking.openURL(uri);
+      }
+    }
+  });
 
-//   return () => subscription.remove();
-// }, []);
+  return () => subscription.remove();
+}, []);
 
 // useEffect(() => {
 //     Linking.getInitialURL().then((url) => {
