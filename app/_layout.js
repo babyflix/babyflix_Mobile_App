@@ -33,6 +33,7 @@ import { registerForPushNotificationsAsync } from '../src/components/notificatio
 import { requestMediaLibraryPermission } from '../src/components/requestMediaPermission';
 import "../src/constants/i18n"; 
 import { setDeepLinkHandled } from '../src/state/slices/storageUISlice';
+import * as Notifications from 'expo-notifications';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
