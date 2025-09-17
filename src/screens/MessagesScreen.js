@@ -335,14 +335,14 @@ const MessagesScreen = () => {
             `${EXPO_PUBLIC_API_URL}/api/chats/get-chat-history?recipientUuid=${member.uuid}&limit=${limit}`
           );
 
-          const translated = await Promise.all(
-            response.data.map(async (msg) => ({
-              ...msg,
-              content: await translate(msg.content || ""),
-              sender: await translate(msg.sender || "")
-            }))
-          );
-
+        // 🔑 translate each message before returning
+        const translated = await Promise.all(
+          response.data.map(async (msg) => ({
+            ...msg,
+            content: await translate(msg.content || ""),
+            //sender: await translate(msg.sender || "")
+          }))
+        );
           return translated;
         })
       );
@@ -505,45 +505,48 @@ const MessagesScreen = () => {
     }
   };
 
-  useEffect(() => {
-    const retranslateData = async () => {
-      if (chatMembersRef.current) {
-        const translatedMembers = await Promise.all(
-          chatMembersRef.current.map(async (m) => ({
-            ...m,
-            last_message_content: m.last_message_content
-              ? await translate(m.last_message_content)
-              : '',
-            name: m.name ? await translate(m.name) : '',
-            role: m.role ? await translate(m.role) : ''
-          }))
+ useEffect(() => {
+  const retranslateData = async () => {
+    // 1️⃣ Retranslate chat members
+    if (chatMembersRef.current) {
+      const translatedMembers = await Promise.all(
+        chatMembersRef.current.map(async (m) => ({
+          ...m,
+          last_message_content: m.last_message_content
+            ? await translate(m.last_message_content)
+            : '',
+          name: m.name ? await translate(m.name) : '',
+          role: m.role ? await translate(m.role) : ''
+        }))
+      );
+      setChatMembers(translatedMembers);
+    }
+
+    // 2️⃣ Retranslate chat histories
+    if (chatHistories.length > 0) {
+      const translatedHistory = await Promise.all(
+        chatHistories.map(async (msg) => ({
+          ...msg,
+          content: await translate(msg.content || ""),
+          //sender: await translate(msg.sender || "")
+        }))
+      );
+      setChatHistories(translatedHistory);
+
+      // Update selected chat messages if a chat is open
+      if (selectedMessageId) {
+        const updatedMessages = translatedHistory.filter(
+          (msg) =>
+            msg.sender_uuid === selectedMessageId ||
+            msg.recipient_uuid === selectedMessageId
         );
-        setChatMembers(translatedMembers);
+        setMessages(updatedMessages);
       }
+    }
+  };
 
-      if (chatHistories.length > 0) {
-        const translatedHistory = await Promise.all(
-          chatHistories.map(async (msg) => ({
-            ...msg,
-            content: await translate(msg.content || ""),
-            sender: await translate(msg.sender || "")
-          }))
-        );
-        setChatHistories(translatedHistory);
-
-        if (selectedMessageId) {
-          const updatedMessages = translatedHistory.filter(
-            (msg) =>
-              msg.sender_uuid === selectedMessageId ||
-              msg.recipient_uuid === selectedMessageId
-          );
-          setMessages(updatedMessages);
-        }
-      }
-    };
-
-    retranslateData();
-  }, [i18n.language]);
+  retranslateData();
+}, [i18n.language]);
 
 
   const renderMessage = ({ item }) => {
@@ -567,8 +570,20 @@ const MessagesScreen = () => {
           </View>
           <View style={styles.messageContent}>
             <View style={styles.messageHeader}>
-              <Text style={styles.senderName}>{item.name}</Text>
-              <Text style={styles.messageTime}>{item.role}</Text>
+               <Text
+                style={styles.senderName}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {item.name}
+              </Text>
+              <Text
+                style={styles.messageTime}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {item.role}
+              </Text>
             </View>
             <Text
               style={[
@@ -795,12 +810,14 @@ const styles = StyleSheet.create({
   },
   messageHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap', 
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   senderName: {
     fontSize: 16,
     fontFamily: 'Nunito700',
+    flex: 1, 
     color: Colors.black,
   },
   messageTime2: {
@@ -866,6 +883,7 @@ const styles = StyleSheet.create({
     color: Colors.messageBlack,
   },
   messageTime: {
+    flex: 1,
     fontSize: 12,
     fontFamily: 'Nunito400',
     color: Colors.messageBlack,
