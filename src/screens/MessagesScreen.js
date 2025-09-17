@@ -22,11 +22,9 @@ import { useTranslation } from 'react-i18next';
 import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-//const { t } = useTranslation();
-
 dayjs.extend(calendar);
 
-const buildTimedFeed = (msgs = [],t,lang = 'en') => {
+const buildTimedFeed = (msgs = [], t, lang = 'en') => {
   const feed = [];
   let lastDay = null;
 
@@ -87,9 +85,9 @@ const MessagesScreen = () => {
   const [inputMarginBottom, setInputMarginBottom] = useState(15);
   const [selectedChat, setSelectedChat] = useState(null);
 
-  const { t,i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
-  const timeline = useMemo(() => buildTimedFeed(messages,t,i18n.language), [messages,t,i18n.language]);
+  const timeline = useMemo(() => buildTimedFeed(messages, t, i18n.language), [messages, t, i18n.language]);
 
   const chatMembersRef = useRef();
   const scrollViewRef = useRef(null);
@@ -103,29 +101,30 @@ const MessagesScreen = () => {
   const insets = useSafeAreaInsets();
   const translate = useDynamicTranslate;
   const lang = (AsyncStorage.getItem('appLanguage')) || 'en';
-  
+
   useFocusEffect(
     useCallback(() => {
       const beforeRemoveListener = navigation.addListener('beforeRemove', (e) => {
         if (selectedMessageId !== null) {
-          e.preventDefault(); 
+          e.preventDefault();
           setSelectedMessageId(null);
           getChatMembers();
-  
+
           setTimeout(() => {
             navigation.dispatch(e.data.action);
           }, 0);
         }
       });
-  
+
       return () => beforeRemoveListener();
     }, [selectedMessageId, navigation])
-  );  
+  );
 
   useEffect(() => {
-    navigation.setOptions({  tabBarStyle: selectedChat
-      ? { display: 'none' }
-      : {
+    navigation.setOptions({
+      tabBarStyle: selectedChat
+        ? { display: 'none' }
+        : {
           display: 'flex',
           position: 'absolute',
           borderTopColor: Colors.border,
@@ -136,7 +135,7 @@ const MessagesScreen = () => {
         },
     });
   }, [selectedChat]);
-  
+
   useEffect(() => {
     getChatMembers();
   }, [unreadMessagesCount]);
@@ -145,12 +144,12 @@ const MessagesScreen = () => {
     const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100); 
+      }, 100);
     });
-  
+
     return () => keyboardDidShow.remove();
   }, []);
-  
+
 
   useEffect(() => {
     const userUuid = user.uuid;
@@ -197,18 +196,15 @@ const MessagesScreen = () => {
     if (!socket) return;
 
     socket.on("privateMessage", async (raw) => {
-      console.log("Received privateMessage:", raw);
       const msg = await normalizeMsg(raw);
       const isInCurrentChat =
         msg.sender_uuid === selectedMessageId ||
         msg.receiverName === selectedMessageId;
 
-        console.log('msg:', msg);
-
       if (isInCurrentChat) {
         setMessages((prev) =>
           prev.some((m) => m.message_uuid === msg.message_uuid) ? prev : [...prev, msg]
-        );        
+        );
         if (msg.sender_uuid !== user.uuid && msg.status === 'sent') {
           setMessages((prev) =>
             prev.map((m) =>
@@ -280,25 +276,23 @@ const MessagesScreen = () => {
       const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-chat-members`);
       if (response.data) {
         const translatedMembers = await Promise.all(
-    response.data.map(async (m) => {
-      const translatedContent = m.last_message_content
-        ? await translate(m.last_message_content)
-        : '';
-      const translatedName = m.name ? await translate(m.name) : '';
-      const translatedRole = m.role ? await translate(m.role) : '';
+          response.data.map(async (m) => {
+            const translatedContent = m.last_message_content
+              ? await translate(m.last_message_content)
+              : '';
+            const translatedName = m.name ? await translate(m.name) : '';
+            const translatedRole = m.role ? await translate(m.role) : '';
 
-      return {
-        ...m,
-        last_message_content: translatedContent,
-        name: translatedName,
-        role: translatedRole
-      };
-    })
-  );
+            return {
+              ...m,
+              last_message_content: translatedContent,
+              name: translatedName,
+              role: translatedRole
+            };
+          })
+        );
 
-  console.log('Translated chat members:', translatedMembers);
-  setChatMembers(translatedMembers);
-        // console.log('Chat members:', response.data);
+        setChatMembers(translatedMembers);
         // setChatMembers(response.data);
         chatMembersRef.current = response.data;
         setLoading(false);
@@ -335,27 +329,25 @@ const MessagesScreen = () => {
       //   })
       // );
 
-       const histories = await Promise.all(
-      chatMembers.map(async (member) => {
-        const response = await axios.get(
-          `${EXPO_PUBLIC_API_URL}/api/chats/get-chat-history?recipientUuid=${member.uuid}&limit=${limit}`
-        );
+      const histories = await Promise.all(
+        chatMembers.map(async (member) => {
+          const response = await axios.get(
+            `${EXPO_PUBLIC_API_URL}/api/chats/get-chat-history?recipientUuid=${member.uuid}&limit=${limit}`
+          );
 
-        // 🔑 translate each message before returning
-        const translated = await Promise.all(
-          response.data.map(async (msg) => ({
-            ...msg,
-            content: await translate(msg.content || ""),
-            sender: await translate(msg.sender || "")
-          }))
-        );
+          const translated = await Promise.all(
+            response.data.map(async (msg) => ({
+              ...msg,
+              content: await translate(msg.content || ""),
+              sender: await translate(msg.sender || "")
+            }))
+          );
 
-        return translated;
-      })
-    );
+          return translated;
+        })
+      );
 
       const flattenedHistories = histories.flat();
-      //console.log('Fetched chat histories:', flattenedHistories);
       setChatHistories(prevHistories => {
         const newMessages = flattenedHistories.filter(msg => !prevHistories.some(prev => prev.message_uuid === msg.message_uuid));
         const combined = [...prevHistories, ...newMessages];
@@ -514,51 +506,47 @@ const MessagesScreen = () => {
   };
 
   useEffect(() => {
-  const retranslateData = async () => {
-    // 1️⃣ Retranslate chat members
-    if (chatMembersRef.current) {
-      const translatedMembers = await Promise.all(
-        chatMembersRef.current.map(async (m) => ({
-          ...m,
-          last_message_content: m.last_message_content
-            ? await translate(m.last_message_content)
-            : '',
-          name: m.name ? await translate(m.name) : '',
-          role: m.role ? await translate(m.role) : ''
-        }))
-      );
-      setChatMembers(translatedMembers);
-    }
-
-    // 2️⃣ Retranslate chat histories
-    if (chatHistories.length > 0) {
-      const translatedHistory = await Promise.all(
-        chatHistories.map(async (msg) => ({
-          ...msg,
-          content: await translate(msg.content || ""),
-          sender: await translate(msg.sender || "")
-        }))
-      );
-      setChatHistories(translatedHistory);
-
-      // Update selected chat messages if a chat is open
-      if (selectedMessageId) {
-        const updatedMessages = translatedHistory.filter(
-          (msg) =>
-            msg.sender_uuid === selectedMessageId ||
-            msg.recipient_uuid === selectedMessageId
+    const retranslateData = async () => {
+      if (chatMembersRef.current) {
+        const translatedMembers = await Promise.all(
+          chatMembersRef.current.map(async (m) => ({
+            ...m,
+            last_message_content: m.last_message_content
+              ? await translate(m.last_message_content)
+              : '',
+            name: m.name ? await translate(m.name) : '',
+            role: m.role ? await translate(m.role) : ''
+          }))
         );
-        setMessages(updatedMessages);
+        setChatMembers(translatedMembers);
       }
-    }
-  };
 
-  retranslateData();
-}, [i18n.language]);
+      if (chatHistories.length > 0) {
+        const translatedHistory = await Promise.all(
+          chatHistories.map(async (msg) => ({
+            ...msg,
+            content: await translate(msg.content || ""),
+            sender: await translate(msg.sender || "")
+          }))
+        );
+        setChatHistories(translatedHistory);
+
+        if (selectedMessageId) {
+          const updatedMessages = translatedHistory.filter(
+            (msg) =>
+              msg.sender_uuid === selectedMessageId ||
+              msg.recipient_uuid === selectedMessageId
+          );
+          setMessages(updatedMessages);
+        }
+      }
+    };
+
+    retranslateData();
+  }, [i18n.language]);
 
 
   const renderMessage = ({ item }) => {
-    console.log('Rendering chat member:', item);
     const senderInitials = item.name ? item.name.split(' ')[0].substring(0, 2).toUpperCase() : '';
 
     const isOnline = Array.isArray(onlineUsers)
@@ -570,9 +558,9 @@ const MessagesScreen = () => {
     return (
       <View style={styles.messageWrapper}>
         <TouchableOpacity style={styles.messageCard} onPress={() => {
-            setSelectedChat(item);
-            handleMessagePress({ Uuid: item.uuid });
-          }}>
+          setSelectedChat(item);
+          handleMessagePress({ Uuid: item.uuid });
+        }}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{senderInitials}</Text>
             <View style={[styles.statusDot, { backgroundColor: isOnline ? 'green' : 'gray' }]} />
@@ -618,127 +606,128 @@ const MessagesScreen = () => {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-      {/* <SafeAreaView edges={['top']} style={{flex: 1, backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 10 : 10,}}> */}
-      <View style={[styles.container,{paddingTop:insets.top}]}>
-        <View style={[styles.headerRow]}>
-          <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
-            <Text style={styles.avatarText}>{senderInitials}</Text>
-          </View>
-          <View style={styles.nameStatusBlock}>
-            <Text style={styles.headerText}>{selectedMessage.name}</Text>
-            <Text
-              style={[
-                styles.headerStatus,
-                {
-                  color: isReceiverTyping ? Colors.messagePrimary
-                    : partnerOnline ? 'green' : 'gray'
-                },
-              ]}
-            >
-              {isReceiverTyping ? t('messagesScreen.typing')
-                : partnerOnline ? t('messagesScreen.online') : ''}
-            </Text>
-          </View>
-
-          <TouchableOpacity style={styles.closeButton} onPress={() => {
-            console.log('Back pressed');
-            setSelectedMessageId(null);
-            getChatMembers();
-            setSelectedChat(null)}}>
-            <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
-          </TouchableOpacity>
-        </View>
-       
-
-        <ScrollView
-          style={styles.chatContainer}
-          contentContainerStyle={{ paddingBottom: 15 }}
-          ref={scrollViewRef}
-          onScroll={({ nativeEvent }) => {
-            const { contentOffset } = nativeEvent;
-            if (contentOffset.y <= 5 && !isFetchingMore) {
-              setIsFetchingMore(true);
-              setMessageLimit((prevLimit) => prevLimit + 10);
-            }
-          }}
-          onContentSizeChange={() => {
-            if (isFetchingMore) {
-              setIsFetchingMore(false);
-            }
-          }}
-          scrollEventThrottle={16}
-          keyboardShouldPersistTaps="handled"
-        >
-
-          {isFetchingMore && (
-            <View style={{ alignItems: 'center', paddingVertical: 10 }}>
-              <Text style={{ color: Colors.textPrimary, fontFamily: 'Poppins_500Medium', }}>{t('messagesScreen.loadingMessages')}</Text>
+        {/* <SafeAreaView edges={['top']} style={{flex: 1, backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 10 : 10,}}> */}
+        <View style={[styles.container, { paddingTop: insets.top }]}>
+          <View style={[styles.headerRow]}>
+            <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={styles.avatarText}>{senderInitials}</Text>
             </View>
-          )}
-
-          {timeline.map((item) => {
-            if (item._type === 'separator') {
-              return (
-                <View key={item.id} style={styles.dayChip}>
-                  <Text style={styles.dayChipText}>{item.label}</Text>
-                </View>
-              );
-            }
-
-            const messageContent = String(item.content);
-            const messageDate = formatDate(item.date);
-
-            return (
-              <View
-                key={`${item.id || item.message_uuid}`}
+            <View style={styles.nameStatusBlock}>
+              <Text style={styles.headerText}>{selectedMessage.name}</Text>
+              <Text
                 style={[
-                  styles.messageBubble,
-                  item.sender === 'You' ? styles.sentMessage : styles.receivedMessage,
+                  styles.headerStatus,
+                  {
+                    color: isReceiverTyping ? Colors.messagePrimary
+                      : partnerOnline ? 'green' : 'gray'
+                  },
                 ]}
               >
-                <Text style={styles.messageText2}>{messageContent}</Text>
-                <View style={styles.metaContainer}>
-                  <Text style={styles.messageTime2}>{messageDate}</Text>
-                  {item.sender === 'You' && (
-                    <Ionicons
-                      name="checkmark-done"
-                      size={14}
-                      color={item.status === 'read' ? 'blue' : 'black'}
-                      style={{ marginLeft: 2 }}
-                    />
-                  )}
-                </View>
-              </View>
-            );
-          })}
+                {isReceiverTyping ? t('messagesScreen.typing')
+                  : partnerOnline ? t('messagesScreen.online') : ''}
+              </Text>
+            </View>
 
-        </ScrollView>
+            <TouchableOpacity style={styles.closeButton} onPress={() => {
+              console.log('Back pressed');
+              setSelectedMessageId(null);
+              getChatMembers();
+              setSelectedChat(null)
+            }}>
+              <Ionicons name="arrow-back" size={20} color={Colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
 
-        <View style={[styles.messageBox]}>
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            placeholder={t('messagesScreen.typePlaceholder')}
-            value={message}
-            onChangeText={(text) => {
-              setMessage(text);
-              handleTyping();
+
+          <ScrollView
+            style={styles.chatContainer}
+            contentContainerStyle={{ paddingBottom: 15 }}
+            ref={scrollViewRef}
+            onScroll={({ nativeEvent }) => {
+              const { contentOffset } = nativeEvent;
+              if (contentOffset.y <= 5 && !isFetchingMore) {
+                setIsFetchingMore(true);
+                setMessageLimit((prevLimit) => prevLimit + 10);
+              }
             }}
-            showSoftInputOnFocus={allowKeyboard}
-            onTouchStart={() => {setAllowKeyboard(true); var bottom=25}}
-          />
-          <TouchableOpacity onPress={handleSendMessage}>
-            <Ionicons name="send" size={24} color={Colors.messagePrimary} />
-          </TouchableOpacity>
+            onContentSizeChange={() => {
+              if (isFetchingMore) {
+                setIsFetchingMore(false);
+              }
+            }}
+            scrollEventThrottle={16}
+            keyboardShouldPersistTaps="handled"
+          >
+
+            {isFetchingMore && (
+              <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+                <Text style={{ color: Colors.textPrimary, fontFamily: 'Nunito400', }}>{t('messagesScreen.loadingMessages')}</Text>
+              </View>
+            )}
+
+            {timeline.map((item) => {
+              if (item._type === 'separator') {
+                return (
+                  <View key={item.id} style={styles.dayChip}>
+                    <Text style={styles.dayChipText}>{item.label}</Text>
+                  </View>
+                );
+              }
+
+              const messageContent = String(item.content);
+              const messageDate = formatDate(item.date);
+
+              return (
+                <View
+                  key={`${item.id || item.message_uuid}`}
+                  style={[
+                    styles.messageBubble,
+                    item.sender === 'You' ? styles.sentMessage : styles.receivedMessage,
+                  ]}
+                >
+                  <Text style={styles.messageText2}>{messageContent}</Text>
+                  <View style={styles.metaContainer}>
+                    <Text style={styles.messageTime2}>{messageDate}</Text>
+                    {item.sender === 'You' && (
+                      <Ionicons
+                        name="checkmark-done"
+                        size={14}
+                        color={item.status === 'read' ? 'blue' : 'black'}
+                        style={{ marginLeft: 2 }}
+                      />
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+
+          </ScrollView>
+
+          <View style={[styles.messageBox]}>
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              placeholder={t('messagesScreen.typePlaceholder')}
+              value={message}
+              onChangeText={(text) => {
+                setMessage(text);
+                handleTyping();
+              }}
+              showSoftInputOnFocus={allowKeyboard}
+              onTouchStart={() => { setAllowKeyboard(true); var bottom = 25 }}
+            />
+            <TouchableOpacity onPress={handleSendMessage}>
+              <Ionicons name="send" size={24} color={Colors.messagePrimary} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-      {/* </SafeAreaView> */}
+        {/* </SafeAreaView> */}
       </KeyboardAvoidingView>
     );
   } else {
 
     return (
-      <View style={[styles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
+      <View style={[styles.container, Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
         <Header title={t('messagesScreen.header')} />
         <FlatList
           data={chatMembers}
@@ -764,7 +753,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Nunito700',
     color: Colors.textPrimary,
   },
   messageWrapper: {
@@ -796,7 +785,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Nunito700',
     color: Colors.white,
     marginTop: 3,
   },
@@ -811,17 +800,17 @@ const styles = StyleSheet.create({
   },
   senderName: {
     fontSize: 16,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Nunito700',
     color: Colors.black,
   },
   messageTime2: {
     fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     color: Colors.black,
   },
   messageText2: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     color: Colors.black,
     paddingRight: 50,
   },
@@ -873,12 +862,12 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     color: Colors.messageBlack,
   },
   messageTime: {
     fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     color: Colors.messageBlack,
     textAlign: 'right',
   },
@@ -889,8 +878,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    marginHorizontal:15,
-    marginBottom:40,
+    marginHorizontal: 15,
+    marginBottom: 40,
     ...Platform.select({
       ios: {
         shadowColor: Colors.black,
@@ -907,7 +896,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     color: Colors.textPrimary,
     paddingVertical: 6,
     paddingHorizontal: 8,
@@ -925,7 +914,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 50,
-    marginTop:10,
+    marginTop: 10,
   },
   metaContainer: {
     flexDirection: 'row',
@@ -936,7 +925,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: Platform.OS === 'ios' ? 20 : 15,
-    paddingBottom:15,
+    paddingBottom: 15,
   },
   statusDot: {
     position: 'absolute',
@@ -957,8 +946,8 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   dayChipText: {
-    fontSize: 12,
-    fontFamily: 'Poppins_500Medium',
+    fontSize: 13,
+    fontFamily: 'Nunito400',
     color: Colors.textPrimary,
   },
   nameStatusBlock: {
@@ -968,7 +957,7 @@ const styles = StyleSheet.create({
   },
   headerStatus: {
     fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     marginTop: 0,
     paddingTop: 0,
     lineHeight: 14,

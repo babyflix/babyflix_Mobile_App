@@ -1,2 +1,2 @@
-import GalleryScreen from '../../src/screens/GalleryScreen';
+import GalleryScreen from '../../src/gallery/GalleryScreen';
 export default GalleryScreen;

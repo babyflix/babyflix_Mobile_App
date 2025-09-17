@@ -10,6 +10,7 @@
       "loadingMedia": "Cargando vista previa del archivo...",
       "uploading": "Subiendo...",
       "upload": "Subir",
+      "uploadOwnImages": "Puedes subir tus propias imágenes.",
       "delete": {
         "title": "Confirmar Eliminación",
         "message": "¿Está seguro de que desea eliminar este archivo? Esta acción no se puede deshacer.",
@@ -45,7 +46,8 @@
   "tabs": {
     "all": "Todo",
     "images": "Imágenes",
-    "videos": "Videos"
+    "videos": "Videos",
+    "flix10k": "Flix10K"
   },
   "noMedia": "No hay archivos disponibles",
   "menu": {
@@ -189,6 +191,10 @@
       "save": "Guardar",
       "cancelButton": "Cancelar",
       "reset": "Restablecer",
+      "close": "Cerca",
+      "profileTab": "Perfil",
+      "subscriptionsTab": "Suscripciones",
+      "spouseName": "nombre del cónyuge",
       "snackbar": {
         "dataFetchFailed": "Error al obtener los datos. Por favor, inténtelo de nuevo.",
         "invalidEmail": "Por favor, ingrese un correo electrónico válido",
@@ -236,6 +242,8 @@
     "enterMobileNumber": "Introduce el número de móvil",
     "phoneInfo": "Este número solo se usará para enviar la invitación del evento por SMS a tus familiares o amigos.",
     "ultrasoundMessage": "La ecografía de {{userName}} está programada para el {{eventDate}}, {{eventTime}}. Inicia sesión en la aplicación Babyflix para disfrutar de la transmisión en vivo.",
+    "enterEmailError": "Por favor ingrese el correo electrónico",
+    "enterMobile": "Por favor ingrese el número de móvil",
     "snackbar": {
       "emailAlreadyInvited": "Este correo electrónico ya ha sido invitado.",
       "shareEmailSuccess": "Evento compartido por correo electrónico correctamente",
@@ -360,6 +368,117 @@
     "buttons": {
       "skip": "Omitir",
       "updateNow": "Actualizar ahora"
+    }
+  },
+  "flix10k": {
+    "title": "Flix10K",
+    "babyFirstMoments": "De las imágenes de ultrasonido a sonrisas: observa los primeros momentos de tu bebé cobrar vida con nuestra IA.",
+    "flix10kDesigner": "Diseñador Flix10K",
+    "selectImages": "✨Selecciona tus imágenes favoritas y mira la magia suceder✨",
+    "convertToAI": "✨ Convertir a Flix10K AI",
+
+    "generationType": "Tipo de generación Flix10K",
+    "predictiveBabys": "Imagen predictiva del bebé",
+
+    "cancel": "Cancelar",
+    "subscribeNow": "Suscribirse",
+    "okGotIt": "OK, Entendido",
+    "okIGotIt": "OK, Lo Entendí",
+    "process": "Procesar",
+    "processing": "Procesando...",
+
+    "unlockTitle": "Desbloquea Flix10K Designer✨",
+    "unlockText": "Suscríbete ahora y transforma las ecografías de tu bebé en momentos realistas que atesorarás para siempre 💖",
+    "pricePerMonth": "$29.45 / mes",
+    "autoRenew": "renovación automática",
+    "whyTitle": "¿Por qué Flix10K? 💡",
+
+    "reason1": "De imágenes de ecografía a sonrisas. Mira los primeros momentos de tu bebé cobrar vida con nuestra IA",
+    "reason2": "Mira a tu bebé por primera vez con IA",
+    "reason3": "Nada captura la magia del embarazo como nuestras fotos mejoradas con IA del antes y después",
+    "reason4": "BabyFlix Flix10K AI convierte tu ecografía 3D en recuerdos fotográficos realistas y preciosos",
+
+    "unsubscribed": "Te has dado de baja",
+    "subscriptionNotActive": "La suscripción no está activa",
+    "month": "Mes",
+    "months": "Meses",
+    "nextBilling": "Vencimiento actual",
+    "upgradeSubscription": "ACTUALIZAR",
+    "unsubscribe": "Darse de baja",
+
+    "unsubscribeWarning": "Advertencia de baja",
+    "unsubscribeMessage": "Tu suscripción aún tiene {{days}} días restantes. Si te das de baja ahora, se cancelará de inmediato y no recibirás un reembolso.",
+    "unsubscribeCancel": "Cancelar",
+    "unsubscribeConfirm": "Darse de baja",
+
+    "profile": "Perfil",
+    "subscriptions": "Suscripciones",
+    "subscribedExpired": "Flix10K Suscripción - Vencida",
+    "subscribed": "Flix10K Suscrito",
+    "date": "Fecha",
+    "gestationalAge": "Edad gestacional",
+    "heartRate": "Frecuencia cardíaca",
+    "measurement": "Medición",
+    "regenerating": "Regenerando...",
+
+    "imageGenerationProgress": "Procesamiento de medios de IA",
+    "imageEnhancing": "Nuestra IA mejora tus imágenes y vídeos en tiempo real...",
+    "noAiImages": "Aún no hay imágenes de IA",
+    "selectMonths": "Seleccionar meses",
+    "info": "Info",
+     "confirmUpgrade": "Confirmar actualización",
+    "upgradeMessage": "¿Estás seguro de que deseas actualizar tu suscripción?",
+    "upgrade": "Actualizar",
+    "success": "Éxito",
+    "autoRenewStatus": "La renovación automática se ha {{status}} correctamente.",
+    "ok": "Aceptar",
+    "autoRenewUpdate": "La actualización de la renovación automática se puede realizar después de {{date}} (dentro de los 15 días posteriores al vencimiento)",
+    "additionalMonths": "Los meses seleccionados se añadirán a tu suscripción actual. Se requiere pago por los meses adicionales.",
+    "amountToPay": "Monto a pagar: ${{amount}}",
+    "newExpiry": "Nueva fecha de vencimiento: {{date}}",
+    "unsubscribeSuccess": "Flix10K se canceló correctamente",
+    "unsubscribeError": "Algo salió mal al cancelar la suscripción",
+    "autoRenewalStatus": "La renovación automática se ha {{status}} correctamente",
+
+     "tabs":{
+      "babyProfile": "Perfil del bebé",
+      "predictiveBabyImages": "Imágenes predictivas"
+    }
+  },
+  "notFound": {
+    "notFoundTitle": "Esta pantalla no existe.",
+    "notFoundBtn": "Ir a la pantalla principal"
+  },
+   "shareModel": {
+    "shareSelectedMedia": "Compartir medios seleccionados",
+    "areYouSureShareSingle": "¿Estás seguro de que quieres compartir",
+    "areYouSureShareMultiple": "elementos seleccionados?",
+    "preview": "Vista previa",
+    "sharing": "Compartiendo...",
+    "cancel": "Cancelar",
+    "share": "Compartir",
+    "shareViaSMS": "Compartir medios por SMS",
+    "mediaWillBeShared": "El medio titulado \"{{title}}\" se compartirá por SMS.",
+    "enterMobileNumber": "Ingresar número de móvil",
+    "mobilePlaceholder": "Número de móvil",
+    "countryCodePlaceholder": "+34",
+    "addMore": "Agregar más",
+    "submit": "Enviar",
+    "selectContact": "Seleccionar un contacto",
+    "searchPlaceholder": "Buscar por nombre o número",
+    "loadingContacts": "Cargando contactos...",
+    "phoneInfo": "Este número solo se usará para enviar la invitación del medio por SMS.",
+    "errors": {
+      "fillAllFields": "Por favor completa todos los campos existentes antes de agregar uno nuevo.",
+      "duplicateNumber": "Este número de móvil ya existe.",
+      "enterMobile": "Por favor ingrese el número de móvil",
+      "enterCountryCode": "Por favor ingrese el código de país",
+      "sendSmsFailed": "Error al enviar el SMS",
+      "noPhoneInContact": "No se encontró un número de teléfono válido en el contacto",
+      "permissionDenied": "Se denegó el permiso para acceder a los contactos"
+    },
+    "success": {
+      "smsSent": "SMS enviado correctamente"
     }
   }
 }

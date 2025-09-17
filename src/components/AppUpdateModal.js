@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const AppUpdateModal = ({ serverUrl }) => {
   const [visible, setVisible] = useState(false);
@@ -28,7 +29,7 @@ const AppUpdateModal = ({ serverUrl }) => {
     const checkForUpdate = async () => {
       try {
         const skippedDate = await AsyncStorage.getItem('skippedUpdateDate');
-        const today = moment().format('YYYY-MM-DD'); // format: YYYY-MM-DD
+        const today = moment().format('YYYY-MM-DD');
 
         if (skippedDate === today) {
           return;
@@ -86,18 +87,36 @@ const AppUpdateModal = ({ serverUrl }) => {
                 </TouchableOpacity>
               )}
               <TouchableOpacity
-                style={[styles.button, styles.update]}
+                activeOpacity={0.8}
                 onPress={() => {
                   setIsLoading(true);
                   openAppStore();
-                  // Note: Don't hide modal on click if forceUpdate is true
                   setTimeout(() => {
                     setIsLoading(false);
                     if (!forceUpdate) setVisible(false);
                   }, 2000);
                 }}
               >
-                <Text style={styles.buttonText}>{t('appUpdate.buttons.updateNow')}</Text>
+                <LinearGradient
+                  colors={["#d63384", "#9b2c6f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[
+                    styles.button,
+                    styles.update,
+                    {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: 12,
+                      paddingHorizontal: 25,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.buttonText, { color: "#fff" }]}>
+                    {t("appUpdate.buttons.updateNow")}
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           )}
@@ -118,7 +137,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   modalContainer: {
-    backgroundColor: Colors.background,
+    backgroundColor: '#fdf2f8',
     borderRadius: 24,
     padding: 24,
     ...Platform.select({
@@ -135,14 +154,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Nunito700',
     color: Colors.primary,
     textAlign: 'center',
     marginBottom: 12,
   },
   message: {
     fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     color: '#555',
     textAlign: 'center',
     lineHeight: 22,
@@ -168,6 +187,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: Colors.white,
     fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Nunito700',
   },
 });

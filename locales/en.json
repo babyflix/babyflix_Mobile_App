@@ -10,6 +10,7 @@
       "loadingMedia": "Loading media preview...",
       "uploading": "Uploading...",
       "upload": "Upload",
+      "uploadOwnImages": "You can upload your own images.",
       "delete": {
         "title": "Confirm Delete",
         "message": "Are you sure you want to delete this media? This action cannot be undone.",
@@ -45,7 +46,8 @@
       "tabs": {
         "all": "All",
         "images": "Images",
-        "videos": "Videos"
+        "videos": "Videos",
+        "flix10k": "Flix10K"
       },
       "noMedia": "No media available",
       "menu": {
@@ -190,6 +192,9 @@
       "cancelButton": "Cancel",
       "reset": "Reset",
       "close": "Close",
+      "profileTab": "Profile",
+      "subscriptionsTab": "Manage Subscriptions",
+      "spouseName": "Spouse Name",
       "snackbar": {
         "dataFetchFailed": "Data fetching failed. Please try again.",
         "invalidEmail": "Please enter a valid email",
@@ -237,6 +242,8 @@
     "enterMobileNumber": "Enter Mobile Number",
     "phoneInfo": "This number will only be used to send the event invite via SMS to your family or friends.",
     "ultrasoundMessage": "{{userName}}'s ultrasound is scheduled on {{eventDate}}, {{eventTime}}. Log in to the Babyflix app to enjoy live streaming of the experience.",
+    "enterEmailError": "Please enter the email",
+    "enterMobile": "Please enter the mobile number",
     "snackbar": {
       "emailAlreadyInvited": "This email is already invited.",
       "shareEmailSuccess": "Share Event Via Email successful",
@@ -361,6 +368,118 @@
     "buttons": {
       "skip": "Skip",
       "updateNow": "Update Now"
+    }
+  },
+  "flix10k": {
+    "title": "Flix10K",
+    "babyFirstMoments": "From ultrasound images to smiles — watch your baby’s first moments come alive with our AI.",
+    "flix10kDesigner": "Flix10K Designer",
+    "selectImages": "✨Select your favorite images and watch magic happen✨",
+    "convertToAI": "✨ Convert to Flix10K AI",
+
+    "generationType": "Flix10K Generation Type",
+    "predictiveBabys": "Predictive Baby Image",
+
+    "cancel": "Cancel",
+    "subscribeNow": "Subscribe Now",
+    "okGotIt": "OK, Got It",
+    "okIGotIt": "OK, I Got It",
+    "process": "Process",
+    "processing": "Processing...",
+
+    "unlockTitle": "Unlock Flix10K Designer✨",
+    "unlockText": "Subscribe now and transform your baby’s ultrasound images into lifelike moments you’ll cherish forever 💖",
+    "pricePerMonth": "$29.45 / month",
+    "autoRenew": "Auto-Renew",
+    "whyTitle": "Why Flix10K? 💡",
+
+    "reason1": "From ultrasound images to smiles. Watch your baby’s first moments come alive with our AI",
+    "reason2": "See your baby for the first time with AI",
+    "reason3": "Nothing captures the magic of pregnancy like our AI-enhanced before and after photos",
+    "reason4": "BabyFlix Flix10K AI turns your 3D ultrasound into precious, photo-realistic keepsakes",
+
+    "unsubscribed": "You have unsubscribed",
+    "subscriptionNotActive": "Subscription is not active",
+    "month": "Month",
+    "months": "Months",
+    "nextBilling": "Current Expiry",
+    "upgradeSubscription": "Upgrade",
+    "unsubscribe": "Unsubscribe",
+
+    "unsubscribeWarning": "Unsubscribe Warning",
+    "unsubscribeMessage": "Your subscription still has {{days}} days left. If you unsubscribe now, it will be cancelled immediately and you will not receive a refund.",
+    "unsubscribeCancel": "Cancel",
+    "unsubscribeConfirm": "Unsubscribe",
+
+    "profile": "Profile",
+    "subscriptions": "Subscriptions",
+
+    "subscribed": "Flix10K Subscribed",
+    "subscribedExpired": "Flix10K Subscribed - Expired",
+    "date": "Date",
+    "gestationalAge": "Gestational Age",
+    "heartRate": "Heart Rate",
+    "measurement": "Measurement",
+    "regenerating": "Regenerating...",
+
+    "imageGenerationProgress": "AI Media Processing",
+    "imageEnhancing": "Our AI is enhancing your images and videos in real-time...",
+    "noAiImages": "No AI images yet",
+    "selectMonths": "Select Months",
+    "info": "Info",
+    "confirmUpgrade": "Confirm Upgrade",
+    "upgradeMessage": "Are you sure you want to upgrade your subscription?",
+    "upgrade": "Upgrade",
+    "success": "Success",
+    "autoRenewStatus": "Auto-renewal {{status}} successfully.",
+    "ok": "Ok",
+    "autoRenewUpdate": "Auto-renewal update can be done after {{date}} (within 15 days of expiry)",
+    "additionalMonths": "Selected months will add to your current subscription. Payment required for additional months.",
+    "amountToPay": "Amount to Pay: ${{amount}}",
+    "newExpiry": "New Expiry: {{date}}",
+    "unsubscribeSuccess": "Flix10K Unsubscribe Successfully",
+    "unsubscribeError": "Something went wrong while unsubscribing",
+    "autoRenewalStatus": "Auto-renewal {{status}} Successfully",
+
+    "tabs":{
+      "babyProfile": "Baby Profile",
+      "predictiveBabyImages": "Predictive Baby Images"
+    }
+  },
+  "notFound": {
+    "notFoundTitle": "This screen doesn't exist.",
+    "notFoundBtn": "Go to Home screen!"
+  },
+  "shareModel": {
+    "shareSelectedMedia": "Share Selected Media",
+    "areYouSureShareSingle": "Are you sure you want to share",
+    "areYouSureShareMultiple": "selected items?",
+    "preview": "Preview",
+    "sharing": "Sharing...",
+    "cancel": "Cancel",
+    "share": "Share",
+    "shareViaSMS": "Share Media Via SMS",
+    "mediaWillBeShared": "Media titled \"{{title}}\" will be shared via SMS.",
+    "enterMobileNumber": "Enter Mobile Number",
+    "mobilePlaceholder": "Mobile Number",
+    "countryCodePlaceholder": "+1",
+    "addMore": "Add More",
+    "submit": "Submit",
+    "selectContact": "Select a Contact",
+    "searchPlaceholder": "Search by name or number",
+    "loadingContacts": "Loading contacts...",
+    "phoneInfo": "This number will only be used to send the media invite via SMS.",
+    "errors": {
+      "fillAllFields": "Please fill all existing fields before adding a new one.",
+      "duplicateNumber": "This mobile number already exists.",
+      "enterMobile": "Please enter the mobile number",
+      "enterCountryCode": "Please enter the country code",
+      "sendSmsFailed": "Failed to send SMS",
+      "noPhoneInContact": "No valid phone number found in contact",
+      "permissionDenied": "Permission to access contacts was denied"
+    },
+    "success": {
+      "smsSent": "SMS sent successfully"
     }
   }
 }

@@ -15,7 +15,9 @@ export default StyleSheet.create({
     marginBottom: 15,
     backgroundColor: Colors.white,
     paddingLeft: 40,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
+    //fontWeight: '600',
+    fontSize: 16,
     ...Platform.select({
       ios: {
         shadowColor: Colors.black,
@@ -30,7 +32,7 @@ export default StyleSheet.create({
   },
   button: {
     height: 50,
-    borderRadius: 8,
+    borderRadius: 20,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -50,14 +52,15 @@ export default StyleSheet.create({
   },
   buttonText: {
     color: Colors.white,
-    fontSize: 15,
-    fontFamily: 'Poppins_500Medium',
+    fontSize: 16,
+    fontFamily: 'Nunito700',
     //marginTop:3,
   },
   resetButtonText: {
     color: Colors.error,
+    fontFamily: 'Nunito700',
     fontSize: 16,
-    fontWeight: '600',
+    //fontWeight: '600',
   },
   buttonIconPosition: {
     marginTop: 2,
@@ -67,19 +70,22 @@ export default StyleSheet.create({
     top: 10,
   },
   title: {
+    fontFamily: 'Nunito700',
     fontSize: 24,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     color: Colors.textPrimary,
     marginBottom: 20,
   },
   subtitle: {
+    fontFamily: 'Nunito400',
     fontSize: 16,
     color: Colors.textSecondary,
     marginBottom: 15,
     marginTop: 40,
   },
   bolttext: {
-    fontWeight: 'bold',
+    fontFamily: 'Nunito700',
+    //fontWeight: 'bold',
     fontSize: 20,
     textAlign: 'left',
     color: Colors.black,
@@ -88,13 +94,14 @@ export default StyleSheet.create({
   },
   error: {
     color: Colors.error,
+    fontFamily: 'Nunito400',
     fontSize: 14,
     marginBottom: 10,
   },
   link: {
     color: Colors.primary,
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     textDecorationLine: 'underline',
   },
   screenPadding: {
@@ -133,7 +140,7 @@ export default StyleSheet.create({
     paddingLeft: 38,
     color: Colors.textSecondary,
     height: 55,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
   },
   container: {
     flex: 1,
@@ -172,24 +179,24 @@ export default StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 8,
+    borderRadius: 20,
     alignItems: 'center',
     backgroundColor: Colors.primary,
     flexDirection: 'row',
     justifyContent: 'center',
-    height: 55,
+    height: 50,
   },
   resetButton: {
     flex: 1,
     padding: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
+    borderColor: Colors.primary,
+    borderRadius: 20,
     alignItems: 'center',
     backgroundColor: Colors.white,
     flexDirection: 'row',
     justifyContent: 'center',
-    height: 55,
+    height: 50,
   },
 });
 
@@ -205,7 +212,7 @@ export const modalStyles = {
   },
 
   delModalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: '#fdf2f8',
     borderRadius: 14,
     padding: 20,
     width: '80%',
@@ -216,16 +223,16 @@ export const modalStyles = {
 
   delModalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    fontFamily: 'Poppins_600SemiBold',
-    marginBottom: 10,
+    //fontWeight: 'bold',
+    fontFamily: 'Nunito700',
+    marginBottom: 20,
     textAlign: 'center',
-    color: 'black', // override in modal if needed (e.g., red for delete)
+    color: Colors.primary, // override in modal if needed (e.g., red for delete)
   },
 
   delModalMessage: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     textAlign: 'center',
     marginBottom: 20,
     color: '#444',
@@ -241,7 +248,7 @@ export const modalStyles = {
     flex: 1,
     marginHorizontal: 5,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     height: 45,
@@ -250,8 +257,8 @@ export const modalStyles = {
   delModalButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: 'Poppins_500Medium',
+    //fontWeight: 'bold',
+    fontFamily: 'Nunito400',
   },
 
   closeIcon: {
@@ -269,17 +276,19 @@ export const modalStyles = {
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#fdf2f8',
     padding: 20,
     borderRadius: 8,
     width: '80%',
   },
   modalTitle: {
+    fontFamily: 'Nunito700',
     fontSize: 20,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     marginBottom: 10,
     marginLeft: 10,
     textAlign: 'center',
+    color:Colors.primary,
   },
   messageBox: {
     borderWidth: 1,
@@ -290,7 +299,8 @@ export const modalStyles = {
   },
   listTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Nunito700',
+    //fontWeight: 'bold',
     marginTop: 10,
     marginLeft: 5,
   },
@@ -309,6 +319,8 @@ export const modalStyles = {
     marginHorizontal: 5,
     textAlign: "center",
     borderRadius: 8,
+    fontFamily:'Nunito400',
+    fontSize: 14,
   },
   mobileInput: {
     height: 50,
@@ -319,6 +331,8 @@ export const modalStyles = {
     paddingLeft: 37,
     borderRadius: 8,
     marginRight: 5,
+    fontFamily:'Nunito400',
+    fontSize: 14,
   },
   addMoreButton: {
     flexDirection: "row",
@@ -328,10 +342,12 @@ export const modalStyles = {
   addMoreText: {
     marginLeft: 5,
     color: Colors.primary,
+    fontFamily: 'Nunito700',
     fontSize: 16,
   },
   errorText: {
     color: Colors.error,
+    fontFamily: 'Nunito400',
     fontSize: 12,
     marginLeft: 5,
     marginTop: 10,

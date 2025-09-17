@@ -4,11 +4,10 @@ import * as Progress from 'react-native-progress';
 import Colors from '../constants/Colors';
 import { useTranslation } from 'react-i18next';
 
-const FloatingDownloadBar = ({ visible, progress, title , activeDownloads}) => {
+const FloatingDownloadBar = ({ visible, progress, title, activeDownloads }) => {
   const { t } = useTranslation();
   if (!visible) return null;
   if (activeDownloads == 0) return null;
-  console.log('in the FloatingDownloadBar')
 
   return (
     <View style={styles.container}>

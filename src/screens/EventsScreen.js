@@ -30,6 +30,9 @@ import { logError } from '../components/logError';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -54,28 +57,25 @@ const EventsTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => {
   const { t } = useTranslation();
 
   const renderItem = ({ item, index }) => {
-    const isUpcoming = (item.isActive == true );
+    const isUpcoming = (item.isActive == true);
     const eventDateConverted = item.eventDateConverted;
-    const [month, day,year] = eventDateConverted.split("/").map(Number);
-    const eventDate = new Date(Date.UTC(year, month - 1, day)); 
+    const [month, day, year] = eventDateConverted.split("/").map(Number);
+    const eventDate = new Date(Date.UTC(year, month - 1, day));
 
     const monthName = eventDate.toLocaleString('en-US', {
       month: 'short',
-      timeZone: 'UTC' 
+      timeZone: 'UTC'
     });
-    //const shortMonth = useDynamicTranslate(monthName)
     const dayFormatted = day
     const yearFormatted = year
 
-    //const translatedMonth = await useDynamicTranslate(monthName);
-    //const translatedEventName = await useDynamicTranslate(item.eventName);
-    console.log('eventName:', item.translatedMonth,item.translatedName);
-  
+    //console.log('eventName:', item.translatedMonth, item.translatedName);
+
     return (
       <Animatable.View
-      animation="fadeInUp"
-      duration={500}
-      delay={index * 100}
+        animation="fadeInUp"
+        duration={500}
+        delay={index * 100}
         style={styles.eventCard}
       >
         <View
@@ -86,17 +86,17 @@ const EventsTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => {
         >
           <View style={styles.eventDateText}>
             <View style={{ backgroundColor: 'white', alignItems: 'center', paddingVertical: 5, paddingHorizontal: 10 }}>
-              <Text style={{ fontFamily: 'Poppins_600SemiBold' }}>{item.translatedMonth}</Text>
+              <Text style={{ fontFamily: 'Nunito700' }}>{item.translatedMonth}</Text>
             </View>
             <View style={{ alignItems: 'center', marginTop: 3 }} >
-              <Text style={{ fontSize: 26,fontFamily: 'Poppins_500Medium'}}>{dayFormatted}</Text>
+              <Text style={{ fontSize: 26, fontFamily: 'Nunito400', }}>{dayFormatted}</Text>
             </View>
             <View style={{ alignItems: 'center' }}>
-              <Text style={{ fontSize: 10,fontFamily: 'Poppins_400Regular' }}>{yearFormatted}</Text>
+              <Text style={{ fontSize: 10, fontFamily: 'Nunito400', }}>{yearFormatted}</Text>
             </View>
           </View>
         </View>
-  
+
         <View style={styles.eventContent}>
           <Text style={styles.eventTitle}>{item.translatedName}</Text>
           <View style={styles.eventDetail}>
@@ -108,14 +108,14 @@ const EventsTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => {
               <Icon name="email" size={20} color={Colors.textSecondary} />
               <Text style={styles.countText}>{item.emailInvites?.length || 0}</Text>
             </View>
-  
+
             <View style={styles.iconWithCount}>
               <Icon name="phone-iphone" size={20} color={Colors.textSecondary} />
               <Text style={styles.countText}>{item.mobileInvites?.length || 0}</Text>
             </View>
           </View>
         </View>
-  
+
         <TouchableOpacity
           style={[styles.shareButton, isUpcoming ? {} : styles.disabledShareButton]}
           onPress={() => isUpcoming && onPreview(item)}
@@ -126,7 +126,7 @@ const EventsTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => {
       </Animatable.View>
     );
   };
-  
+
 
   return (
     <FlatList
@@ -153,9 +153,9 @@ const EventsTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => {
   );
 }
 
-const AllTab = ({ data, onPreview, onLoadMore,onRefresh, refreshing  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing}/>;
-const UpcomingTab = ({ data, onPreview, onLoadMore,onRefresh, refreshing  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing}/>;
-const PassedTab = ({ data, onPreview, onLoadMore,onRefresh, refreshing  }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing} />;
+const AllTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing} />;
+const UpcomingTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing} />;
+const PassedTab = ({ data, onPreview, onLoadMore, onRefresh, refreshing }) => <EventsTab data={data} onPreview={onPreview} onLoadMore={onLoadMore} onRefresh={onRefresh} refreshing={refreshing} />;
 
 const EventsScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -188,19 +188,19 @@ const EventsScreen = () => {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
-useEffect(() => {
-  if (previewItem?.userName) {
-    (async () => {
-      const translated = await useDynamicTranslate(previewItem.userName);
-      setTranslatedPreviewUserName(translated || previewItem.userName);
-    })();
-  }
-}, [previewItem]);
+  useEffect(() => {
+    if (previewItem?.userName) {
+      (async () => {
+        const translated = await useDynamicTranslate(previewItem.userName);
+        setTranslatedPreviewUserName(translated || previewItem.userName);
+      })();
+    }
+  }, [previewItem]);
 
   const fetchData = async (page = 0, isLoadMore = false) => {
     setIsLoading(true);
     const timezone = await AsyncStorage.getItem('timezone');
-  
+
     try {
       const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/events/getAllEvents`, {
         params: {
@@ -217,26 +217,23 @@ useEffect(() => {
           'Content-Type': 'application/json',
         },
       });
-       
+
       const newEvent = response.data.data;
       const newEvents = await Promise.all(
-      newEvent.map(async (item) => {
-        const [month, day, year] = item.eventDateConverted.split("/").map(Number);
-        const eventDate = new Date(Date.UTC(year, month - 1, day));
-        const monthName = eventDate.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+        newEvent.map(async (item) => {
+          const [month, day, year] = item.eventDateConverted.split("/").map(Number);
+          const eventDate = new Date(Date.UTC(year, month - 1, day));
+          const monthName = eventDate.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
 
-        // const translatedName = await useDynamicTranslate(item.eventName)
-        // const translatedMonth = await useDynamicTranslate(monthName);
-
-        return {
-          ...item,
-          translatedMonth: await useDynamicTranslate(monthName),
-          translatedName: await useDynamicTranslate(item.eventName),
-        };
-      })
-    );
+          return {
+            ...item,
+            translatedMonth: await useDynamicTranslate(monthName),
+            translatedName: await useDynamicTranslate(item.eventName),
+          };
+        })
+      );
       const allEvents = isLoadMore ? [...events, ...newEvents] : newEvents;
-  
+
       setEvents(allEvents);
       const { upcoming, passed } = sortEvents(allEvents);
       setUpcomingEvents(upcoming);
@@ -248,15 +245,15 @@ useEffect(() => {
       const errorData = JSON.stringify(error?.response || error || 'Unknown Error');
 
       await logError({
-             error: error,
-             data: errorData,
-             details: "Error in getAllEvents API call on EventScreen"
-           });
-     
+        error: error,
+        data: errorData,
+        details: "Error in getAllEvents API call on EventScreen"
+      });
+
     } finally {
       setIsLoading(false);
     }
-  };  
+  };
 
   useEffect(() => {
     fetchData();
@@ -264,33 +261,33 @@ useEffect(() => {
 
   const onRefresh = async () => {
     setIsRefreshing(true);
-    await fetchData(0); 
+    await fetchData(0);
     setIsRefreshing(false);
-  };  
+  };
 
   const loadMoreData = () => {
     if (hasMoreData && !isLoading) {
       fetchData(pageIndex + 1, true);
     }
-  };  
+  };
 
   const handleShareViaEmail = async ({ previewItem, inviteType, invitedEmails, mobileNumbers }) => {
     try {
 
+      //console.log('previewItem, inviteType, invitedEmails, mobileNumbers', previewItem, inviteType, invitedEmails, mobileNumbers)
+
       if (!previewItem) {
-        console.error("Error: previewItem is undefined!");
-        return;
-      }
-      if (!inviteType) {
-        console.error("Error: inviteType is undefined!");
         return;
       }
       if (inviteType === "email" && invitedEmails.length === 0) {
-        console.error("Error: No emails provided!");
+        setEmailError(t("eventsScreen.enterEmailError"))
         return;
       }
-      if (inviteType === "mobile" && mobileNumbers.length === 0) {
-        console.error("Error: No mobile numbers provided!");
+      if (inviteType === "mobile" && mobileNumbers.filter(item => item.mobileNumber && item.mobileNumber.trim() !== "").length === 0) {
+        setMobileErrors(t("eventsScreen.enterMobile"))
+        return;
+      }
+      if (!inviteType) {
         return;
       }
 
@@ -316,16 +313,31 @@ useEffect(() => {
 
       const response = await axios.post(`${EXPO_PUBLIC_API_URL}/api/events/sendInvite`, requestBody);
 
+      setMobileModalVisible(false);
+      setEmailModalVisible(false);
+
       if (inviteType === 'email' && response.data) {
         setExistingEmails(updatedEmails);
         setSnackbarMessage(t('eventsScreen.snackbar.shareEmailSuccess'));
         setSnackbarType('success');
         setSnackbarVisible(true);
+        onRefresh();
+
+        sendDeviceUserInfo({
+          action_type: USERACTIONS.SHARE,
+          action_description: `User Shared event via email`,
+        });
       } else {
         setExistingMobileNumbers(updatedMobileNumbers);
         setSnackbarMessage(t('eventsScreen.snackbar.shareMobileSuccess'));
         setSnackbarType('success');
         setSnackbarVisible(true);
+        onRefresh();
+
+        sendDeviceUserInfo({
+          action_type: USERACTIONS.SHARE,
+          action_description: `User Shared event via SMS`,
+        });
       }
     } catch (error) {
       await logError({
@@ -357,7 +369,6 @@ useEffect(() => {
     setInviteType("mobile");
   };
 
-
   const handleRemoveMobileRow = (index) => {
     setMobileNumbers(mobileNumbers.filter((_, i) => i !== index));
   };
@@ -379,6 +390,7 @@ useEffect(() => {
     }
     setMobileErrors(updatedErrors);
   };
+
   const openMobileModal = () => {
     if (previewItem && previewItem.mobileInvites?.length > 0) {
       const parsedMobiles = previewItem.mobileInvites.map((item) => {
@@ -398,17 +410,11 @@ useEffect(() => {
 
     setModalVisible(false);
     setMobileModalVisible(true);
+    setInviteType("mobile");
   };
-  
-  // const translatedUserName = useDynamicTranslate(previewItem.userName);
-  // const messageForShare = t('eventsScreen.ultrasoundMessage', {
-  //   userName: translatedUserName || previewItem.userName,
-  //   eventDate: previewItem.eventDateConverted,
-  //   eventTime: previewItem.eventTime
-  // });
 
   return (
-    <View style={[GlobalStyles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
+    <View style={[GlobalStyles.container, Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
       <Header title={t('eventsScreen.title')} />
 
       {isLoading ? (
@@ -426,9 +432,91 @@ useEffect(() => {
             tabBarInactiveTintColor: Colors.textSecondary,
           })}
         >
-          <Tab.Screen name={t('eventsScreen.allTab')} children={() => <AllTab data={[...upcomingEvents, ...passedEvents]} onPreview={handlePreview} onLoadMore={loadMoreData} onRefresh={onRefresh} refreshing={isRefreshing} />} />
-          <Tab.Screen name={t('eventsScreen.upcomingTab')} children={() => <UpcomingTab data={upcomingEvents} onPreview={handlePreview} onLoadMore={loadMoreData} onRefresh={onRefresh} refreshing={isRefreshing}/>} />
-          <Tab.Screen name={t('eventsScreen.passedTab')} children={() => <PassedTab data={passedEvents} onPreview={handlePreview} onLoadMore={loadMoreData} onRefresh={onRefresh} refreshing={isRefreshing}/>} />
+          <Tab.Screen
+            name={t('eventsScreen.allTab')}
+            options={{
+              tabBarLabel: ({ color }) => (
+                <View style={styles.tabItem}>
+                  <Ionicons name="albums-outline" size={20} color={color} />
+                  <View style={styles.tabRow}>
+                    <Text style={[styles.tabLabel, { color }]}>{t('eventsScreen.allTab')}</Text>
+                    {[...upcomingEvents, ...passedEvents].length > 0 && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>
+                          {[...upcomingEvents, ...passedEvents].length}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ),
+            }}
+            children={() => (
+              <AllTab
+                data={[...upcomingEvents, ...passedEvents]}
+                onPreview={handlePreview}
+                onLoadMore={loadMoreData}
+                onRefresh={onRefresh}
+                refreshing={isRefreshing}
+              />
+            )}
+          />
+
+          <Tab.Screen
+            name={t('eventsScreen.upcomingTab')}
+            options={{
+              tabBarLabel: ({ color }) => (
+                <View style={styles.tabItem}>
+                  <Ionicons name="calendar-outline" size={20} color={color} />
+                  <View style={styles.tabRow}>
+                    <Text style={[styles.tabLabel, { color }]}>{t('eventsScreen.upcomingTab')}</Text>
+                    {upcomingEvents.length > 0 && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{upcomingEvents.length}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ),
+            }}
+            children={() => (
+              <UpcomingTab
+                data={upcomingEvents}
+                onPreview={handlePreview}
+                onLoadMore={loadMoreData}
+                onRefresh={onRefresh}
+                refreshing={isRefreshing}
+              />
+            )}
+          />
+
+          <Tab.Screen
+            name={t('eventsScreen.passedTab')}
+            options={{
+              tabBarLabel: ({ color }) => (
+                <View style={styles.tabItem}>
+                  <MaterialCommunityIcons name="calendar-remove-outline" size={20} color={color} />
+                  <View style={styles.tabRow}>
+                    <Text style={[styles.tabLabel, { color }]}>{t('eventsScreen.passedTab')}</Text>
+                    {passedEvents.length > 0 && (
+                      <View style={[styles.badge, { backgroundColor: 'lightgray' }]}>
+                        <Text style={styles.badgeText}>{passedEvents.length}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ),
+            }}
+            children={() => (
+              <PassedTab
+                data={passedEvents}
+                onPreview={handlePreview}
+                onLoadMore={loadMoreData}
+                onRefresh={onRefresh}
+                refreshing={isRefreshing}
+              />
+            )}
+          />
         </Tab.Navigator>
       )}
 
@@ -443,24 +531,40 @@ useEffect(() => {
                 <Text>{previewItem.eventTime}</Text>
               </View>
 
-              <TouchableOpacity
-                style={[GlobalStyles.button, styles.moduleButton, { marginTop: 10 }]}
-                onPress={openMobileModal}
-              >
-                <Ionicons name="phone-portrait-outline" size={22} color={Colors.white} />
-                <Text style={[GlobalStyles.buttonText, styles.modalButtonText]}>{t('eventsScreen.shareViaMobile')}</Text>
+              <TouchableOpacity activeOpacity={0.8} onPress={openMobileModal} style={{ marginBottom: -20 }}>
+                <LinearGradient
+                  colors={["#d63384", "#9b2c6f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[GlobalStyles.button, styles.moduleButton, { justifyContent: "center" }]}
+                >
+                  <Ionicons name="phone-portrait-outline" size={22} color="#fff" />
+                  <Text style={[GlobalStyles.buttonText, styles.modalButtonText, { marginLeft: 6 }]}>
+                    {t("eventsScreen.shareViaMobile")}
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[GlobalStyles.button, styles.moduleButton, { marginTop: 0 }]}
+                activeOpacity={0.8}
                 onPress={() => {
                   setModalVisible(false);
                   setEmailModalVisible(true);
-                  setInvitedEmails(previewItem.emailInvites||[])
+                  setInvitedEmails(previewItem.emailInvites || []);
+                  setInviteType("email");
                 }}
               >
-                <Ionicons name="mail-outline" size={24} color={Colors.white} />
-                <Text style={[GlobalStyles.buttonText, styles.modalButtonText]}>{t('eventsScreen.shareViaEmail')}</Text>
+                <LinearGradient
+                  colors={["#d63384", "#9b2c6f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[GlobalStyles.button, styles.moduleButton, { justifyContent: "center" }]}
+                >
+                  <Ionicons name="mail-outline" size={24} color="#fff" />
+                  <Text style={[GlobalStyles.buttonText, styles.modalButtonText, { marginLeft: 6 }]}>
+                    {t("eventsScreen.shareViaEmail")}
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity style={[GlobalStyles.button, styles.moduleButton, { marginTop: 0, backgroundColor: Colors.white }]} onPress={closeModal}>
@@ -476,243 +580,261 @@ useEffect(() => {
       {emailModalVisible && (
         <Modal transparent={true} visible={emailModalVisible} onRequestClose={() => setEmailModalVisible(false)}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{t('eventsScreen.shareEventViaEmail')}</Text>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>{t('eventsScreen.shareEventViaEmail')}</Text>
 
-              <View style={styles.messageBox}>
-                {/* <Text>{previewItem.userName}'s ultrasound is scheduled on {previewItem.eventDateConverted}, {previewItem.eventTime}.
-                  Log in to the Babyflix app to enjoy live streaming of the experience.</Text> */}
-                <Text>{
-                  t('eventsScreen.ultrasoundMessage', {
-                    userName: translatedPreviewUserName || previewItem.userName,
-                    eventDate: previewItem.eventDateConverted,
-                    eventTime: previewItem.eventTime
-                  })}
-                </Text>
-              </View>
+                <View style={styles.messageBox}>
+                  <Text style={{ fontFamily: 'Nunito400' }}>{
+                    t('eventsScreen.ultrasoundMessage', {
+                      userName: translatedPreviewUserName || previewItem.userName,
+                      eventDate: previewItem.eventDateConverted,
+                      eventTime: previewItem.eventTime
+                    })}
+                  </Text>
+                </View>
 
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={24} color={Colors.textSecondary} />
-                <TextInput
-                  style={styles.input}
-                  placeholder={t('eventsScreen.enterEmail')}
-                  value={email}
-                  onChangeText={(text) => {
-                    setEmail(text);
-                    setEmailError('');
-                  }}
-                />
-                <TouchableOpacity onPress={() => {
-                  if (email) {
-                    const trimmedEmail = email.trim().toLowerCase();
-                    const alreadyInvited = invitedEmails.includes(trimmedEmail);
-                    setEmail('');
-                    setInviteType("email");
-
-                    if (alreadyInvited) {
-                      setEmailError(t('eventsScreen.snackbar.emailAlreadyInvited'));
-                    } else {
-                      setInvitedEmails([...invitedEmails, email])
+                <View style={styles.inputContainer}>
+                  <Ionicons name="mail-outline" size={24} color={Colors.textSecondary} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t('eventsScreen.enterEmail')}
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      setEmailError('');
+                    }}
+                  />
+                  <TouchableOpacity onPress={() => {
+                    if (email) {
+                      const trimmedEmail = email.trim().toLowerCase();
+                      const alreadyInvited = invitedEmails.includes(trimmedEmail);
                       setEmail('');
                       setInviteType("email");
-                      setEmailError('');
+
+                      if (alreadyInvited) {
+                        setEmailError(t('eventsScreen.snackbar.emailAlreadyInvited'));
+                      } else {
+                        setInvitedEmails([...invitedEmails, email])
+                        setEmail('');
+                        setInviteType("email");
+                        setEmailError('');
+                      }
                     }
-                  }
-                }}>
-                  <Ionicons name="add-circle" size={28} color={Colors.primary} />
-                </TouchableOpacity>
-              </View>
-              {emailError ? (
-                <Text style={styles.errorText}>{emailError}</Text>
-              ) : null}
+                  }}>
+                    <Ionicons name="add-circle" size={28} color={Colors.primary} />
+                  </TouchableOpacity>
+                </View>
+                {emailError ? (
+                  <Text style={styles.errorText}>{emailError}</Text>
+                ) : null}
 
-              <Text style={styles.shareCount}>{t('eventsScreen.totalShares')}: {invitedEmails.length}</Text>
+                <Text style={styles.shareCount}>{t('eventsScreen.totalShares')}: {invitedEmails.length}</Text>
 
-              <Text style={styles.listTitle}>{t('eventsScreen.invitedForThisEvent')}</Text>
-              <ScrollView contentContainerStyle={styles.invitedList}>
-                {invitedEmails.map((email, index) => (
-                  <View key={index} style={styles.invitedEmailContainer}>
-                    <Text style={styles.invitedEmail}>{email}</Text>
-                    <TouchableOpacity onPress={() => {
-                      setInvitedEmails(invitedEmails.filter((_, i) => i !== index));
-                    }}>
-                      <Ionicons name="close-circle" size={22} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
+                <Text style={styles.listTitle}>{t('eventsScreen.invitedForThisEvent')}</Text>
+                <ScrollView contentContainerStyle={styles.invitedList}>
+                  {invitedEmails.map((email, index) => (
+                    <View key={index} style={styles.invitedEmailContainer}>
+                      <Text style={styles.invitedEmail}>{email}</Text>
+                      <TouchableOpacity onPress={() => {
+                        setInvitedEmails(invitedEmails.filter((_, i) => i !== index));
+                      }}>
+                        <Ionicons name="close-circle" size={22} color="red" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
 
-              <View style={[GlobalStyles.row, { marginVertical: 15 }]}>
-                <TouchableOpacity
-                  style={[GlobalStyles.resetButton, GlobalStyles.allMarginRight]}
-                  onPress={() => setEmailModalVisible(false)}
-                >
-                  <Ionicons name="close-circle-outline" size={20} color={Colors.black} style={{ marginRight: 5 }} />
-                  <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>{t('eventsScreen.cancel')}</Text>
-                </TouchableOpacity>
+                <View style={[GlobalStyles.row, { marginVertical: 15 }]}>
 
-                <TouchableOpacity
-                  style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft]}
-                  onPress={() => {
-                    if (previewItem) {
-                      handleShareViaEmail({
-                        previewItem: previewItem,
-                        inviteType: inviteType,
-                        invitedEmails: invitedEmails,
-                        mobileNumbers: mobileNumbers,
-                      });
-                      setTimeout(() => {
-                        setEmailModalVisible(false);
-                      }, 2000);
-                    } else {
-                      console.error("Error: No event selected for sharing.");
-                    }
-                  }}
-                >
-                  <Ionicons name="send-outline" size={20} color={Colors.white} style={{ marginRight: 5 }} />
-                  <Text style={GlobalStyles.buttonText}>{t('eventsScreen.send')}</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[GlobalStyles.resetButton, GlobalStyles.allMarginRight]}
+                    onPress={() => setEmailModalVisible(false)}
+                  >
+                    <Ionicons name="close-circle-outline" size={20} color={Colors.primary} style={{ marginRight: 5 }} />
+                    <Text style={[GlobalStyles.buttonText, { color: Colors.primary }]}>
+                      {t("eventsScreen.cancel")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={{ flex: 1 }}
+                    onPress={() => {
+                      if (previewItem) {
+                        handleShareViaEmail({
+                          previewItem: previewItem,
+                          inviteType: inviteType,
+                          invitedEmails: invitedEmails,
+                          mobileNumbers: mobileNumbers,
+                        });
+                        // setTimeout(() => {
+                        //   setEmailModalVisible(false);
+                        // }, 2000);
+                      } else {
+                        console.error("Error: No event selected for sharing.");
+                      }
+                    }}
+                  >
+                    <LinearGradient
+                      colors={["#d63384", "#9b2c6f"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}
+                    >
+                      <Ionicons name="send-outline" size={20} color="#fff" style={{ marginRight: 5 }} />
+                      <Text style={[GlobalStyles.buttonText, { color: "#fff" }]}>
+                        {t("eventsScreen.send")}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+
+                </View>
               </View>
             </View>
-          </View>
           </TouchableWithoutFeedback>
           {isLoading && <Loader loading={true} />}
-           <Snackbar
-              visible={snackbarVisible}
-              message={snackbarMessage}
-              type={snackbarType}
-              onDismiss={() => setSnackbarVisible(false)}
-            />
         </Modal>
       )}
 
       {mobileModalVisible && (
         <Modal transparent={true} visible={mobileModalVisible} onRequestClose={() => setMobileModalVisible(false)}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{t('eventsScreen.shareEvebtViaMobile')}</Text>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>{t('eventsScreen.shareEvebtViaMobile')}</Text>
 
-              <View style={styles.messageBox}>
-                {/* <Text>{previewItem.userName}'s ultrasound is scheduled on {previewItem.eventDateConverted}, {previewItem.eventTime}.
-                  Log in to the Babyflix app to enjoy live streaming of the experience.</Text> */}
-                  <Text>{t('eventsScreen.ultrasoundMessage', {
+                <View style={styles.messageBox}>
+                  <Text style={{ fontFamily: 'Nunito400' }}>{t('eventsScreen.ultrasoundMessage', {
                     userName: translatedPreviewUserName || previewItem.userName,
                     eventDate: previewItem.eventDateConverted,
                     eventTime: previewItem.eventTime
                   })}
                   </Text>
-              </View>
-
-              <Text style={styles.listTitle}>{t('eventsScreen.enterMobileNumber')}</Text>
-              <ScrollView >
-                {mobileNumbers.map((item, index) => (
-                  <View key={index} style={styles.mobileInputRow}>
-                    <TextInput
-                      style={styles.countryCodeInput}
-                      placeholder="1"
-                      value={item.countryCode}
-                      onChangeText={(text) => handleUpdateMobileNumber(index, "countryCode", text)}
-                      keyboardType="phone-pad"
-                      maxLength={4}
-                    />
-
-                    <View style={{ flex: 1 }}>
-                      <Ionicons
-                        name="call"
-                        size={20}
-                        color={Colors.gray}
-                        style={{
-                          position: 'absolute',
-                          left: '6%',
-                          top: '50%',
-                          transform: [{ translateY: -10 }],
-                        }}
-                      />
-                      <TextInput
-                        style={styles.mobileInput}
-                        placeholder={t('eventsScreen.enterMobileNumber')}
-                        value={item.mobileNumber}
-                        onChangeText={(text) => handleUpdateMobileNumber(index, "mobileNumber", text)}
-                        keyboardType="phone-pad"
-                        maxLength={10}
-                        onFocus={() => setShowPhoneInfo(true)}
-                      />
-                    </View>
-
-                    {mobileNumbers.length > 1 && (
-                      <TouchableOpacity onPress={() => handleRemoveMobileRow(index)}>
-                        <Ionicons name="remove-circle-outline" size={24} color="red" />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ))}
-                {mobileErrors ? (
-                  <Text style={styles.errorText}>{mobileErrors}</Text>
-                ) : null}
-                {showPhoneInfo && (
-                <View style={{
-                  backgroundColor: 'lightyellow',
-                  padding: 8,
-                  borderRadius: 5,
-                  marginTop: 5,
-                }}>
-                  <Text style={{ fontSize: 12, color: 'black' }}>
-                    {t('eventsScreen.phoneInfo')}
-                  </Text>
                 </View>
-              )}
-              </ScrollView>
+
+                <Text style={styles.listTitle}>{t('eventsScreen.enterMobileNumber')}</Text>
+                <ScrollView >
+                  {mobileNumbers.map((item, index) => (
+                    <View key={index} style={styles.mobileInputRow}>
+                      <TextInput
+                        style={styles.countryCodeInput}
+                        placeholder="1"
+                        value={item.countryCode}
+                        onChangeText={(text) => {
+                          handleUpdateMobileNumber(index, "countryCode", text);
+                          setMobileErrors('');
+                        }}
+                        keyboardType="phone-pad"
+                        maxLength={4}
+                      />
+
+                      <View style={{ flex: 1 }}>
+                        <Ionicons
+                          name="call"
+                          size={20}
+                          color={Colors.gray}
+                          style={{
+                            position: 'absolute',
+                            left: '6%',
+                            top: '50%',
+                            transform: [{ translateY: -10 }],
+                          }}
+                        />
+                        <TextInput
+                          style={styles.mobileInput}
+                          placeholder={t('eventsScreen.enterMobileNumber')}
+                          value={item.mobileNumber}
+                          onChangeText={(text) => {
+                            handleUpdateMobileNumber(index, "mobileNumber", text);
+                            setMobileErrors('');
+                          }}
+                          keyboardType="phone-pad"
+                          maxLength={10}
+                          onFocus={() => setShowPhoneInfo(true)}
+                        />
+                      </View>
+
+                      {mobileNumbers.length > 1 && (
+                        <TouchableOpacity onPress={() => handleRemoveMobileRow(index)}>
+                          <Ionicons name="remove-circle-outline" size={24} color="red" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  ))}
+                  {mobileErrors ? (
+                    <Text style={styles.errorText}>{mobileErrors}</Text>
+                  ) : null}
+                  {showPhoneInfo && (
+                    <View style={{
+                      backgroundColor: 'lightyellow',
+                      padding: 8,
+                      borderRadius: 5,
+                      marginTop: 5,
+                    }}>
+                      <Text style={{ fontFamily: 'Nunito400', fontSize: 12, color: 'black' }}>
+                        {t('eventsScreen.phoneInfo')}
+                      </Text>
+                    </View>
+                  )}
+                </ScrollView>
 
 
-              <TouchableOpacity style={styles.addMoreButton} onPress={handleAddMobileRow}>
-                <Ionicons name="add-circle" size={24} color={Colors.primary} />
-                <Text style={styles.addMoreText}>{t('eventsScreen.addMore')}</Text>
-              </TouchableOpacity>
-
-              <View style={[GlobalStyles.row, { marginVertical: 15 }]}>
-                <TouchableOpacity
-                  style={[GlobalStyles.resetButton, GlobalStyles.allMarginRight]}
-                  onPress={() => setMobileModalVisible(false)}
-                >
-                  <Ionicons name="refresh" size={20} color={Colors.black} style={{ marginRight: 5 }} />
-                  <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>{t('eventsScreen.cancel')}</Text>
+                <TouchableOpacity style={styles.addMoreButton} onPress={handleAddMobileRow}>
+                  <Ionicons name="add-circle" size={24} color={Colors.primary} />
+                  <Text style={styles.addMoreText}>{t('eventsScreen.addMore')}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft]}
-                  onPress={() => {
-                    if (previewItem) {
-                      handleShareViaEmail({
-                        previewItem: previewItem,
-                        inviteType: inviteType,
-                        invitedEmails: invitedEmails,
-                        mobileNumbers: mobileNumbers,
-                      });
+                <View style={[GlobalStyles.row, { marginVertical: 15 }]}>
+                  <TouchableOpacity
+                    style={[GlobalStyles.resetButton, GlobalStyles.allMarginRight]}
+                    onPress={() => setMobileModalVisible(false)}
+                  >
+                    <Ionicons name="refresh" size={20} color={Colors.black} style={{ marginRight: 5 }} />
+                    <Text style={[GlobalStyles.buttonText, { color: Colors.black }]}>{t('eventsScreen.cancel')}</Text>
+                  </TouchableOpacity>
 
-                      setMobileModalVisible(false);
-                    } else {
-                      console.error("Error: No event selected for sharing.");
-                    }
-                  }}
-                >
-                  <Ionicons name="send-outline" size={20} color={Colors.white} style={{ marginRight: 5 }} />
-                  <Text style={GlobalStyles.buttonText}>{t('eventsScreen.submit')}</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={{ flex: 1 }}
+                    onPress={() => {
+                      if (previewItem) {
+                        handleShareViaEmail({
+                          previewItem: previewItem,
+                          inviteType: inviteType,
+                          invitedEmails: invitedEmails,
+                          mobileNumbers: mobileNumbers,
+                        });
+
+                        //setMobileModalVisible(false);
+                      } else {
+                        console.error("Error: No event selected for sharing.");
+                      }
+                    }}
+                  >
+                    <LinearGradient
+                      colors={["#d63384", "#9b2c6f"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[GlobalStyles.registerButton, GlobalStyles.allMarginLeft, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}
+                    >
+                      <Ionicons name="send-outline" size={20} color={Colors.white} style={{ marginRight: 5 }} />
+                      <Text style={GlobalStyles.buttonText}>{t('eventsScreen.send')}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
           </TouchableWithoutFeedback>
           {isLoading && <Loader loading={true} />}
-          <Snackbar
-              visible={snackbarVisible}
-              message={snackbarMessage}
-              type={snackbarType}
-              onDismiss={() => setSnackbarVisible(false)}
-            />
         </Modal>
       )}
+      <Snackbar
+        visible={snackbarVisible}
+        message={snackbarMessage}
+        type={snackbarType}
+        onDismiss={() => setSnackbarVisible(false)}
+      />
     </View>
   );
 };
@@ -720,7 +842,7 @@ useEffect(() => {
 const styles = StyleSheet.create({
   gridContainer: {
     padding: 15,
-    paddingBottom:65,
+    paddingBottom: 65,
   },
   eventCard: {
     backgroundColor: Colors.white,
@@ -749,9 +871,9 @@ const styles = StyleSheet.create({
   },
 
   eventTitle: {
-   fontSize: 16,
+    fontSize: 16,
     color: '#333',
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Nunito700',
   },
   eventDetail: {
     flexDirection: 'row',
@@ -762,8 +884,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 6,
     marginTop: 3,
-    color:'#555',
-    fontFamily: 'Poppins_400Regular',
+    color: '#555',
+    fontFamily: 'Nunito400',
   },
   shareButton: {
     position: 'absolute',
@@ -782,14 +904,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#fdf2f8',
     padding: 20,
     borderRadius: 8,
     width: '80%',
   },
   modalTitle: {
+    fontFamily: 'Nunito700',
     fontSize: 20,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     marginBottom: 10,
     marginLeft: 10,
   },
@@ -805,6 +928,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: Colors.white,
+    fontFamily: 'Nunito700',
     fontSize: 16,
     paddingLeft: 7,
     flexDirection: 'row',
@@ -823,6 +947,7 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: Colors.white,
+    fontFamily: 'Nunito700',
     fontSize: 16,
     paddingLeft: 10,
     flexDirection: 'row',
@@ -836,18 +961,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   shareCount: {
+    fontFamily: 'Nunito700',
     fontSize: 15,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     marginTop: 10,
     marginLeft: 2,
   },
   listTitle: {
+    fontFamily: 'Nunito700',
     fontSize: 16,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     marginTop: 10,
     marginLeft: 5
   },
   invitedEmail: {
+    fontFamily: 'Nunito400',
     fontSize: 16,
     color: Colors.textPrimary,
     marginBottom: 5,
@@ -860,6 +988,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    fontFamily: 'Nunito400',
     padding: 10,
   },
   inputContainer: {
@@ -902,6 +1031,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     textAlign: "center",
     borderRadius: 8,
+    fontFamily: 'Nunito400',
   },
   mobileInput: {
     height: 50,
@@ -912,6 +1042,7 @@ const styles = StyleSheet.create({
     paddingLeft: 37,
     borderRadius: 8,
     marginRight: 5,
+    fontFamily: 'Nunito400',
   },
   addMoreButton: {
     flexDirection: "row",
@@ -921,6 +1052,7 @@ const styles = StyleSheet.create({
   addMoreText: {
     marginLeft: 5,
     color: Colors.primary,
+    fontFamily: 'Nunito400',
     fontSize: 16,
   },
   buttonContent: {
@@ -953,9 +1085,9 @@ const styles = StyleSheet.create({
 
   countText: {
     marginLeft: 5,
-    marginTop:3,
-    fontSize: 12,
-    fontFamily:'Poppins_500Medium',
+    marginTop: 3,
+    fontSize: 13,
+    fontFamily: 'Nunito400',
     color: Colors.black,
   },
   eventImageContainer: {
@@ -973,21 +1105,42 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: Colors.error,
+    fontFamily: 'Nunito400',
     fontSize: 12,
     marginLeft: 5,
     marginTop: 5,
   },
-   tabBar: {
-      backgroundColor: Colors.white,
-      elevation: 0,
-      shadowOpacity: 0,
-      borderBottomWidth: 1,
-      borderBottomColor: Colors.border,
-    },
-    tabLabel: {
-      textTransform: 'none',
-      fontFamily:'Poppins_400Regular'
-    },
+  tabBar: {
+    backgroundColor: Colors.white,
+  },
+  tabItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  tabLabel: {
+    fontFamily: 'Nunito400',
+    fontSize: 12,
+    marginRight: 4,
+  },
+  badge: {
+    backgroundColor: '#e9b7dcff',
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    minWidth: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
 });
 
 export default EventsScreen;

@@ -11,52 +11,6 @@ const AuthLoader = ({ children }) => {
   const dispatch = useDispatch();
   const isLoggingOut = useSelector((state) => state.auth.isLoggingOut);
 
-  // const refreshToken = async () => {
-  //   const timeout = setTimeout(() => {
-  //     console.warn('Auth check timed out');
-  //     setCheckingAuth(false); // Avoid blocking the app forever
-  //   }, 5000); // 5 seconds max
-
-  //   try {
-  //     const token = await AsyncStorage.getItem('token');
-  //     const userDataStr = await AsyncStorage.getItem('userData');
-  //     const userData = userDataStr ? JSON.parse(userDataStr) : null;
-
-  //     if (token && userData) {
-  //       const res = await axios.post(
-  //         `${EXPO_PUBLIC_API_URL}/api/auth/apprefreshtoken`,
-  //         { token },
-  //         { headers: { 'Content-Type': 'application/json' } }
-  //       );
-
-  //       console.log('apprefreshtoken', res.data?.newtoken);
-
-  //       if (res.data?.newtoken) {
-  //         const updatedData = {
-  //           ...res.data,
-  //           token: res.data.newtoken,
-  //         };
-
-  //         await AsyncStorage.setItem('token', updatedData.token);
-  //         await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
-  //         dispatch(setCredentials(updatedData));
-  //       } else {
-  //         throw new Error('Token refresh failed');
-  //       }
-  //     } else {
-  //       throw new Error('Missing token or userData');
-  //     }
-  //   } catch (err) {
-  //     console.warn('AuthLoader error:', err.message);
-  //     await AsyncStorage.removeItem('token');
-  //     await AsyncStorage.removeItem('userData');
-  //     dispatch(logout());
-  //   } finally {
-  //     clearTimeout(timeout);
-  //     setCheckingAuth(false);
-  //   }
-  // };
-
   const refreshToken = async () => {
   const timeout = setTimeout(() => {
     setCheckingAuth(false);
@@ -88,11 +42,11 @@ const AuthLoader = ({ children }) => {
         { headers: { 'Content-Type': 'application/json' } }
       );
 
-      if (res.data?.newtoken) {
+      if (res.data?.token) {
         const updatedData = {
           ...res.data,
-          token: res.data.newtoken,
         };
+        console.log('updatedData', updatedData);
 
         await AsyncStorage.setItem('token', updatedData.token);
         await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
@@ -109,7 +63,7 @@ const AuthLoader = ({ children }) => {
   } finally {
     clearTimeout(timeout);
     setCheckingAuth(false);
-    await AsyncStorage.removeItem('logoutInProgress'); // ✅ clear flag after
+    await AsyncStorage.removeItem('logoutInProgress');
   }
 };
 

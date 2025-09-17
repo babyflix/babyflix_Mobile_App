@@ -45,7 +45,7 @@ const CustomDropdown = ({
           <Text
             style={{
               fontSize: 14,
-              fontFamily: 'Poppins_400Regular',
+              fontFamily: 'Nunito400',
               color: selectedValue ? 'black' : 'gray',
               paddingLeft: 5,
             }}
@@ -89,7 +89,7 @@ const CustomDropdown = ({
                   }}
                   style={{ paddingVertical: 12 }}
                 >
-                  <Text style={{ fontFamily: 'Poppins_400Regular' }}>{item.label}</Text>
+                  <Text style={{ fontFamily: 'Nunito400' }}>{item.label}</Text>
                 </TouchableOpacity>
               )}
             />

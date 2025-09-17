@@ -30,7 +30,8 @@ import { logError } from '../components/logError';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import LanguageModal from '../constants/LanguageModal';
-//import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
+import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
+
 const LoginScreen = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -58,17 +59,16 @@ const LoginScreen = () => {
   }, []);
 
   useEffect(() => {
-      const checkLanguage = async () => {
-        const lang = await AsyncStorage.getItem("appLanguage");
-        console.log('Language from storage:', lang);
-        if (!lang) {
-          setShowLangModal(true); // show modal if not selected
-        } else {
-          i18n.changeLanguage(lang); // apply saved language
-        }
-      };
-      checkLanguage();
-    }, []);
+    const checkLanguage = async () => {
+      const lang = await AsyncStorage.getItem("appLanguage");
+      if (!lang) {
+        setShowLangModal(true);
+      } else {
+        i18n.changeLanguage(lang);
+      }
+    };
+    checkLanguage();
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -97,7 +97,6 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      console.log('EXPO_PUBLIC_API_URL 1',EXPO_PUBLIC_API_URL)
       const timezone = await AsyncStorage.getItem('timezone');
 
       const res = await axios.post(
@@ -114,6 +113,8 @@ const LoginScreen = () => {
         }
       );
 
+      console.log('Login response:', res.data);
+
       if (res.data.token) {
         setIsStreamStart(true);
         await AsyncStorage.setItem('token', res.data.token);
@@ -126,10 +127,10 @@ const LoginScreen = () => {
         setSnackbarType('success');
         setSnackbarVisible(true);
 
-        // sendDeviceUserInfo({
-        //   action_type: USERACTIONS.LOGIN,
-        //   action_description: USERACTIONS.LOGINDESC,
-        // });
+        sendDeviceUserInfo({
+          action_type: USERACTIONS.LOGIN,
+          action_description: USERACTIONS.LOGINDESC,
+        });
 
         setTimeout(() => {
           router.replace('/gallery');
@@ -173,9 +174,9 @@ const LoginScreen = () => {
       style={[GlobalStyles.container]}
     >
       <View style={[GlobalStyles.container]}>
-        <CommonSVG color={svgColor} />      
+        <CommonSVG color={svgColor} />
 
-        <ScrollView contentContainerStyle={[GlobalStyles.screenPadding, { flexGrow: 1, justifyContent: 'center', alignItems: 'center',}]}
+        <ScrollView contentContainerStyle={[GlobalStyles.screenPadding, { flexGrow: 1, justifyContent: 'center', alignItems: 'center', }]}
           keyboardShouldPersistTaps="handled"
         >
           <View style={{ width: '100%' }}>
@@ -242,7 +243,7 @@ const LoginScreen = () => {
             </TouchableOpacity>
 
             <View style={[GlobalStyles.row, GlobalStyles.center, { marginTop: 20 }]}>
-              <Text style={{ color: Colors.textSecondary }}>
+              <Text style={{ color: Colors.textSecondary, fontFamily: 'Nunito400' }}>
                 {t('loginPage.dontHaveAccount')}{' '}
               </Text>
               <TouchableOpacity onPress={() => router.push('register')}>
@@ -250,7 +251,7 @@ const LoginScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-          <Text style={{ marginTop: 20, color: 'white', fontSize: 12, position: 'absolute', bottom: 15 }}>
+          <Text style={{ marginTop: 20, color: 'white', fontFamily: 'Nunito400', fontSize: 12, position: 'absolute', bottom: 15 }}>
             {t('loginPage.version')}: {appVersion}
           </Text>
         </ScrollView>

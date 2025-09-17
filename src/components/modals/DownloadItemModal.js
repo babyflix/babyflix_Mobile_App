@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, ActivityIndicator, Alert, AppState, Platform } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { modalStyles as styles } from '../../styles/GlobalStyles';
@@ -14,7 +14,8 @@ import { useDownloadQueueHandler } from '../useDownloadQueueHandler';
 import { useSelector } from 'react-redux';
 import { useDynamicTranslate } from '../../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
-//import sendDeviceUserInfo, { USERACTIONS } from '../deviceInfo';
+import { LinearGradient } from 'expo-linear-gradient';
+import sendDeviceUserInfo, { USERACTIONS } from '../deviceInfo';
 
 const DownloadItemModal = ({
   visible,
@@ -39,9 +40,10 @@ const DownloadItemModal = ({
   const [downloadResumable, setDownloadResumable] = useState(null);
   const [downloadQueue, setDownloadQueue] = useState([]);
   const { storagePlanId, storagePlanPrice } = useSelector((state) => state.storagePlan || {});
+  const [mediaData, setMediaData] = useState({ convertedTitle: [], convertedType: [] });
 
   const { t } = useTranslation();
-   
+
   const resumeDownload = (item) => {
     if (item?.object_type === 'image') {
       downloadImageHandler(item, { resume: true });
@@ -53,6 +55,26 @@ const DownloadItemModal = ({
   //useDownloadQueueHandler(downloadQueue, resumeDownload);
 
   const hasLargeFiles = selectedItems?.some(item => item?.size > 5 * 1024 * 1024);
+
+  const titles = useMemo(() => selectedItems?.map(item => item.title) || [], [selectedItems]);
+  const types = useMemo(() => selectedItems?.map(item => item.object_type) || [], [selectedItems]);
+
+  useEffect(() => {
+    const handleSelectedItems = async () => {
+      const convertedTitle = await Promise.all(
+        titles.map(title => useDynamicTranslate(title))
+      );
+      const convertedType = await Promise.all(
+        types.map(type => useDynamicTranslate(type))
+      );
+
+      setMediaData({ convertedTitle, convertedType });
+    };
+
+    if (titles.length || types.length) {
+      handleSelectedItems();
+    }
+  }, [titles, types]);
 
   useEffect(() => {
     const initNotifications = async () => {
@@ -78,32 +100,30 @@ const DownloadItemModal = ({
   }, []);
 
   useEffect(() => {
-    console.log('Setting selected quality to SD due to free plan 1',storagePlanId,storagePlanPrice);
-  if (storagePlanId === 1 && storagePlanPrice === '0.00') {
-    console.log('Setting selected quality to SD due to free plan',storagePlanId,storagePlanPrice);
-    setSelectedQuality('sd');
-  } else if (storagePlanId > 1 && storagePlanPrice > '0.00') {
-    setSelectedQuality('hd');
-  }
-}, [storagePlanId, storagePlanPrice]);
+    if (storagePlanId === 1 && storagePlanPrice === '0.00') {
+      setSelectedQuality('sd');
+    } else if (storagePlanId > 1 && storagePlanPrice > '0.00') {
+      setSelectedQuality('hd');
+    }
+  }, [storagePlanId, storagePlanPrice]);
 
-//   useEffect(() => {
-//   const loadAndResumeQueue = async () => {
-//     const savedQueue = await AsyncStorage.getItem('downloadQueue');
-//     if (savedQueue) {
-//       const parsedQueue = JSON.parse(savedQueue);
-//       setDownloadQueue(parsedQueue);
+  //   useEffect(() => {
+  //   const loadAndResumeQueue = async () => {
+  //     const savedQueue = await AsyncStorage.getItem('downloadQueue');
+  //     if (savedQueue) {
+  //       const parsedQueue = JSON.parse(savedQueue);
+  //       setDownloadQueue(parsedQueue);
 
-//       parsedQueue.forEach(item => {
-//         resumeDownload(item);
-//       });
+  //       parsedQueue.forEach(item => {
+  //         resumeDownload(item);
+  //       });
 
-//       await AsyncStorage.removeItem('downloadQueue');
-//     }
-//   };
+  //       await AsyncStorage.removeItem('downloadQueue');
+  //     }
+  //   };
 
-//   loadAndResumeQueue();
-// }, []);
+  //   loadAndResumeQueue();
+  // }, []);
 
   useEffect(() => {
     const resumePausedDownload = async () => {
@@ -159,19 +179,17 @@ const DownloadItemModal = ({
 
     try {
       setVisible(false);
-      //onCancel();
       setProgressValue(0);
       setDownloadTitle(title);
       setDownloadingProgress(true);
 
       await AsyncStorage.setItem(
-      'incompleteImageDownload',
-      JSON.stringify({
-        title,
-        imageUrl,
-      })
-    );
-       console.log('Permission Required')
+        'incompleteImageDownload',
+        JSON.stringify({
+          title,
+          imageUrl,
+        })
+      );
       const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
       if (existingStatus !== 'granted') {
         const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
@@ -181,8 +199,6 @@ const DownloadItemModal = ({
           return;
         }
       }
-
-      console.log('Permission Granted saving file in gallary of phone')
 
       const filename = `${title}.jpg`;
       const fileUri = FileSystem.documentDirectory + filename;
@@ -205,17 +221,15 @@ const DownloadItemModal = ({
       // const asset = await MediaLibrary.createAssetAsync(downloadedFile.uri);
       // await MediaLibrary.createAlbumAsync("Download", asset, false);
 
-      console.log('Photo save successfully')
-
       await showCompletionNotification(title, downloadedFile.uri, 'video/*');
 
       setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await useDynamicTranslate(`${filename}`) }));
       setSnackbarType('success');
       setSnackbarVisible(true);
-      // sendDeviceUserInfo({
-      //   action_type: USERACTIONS.DOWNLOAD,
-      //   action_description: `User downloaded ${item}`,
-      // });
+      sendDeviceUserInfo({
+        action_type: USERACTIONS.DOWNLOAD,
+        action_description: `User downloaded ${item}`,
+      });
       setDownloadQueue(prev => {
         const filteredQueue = prev.filter(q => q.id !== item.id);
         AsyncStorage.setItem('downloadQueue', JSON.stringify(filteredQueue));
@@ -253,14 +267,13 @@ const DownloadItemModal = ({
   };
 
   const enqueueDownload = async (item) => {
-    console.log('[enqueueDownload] Started');
-    const isImage = item?.object_type === 'image';
+    const isImage = (item?.object_type === 'image' || item?.object_type === 'predictiveBabyImage');
 
     setDownloadQueue(prev => {
-    const updatedQueue = [...prev, item];
-    AsyncStorage.setItem('downloadQueue', JSON.stringify(updatedQueue)); 
-    return updatedQueue;
-  });
+      const updatedQueue = [...prev, item];
+      AsyncStorage.setItem('downloadQueue', JSON.stringify(updatedQueue));
+      return updatedQueue;
+    });
 
     DownloadQueue.addToQueue(item, {
       selectedQuality,
@@ -280,19 +293,16 @@ const DownloadItemModal = ({
     setActiveDownloads(prev => prev + 1);
 
     if (!isImage) {
-      console.log('[enqueueDownload] Video download started');
       setIsConverting(true);
       setIsDownloading(false);
 
       setTimeout(() => {
         setIsConverting(false);
         setVisible(false);
-        //onCancel();
       }, 3000);
     } else {
       setIsConverting(false);
       setTimeout(() => {
-        //onCancel();
         setVisible(false);
       }, 3000);
     }
@@ -311,15 +321,14 @@ const DownloadItemModal = ({
     } = options;
 
     await AsyncStorage.setItem(
-    'pendingConversion',
-    JSON.stringify({
-      title: item.title,
-      id: item.id,
-      object_url: item.object_url,
-      selectedQuality,
-    })
-  );
-    console.log('in downloadVideoHandler')
+      'pendingConversion',
+      JSON.stringify({
+        title: item.title,
+        id: item.id,
+        object_url: item.object_url,
+        selectedQuality,
+      })
+    );
     setIsConverting(true);
     setIsDownloading(false);
     setDownloadProgress(0);
@@ -332,43 +341,35 @@ const DownloadItemModal = ({
 
     setTimeout(() => {
       setIsConverting(false);
-      //onCancel();
       setDownloadingProgress(true);
     }, 3000);
 
     try {
 
       const endpoint =
-         selectedQuality === 'sd'
+        selectedQuality === 'sd'
           ? 'https://fm-apis.babyflix.ai/convert/sd' : 'https://fm-apis.babyflix.ai/convert/hd';
 
-          const encodedPath =
-            Platform.OS === 'ios'
-              ? encodeURIComponent(item.object_url)
-              : item.object_url;
+      const encodedPath =
+        Platform.OS === 'ios'
+          ? encodeURIComponent(item.object_url)
+          : item.object_url;
 
       //const fullUrl = `${endpoint}?path=${item.object_url}&id=${item.id}`;
       const fullUrl = `${endpoint}?path=${encodedPath}&id=${item.id}`;
-      console.log('iOS: Fetching converted video from URL:', fullUrl);
       const response = await axios.get(fullUrl);
       const downloadUrl = response.data?.download_url;
-      console.log('iOS: Conversion API response:', downloadUrl);
       if (!downloadUrl) throw new Error(t('downloadModal.noDownloadUrl'));
 
       await AsyncStorage.removeItem('pendingConversion');
-
-      console.log('Permission Required')
 
       const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
       if (existingStatus !== 'granted') {
         const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
         if (newStatus !== 'granted') throw new Error(t('downloadModal.permissionDenied'));
       }
-       console.log('Permission Granted saving file in gallary of phone')
 
       const fileUri = FileSystem.documentDirectory + `${item.title || 'video'}.mp4`;
-
-      console.log('fileUri',fileUri)
 
       setDownloadTitle(item.title);
       setProgressValue(0);
@@ -390,17 +391,15 @@ const DownloadItemModal = ({
       // const asset = await MediaLibrary.createAssetAsync(result.uri);
       // await MediaLibrary.createAlbumAsync("Download", asset, false);
 
-      console.log('Video save successfully')
-
       await showCompletionNotification(item.title, result.uri, 'video/*');
 
       setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await useDynamicTranslate(`${item.title}`) }));
       setSnackbarType('success');
       setSnackbarVisible(true);
-      // sendDeviceUserInfo({
-      //   action_type: USERACTIONS.DOWNLOAD,
-      //   action_description: "User downloaded ",item,
-      // });
+      sendDeviceUserInfo({
+        action_type: USERACTIONS.DOWNLOAD,
+        action_description: `User downloaded ${item}`,
+      });
       setDownloadQueue(prev => {
         const filteredQueue = prev.filter(q => q.id !== item.id);
         AsyncStorage.setItem('downloadQueue', JSON.stringify(filteredQueue));
@@ -441,15 +440,15 @@ const DownloadItemModal = ({
                 ) : (
                   <>
                     {t('downloadModal.confirmDownload')}{' '}
-                    <Text style={{ fontWeight: 'bold' }}>{useDynamicTranslate(`${selectedItems[0]?.title || ''}`)}</Text>{' '}
-                    ({useDynamicTranslate(`${selectedItems[0]?.object_type}`)})?
+                    <Text style={{ fontWeight: 'bold' }}>{mediaData.convertedTitle.join(", ")}</Text>{' '}
+                    {mediaData.convertedType.join(", ")}?
                   </>
                 )}
               </Text>
 
               {selectedItems[0]?.object_type === 'video' && (
                 <>
-                  <Text style={{ fontFamily: 'Poppins_500Medium', fontSize: 17, fontWeight: 'bold' }}>
+                  <Text style={{ fontFamily: 'Nunito400', fontSize: 17, fontWeight: 'bold' }}>
                     {t('downloadModal.chooseQuality')}
                   </Text>
 
@@ -473,7 +472,7 @@ const DownloadItemModal = ({
                       onPress={() => setSelectedQuality('hd')}
                       style={{
                         backgroundColor: selectedQuality === 'hd' ? Colors.primary : '#ddd',
-                        opacity: storagePlanId === 1 && storagePlanPrice === '0.00' ? 0.5 : 1,
+                        opacity: (storagePlanId === 1 && storagePlanPrice === '0.00') ? 5 : 1,
                         paddingVertical: 12,
                         paddingHorizontal: 24,
                         borderTopRightRadius: 10,
@@ -534,7 +533,7 @@ const DownloadItemModal = ({
           {isConverting ? (
             <View style={{ alignItems: 'center', marginVertical: 20 }}>
               <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={{ marginTop: 10, fontSize: 16, color: Colors.primary, fontWeight: '600' }}>
+              <Text style={{ marginTop: 10, fontSize: 16, color: Colors.primary, fontFamily: "Nunito700" }}>
                 {t('downloadModal.convertingVideo')}
               </Text>
             </View>
@@ -549,7 +548,7 @@ const DownloadItemModal = ({
                 borderWidth={0}
                 borderRadius={5}
               />
-              <Text style={{ marginTop: 10, fontSize: 16, color: 'green', fontWeight: '600' }}>
+              <Text style={{ marginTop: 10, fontSize: 16, color: 'green', fontFamily: "Nunito700" }}>
                 {t('downloadModal.percentDownloaded', { percent: Math.round(downloadProgress * 100) })}
               </Text>
             </View>
@@ -557,23 +556,46 @@ const DownloadItemModal = ({
             <View style={styles.delModalButtons}>
               <TouchableOpacity
                 onPress={onCancel}
-                style={[styles.delModalButton, { backgroundColor: '#ccc', flexDirection: 'row' }]}
+                style={[styles.delModalButton, { backgroundColor: 'white', borderWidth: 1, borderColor: Colors.primary, flexDirection: 'row' }]}
               >
-                <Ionicons name="close-circle" size={20} color="white" style={{ marginRight: 5 }} />
-                <Text style={styles.delModalButtonText}>{t('downloadModal.cancel')}</Text>
+                <Ionicons name="close-circle" size={20} color={Colors.primary} style={{ marginRight: 5 }} />
+                <Text style={[styles.delModalButtonText, { color: Colors.primary }]}>{t('downloadModal.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                activeOpacity={0.8}
                 onPress={() => {
                   selectedItems.forEach((item) => {
                     enqueueDownload(item);
                   });
                 }}
-                style={[styles.delModalButton, { backgroundColor: Colors.primary, flexDirection: 'row' }]}
               >
-                <MaterialIcons name="file-download" size={20} color="white" style={{ marginRight: 5 }} />
-                <Text style={styles.delModalButtonText}>{t('downloadModal.download')}</Text>
+                <LinearGradient
+                  colors={["#d63384", "#9b2c6f"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[
+                    styles.delModalButton,
+                    {
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 16,
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                    },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="file-download"
+                    size={20}
+                    color="white"
+                    style={{ marginRight: 5 }}
+                  />
+                  <Text style={[styles.delModalButtonText, { color: "white" }]}>
+                    {t("downloadModal.download")}
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
-
             </View>
           )}
         </View>

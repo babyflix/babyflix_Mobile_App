@@ -21,15 +21,16 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
 
 const LiveStreamingScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-const [isMinimized, setIsMinimized] = useState(true);
-const [isRotated, setIsRotated] = useState(false);
-const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
+  const [isRotated, setIsRotated] = useState(false);
+  const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
 
   const videoRef = useRef(null);
   const dispatch = useDispatch();
@@ -41,140 +42,147 @@ const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
   const streamingUrl = streamState.streamUrl || '';
 
   useEffect(() => {
+    sendDeviceUserInfo({
+      action_type: USERACTIONS.LIVESTREAMINGJOINED,
+      action_description: `User join livestreaming from app`,
+    });
+  }, []);
+
+  useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
       const isLandscape = window.width > window.height;
-      setIsFullScreen(isLandscape); 
+      setIsFullScreen(isLandscape);
     });
-  
+
     return () => {
       subscription.remove();
     };
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     console.log('useEffect 3 ')
 
-      const playVideo = async () => {
-        if (videoRef.current && streamState.streamState == 'live') {
-          if (!streamingUrl || !streamingUrl.startsWith('http') || streamState.streamState !== 'live') {
-            return;
-          }
-      
-          try {
-            await videoRef.current.loadAsync(
-              { uri: streamingUrl },
-              { shouldPlay: true },
-              false
-            );
-            await videoRef.current.playAsync();
-          } catch (err) {
-            setModalVisible(true);
-          }
+    const playVideo = async () => {
+      if (videoRef.current && streamState.streamState == 'live') {
+        if (!streamingUrl || !streamingUrl.startsWith('http') || streamState.streamState !== 'live') {
+          return;
         }
-      };
-    
-      playVideo();
-  
-      const id = setInterval(() => {
-        checkUrlStatus(streamingUrl, dispatch);
-      }, 3000);
-  
-      setIntervalId(id);
-  
-      return () => clearInterval(id);
-    }, [streamState.streamState]);
 
-    useEffect(() => {
-  if (eventActualEndTime && streamState.streamState === 'live') {
-    const endTime = moment(eventActualEndTime);
-
-    const checkTime = () => {
-      const now = moment();
-      const diff = endTime.diff(now, 'minutes');
-
-      if (diff <= 2 && diff >= 0 && streamState.streamState === 'live') {
-        setShowBeforeEndMessage(true);
-      } else {
-        setShowBeforeEndMessage(false);
+        try {
+          await videoRef.current.loadAsync(
+            { uri: streamingUrl },
+            { shouldPlay: true },
+            false
+          );
+          await videoRef.current.playAsync();
+        } catch (err) {
+          setModalVisible(true);
+        }
       }
     };
 
-    checkTime(); 
-    const timerId = setInterval(checkTime, 15000); 
+    playVideo();
 
-    return () => clearInterval(timerId);
-  } else {
-    setShowBeforeEndMessage(false);
-  }
-}, [eventActualEndTime, streamState.streamState]);
+    const id = setInterval(() => {
+      checkUrlStatus(streamingUrl, dispatch);
+    }, 3000);
 
+    setIntervalId(id);
 
-    const checkUrlStatus = async (url, dispatch) => {
-      if (streamState.streamState !== 'live') {
-        return;
-      }
-    
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); 
-    
-      try {
-        const response = await fetch(url + '?nocache=' + Date.now(), {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache',
-            Pragma: 'no-cache',
-          },
-          signal: controller.signal,
-        });
-    
-        clearTimeout(timeoutId);
-    
-        const text = await response.text();
-        const isLiveStream = response.ok && text.includes('#EXTM3U');
-    
-        console.log('✅ response.ok:2', response.ok);
-        console.log('✅ text contains #EXTM3U:', text.includes('#EXTM3U'));
-    
-        if (!isLiveStream) {
-          if (streamState.streamState === 'live') {
-            updateLiveStreamState('', false, 'stop', '');
-            setModalVisible(true);
-            if (intervalId) {
-              clearInterval(intervalId);
-              setIntervalId(null);
-            }
-          }else{
-            updateLiveStreamState('', true, '', '');
-          }
+    return () => clearInterval(id);
+  }, [streamState.streamState]);
+
+  useEffect(() => {
+    if (eventActualEndTime && streamState.streamState === 'live') {
+      const endTime = moment(eventActualEndTime);
+
+      const checkTime = () => {
+        const now = moment();
+        const diff = endTime.diff(now, 'minutes');
+
+        if (diff <= 2 && diff >= 0 && streamState.streamState === 'live') {
+          setShowBeforeEndMessage(true);
+        } else {
+          setShowBeforeEndMessage(false);
         }
-      } catch (err) {
-        clearTimeout(timeoutId);
-    
-        if (err.name === 'AbortError') {
-        }
-    
+      };
+
+      checkTime();
+      const timerId = setInterval(checkTime, 15000);
+
+      return () => clearInterval(timerId);
+    } else {
+      setShowBeforeEndMessage(false);
+    }
+  }, [eventActualEndTime, streamState.streamState]);
+
+
+  const checkUrlStatus = async (url, dispatch) => {
+    if (streamState.streamState !== 'live') {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const response = await fetch(url + '?nocache=' + Date.now(), {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      const text = await response.text();
+      const isLiveStream = response.ok && text.includes('#EXTM3U');
+
+      console.log('✅ response.ok:2', response.ok);
+      console.log('✅ text contains #EXTM3U:', text.includes('#EXTM3U'));
+
+      if (!isLiveStream) {
         if (streamState.streamState === 'live') {
           updateLiveStreamState('', false, 'stop', '');
+          setModalVisible(true);
           if (intervalId) {
             clearInterval(intervalId);
             setIntervalId(null);
           }
+        } else {
+          updateLiveStreamState('', true, '', '');
         }
       }
-    };
-    
-    const enterFullScreen = () => {
-      setIsFullScreen(true);
-      //setIsMinimized(false);
-      setIsRotated(true);
-    };
-    
-    const exitFullScreen = () => {
-      setIsFullScreen(false);
-      setIsMinimized(true);
-      setIsRotated(false);
-    };    
-    
+    } catch (err) {
+      clearTimeout(timeoutId);
+
+      if (err.name === 'AbortError') {
+      }
+
+      if (streamState.streamState === 'live') {
+        updateLiveStreamState('', false, 'stop', '');
+        if (intervalId) {
+          clearInterval(intervalId);
+          setIntervalId(null);
+        }
+      }
+    }
+  };
+
+  const enterFullScreen = () => {
+    setIsFullScreen(true);
+    //setIsMinimized(false);
+    setIsRotated(true);
+  };
+
+  const exitFullScreen = () => {
+    setIsFullScreen(false);
+    setIsMinimized(true);
+    setIsRotated(false);
+  };
+
 
   const handleMinimize = () => {
     setIsMinimized(true);
@@ -201,82 +209,82 @@ const [showBeforeEndMessage, setShowBeforeEndMessage] = useState(false);
       streamState: streamState,
       reStart: reStart,
     }));
-  }  
+  }
 
   return (
-    <View style={[GlobalStyles.container,Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
-      {!isFullScreen &&<Header title={t('liveStreaming.title')} />}
+    <View style={[GlobalStyles.container, Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
+      {!isFullScreen && <Header title={t('liveStreaming.title')} />}
 
-   <ScrollView contentContainerStyle={styles.container}>
-   {!isFullScreen && <Text style={styles.liveTitle}>{t('liveStreaming.videoLive')}</Text>}
+      <ScrollView contentContainerStyle={styles.container}>
+        {!isFullScreen && <Text style={styles.liveTitle}>{t('liveStreaming.videoLive')}</Text>}
 
-      {streamState.streamState === 'live' && streamingUrl?.startsWith('https') ? (
-      <View
-      style={[
-        styles.previewContainer,
-        isMinimized ? styles.minimized : styles.maximized,
-        isFullScreen && styles.maxRotateModelContent,
-        isRotated && styles.rotated,
-      ]}
-    >    
-      <Video
-        ref={videoRef}
-        style={[styles.video]}
-        useNativeControls={false}
-        resizeMode={ResizeMode.CONTAIN}
-        isLooping={false}
-        isMuted={isMuted}
-        // onReadyForDisplay={() => {
-        //   console.log('✅ Video component is ready');
-        //   // Optionally: set a state like setVideoReady(true)
-        // }}
-      />
-      <View style={styles.overlay}>
-          <Text style={styles.liveLabel}>{t('liveStreaming.liveLabel')}</Text>
+        {streamState.streamState === 'live' && streamingUrl?.startsWith('https') ? (
+          <View
+            style={[
+              styles.previewContainer,
+              isMinimized ? styles.minimized : styles.maximized,
+              isFullScreen && styles.maxRotateModelContent,
+              isRotated && styles.rotated,
+            ]}
+          >
+            <Video
+              ref={videoRef}
+              style={[styles.video]}
+              useNativeControls={false}
+              resizeMode={ResizeMode.CONTAIN}
+              isLooping={false}
+              isMuted={isMuted}
+            // onReadyForDisplay={() => {
+            //   console.log('✅ Video component is ready');
+            //   // Optionally: set a state like setVideoReady(true)
+            // }}
+            />
+            <View style={styles.overlay}>
+              <Text style={styles.liveLabel}>{t('liveStreaming.liveLabel')}</Text>
 
-          <View style={styles.controls}>
-            {isMinimized ? (
-              <TouchableOpacity onPress={handleMaximize}>
-                <Ionicons name="expand-outline" size={24} color="white" />
+              <View style={styles.controls}>
+                {isMinimized ? (
+                  <TouchableOpacity onPress={handleMaximize}>
+                    <Ionicons name="expand-outline" size={24} color="white" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity onPress={handleMinimize}>
+                    <Ionicons name="contract-outline" size={24} color="white" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <TouchableOpacity style={styles.muteButton} onPress={() => setIsMuted(!isMuted)}>
+                <Ionicons
+                  name={isMuted ? 'volume-mute' : 'volume-high'}
+                  size={24}
+                  color="white"
+                />
               </TouchableOpacity>
-            ) : (
-              <TouchableOpacity onPress={handleMinimize}>
-                <Ionicons name="contract-outline" size={24} color="white" />
+
+              <TouchableOpacity onPress={isFullScreen ? exitFullScreen : enterFullScreen} style={styles.rotateButton}>
+                <View style={styles.muteButtonText}>
+                  <MaterialIcons
+                    name={isFullScreen ? "stay-current-landscape" : "stay-current-portrait"}
+                    size={20}
+                    color="white"
+                  />
+                </View>
               </TouchableOpacity>
+            </View>
+            {showBeforeEndMessage && streamState.streamState === 'live' && (
+              <View style={[styles.streamNoticeContainer, isMinimized ? { bottom: 20 } : { top: 170 }]}>
+                <MaterialIcons name="warning" size={20} color="#FFA500" style={{ paddingLeft: 6, backgroundColor: '#FFF3CD', paddingVertical: 5.46, borderTopLeftRadius: 6, borderBottomLeftRadius: 6 }} />
+                <Text style={styles.streamNoticeText}>{t('liveStreaming.streamEndingSoon')}</Text>
+              </View>
             )}
           </View>
-          <TouchableOpacity style={styles.muteButton} onPress={() => setIsMuted(!isMuted)}>
-          <Ionicons
-            name={isMuted ? 'volume-mute' : 'volume-high'}
-            size={24}
-            color="white"
-          />
-         </TouchableOpacity>
+        ) : (
+          <Text style={{ textAlign: 'center', color: 'gray', marginVertical: 20 }}>
+            {t('liveStreaming.waiting')}
+          </Text>
+        )}
+      </ScrollView>
 
-         <TouchableOpacity onPress={isFullScreen ? exitFullScreen : enterFullScreen} style={styles.rotateButton}>
-            <View style={styles.muteButtonText}>
-              <MaterialIcons
-                name={isFullScreen ? "stay-current-landscape" : "stay-current-portrait"}
-                size={20}
-                color="white"
-              />
-            </View>
-          </TouchableOpacity>
-        </View>
-        {showBeforeEndMessage && streamState.streamState === 'live' && (
-            <View style={[styles.streamNoticeContainer,isMinimized ? {bottom:20}:{top:170}]}>
-              <MaterialIcons name="warning" size={20} color="#FFA500" style={{ paddingLeft: 6, backgroundColor: '#FFF3CD' ,paddingVertical: 5.46, borderTopLeftRadius:6, borderBottomLeftRadius:6 }} />
-              <Text style={styles.streamNoticeText}>{t('liveStreaming.streamEndingSoon')}</Text>
-            </View>
-          )}
-      </View>
-      ) : (
-        <Text style={{ textAlign: 'center', color: 'gray', marginVertical: 20 }}>
-          {t('liveStreaming.waiting')}
-        </Text>
-      )}
-    </ScrollView>
-    
 
       <Modal
         animationType="slide"
@@ -302,27 +310,28 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   rotated: {
-    width:  screenHeight-65,
-    height: Math.min(screenWidth, screenHeight),    
+    width: screenHeight - 65,
+    height: Math.min(screenWidth, screenHeight),
     position: 'absolute',
     top: 0,
     left: 0,
-    right:-65,
+    right: -65,
     backgroundColor: 'black',
-    borderRadius:0,
+    borderRadius: 0,
     zIndex: 1000,
     transform: [
       { rotate: '90deg' },
       { translateX: ((screenHeight - 65) - screenWidth) / 2 },
-      { translateY: (screenHeight - screenWidth-65) / 2 }
+      { translateY: (screenHeight - screenWidth - 65) / 2 }
     ],
   },
   container: {
     padding: 16,
   },
   liveTitle: {
+    fontFamily: 'Nunito700',
     fontSize: 24,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 20,
     color: Colors.primary,
@@ -336,16 +345,18 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: '80%',
     padding: 20,
-    backgroundColor: Colors.white,
+    backgroundColor: '#fdf2f8',
     borderRadius: 10,
     alignItems: 'center',
   },
   modalTitle: {
+    fontFamily: 'Nunito700',
     fontSize: 24,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     color: Colors.primary,
   },
   modalMessage: {
+    fontFamily: 'Nunito400',
     fontSize: 16,
     color: Colors.textSecondary,
     marginVertical: 10,
@@ -359,11 +370,13 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     color: Colors.white,
+    fontFamily: 'Nunito700',
     fontSize: 16,
   },
   liveTitle: {
+    fontFamily: 'Nunito700',
     fontSize: 20,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     marginBottom: 10,
   },
   previewContainer: {
@@ -374,7 +387,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'black',
     padding: 10,
-  },  
+  },
   video: {
     width: '100%',
     height: '100%',
@@ -389,10 +402,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    zIndex: 999, 
-    backgroundColor: 'black', 
+    zIndex: 999,
+    backgroundColor: 'black',
   },
-  
+
   overlay: {
     position: 'absolute',
     top: 6,
@@ -408,9 +421,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
+    fontFamily: 'Nunito700',
     fontSize: 12,
-    marginTop : 10
+    marginTop: 10
   },
   controls: {
     flexDirection: 'row',
@@ -435,37 +449,38 @@ const styles = StyleSheet.create({
   },
   muteButtonText: {
     color: 'white',
+    fontFamily: 'Nunito400',
     fontSize: 10,
-  },  
-  maxRotateModelContent: { 
-    width: screenHeight, 
+  },
+  maxRotateModelContent: {
+    width: screenHeight,
     height: screenWidth,
     backgroundColor: 'black',
     padding: 10,
-    },
-   streamNoticeContainer: {
-  position: 'absolute',
-  flexDirection: 'row',
-  bottom: 15,
-  left: 0,
-  right: 0,
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 999,
-},
+  },
+  streamNoticeContainer: {
+    position: 'absolute',
+    flexDirection: 'row',
+    bottom: 15,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999,
+  },
 
-streamNoticeText: {
-  color: '#856404',
-  fontSize: 12,
-  fontFamily:'Poppins_400Regular',
-  fontWeight: '600',
-  backgroundColor: '#FFF3CD',
-  paddingHorizontal: 6,
-  paddingVertical: 6,
-  //borderRadius: 6,
-  borderTopRightRadius:6,
-  borderBottomRightRadius:6,
-},
+  streamNoticeText: {
+    color: '#856404',
+    fontSize: 12,
+    fontFamily: 'Nunito700',
+    //fontWeight: '600',
+    backgroundColor: '#FFF3CD',
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    //borderRadius: 6,
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+  },
 });
 
 export default LiveStreamingScreen;

@@ -5,7 +5,7 @@ const initialState = {
   storagePlanId: null,
   storagePlanPayment: null,
   storagePlanPrice: null,
-  isPlanDeleted: false, // ✅ added new field
+  isPlanDeleted: false,
 };
 
 const storagePlanSlice = createSlice({
@@ -17,22 +17,22 @@ const storagePlanSlice = createSlice({
         skippedPlanCount,
         storagePlanId,
         storagePlanPayment,
-        storagePlanPrice, // ✅ accept from payload
-        isPlanDeleted = false, // ✅ default to false if not provided
+        storagePlanPrice,
+        isPlanDeleted = false,
       } = action.payload;
 
       state.skippedPlanCount = skippedPlanCount;
       state.storagePlanId = storagePlanId;
       state.storagePlanPayment = storagePlanPayment;
-      state.storagePlanPrice = storagePlanPrice; // ✅ set value
+      state.storagePlanPrice = storagePlanPrice; 
       state.isPlanDeleted = isPlanDeleted;
     },
     clearStoragePlanDetails: (state) => {
       state.skippedPlanCount = null;
       state.storagePlanId = null;
       state.storagePlanPayment = null;
-      state.storagePlanPrice = null; // ✅ reset value
-      state.isPlanDeleted = false; // ✅ reset to false
+      state.storagePlanPrice = null;
+      state.isPlanDeleted = false; 
     },
     setIsPlanDeleted: (state, action) => {
       state.isPlanDeleted = action.payload;
@@ -43,7 +43,7 @@ const storagePlanSlice = createSlice({
 export const {
   setStoragePlanDetails,
   clearStoragePlanDetails,
-  setIsPlanDeleted, // ✅ export new action
+  setIsPlanDeleted, 
 } = storagePlanSlice.actions;
 
 export const selectStoragePlan = (state) => state.storagePlan;

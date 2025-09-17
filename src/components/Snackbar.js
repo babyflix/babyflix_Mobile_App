@@ -74,6 +74,7 @@ const styles = StyleSheet.create({
   },
   message: {
     color: Colors.white,
+    fontFamily: 'Nunito400',
     fontSize: 14,
     fontWeight: '500',
   },

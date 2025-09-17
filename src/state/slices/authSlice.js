@@ -17,6 +17,11 @@ const initialState = {
   uuid: '',
   isAuthenticated: false,
   isLoggingOut: false,
+  subscription: null,
+  subscriptionAmount: '',
+  subscriptionId: '',
+  subscriptionIsActive: false,
+  subscriptionExpired: false,
 };
 
 
@@ -40,6 +45,7 @@ const authSlice = createSlice({
         role,
         token,
         uuid,
+        subscription,
       } = action.payload;
 
       state.actionStatus = actionStatus;
@@ -58,6 +64,11 @@ const authSlice = createSlice({
       state.uuid = uuid;
       state.isAuthenticated = !!token;
       state.isLoggingOut = false;
+      state.subscription = subscription || null;
+      state.subscriptionAmount = subscription?.subscriptionAmount || '';
+      state.subscriptionId = subscription?.subscriptionId || '';
+      state.subscriptionIsActive = subscription?.subscriptionIsActive === 1;
+      state.subscriptionExpired = subscription?.subscriptionExpired || '';
     },
     logout: (state) => {
       state.actionStatus = '';
@@ -76,6 +87,11 @@ const authSlice = createSlice({
       state.uuid = '';
       state.isAuthenticated = false;
       state.isLoggingOut = false; 
+      state.subscription= null,
+      state.subscriptionAmount= '',
+      state.subscriptionId= '',
+      state.subscriptionIsActive= false
+      state.subscriptionExpired= false
     },
     updateActionStatus: (state, action) => {
       state.actionStatus = action.payload;
@@ -83,8 +99,11 @@ const authSlice = createSlice({
      setLoggingOut: (state, action) => {
       state.isLoggingOut = action.payload;
     },  
+    setSubscriptionActive: (state, action) => {
+  state.subscriptionIsActive = action.payload;
+},
   },
 });
 
-export const { setCredentials, logout, updateActionStatus, setLoggingOut  } = authSlice.actions;
+export const { setCredentials, logout, updateActionStatus, setLoggingOut, setSubscriptionActive  } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,70 +1,32 @@
-// import * as Device from "expo-device";
-// import * as Application from 'expo-application';
-// import { Platform } from "react-native";
-
-// export default async function sendDeviceUserInfo(user) {
-//   if (!user?.uuid) return;
-
-//   try {
-//     const uniqueId =
-//       Platform.OS === "android"
-//         ? Application.getAndroidId()
-//         : await Application.getIosIdForVendorAsync();
-
-//     const deviceInfo = {
-//       brand: Device.brand,
-//       modelName: Device.deviceName || Device.modelName,
-//       osName: Device.osName,
-//       osVersion: Device.osVersion,
-//       deviceType: Device.deviceType,
-//       uniqueId,
-//     };
-
-//     const payload = {
-//       firstName: user.firstName || "",
-//       lastName: user.lastName || "",
-//       uuid: user.uuid || "",
-//       companyId: user.companyId || "",
-//       ...deviceInfo,
-//       openedAt: new Date().toISOString(),
-//       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || moment.tz.guess(),
-//     };
-
-//     console.log("Payload to Send:", payload);
-
-//     // Example API call
-//     // await fetch("https://yourapi.com/app-open", {
-//     //   method: "POST",
-//     //   headers: { "Content-Type": "application/json" },
-//     //   body: JSON.stringify(payload),
-//     // });
-//   } catch (error) {
-//     console.error("Error sending device info:", error);
-//   }
-// }
-
-
+import axios from "axios";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
+import { EXPO_PUBLIC_API_URL } from '@env';
 
 export const USERACTIONS = {
-  DOWNLOAD: "download",
-  VIEW: "view",
-  AI: "ai",
-  SHARE: "share",
-  DELETE: "delete",
-  EDIT: "edit",
-  LOGIN: "login",
-  LOGOUT: "logout",
+  DOWNLOAD: "Download",
+  VIEW: "View",
+  AI: "AI",
+  SHARE: "Share",
+  DELETE: "Delete",
+  EDIT: "Edit",
+  LOGIN: "Login",
   LOGINDESC: "user logged in",
-  FORGOTPASSWORD: "forgot-password",
-  RESETPASSWORD: "reset-password",
+  FORGOTPASSWORD: "Forgot Password",
+  RESETPASSWORD: "Reset Password",
   PAYMENT: "payment",
-  LIVESTREAMINGJOINED: "live-streaming-joined",
-  LIVESTREAMINGSTARTED: "live-streaming-started",
+  LIVESTREAMINGJOINED: "Live Streaming Joined",
+  LIVESTREAMINGSTARTED: "Live Streaming Started",
+  DEVICE: "device-report",
+  NEWSUBCRIPTION: "New Subscription",
+  UNSUBSCRIBE: "Unsubscribe",
+  UPDATESUBSCRIPTION: "Update Subscription",
+  FLIX10: "FLIX10",
+  FLIX10KBABYPROFILEIMAGE: "ai baby profile image",
+  FLIX10KBABYPROFILEVIDEO: "ai baby profile video",
+  FLIX10KBABYPREDICTIVEIMAGE: "predicitive image",
 };
 
-// Detect if environment is browser or app
 function detectEnvironment() {
   if (Platform.OS === "web") {
     const userAgent = navigator.userAgent;
@@ -78,7 +40,6 @@ function detectEnvironment() {
     return { using_from: "BROWSER", browser };
   }
 
-  // Default → Expo/React Native app
   return { using_from: "APP", browser: "" };
 }
 
@@ -86,31 +47,37 @@ export default async function sendDeviceUserInfo({
   action_type = "",
   action_description = "",
 }) {
-  try {
-    const { using_from, browser } = detectEnvironment();
+  const { using_from, browser } = detectEnvironment();
 
-    const userActionPayload = {
-      action_type,
-      device_type:
-        Device.deviceType === 1
-          ? "mobile"
-          : Device.deviceType === 2
+  const userActionPayload = {
+    action_type,
+    device_type:
+      Device.deviceType === 1
+        ? "mobile"
+        : Device.deviceType === 2
           ? "tablet"
           : "unknown",
-      device: Device.deviceName || Device.modelName || "unknown",
-      platform: Platform.OS, // ios / android / web
-      browser,
-      using_from,
-      action_description,
-    };
+    device: Device.deviceName || Device.modelName || "unknown",
+    platform: Platform.OS,
+    browser,
+    using_from,
+    action_description,
+  };
 
-    console.log("Payload to Send:", userActionPayload);
+  console.log("Payload to Send:", userActionPayload);
+  try {
 
-    // await fetch("/api/metrics/userActions", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(userActionPayload),
-    // });
+    const response = await axios.post(
+      `${EXPO_PUBLIC_API_URL}/api/metrics/userActions`,
+      userActionPayload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("respond userActions", response.data);
   } catch (error) {
     console.error("Error sending device info:", error);
   }

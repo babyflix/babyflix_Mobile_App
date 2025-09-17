@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logError } from '../components/logError';
 import { useTranslation } from 'react-i18next';
 import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const router = useRouter();
@@ -75,6 +76,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
           setSnackbarMessage(t('forgotPassword.success.linkSent'));
           setSnackbarType('success');
           setSnackbarVisible(true);
+
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.FORGOTPASSWORD,
+            action_description: `User send forgotPassword link on email`,
+          });
 
           setTimeout(() => {
             router.replace('login');

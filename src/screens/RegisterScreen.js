@@ -67,13 +67,12 @@ const RegisterScreen = () => {
 
   useEffect(() => {
     const fetchCountries = async () => {
-      console.log('i18n.language:', i18n.language);
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/locations/getAllCountries`);
         setCountries(response.data);
       } catch (err) {
         setError(t('registration.failedFetchCountries') + err);
-         await logError({
+        await logError({
           error: err,
           data: err.response?.data.error || response.data.error,
           details: "Error in getAllCountries API call on  RegisterScreen"
@@ -93,38 +92,24 @@ const RegisterScreen = () => {
     }
   }, [formData.accountType]);
 
-  // useEffect(() => {
-  //   if (countries.length > 0) {
-
-  //     const formatted = countries.map((country) => ({
-  //       label: `+${country.phonecode} ${country.country_name}`,
-  //       value: `${country.phonecode}_${country.country_name}`,
-  //     }));
-
-  //     setFormattedCountries(formatted);
-  //   }
-  // }, [countries]);
-
   useEffect(() => {
-  if (countries.length > 0) {
-    console.log('countries:', countries);
-    const translateCountries = async () => {
-      const formatted = await Promise.all(
-        countries.map(async (country) => {
-          const translatedName = await useDynamicTranslate(country.country_name);
-          console.log('Translated country name:', country.country_name, '->', translatedName);
-          return {
-            label: `+${country.phonecode} ${translatedName}`,
-            value: `${country.phonecode}_${country.country_name}`,
-          };
-        })
-      );
-      setFormattedCountries(formatted);
-    };
+    if (countries.length > 0) {
+      const translateCountries = async () => {
+        const formatted = await Promise.all(
+          countries.map(async (country) => {
+            const translatedName = await useDynamicTranslate(country.country_name);
+            return {
+              label: `+${country.phonecode} ${translatedName}`,
+              value: `${country.phonecode}_${country.country_name}`,
+            };
+          })
+        );
+        setFormattedCountries(formatted);
+      };
 
-    translateCountries();
-  }
-}, [countries]);
+      translateCountries();
+    }
+  }, [countries]);
 
   const accountType = [
     { label: t('registration.patient'), value: 'patient' },
@@ -136,7 +121,7 @@ const RegisterScreen = () => {
 
     setError('');
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword ) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       setError(t('registration.pleaseFillAllFields'));
       return;
     }
@@ -217,7 +202,7 @@ const RegisterScreen = () => {
     try {
       const timezone = await AsyncStorage.getItem('timezone');
       const token = await AsyncStorage.getItem('token');
-      console.log(`${EXPO_PUBLIC_API_URL}/api/auth/register`)
+
       const response = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/register`,
         {
@@ -373,7 +358,7 @@ const RegisterScreen = () => {
                 <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
                   <View style={[styles.textInputIconView, styles.allMarginRight, { position: 'relative', justifyContent: 'center' }]}>
                     <TextInput
-                      style={[{ paddingLeft: 38, fontFamily: 'Poppins_400Regular', color: 'black' }]}
+                      style={[{ paddingLeft: 38, fontFamily: 'Nunito400', color: 'black' }]}
                       placeholder={t('registration.placeholders.firstName')}
                       value={formData.firstName}
                       onChangeText={(text) => setFormData({ ...formData, firstName: text })}
@@ -388,7 +373,7 @@ const RegisterScreen = () => {
 
                   <View style={[styles.textInputIconView, styles.allMarginLeft, { position: 'relative', justifyContent: 'center' }]}>
                     <TextInput
-                      style={[{ paddingLeft: 38, fontFamily: 'Poppins_400Regular', color: 'black' }]}
+                      style={[{ paddingLeft: 38, fontFamily: 'Nunito400', color: 'black' }]}
                       placeholder={t('registration.placeholders.lastName')}
                       value={formData.lastName}
                       onChangeText={(text) => setFormData({ ...formData, lastName: text })}
@@ -458,7 +443,7 @@ const RegisterScreen = () => {
                       <Text
                         style={{
                           fontSize: 14,
-                          fontFamily: 'Poppins_400Regular',
+                          fontFamily: 'Nunito400',
                           color: formData.accountType ? 'black' : 'gray',
                         }}
                       >
@@ -507,7 +492,7 @@ const RegisterScreen = () => {
                               borderBottomColor: '#eee',
                             }}
                           >
-                            <Text style={{ fontFamily: 'Poppins_400Regular' }}>{option.label}</Text>
+                            <Text style={{ fontFamily: 'Nunito400' }}>{option.label}</Text>
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -579,7 +564,7 @@ const RegisterScreen = () => {
                 <View style={[GlobalStyles.row, { marginBottom: 15 }]}>
                   <View style={[styles.textInputIconView, styles.allMarginRight, { justifyContent: 'center' }]}>
                     <TextInput
-                      style={[GlobalStyles.textInputIcon, { paddingLeft: 37, fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined, marginTop: 5, color: 'black' }]}
+                      style={[GlobalStyles.textInputIcon, { paddingLeft: 37, fontFamily: Platform.OS === 'android' ? 'Nunito400' : undefined, marginTop: 5, color: 'black' }]}
                       placeholder={t('registration.placeholders.password')}
                       value={formData.password}
                       onChangeText={(text) => setFormData({ ...formData, password: text })}
@@ -597,7 +582,7 @@ const RegisterScreen = () => {
 
                   <View style={[styles.textInputIconView, styles.allMarginLeft, { justifyContent: 'center' }]}>
                     <TextInput
-                      style={[GlobalStyles.textInputIcon, { paddingLeft: 35, fontFamily: Platform.OS === 'android' ? 'Poppins_400Regular' : undefined, marginTop: 5, color: 'black' }]}
+                      style={[GlobalStyles.textInputIcon, { paddingLeft: 35, fontFamily: Platform.OS === 'android' ? 'Nunito400' : undefined, marginTop: 5, color: 'black' }]}
                       placeholder={t('registration.placeholders.confirmPassword')}
                       value={formData.confirmPassword}
                       onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
@@ -655,7 +640,7 @@ const RegisterScreen = () => {
                       <Text
                         style={{
                           fontSize: 13.5,
-                          fontFamily: 'Poppins_400Regular',
+                          fontFamily: 'Nunito400',
                           color: formData.countryCode ? 'black' : 'gray',
                         }}
                       >
@@ -708,7 +693,7 @@ const RegisterScreen = () => {
                                 }}
                                 style={{ paddingVertical: 12 }}
                               >
-                                <Text style={{ fontFamily: 'Poppins_400Regular' }}>{item.label}</Text>
+                                <Text style={{ fontFamily: 'Nunito400' }}>{item.label}</Text>
                               </TouchableOpacity>
                             )}
                           />
@@ -734,9 +719,9 @@ const RegisterScreen = () => {
                         top: 15,
                       }}
                     />
-                     <TextInput
+                    <TextInput
                       style={[GlobalStyles.textInputIcon, { color: 'black', marginTop: 5 }]}
-                      placeholder={t('registration.placeholders.phone')} 
+                      placeholder={t('registration.placeholders.phone')}
                       value={formData.phone}
                       onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneNumber(text) })}
                       keyboardType="phone-pad"
@@ -752,10 +737,10 @@ const RegisterScreen = () => {
                     padding: 8,
                     borderRadius: 5,
                     marginTop: 5,
-                    marginBottom:5,
+                    marginBottom: 5,
                   }}>
-                    <Text style={{ fontSize: 12, color: 'black' }}>
-                     {t('registration.phoneInfo')}
+                    <Text style={{ fontFamily: 'Nunito400', fontSize: 12, color: 'black' }}>
+                      {t('registration.phoneInfo')}
                     </Text>
                   </View>
                 )}
@@ -768,10 +753,10 @@ const RegisterScreen = () => {
 
                   </View>
 
-                  <Text style={[styles.termsText, { fontFamily: 'Poppins_400Regular' }]}>
+                  <Text style={[styles.termsText, { fontFamily: 'Nunito400' }]}>
                     {t('registration.terms.accept')}{" "}
                     <Text
-                      style={[styles.termsLink, { fontFamily: 'Poppins_400Regular' }]}
+                      style={[styles.termsLink, { fontFamily: 'Nunito400' }]}
                       onPress={() => Linking.openURL('https://babyflix.ai/terms')}
                     >
                       {t('registration.terms.link')}
@@ -801,11 +786,11 @@ const RegisterScreen = () => {
                 </View>
 
                 <View style={[GlobalStyles.row, GlobalStyles.center, { marginTop: 0 }]}>
-                  <Text style={{ color: Colors.textSecondary, fontFamily: 'Poppins_400Regular' }}>
+                  <Text style={{ color: Colors.textSecondary, fontFamily: 'Nunito400' }}>
                     {t('registration.alreadyHaveAccount')}{' '}
                   </Text>
                   <TouchableOpacity onPress={() => router.push('login')}>
-                    <Text style={[GlobalStyles.link, { fontFamily: 'Poppins_400Regular' }]}>{t('registration.signIn')}</Text>
+                    <Text style={[GlobalStyles.link, { fontFamily: 'Nunito400' }]}>{t('registration.signIn')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -820,7 +805,7 @@ const RegisterScreen = () => {
                 />
               )} */}
 
-            {/* {Platform.OS === 'ios' ? (
+              {/* {Platform.OS === 'ios' ? (
               <Modal
                 transparent={true}
                 animationType="slide"
@@ -855,40 +840,40 @@ const RegisterScreen = () => {
               )
             )} */}
 
-            {Platform.OS === 'ios' ? (
-  showDatePicker && (
-    <View style={styles.iosPickerWrapper}>
-      <DateTimePicker
-        value={tempDate}
-        mode="date"
-        display="spinner"
-        onChange={(event, selectedDate) => {
-          if (selectedDate) setTempDate(selectedDate);
-        }}
-        style={styles.iosPicker}
-      />
-      <TouchableOpacity
-        onPress={() => {
-          handleDateChange(null, tempDate);
-          setShowDatePicker(false);
-        }}
-        style={styles.doneButton}
-      >
-        <Text style={styles.doneText}>{t('registration.done')}</Text>
-      </TouchableOpacity>
-    </View>
-  )
-) : (
-  showDatePicker && (
-    <DateTimePicker
-      value={tempDate}
-      mode="date"
-      display="default"
-      onChange={handleDateChange}
-      locale={i18n.language === 'es' ? 'es-ES' : 'en-US'}
-    />
-  )
-)}
+              {Platform.OS === 'ios' ? (
+                showDatePicker && (
+                  <View style={styles.iosPickerWrapper}>
+                    <DateTimePicker
+                      value={tempDate}
+                      mode="date"
+                      display="spinner"
+                      onChange={(event, selectedDate) => {
+                        if (selectedDate) setTempDate(selectedDate);
+                      }}
+                      style={styles.iosPicker}
+                    />
+                    <TouchableOpacity
+                      onPress={() => {
+                        handleDateChange(null, tempDate);
+                        setShowDatePicker(false);
+                      }}
+                      style={styles.doneButton}
+                    >
+                      <Text style={styles.doneText}>{t('registration.done')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )
+              ) : (
+                showDatePicker && (
+                  <DateTimePicker
+                    value={tempDate}
+                    mode="date"
+                    display="default"
+                    onChange={handleDateChange}
+                    locale={i18n.language === 'es' ? 'es-ES' : 'en-US'}
+                  />
+                )
+              )}
 
 
             </ScrollView>
@@ -964,6 +949,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   termsText: {
+    fontFamily: 'Nunito400',
     fontSize: 14,
     color: 'black',
   },
@@ -1045,45 +1031,23 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#eee',
   },
-
-//   iosPickerWrapper: {
-//   backgroundColor: '#fff',
-//   padding: 20,
-//   borderTopLeftRadius: 20,
-//   borderTopRightRadius: 20,
-//   position: 'absolute',
-//   bottom: 0,
-//   width: '100%',
-//   shadowColor: '#000',
-//   shadowOffset: { width: 0, height: -3 },
-//   shadowOpacity: 0.2,
-//   shadowRadius: 4,
-//   elevation: 10,
-// },
-// iosPicker: {
-//   height: 200,
-// },
-// doneButton: {
-//   marginTop: 10,
-//   alignSelf: 'flex-end',
-// },  
-iosPickerWrapper: {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: [{ translateX: -150 }, { translateY: -100 }], // adjust based on picker size
-  width: 300,
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  padding: 10,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 5,
-  alignItems: 'center',
-  zIndex:99999,
-},
+  iosPickerWrapper: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -150 }, { translateY: -100 }],
+    width: 300,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    alignItems: 'center',
+    zIndex: 99999,
+  },
   iosPicker: {
     width: '100%',
     height: 150,
@@ -1096,9 +1060,9 @@ iosPickerWrapper: {
     borderRadius: 8,
   },
   doneText: {
-    color: '#007AFF', // iOS blue
+    color: '#007AFF',
+    fontFamily: 'Nunito700',
     fontSize: 16,
-    fontWeight: '600',
   },
 });
 

@@ -32,12 +32,10 @@ export const loadNotificationsFromStorage = async () => {
 };
 
 export const saveNotificationsToStorage = async (notifications) => {
-  console.log('saveNotificationsToStorage', notifications);
   await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
 };
 
 const Header = ({ title, showMenu = true, showProfile = true }) => {
-  //const [unreadCount, setUnreadCount] = useState(0);
   const [isPlanModalVisible, setPlanModalVisible] = useState(false);
   const [plans, setPlans] = useState([]);
   const [currentPlan, setCurrentPlan] = useState([]);
@@ -49,7 +47,6 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const [isDeletingPlan, setIsDeletingPlan] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  //const [notifications, setNotifications] = useState([]);
   const [translatedUserName, setTranslatedUserName] = useState('');
   const [translatedCurrentPlan, setTranslatedCurrentPlan] = useState('');
   const [translatedDescription, setTranslatedDescription] = useState('');
@@ -67,11 +64,13 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const openStorage2Directly = useSelector(state => state.storageUI.openStorage2Directly);
   const { setHandleChooseClick } = useHeaderAction();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-   const { t } = useTranslation();
+  const { t } = useTranslation();
+  const { subscriptionAmount, subscriptionId, subscriptionIsActive, subscriptionExpired } = useSelector(
+    (state) => state.auth
+  );
+  const subscriptionActive = subscriptionIsActive
 
-  //const NOTIFICATION_STORAGE_KEY = 'APP_NOTIFICATIONS';
-
-   const {
+  const {
     notifications,
     unreadCount,
     markAsRead,
@@ -97,45 +96,16 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     fetchPlans();
   }, []);
 
-//   useFocusEffect(
-//   useCallback(() => {
-//     reload(); // Refresh when screen/modal is focused
-//   }, [])
-// );
-
-//   useEffect(() => {
-//   const fetchNotifications = async () => {
-//     const stored = await loadNotificationsFromStorage();
-//     setNotifications(stored);
-//     setUnreadCount(stored.filter(n => !n.read).length);
-//   };
-
-//   fetchNotifications();
-// }, []);
-
-
-//   useEffect(() => {
-//   const loadNotifications = async () => {
-//     const stored = await AsyncStorage.getItem('notifications');
-//     const parsed = stored ? JSON.parse(stored) : [];
-//     setNotifications(parsed);
-//     setUnreadCount(parsed.filter(n => !n.read).length);
-//   };
-//   loadNotifications();
-// }, []);
-
   //const remainingDay = 3;
 
   useEffect(() => {
-    console.log('remainingDays', remainingDays);
-  if (
+    if (
       remainingDays != null &&
       remainingDays !== '' &&
       (remainingDays <= 3 || remainingDays === 12)
     ) {
-    const date = new Date().toLocaleString();
-    //const message = `Your storage plan expires in ${remainingDay} day${remainingDay > 1 ? 's' : ''}.`;
-    let message = '';
+      const date = new Date().toLocaleString();
+      let message = '';
       if (remainingDays > 1) {
         message = t('header.planExpiresDays', { count: remainingDays });
       } else if (remainingDays === 1) {
@@ -146,69 +116,26 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         message = t('header.planExpired');
       }
 
-      console.log('message', message);
+      const newNotification = {
+        id: Date.now().toString(),
+        title: t('header.planExpiringSoon'),
+        message,
+        type: 'plan',
+        date,
+        read: false,
+      };
 
-    const newNotification = {
-      id: Date.now().toString(),
-      title: t('header.planExpiringSoon'),
-      message,
-      type: 'plan',
-      date,
-      read: false,
-    };
+      addNotification(newNotification);
 
-    // loadNotificationsFromStorage().then((prev) => {
-    //   const alreadyExists = prev.find((n) => n.message === message);
-    //   if (!alreadyExists) {
-    //     const updated = [...prev, newNotification];
-    //     console.log('updated loadNotificationsFromStorage', updated);
-    //     saveNotificationsToStorage(updated);
-    //     setNotifications(updated);
-    //     setUnreadCount(updated.filter((n) => !n.read).length);
-    //   }
-    // });
-    addNotification(newNotification);
+    }
+  }, [remainingDays]);
 
-    // Notifications.scheduleNotificationAsync({
-    //   content: {
-    //     title: 'Storage Plan Reminder',
-    //     body: message,
-    //     sound: true,
-    //   },
-    //   trigger: null,
-    // });
-  }
-}, [remainingDays]);
-
-
-  // useEffect(() => {
-  //   const unread = notifications.filter(n => !n.read).length;
-  //   setUnreadCount(unread);
-  // }, [notifications]);
-
-  // Listen to notification tap
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(() => {
       setShowModal(true);
     });
     return () => subscription.remove();
   }, []);
-
-  // Mark all as read on open
-  // useEffect(() => {
-  //   if (showModal) {
-  //     setNotifications((prev) =>
-  //       prev.map((n) => ({
-  //         ...n,
-  //         read: true,
-  //       }))
-  //     );
-  //   }
-  // }, [showModal]);
-
-  // const handleClose = () => {
-  //   setShowModal(false);
-  // };
 
   useEffect(() => {
     if (plans.length > 0) {
@@ -279,7 +206,6 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
 
   const handleChangeClick = async () => {
-    console.log('Change plan clicked');
     if (Platform.OS === 'ios') {
       setPlanModalVisible(false)
     }
@@ -287,23 +213,22 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       router.replace('/gallery');
     }, 200);
     setTimeout(() => {
-    dispatch(triggerOpenStorage2());
-  }, 100);
+      dispatch(triggerOpenStorage2());
+    }, 100);
     await AsyncStorage.setItem('storage_modal_triggered', 'false');
     router.push('/gallery?showStorageModal=true');
   };
 
   const handleChooseClick = async () => {
-    console.log('Choose plan clicked');
     if (Platform.OS === 'ios') {
       setPlanModalVisible(false)
     }
-     setTimeout(() => {
+    setTimeout(() => {
       router.replace('/gallery');
     }, 200);
     setTimeout(() => {
-    dispatch(triggerOpenStorage2());
-  }, 100);
+      dispatch(triggerOpenStorage2());
+    }, 100);
     await AsyncStorage.setItem('storage_modal_triggered', 'false');
   };
 
@@ -367,98 +292,53 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const formatNotificationDate = async (dateString) => {
     const lang = (await AsyncStorage.getItem('appLanguage')) || 'en';
     moment.locale(lang);
-    const date = moment(dateString, 'D/M/YYYY, h:mm:ss a'); // Match your format
+    const date = moment(dateString, 'D/M/YYYY, h:mm:ss a');
 
     if (moment().isSame(date, 'day')) {
       return t('header.today');
     } else if (moment().subtract(1, 'day').isSame(date, 'day')) {
       return t('header.yesterday');
     } else {
-      return date.format('DD MMM YYYY'); // like 01 Aug 2025
+      return date.format('DD MMM YYYY');
     }
   };
 
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       const saved = await AsyncStorage.getItem('notifications');
-  //       console.log('saved', saved)
-  //       if (saved) {
-  //         const parsed = JSON.parse(saved);
-  //         setNotifications(parsed);
-  //         const unread = parsed.filter(n => n.read !== true).length;
-  //         setUnreadCount(unread);
-  //       }
-  //     } catch (e) {
-  //       console.error('Failed to load notifications', e);
-  //     }
-  //   })();
-  // }, []);
-
-  // // Save updated list back
-  // const markAsRead = async (item) => {
-  //   const updated = notifications.map(n =>
-  //     n.id === item.id ? { ...n, read: 'true' } : n
-  //   );
-  //   setNotifications(updated);
-  //   setUnreadCount(prev => Math.max(0, prev - 1));
-  //   await AsyncStorage.setItem('notifications', JSON.stringify(updated));
-  // };
-
   const handleNotificationPress = async (clickedItem) => {
-  //   const updated = notifications.map((n) =>
-  //   n.id === clickedItem.id ? { ...n, read: true } : n
-  // );
-  // setNotifications(updated);
-  // setUnreadCount(updated.filter(n => !n.read).length);
-  //  try {
-  //   await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(updated));
-  // } catch (error) {
-  //   console.error("Error saving notifications:", error);
-  // }
-  // console.log('updated handleNotificationPress', updated);
-  // await saveNotificationsToStorage(updated);
     markAsRead(clickedItem);
     setShowModal(false);
 
     setTimeout(() => {
-    if (clickedItem.type === 'plan') handleChooseClick();
-    if (clickedItem.type === 'event') router.push('/event');
+      if (clickedItem.type === 'plan') handleChooseClick();
+      if (clickedItem.type === 'event') router.push('/event');
     }, 1000);
   };
 
   const closeModalAndMarkAllRead = async () => {
-  // const updated = notifications.map((n) => ({ ...n, read: true }));
-  // setNotifications(updated);
-  // setUnreadCount(0);
-  // console.log('updated closeModalAndMarkAllRead', updated);
-  // await saveNotificationsToStorage(updated);
-  // setShowModal(false);
     markAllAsRead();
     setShowModal(false);
-};
-
-useEffect(() => {
-  const translateDynamicTexts = async () => {
-    if (user?.firstName && user?.lastName) {
-      const fullName = `${user.firstName} ${user.lastName}`;
-      const translated = await useDynamicTranslate(fullName);
-      setTranslatedUserName(translated);
-    }
-
-    if (currentPlan?.name) {
-      const translatedPlan = await useDynamicTranslate(currentPlan.name);
-      setTranslatedCurrentPlan(translatedPlan);
-    }
-
-     if (currentPlan?.description) {
-      const translatedDescription = await useDynamicTranslate(currentPlan.description);
-      setTranslatedDescription(translatedDescription);
-    }
   };
 
-  translateDynamicTexts();
-}, [user, currentPlan, snackbarMessage]);
+  useEffect(() => {
+    const translateDynamicTexts = async () => {
+      if (user?.firstName && user?.lastName) {
+        const fullName = `${user.firstName} ${user.lastName}`;
+        const translated = await useDynamicTranslate(fullName);
+        setTranslatedUserName(translated);
+      }
+
+      if (currentPlan?.name) {
+        const translatedPlan = await useDynamicTranslate(currentPlan.name);
+        setTranslatedCurrentPlan(translatedPlan);
+      }
+
+      if (currentPlan?.description) {
+        const translatedDescription = await useDynamicTranslate(currentPlan.description);
+        setTranslatedDescription(translatedDescription);
+      }
+    };
+
+    translateDynamicTexts();
+  }, [user, currentPlan, snackbarMessage]);
 
   return (
     <View style={styles.header}>
@@ -471,10 +351,6 @@ useEffect(() => {
       {showProfile && (
         <View style={styles.profileContainer}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-
-            {/* <TouchableOpacity onPress={toggleDropdownHandler} style={styles.profileButton}>
-              <Ionicons name="notifications" size={26} color={Colors.textPrimary} />
-            </TouchableOpacity> */}
             <TouchableOpacity onPress={() => setShowModal(true)} style={styles.notificationButton}>
               <Ionicons name="notifications-outline" size={27} color={Colors.textPrimary} />
               {unreadCount > 0 && (
@@ -502,6 +378,45 @@ useEffect(() => {
                 👋 {t('header.hello')} {translatedUserName}
               </Text>
 
+              {/* {(subscriptionActive && subscriptionId) && (
+                <View style={styles.subscriptionStatus}>
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={17}
+                    color="green"
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.subscriptionText}>{t("flix10k.subscribed")}</Text>
+                </View>
+              )} */}
+
+              {(subscriptionActive && subscriptionId) && (
+                <View
+                  style={[
+                    styles.subscriptionStatus,
+                    subscriptionExpired ? styles.expiredStatus : styles.activeStatus,
+                  ]}
+                >
+                  <Ionicons
+                    name={subscriptionExpired ? "close-circle-outline" : "checkmark-circle-outline"}
+                    size={17}
+                    color={subscriptionExpired ? "red" : "green"}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={[
+                      styles.subscriptionText,
+                      subscriptionExpired && styles.expiredText,
+                    ]}
+                  >
+                    {subscriptionExpired
+                      ? t("flix10k.subscribedExpired")
+                      : t("flix10k.subscribed")}
+                  </Text>
+                </View>
+              )}
+
+
               <TouchableOpacity
                 style={styles.dropdownItem}
                 onPress={() => {
@@ -510,7 +425,7 @@ useEffect(() => {
                 }}
               >
                 <Ionicons name="settings-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
-                <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>{t('header.profileSettings')}</Text>
+                <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>{t('header.profileSettings')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -524,35 +439,42 @@ useEffect(() => {
               >
                 <Ionicons name="cloud-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
                 {storagePlan?.storagePlanId === 1 || storagePlan?.storagePlanId === 2 ? (
-                  <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>
+                  <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
                     {t('header.storagePlan')}
                   </Text>
                 ) : (
-                  <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>
+                  <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
                     {t('header.noPlanSelected')}
                   </Text>
                 )}
 
               </TouchableOpacity>
 
-              {/* <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}
-              >
-                <Ionicons name="language-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
-                <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>
-                  Language
-                </Text>
-              </TouchableOpacity> */}
+              {(subscriptionActive && subscriptionId) && (
+                <TouchableOpacity
+                  style={[styles.dropdownItem]}
+                  onPress={() => {
+                    closeDropdownHandler();
+                    navigation.navigate('profile', {
+                      screen: 'ProfileSettings',
+                      params: { initialTab: 'subscriptions' },
+                    });
+                  }}
+                >
+                  <Ionicons name="card-outline" size={20} style={styles.icon} />
+                  <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>{t('profileSettings.subscriptionsTab')}</Text>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity
                 style={styles.dropdownItem}
                 onPress={() => {
-                  closeDropdownHandler();      // close profile dropdown
-                  setShowLanguageModal(true);  // open language modal
+                  closeDropdownHandler();
+                  setShowLanguageModal(true);
                 }}
               >
                 <Ionicons name="language-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
-                <Text style={{ fontFamily: 'Poppins_400Regular', marginTop: 4 }}>
+                <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
                   {t('header.language')}
                 </Text>
               </TouchableOpacity>
@@ -570,7 +492,7 @@ useEffect(() => {
                     style={styles.subDropdownItem}
                     onPress={() => {
                       setShowLanguageDropdown(false);
-                      i18n.changeLanguage("en"); // ✅ switch to English
+                      i18n.changeLanguage("en");
                     }}
                   >
                     <Text style={styles.subDropdownText}>English</Text>
@@ -580,7 +502,7 @@ useEffect(() => {
                     style={styles.subDropdownItem}
                     onPress={() => {
                       setShowLanguageDropdown(false);
-                      i18n.changeLanguage("es"); // ✅ switch to Spanish
+                      i18n.changeLanguage("es");
                     }}
                   >
                     <Text style={styles.subDropdownText}>Español</Text>
@@ -610,12 +532,17 @@ useEffect(() => {
 
             {currentPlan ? (
               <>
-                <Text style={styles.planTitle}>{translatedCurrentPlan }</Text>
+                <Text style={styles.planTitle}>{translatedCurrentPlan}</Text>
                 <Text style={styles.planSubtitle}>
                   ${currentPlan.price_per_month} / {t('header.year')} • {currentPlan.storage_limit_gb} {t('header.gb')}
                 </Text>
                 {isPlanExpired && <Text style={[styles.expiryTitle]}>{t('header.expired')}</Text>}
                 {showUpgradeReminder && <Text style={[styles.expiryTitle]}>{t('header.expiringIn')} {remainingDays} {t('header.days')}</Text>}
+                {storagePlan.storagePlanPrice == "0.00" && !isPlanExpired && !showUpgradeReminder && (
+                  <Text style={[styles.expiryTitle, { color: "#e96b04", fontSize: 14 }]}>
+                    {t('header.expiringIn')} {remainingDays} {t('header.days')}
+                  </Text>
+                )}
 
                 <View style={styles.separator} />
 
@@ -680,13 +607,13 @@ useEffect(() => {
             <Ionicons name="warning" size={48} color={Colors.error} />
             <Text style={styles.delModalTitle}>{t('header.deletePlanTitle')}</Text>
             <Text style={styles.delModalMessage}>
-             {t('header.deletePlanMessage')}
+              {t('header.deletePlanMessage')}
             </Text>
 
             {isDeletingPlan ? (
               <View style={{ alignItems: 'center', marginVertical: 20 }}>
                 <ActivityIndicator size="large" color="red" />
-                <Text style={{ marginTop: 10, fontSize: 16, color: 'red', fontWeight: '600' }}>
+                <Text style={{ marginTop: 10, fontFamily: "Nunito700", fontSize: 16, color: 'red' }}>
                   {t('header.deletingPlan')}
                 </Text>
               </View>
@@ -712,26 +639,14 @@ useEffect(() => {
         </View>
       </Modal>
 
-      {/* <Modal visible={showModal} animationType="slide" transparent>
+      <Modal visible={showModal} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalBox}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Notifications</Text>
-              <TouchableOpacity
-              onPress={async () => {
-                setShowModal(false);
-
-                setNotifications((prev) => {
-                  const updated = prev.map(n => ({ ...n, read: true }));
-                  AsyncStorage.setItem('notifications', JSON.stringify(updated));
-                  setUnreadCount(0);
-                  return updated;
-                });
-              }}
-            >
-              <Ionicons name="close" size={24} color="#333" />
-            </TouchableOpacity>
-
+              <Text style={styles.modalTitle}>{t('header.notifications')}</Text>
+              <TouchableOpacity onPress={closeModalAndMarkAllRead}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={styles.notificationList}>
@@ -739,7 +654,7 @@ useEffect(() => {
                 [...notifications]
                   .sort((a, b) => moment(b.date, 'D/M/YYYY, h:mm:ss a') - moment(a.date, 'D/M/YYYY, h:mm:ss a'))
                   .map((item, index) => {
-                    const isRead = String(item.read) === 'true';
+                    const isRead = item.read === true;
 
                     return (
                       <TouchableOpacity
@@ -762,57 +677,12 @@ useEffect(() => {
                     );
                   })
               ) : (
-                <Text style={styles.noNotifications}>No new notifications</Text>
+                <Text style={styles.noNotifications}>{t('header.noNotifications')}</Text>
               )}
             </ScrollView>
           </View>
         </View>
-      </Modal> */}
-
-      <Modal visible={showModal} animationType="slide" transparent>
-  <View style={styles.modalBackdrop}>
-    <View style={styles.modalBox}>
-      <View style={styles.modalHeader}>
-        <Text style={styles.modalTitle}>{t('header.notifications')}</Text>
-        <TouchableOpacity onPress={closeModalAndMarkAllRead}>
-          <Ionicons name="close" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.notificationList}>
-        {notifications.length > 0 ? (
-          [...notifications]
-            .sort((a, b) => moment(b.date, 'D/M/YYYY, h:mm:ss a') - moment(a.date, 'D/M/YYYY, h:mm:ss a'))
-            .map((item, index) => {
-              const isRead = item.read === true;
-
-              return (
-                <TouchableOpacity
-                  key={item.id || index}
-                  style={[
-                    styles.notificationItem,
-                    isRead ? styles.readItem : styles.unreadItem,
-                  ]}
-                  onPress={() => handleNotificationPress(item)}
-                >
-                  <View style={styles.notificationContent}>
-                    <Text style={styles.notificationMessage}>{item.title}</Text>
-                    <Text style={styles.notificationTitle}>{item.message}</Text>
-                    <Text style={styles.notificationDate}>
-                      {formatNotificationDate(item.date)}
-                    </Text>
-                    {!isRead && <View style={styles.redDot} />}
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-        ) : (
-          <Text style={styles.noNotifications}>{t('header.noNotifications')}</Text>
-        )}
-      </ScrollView>
-    </View>
-  </View>
-</Modal>
+      </Modal>
     </View>
   );
 };
@@ -831,9 +701,10 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   title: {
-    fontSize: 20,
-    fontFamily: 'Poppins_700Bold',
+    fontSize: 22,
+    fontFamily: 'Nunito700',
     color: Colors.textPrimary,
+    fontWeight: '600',
     paddingLeft: 55,
     //justifyContent: 'center',
     alignItems: 'center',
@@ -867,13 +738,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
   },
 
   dropdownItemFirst: {
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Nunito700',
     fontSize: 14,
     color: Colors.textPrimary,
     marginBottom: 8,
@@ -890,7 +761,7 @@ const styles = StyleSheet.create({
 
   logoutText: {
     color: Colors.error,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
   },
 
   messageButton: {
@@ -912,8 +783,9 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: 'white',
+    fontFamily: "Nunito400",
     fontSize: 10,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -937,13 +809,13 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Nunito700',
     marginBottom: 10,
     color: Colors.textPrimary,
   },
   modalText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     marginBottom: 6,
     textAlign: 'center',
   },
@@ -956,13 +828,13 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: 'white',
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Nunito700',
   },
   planCard: {
-    width: 300,
-    backgroundColor: '#fff',
+    width: 330,
+    backgroundColor: '#fdf2f8',
     borderRadius: 10,
-    padding: 20,
+    padding: 25,
     alignItems: 'flex-start',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -972,19 +844,19 @@ const styles = StyleSheet.create({
   },
   planTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Nunito700',
     color: Colors.textPrimary,
     marginBottom: 4,
   },
   expiryTitle: {
     fontSize: 15,
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: 'Nunito700',
     color: 'red',
     marginTop: 4,
   },
   planSubtitle: {
     fontSize: 13,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     color: Colors.gray,
   },
   separator: {
@@ -995,18 +867,19 @@ const styles = StyleSheet.create({
   },
   featureTitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Nunito700',
     marginBottom: 6,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 12,
+    padding: 5
   },
   featureText: {
     marginLeft: 8,
     marginRight: 8,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     fontSize: 13,
   },
   actionRow: {
@@ -1021,8 +894,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   actionText: {
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 13,
+    fontFamily: 'Nunito400',
+    fontSize: 14,
   },
   closeModalButton: {
     alignSelf: 'center',
@@ -1034,7 +907,7 @@ const styles = StyleSheet.create({
   },
   closeModalText: {
     color: '#fff',
-    fontFamily: 'Poppins_600SemiBold',
+    fontFamily: 'Nunito700',
   },
   closeIcon: {
     position: 'absolute',
@@ -1053,7 +926,8 @@ const styles = StyleSheet.create({
   },
   chooseButtonText: {
     color: '#fff',
-    fontWeight: '600',
+    //fontWeight: '600',
+    fontFamily: 'Nunito700',
     fontSize: 14,
   },
   delModalOverlay: {
@@ -1073,15 +947,15 @@ const styles = StyleSheet.create({
 
   delModalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    fontFamily: 'Poppins_600SemiBold',
+    //fontWeight: 'bold',
+    fontFamily: 'Nunito700',
     marginBottom: 10,
     textAlign: 'center'
   },
 
   delModalMessage: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontFamily: 'Nunito400',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -1105,8 +979,8 @@ const styles = StyleSheet.create({
   delModalButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: 'Poppins_500Medium',
+    //fontWeight: 'bold',
+    fontFamily: 'Nunito700',
   },
   notificationButton: {
     marginHorizontal: 5,
@@ -1135,7 +1009,8 @@ const styles = StyleSheet.create({
   },
   notificationHeaderText: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: 'Nunito700',
+    //fontWeight: '600',
     color: '#333',
   },
   notificationScrollArea: {
@@ -1149,14 +1024,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   notificationCardUnread: {
-    backgroundColor: '#dbeafe', // light blue highlight for unread
+    backgroundColor: '#dbeafe',
   },
-  // notificationText: {
-  //   fontSize: 16,
-  //   color: '#111',
-  //   marginBottom: 4,
-  // },
   notificationTimestamp: {
+    fontFamily: 'Nunito400',
     fontSize: 12,
     color: '#666',
     textAlign: 'right',
@@ -1168,6 +1039,7 @@ const styles = StyleSheet.create({
     paddingVertical: 50,
   },
   noNotificationText: {
+    fontFamily: 'Nunito400',
     fontSize: 16,
     color: '#999',
     textAlign: 'center',
@@ -1211,18 +1083,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   modalTitle: {
+    fontFamily: 'Nunito700',
     fontSize: 20,
-    fontWeight: 'bold',
+    //fontWeight: 'bold',
     color: '#333',
   },
   notificationList: {
     paddingBottom: 20,
   },
-  // notificationItem: {
-  //   borderRadius: 10,
-  //   padding: 14,
-  //   marginBottom: 10,
-  // },
   notificationItem: {
     padding: 10,
     marginVertical: 6,
@@ -1230,27 +1098,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   unreadItem: {
-    backgroundColor: '#f7d9efff', // Light blue or your highlight color
+    backgroundColor: '#f7d9efff',
     borderLeftWidth: 4,
     borderLeftColor: '#a23586'
   },
   readItem: {
-    backgroundColor: '#E0E0E0', // Light blue or your highlight color
+    backgroundColor: '#E0E0E0',
     borderLeftWidth: 4,
     borderLeftColor: '#9E9E9E'
   },
   notificationMessage: {
+    fontFamily: 'Nunito400',
     fontSize: 14,
     color: '#000',
     marginBottom: 4,
   },
   notificationTitle: {
+    fontFamily: 'Nunito400',
     fontSize: 12,
     color: '#555',
     fontStyle: 'italic',
     marginBottom: 4,
   },
   notificationDate: {
+    fontFamily: 'Nunito400',
     fontSize: 11,
     color: '#888',
     textAlign: 'right',
@@ -1258,12 +1129,13 @@ const styles = StyleSheet.create({
   noNotifications: {
     textAlign: 'center',
     color: '#888',
+    fontFamily: 'Nunito700',
     fontSize: 14,
     marginTop: 20,
   },
   notificationContent: {
     position: 'relative',
-    paddingRight: 20 // Add space for dot on right
+    paddingRight: 20,
   },
 
   redDot: {
@@ -1276,26 +1148,55 @@ const styles = StyleSheet.create({
     right: 0
   },
   subDropdown: {
-  marginLeft: 40, // shift inside
-  backgroundColor: "#fff",
-  borderRadius: 8,
-  paddingVertical: 4,
-  marginTop: 4,
-  shadowColor: "#000",
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
-},
-subDropdownItem: {
-  paddingVertical: 8,
-  paddingHorizontal: 12,
-},
-subDropdownText: {
-  fontFamily: 'Poppins_400Regular',
-  fontSize: 14,
-  color: Colors.textPrimary,
-},
+    marginLeft: 40,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingVertical: 4,
+    marginTop: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  subDropdownItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  subDropdownText: {
+    fontFamily: 'Nunito400',
+    fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  subscriptionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginHorizontal: 8,
+    marginBottom: 5,
+    backgroundColor: '#e6f9ec',
+    borderRadius: 12,
+  },
 
+  activeStatus: {
+    backgroundColor: "#e6f9ec",
+  },
+
+  expiredStatus: {
+    backgroundColor: "#fdeaea",
+  },
+
+  subscriptionText: {
+    fontFamily: "Nunito700",
+    fontSize: 13,
+    color: 'green',
+  },
+
+  expiredText: {
+    color: "red",
+    fontSize: 10.5,
+  },
 
 });
 

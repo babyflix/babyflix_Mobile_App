@@ -5,13 +5,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 
-import GalleryScreen from '../screens/GalleryScreen';
+import GalleryScreen from '../gallery/GalleryScreen';
 import UploadScreen from '../screens/UploadScreen';
 import EventsScreen from '../screens/EventsScreen';
 import LiveStreamingScreen from '../screens/LiveStreamingScreen';
 import MessagesScreen from '../screens/MessagesScreen';
 import LoginScreen from '../screens/LoginScreen';
 import ProfileSettingsScreen from '../screens/ProfileSettingsScreen';
+import ManageSubscriptions from '../screens/ManageSubscriptions';
 
 const Drawer = createDrawerNavigator();
 const Tabs = createBottomTabNavigator();

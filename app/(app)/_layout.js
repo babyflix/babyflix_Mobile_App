@@ -41,7 +41,12 @@ export default function AppLayout() {
           paddingTop: 5,
           paddingBottom: 5,
           height: 65,
-          backgroundColor: 'white'
+          backgroundColor: 'white',
+          //fontfamily: "Nunito700",
+        },
+        tabBarLabelStyle: {
+          fontFamily: "Nunito700", 
+          //fontSize: 13,            
         },
       }}
     >

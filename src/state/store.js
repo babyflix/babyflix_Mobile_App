@@ -7,6 +7,8 @@ import streamReducer from './slices/streamSlice';
 import storagePlanReducer from './slices/storagePlanSlice';
 import storageUIReducer from './slices/storageUISlice';
 import expiredPlanReducer from './slices/expiredPlanSlice';
+import flix10kSliceReducer from './slices/flix10kSlice';
+import subscriptionReducer from "./slices/subscriptionSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,5 +20,7 @@ export const store = configureStore({
     storagePlan: storagePlanReducer,
     storageUI: storageUIReducer,
     expiredPlan: expiredPlanReducer,
+    flix10kSlice: flix10kSliceReducer,
+    subscription: subscriptionReducer,
   },
 });
