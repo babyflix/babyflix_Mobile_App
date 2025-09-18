@@ -163,7 +163,7 @@ const MediaTabs = ({
                 {(mediaData.babyProfile.length + mediaData.predictiveBabyImages.length) > 0 && (
                   <View style={styles.badge}>
                     <Text style={[styles.badgeText, { color }]}>
-                      {mediaData.babyProfile.length + mediaData.predictiveBabyImages.length}
+                      {mediaData.babyProfile.length + mediaData.predictiveBabyImages.length + flix10kAiImages.length}
                     </Text>
                   </View>
                 )}
