@@ -34,6 +34,7 @@ import { requestMediaLibraryPermission } from '../src/components/requestMediaPer
 import "../src/constants/i18n"; 
 import { setDeepLinkHandled } from '../src/state/slices/storageUISlice';
 import * as Notifications from 'expo-notifications';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
@@ -162,7 +163,7 @@ useEffect(() => {
 
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="splash">
+      <Stack screenOptions={{ headerShown: false, }} initialRouteName="splash">
         <Stack.Screen name="index" />
         <Stack.Screen name="splash" />
         <Stack.Screen name="(auth)" />
@@ -204,7 +205,9 @@ export default function RootLayout() {
         <NotificationProvider>
         <HeaderActionProvider>
         <AuthLoader>
+          <GestureHandlerRootView style={{ flex: 1 }}>
           <LayoutContent />
+          </GestureHandlerRootView>
         </AuthLoader>
         </HeaderActionProvider>
         </NotificationProvider>

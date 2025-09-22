@@ -439,6 +439,10 @@
     "unsubscribeSuccess": "Flix10K se canceló correctamente",
     "unsubscribeError": "Algo salió mal al cancelar la suscripción",
     "autoRenewalStatus": "La renovación automática se ha {{status}} correctamente",
+    "subscriptionSuccessWithMonths": "Te has suscrito con éxito a FLIX10K por 3 meses.",
+    "subscriptionSuccess": "Te has suscrito con éxito a FLIX10K.",
+    "offerApplied": "¡Oferta aplicada! Paga 2 meses y obtén el 3.º mes gratis.",
+    "offerNotApplicable": "La oferta de suscripción por primera vez no será aplicable para esta selección.",
 
      "tabs":{
       "babyProfile": "Perfil del bebé",

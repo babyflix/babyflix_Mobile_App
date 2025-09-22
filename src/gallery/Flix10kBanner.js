@@ -21,12 +21,13 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as WebBrowser from 'expo-web-browser';
-import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
+import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL, NEXT_PUBLIC_SHOWFLIXAD } from '@env';
 import * as Updates from 'expo-updates';
 import { generateImage } from "../constants/generateApi";
 import sendDeviceUserInfo, { USERACTIONS } from "../components/deviceInfo";
 import { setSubscriptionExpired } from "../state/slices/subscriptionSlice";
 import { useNavigation, useRouter } from "expo-router";
+import FlixAdModal from "./FlixAdModal";
 
 const Flix10kBanner = ({
   mediaData,
@@ -43,6 +44,9 @@ const Flix10kBanner = ({
   setFlix10kResults,
   flix10kAiImages,
   setFlix10kAiImages,
+  setSnackbarVisible,
+  setSnackbarMessage,
+  setSnackbarType
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -61,7 +65,7 @@ const Flix10kBanner = ({
   const [showModal, setShowModal] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [months, setMonths] = useState(1);
-  const [autoRenew, setAutoRenew] = useState(true);
+  const [autoRenew, setAutoRenew] = useState(false);
 
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [showPaymentFailure, setShowPaymentFailure] = useState(false);
@@ -70,6 +74,8 @@ const Flix10kBanner = ({
 
   const [analyzeResult, setAnalyzeResult] = useState(null);
   const [loadingAnalyze, setLoadingAnalyze] = useState(false);
+  const [showFlix10KAd, setShowFlix10KAd] = useState(false);
+  const [message, setMessage] = useState("");
 
   const selectionCount = selectedItemsForAi.length;
 
@@ -263,10 +269,11 @@ const Flix10kBanner = ({
     setFlix10kGenerating(true);
 
     const updatedItems = [];
+     const failedItems = [];
 
     try {
       for (const item of selectedItemsForAi) {
-        console.log('generating for', item.id)
+        console.log('generating for', item)
         if (item.object_type !== "image") {
           console.log("Skipping non-image item:", item.id);
           continue;
@@ -279,25 +286,52 @@ const Flix10kBanner = ({
         }
 
         try {
-          const response = await generateImage(item.object_url, item.object_type, user);
+          const response = await generateImage(item.object_url, item.object_type, user, item.id);
           console.log("API Response for item:", item.id, response);
 
-          const newItem = { ...item, flix10kAiImages: response };
+          // const newItem = { ...item, flix10kAiImages: response };
 
+          // updatedItems.push(newItem);
+
+          // sendDeviceUserInfo({
+          //   action_type: USERACTIONS.FLIX10KBABYPREDICTIVEIMAGE,
+          //   action_description: `Flox10K generate predictiveimage for ${item}`,
+          // });
+          if (response?.output_path) {
+          const newItem = { ...item, flix10kAiImages: response };
           updatedItems.push(newItem);
 
           sendDeviceUserInfo({
             action_type: USERACTIONS.FLIX10KBABYPREDICTIVEIMAGE,
-            action_description: `Flox10K generate predictiveimage for ${item}`,
+            action_description: `Flix10K generate predictive image for ${item}`,
           });
+        } else {
+          // 🚨 no output_path → add to failedItems
+          failedItems.push(item.title);
+        }
+
         } catch (err) {
           console.error("❌ Error generating item", item.id, err);
+           failedItems.push(item.object_name || item.id);
         }
       }
 
       if (updatedItems.length > 0) {
         setFlix10kAiImages(prev => [...updatedItems, ...(prev || [])]);
       }
+
+       if (failedItems.length > 0) {
+      const msg =
+        failedItems.length === 1
+          ? `Image with image name "${failedItems[0]}" is already generated. Please try another.`
+          : `Images with image names "${failedItems.join(
+              ", "
+            )}" are already generated. Please try another.`;
+      //showSnackbar(errorMessage, "error"); // assuming you have a snackbar util
+      setSnackbarVisible(true);
+      setSnackbarMessage(msg);
+      setSnackbarType("error")
+    }
 
       console.log("🎉 All items processed:", updatedItems);
       cancelFlix10KPress();
@@ -319,6 +353,7 @@ const Flix10kBanner = ({
         autoRenewal: autoRenew,
         subscribedMonths: months,
         platform: Platform.OS,
+        showFlix10KAd: showFlix10KAd,
       };
 
       console.log("Subscription Payload:", payload);
@@ -364,8 +399,20 @@ const Flix10kBanner = ({
 
   return (
     <View style={styles.container}>
+
+      <FlixAdModal
+        paymentSuccess={subscriptionAmount == "" || null}
+        handleSubscribe={handleSubscribe} // from parent
+        //months={months}
+        setMonths={setMonths}
+        //autoRenew={autoRenew}
+        setAutoRenew={setAutoRenew}
+        setShowFlix10KAd={setShowFlix10KAd}
+        setMessage={setMessage}
+      />
+
       {/* CASE 1: Not selecting */}
-      {(mediaData.images.length !== 0 && !selecting && storagePlanId) && (
+      {(mediaData.images.length !== 0 && !selecting ) && (
         <LinearGradient
           colors={subscriptionExpired ? ["#f86977ff", "#dc3545"] : ["#a23586", "#d16ba5"]}
           start={{ x: 0, y: 0 }}
@@ -487,6 +534,17 @@ const Flix10kBanner = ({
 
                   <MonthSelector months={months} setMonths={setMonths} autoRenew={autoRenew} mode="dropdown" />
 
+                  { (user?.firstTimeSubscription &&
+                    user?.showFlixAd &&
+                    (subscriptionAmount == "" || null) && 
+                    months === 2 &&
+                    autoRenew === false ) ? (
+                    <Text style={styles.offer}>🎉 {t("flix10k.offerApplied")}</Text>
+                    ) : (
+                      <Text style={styles.offer}>⚠️ {t("flix10k.offerNotApplicable")}</Text>
+                    )
+                  }
+
                   <TouchableOpacity
                     style={styles.autoRenewRow}
                     onPress={() => setAutoRenew(!autoRenew)}
@@ -577,7 +635,7 @@ const Flix10kBanner = ({
         <View style={[styles.modalBackground, { zIndex: 999 }]}>
           <View style={[styles.modalContainerStatus, { borderColor: "green" }]}>
             <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>{t('storage.paymentSuccess')}</Text>
-            <Text style={[styles.subtitle, {}]}>{t('storage.thankYou')}</Text>
+            <Text style={[styles.subtitle, {}]}>{message}</Text> 
             <TouchableOpacity
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={() => handlePaymentClose("success")}
@@ -898,6 +956,13 @@ const styles = StyleSheet.create({
     //fontWeight: "bold",
     color: "#d63384",
     marginBottom: 16,
+  },
+   offer: {
+    fontFamily: "Nunito400",
+    fontSize: 12,
+    //fontWeight: "bold",
+    color: "#19b804ff",
+    //marginBottom: 0,
   },
   primaryButton: {
     flex: 1,

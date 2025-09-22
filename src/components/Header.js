@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Image, Modal, ActivityIndicator, FlatList, ScrollView } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +23,7 @@ import LanguageModal from '../constants/LanguageModal';
 import { useTranslation } from 'react-i18next';
 import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 import 'moment/locale/es';
+import { setSubscriptionExpired } from '../state/slices/subscriptionSlice';
 
 const NOTIFICATIONS_KEY = 'APP_NOTIFICATIONS';
 
@@ -342,17 +343,19 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
   return (
     <View style={styles.header}>
-      <View style={{ alignItems: 'center' }}>
+      <View style={{ justifyContent: 'flex-start'}}>
         <Image source={babyflixLogo} style={{ width: 36, height: 35, margintop: 50 }} />
       </View>
 
+      <View style={{ flex: 1, justifyContent: 'flex-start', }}>
       <Text style={styles.title}>{title}</Text>
+      </View>
 
       {showProfile && (
         <View style={styles.profileContainer}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center',justifyContent:'flex-end' }}>
             <TouchableOpacity onPress={() => setShowModal(true)} style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={27} color={Colors.textPrimary} />
+              <FontAwesome5 name="bell" size={25} color={Colors.textPrimary} />
               {unreadCount > 0 && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{unreadCount}</Text>
@@ -361,7 +364,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.messageButton} onPress={() => router.push('/messages')}>
-              <Ionicons name="chatbubble-ellipses-outline" size={26} color={Colors.textPrimary} />
+              <FontAwesome5 name="comment-dots" size={25} color={Colors.textPrimary} />
               <View style={styles.messageBadge}>
                 <Text style={styles.badgeText}>{unreadMessagesCount}</Text>
               </View>
@@ -455,6 +458,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                   style={[styles.dropdownItem]}
                   onPress={() => {
                     closeDropdownHandler();
+                    dispatch(setSubscriptionExpired(true));
                     navigation.navigate('profile', {
                       screen: 'ProfileSettings',
                       params: { initialTab: 'subscriptions' },
@@ -692,26 +696,28 @@ const styles = StyleSheet.create({
     height: Platform.OS === 'ios' ? 88 : 56,
     paddingTop: Platform.OS === 'ios' ? 40 : 0,
     backgroundColor: Colors.white,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+   flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
     paddingHorizontal: 15,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
     zIndex: 999,
   },
   title: {
-    fontSize: 22,
+    fontSize: 25,
     fontFamily: 'Nunito700',
     color: Colors.textPrimary,
-    fontWeight: '600',
-    paddingLeft: 55,
-    //justifyContent: 'center',
-    alignItems: 'center',
+    //fontWeight: '600',
+    paddingLeft: 15,
+    //alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   profileContainer: {
-    position: 'relative',
+    //position: 'relative',
     overflow: 'visible',
+    //alignItems: 'center',
+    justifyContent: 'flex-end',
     zIndex: 100,
   },
   profileButton: {
@@ -765,7 +771,7 @@ const styles = StyleSheet.create({
   },
 
   messageButton: {
-    marginRight: 5,
+    marginRight: 8,
     //marginLeft: 5,
     padding: 5,
     position: 'relative',
@@ -983,7 +989,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito700',
   },
   notificationButton: {
-    marginHorizontal: 5,
+    marginHorizontal: 12,
     marginTop: 2
   },
   notificationBackdrop: {

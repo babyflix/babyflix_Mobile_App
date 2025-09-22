@@ -59,18 +59,21 @@ const AiMediaGrid = memo(
         const currentItem = regenerationQueue[0];
 
         try {
-          console.log("Regenerating sequentially:", currentItem.id);
+          console.log("Regenerating sequentially:", currentItem);
 
           await callImageAction({
             object_name: currentItem?.flix10kAiImages?.output_path?.object_name,
             action: "regenerate",
             user,
+            imageUrl: currentItem?.object_url,
+            imageId: currentItem?.id,
           });
 
           const response = await generateImage(
             currentItem?.object_url,
             currentItem?.object_type,
-            user
+            user,
+            currentItem?.id,
           );
 
           setFlix10kAiImages((prev) =>
@@ -110,6 +113,8 @@ const AiMediaGrid = memo(
           object_name: item?.flix10kAiImages?.output_path?.object_name,
           action: "keep",
           user,
+          imageUrl: item?.object_url,
+          imageId: item?.id,
         });
 
       } catch (err) {

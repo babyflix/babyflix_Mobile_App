@@ -98,6 +98,7 @@ const GalleryScreen = () => {
   const [flix10kResults, setFlix10kResults] = useState([]);
   const [flix10kAiImages, setFlix10kAiImages] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
+  const [flix10KAD, setFlix10KAD] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -105,6 +106,7 @@ const GalleryScreen = () => {
   const openStorage2Directly = useSelector(state => state.storageUI.openStorage2Directly);
   const forceOpenStorageModals = useSelector((state) => state.storageUI.forceOpenStorageModals);
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+   const showFlix10KAd = useSelector((state) => state.subscription.showFlix10KAd);
 
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
@@ -121,6 +123,15 @@ const GalleryScreen = () => {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+   useEffect(() => {
+    if (showFlix10KAd) {
+      setFlix10KAD(false);
+    }else{
+      setFlix10KAD(true);
+    }
+  }, [showFlix10KAd]);
+
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -563,7 +574,7 @@ const GalleryScreen = () => {
   return (
     <View style={[
       GlobalStyles.container,
-      { marginBottom: 65 },
+      { marginBottom: 0 },
       Platform.OS === 'android' ? { paddingTop: insets.top } : null
     ]}>
       <LiveStreamStatus />
@@ -584,6 +595,9 @@ const GalleryScreen = () => {
         setFlix10kResults={setFlix10kResults}
         flix10kAiImages={flix10kAiImages}
         setFlix10kAiImages={setFlix10kAiImages}
+        setSnackbarVisible={setSnackbarVisible}
+        setSnackbarMessage={setSnackbarMessage}
+        setSnackbarType={setSnackbarType}
       />
 
       {isLoading ? (
@@ -702,7 +716,7 @@ const GalleryScreen = () => {
 
       <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
 
-      {(storageModelStart || shouldShowStorageModal) && (
+      {(storageModelStart || shouldShowStorageModal) && flix10KAD && (
         <StorageModals
           onClose={() => setStorageModelStart(false)}
           storageModalKey={storageModalKey}

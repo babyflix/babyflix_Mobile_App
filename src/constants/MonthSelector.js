@@ -18,7 +18,7 @@ const MonthSelector = ({ months, setMonths, autoRenew, mode = "dropdown" }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { t } = useTranslation();
 
-  const options = [1, 3, 6, 12];
+  const options = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
   const increase = () => setMonths((prev) => (prev ? prev + 1 : 1));
 

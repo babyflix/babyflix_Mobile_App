@@ -92,7 +92,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const storedStatus = await AsyncStorage.getItem('payment_status');
       const storedPaying = await AsyncStorage.getItem('paying');
 
-      //console.log('[StorageModals] fetchStatusFromStorage:', storedStatus, storedPaying );
+      console.log('[StorageModals] fetchStatusFromStorage:', storedStatus, storedPaying );
 
       if (!storedStatus && storedPaying === 'true') {
         //console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');

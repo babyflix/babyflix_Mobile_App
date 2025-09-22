@@ -440,6 +440,10 @@
     "unsubscribeSuccess": "Flix10K Unsubscribe Successfully",
     "unsubscribeError": "Something went wrong while unsubscribing",
     "autoRenewalStatus": "Auto-renewal {{status}} Successfully",
+    "subscriptionSuccessWithMonths": "You have successfully subscribed FLIX10K for 3 Months.",
+    "subscriptionSuccess": "You have successfully subscribed FLIX10K.",
+    "offerApplied": "Offer applied! Pay for 2 months and get 3rd month free.",
+    "offerNotApplicable": "First-time subscription offer will not be applicable for this selection.",
 
     "tabs":{
       "babyProfile": "Baby Profile",

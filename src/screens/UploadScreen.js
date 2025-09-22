@@ -222,7 +222,7 @@ const UploadScreen = () => {
     <View
       style={[
         GlobalStyles.container,
-        { marginBottom: 65 },
+        { marginBottom: 0 },
         Platform.OS === "android" ? { paddingTop: insets.top } : null,
       ]}
     >

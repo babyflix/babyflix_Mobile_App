@@ -22,6 +22,8 @@ const initialState = {
   subscriptionId: '',
   subscriptionIsActive: false,
   subscriptionExpired: false,
+  firstTimeSubscription: false,
+  showFlixAd: false,
 };
 
 
@@ -46,6 +48,8 @@ const authSlice = createSlice({
         token,
         uuid,
         subscription,
+        firstTimeSubscription,
+        showFlixAd,
       } = action.payload;
 
       state.actionStatus = actionStatus;
@@ -69,6 +73,8 @@ const authSlice = createSlice({
       state.subscriptionId = subscription?.subscriptionId || '';
       state.subscriptionIsActive = subscription?.subscriptionIsActive === 1;
       state.subscriptionExpired = subscription?.subscriptionExpired || '';
+      state.firstTimeSubscription = firstTimeSubscription;
+      state.showFlixAd = showFlixAd;
     },
     logout: (state) => {
       state.actionStatus = '';
@@ -87,11 +93,13 @@ const authSlice = createSlice({
       state.uuid = '';
       state.isAuthenticated = false;
       state.isLoggingOut = false; 
-      state.subscription= null,
-      state.subscriptionAmount= '',
-      state.subscriptionId= '',
-      state.subscriptionIsActive= false
-      state.subscriptionExpired= false
+      state.subscription= null;
+      state.subscriptionAmount= '';
+      state.subscriptionId= '';
+      state.subscriptionIsActive= false;
+      state.subscriptionExpired= false;
+      state.firstTimeSubscription= false;
+      state.showFlixAd= false;
     },
     updateActionStatus: (state, action) => {
       state.actionStatus = action.payload;

@@ -41,6 +41,7 @@ export default ({ config }) => ({
         "UIInterfaceOrientationLandscapeLeft",
         "UIInterfaceOrientationLandscapeRight"
       ],
+      NSContactsUsageDescription: "BabyFlix needs access to your contacts so you can share baby memories with your friends and family.",
       NSPhotoLibraryUsageDescription: "BabyFlix allows you to select baby ultrasound images and videos from your photo library to view them in the app",
       NSPhotoLibraryAddUsageDescription: "BabyFlix needs permission to save baby ultrasound videos and images to your Photos Library.",
       ITSAppUsesNonExemptEncryption: false,
