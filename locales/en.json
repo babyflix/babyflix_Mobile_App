@@ -444,6 +444,7 @@
     "subscriptionSuccess": "You have successfully subscribed FLIX10K.",
     "offerApplied": "Offer applied! Pay for 2 months and get 3rd month free.",
     "offerNotApplicable": "First-time subscription offer will not be applicable for this selection.",
+    "upgradeSuccess": "You have successfully upgraded FLIX10K subscription.",
 
     "tabs":{
       "babyProfile": "Baby Profile",

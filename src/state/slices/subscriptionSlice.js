@@ -5,6 +5,7 @@ const subscriptionSlice = createSlice({
   initialState: {
     expired: false,
     showFlix10KAd: false,
+    paymentStatusAdd: false,
   },
   reducers: {
     setSubscriptionExpired: (state, action) => {
@@ -13,8 +14,11 @@ const subscriptionSlice = createSlice({
     setShowFlix10KADSlice: (state, action) => {
       state.showFlix10KAd = action.payload;
     },
+     setPaymentStatusAdd: (state, action) => {
+      state.showFlix10KAd = action.payload;
+    },
   },
 });
 
-export const { setSubscriptionExpired, setShowFlix10KADSlice } = subscriptionSlice.actions;
+export const { setSubscriptionExpired, setShowFlix10KADSlice, setPaymentStatusAdd } = subscriptionSlice.actions;
 export default subscriptionSlice.reducer;

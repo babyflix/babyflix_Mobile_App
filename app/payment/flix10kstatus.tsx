@@ -32,6 +32,7 @@ export default function Flix10KRedirect() {
         console.log('✅ Flix10K Payment Success:', { subscriptionId, autoRenewal, subscribedMonths, sessionId, urlStatus });
 
         await AsyncStorage.setItem('flix10k_payment_status', 'done');
+        await AsyncStorage.setItem('flix10kPaymentForAdd', 'done');
         if (subscriptionId) await AsyncStorage.setItem('flix10k_subscriptionId', String(subscriptionId));
         if (autoRenewal) await AsyncStorage.setItem('flix10k_autoRenewal', String(autoRenewal));
         if (subscribedMonths) await AsyncStorage.setItem('flix10k_subscribedMonths', String(subscribedMonths));
@@ -41,6 +42,7 @@ export default function Flix10KRedirect() {
       } else {
         console.log('❌ Flix10K Payment Failed');
         await AsyncStorage.setItem('flix10k_payment_status', 'fail');
+        await AsyncStorage.setItem('flix10kPaymentForAdd', 'fail');
         if (subscriptionId) await AsyncStorage.setItem('flix10k_subscriptionId', String(subscriptionId));
         if (autoRenewal) await AsyncStorage.setItem('flix10k_autoRenewal', String(autoRenewal));
         if (subscribedMonths) await AsyncStorage.setItem('flix10k_subscribedMonths', String(subscribedMonths));

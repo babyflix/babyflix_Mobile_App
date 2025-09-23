@@ -352,7 +352,7 @@ const ManageSubscriptions = () => {
                 </LinearGradient>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.unsubscribeBtn} onPress={handleUnsubscribe}>
+              <TouchableOpacity style={styles.unsubscribeBtn} onPress={handleUnsubscribe} >
                 <Text style={styles.unsubscribeText}>{t("flix10k.unsubscribe")}</Text>
               </TouchableOpacity>
             </View>
@@ -463,7 +463,9 @@ const ManageSubscriptions = () => {
             <View style={styles.modalOkRow}>
               <TouchableOpacity
                 onPress={() => {
+                  if(!autoRenew === (subscription.autoRenewal === 1 ? true : false) && !months === subscription?.subscribedMonths){
                   handleRestart();
+                  }
                   setSuccessModal(false);
                 }}
                 activeOpacity={0.8}

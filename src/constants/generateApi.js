@@ -5,7 +5,7 @@ const BASE_URL = NEXT_PUBLIC_BUCKET_URL;
 //const BASE_URL = "https://babyflix.ai";
 
 export async function generateImage(imageUrl, objectType, user, imageId) {
-  const MAX_RETRIES = 10;
+  const MAX_RETRIES = 20;
   let lastError = null;
   console.log('imageUrl, objectType, user, imageId',{imageUrl, objectType, imageId})
 

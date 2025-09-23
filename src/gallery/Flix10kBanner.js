@@ -25,7 +25,7 @@ import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL, NEXT_PUBLIC_SHOWFLIXAD 
 import * as Updates from 'expo-updates';
 import { generateImage } from "../constants/generateApi";
 import sendDeviceUserInfo, { USERACTIONS } from "../components/deviceInfo";
-import { setSubscriptionExpired } from "../state/slices/subscriptionSlice";
+import { setPaymentStatusAdd, setShowFlix10KADSlice, setSubscriptionExpired } from "../state/slices/subscriptionSlice";
 import { useNavigation, useRouter } from "expo-router";
 import FlixAdModal from "./FlixAdModal";
 
@@ -60,6 +60,8 @@ const Flix10kBanner = ({
     useSelector((state) => state.storagePlan || {});
   const subscriptionActive = subscriptionIsActive
 
+  console.log("EXPO_PUBLIC_CLOUD_API_URL",EXPO_PUBLIC_CLOUD_API_URL)
+
   console.log('subscriptionAmount, subscriptionId, subscriptionIsActive ', subscriptionAmount, subscriptionId, subscriptionIsActive)
 
   const [showModal, setShowModal] = useState(false);
@@ -76,6 +78,7 @@ const Flix10kBanner = ({
   const [loadingAnalyze, setLoadingAnalyze] = useState(false);
   const [showFlix10KAd, setShowFlix10KAd] = useState(false);
   const [message, setMessage] = useState("");
+  const [showAfterAdd, setShowafterAdd] = useState(false);
 
   const selectionCount = selectedItemsForAi.length;
 
@@ -98,10 +101,16 @@ const Flix10kBanner = ({
         subscribedMonths,
         stripeSessionId,
         status: apiStatus,
+        showFlix10KAd: showFlix10KAd,
       };
 
       if (status === 'done') {
+         //await AsyncStorage.setItem('flix10kPaymentForAdd', 'done');
+         setShowafterAdd(true);
+        //dispatch(setPaymentStatusAdd(true))
+        setTimeout(() => {          
         setShowPaymentSuccess(true);
+        }, 1000);
 
         console.log("Calling subscription API with:", payload);
 
@@ -131,7 +140,12 @@ const Flix10kBanner = ({
       }
 
       else if (status === 'fail') {
-        setShowPaymentFailure(true);
+        //await AsyncStorage.setItem('flix10kPaymentForAdd', 'fail');
+        setShowafterAdd(true);
+        //dispatch(setPaymentStatusAdd(true))
+        setTimeout(() => {
+          setShowPaymentFailure(true);
+        }, 1000);
 
         console.log("Calling subscription API with:", payload);
 
@@ -196,10 +210,16 @@ const Flix10kBanner = ({
     if (type === "success") {
       setShowPaymentSuccess(false);
       await AsyncStorage.removeItem("flix10k_payment_status");
+       await AsyncStorage.removeItem('flix10kPaymentForAdd');
+       //dispatch(setPaymentStatusAdd(false))
+       setShowafterAdd(false);
       handleRestart();
     } else if (type === "failure") {
       setShowPaymentFailure(false);
       await AsyncStorage.removeItem("flix10k_payment_status");
+       await AsyncStorage.removeItem('flix10kPaymentForAdd');
+       //dispatch(setPaymentStatusAdd(false))
+       setShowafterAdd(false);
     }
   };
 
@@ -353,7 +373,6 @@ const Flix10kBanner = ({
         autoRenewal: autoRenew,
         subscribedMonths: months,
         platform: Platform.OS,
-        showFlix10KAd: showFlix10KAd,
       };
 
       console.log("Subscription Payload:", payload);
@@ -396,11 +415,11 @@ const Flix10kBanner = ({
       console.error("Subscription error:", error.response?.data || error.message);
     }
   };
-
+console.log("showAfterAdd",showAfterAdd)
   return (
     <View style={styles.container}>
 
-      <FlixAdModal
+      { !showAfterAdd && <FlixAdModal
         paymentSuccess={subscriptionAmount == "" || null}
         handleSubscribe={handleSubscribe} // from parent
         //months={months}
@@ -409,7 +428,7 @@ const Flix10kBanner = ({
         setAutoRenew={setAutoRenew}
         setShowFlix10KAd={setShowFlix10KAd}
         setMessage={setMessage}
-      />
+      />}
 
       {/* CASE 1: Not selecting */}
       {(mediaData.images.length !== 0 && !selecting ) && (
@@ -534,7 +553,7 @@ const Flix10kBanner = ({
 
                   <MonthSelector months={months} setMonths={setMonths} autoRenew={autoRenew} mode="dropdown" />
 
-                  { (user?.firstTimeSubscription &&
+                  {/* { (user?.firstTimeSubscription &&
                     user?.showFlixAd &&
                     (subscriptionAmount == "" || null) && 
                     months === 2 &&
@@ -543,7 +562,17 @@ const Flix10kBanner = ({
                     ) : (
                       <Text style={styles.offer}>⚠️ {t("flix10k.offerNotApplicable")}</Text>
                     )
-                  }
+                  } */}
+
+                  {user?.firstTimeSubscription && user?.showFlixAd && (
+                    (subscriptionAmount === "" || subscriptionAmount === null) && 
+                    months === 2 &&
+                    autoRenew === false ? (
+                      <Text style={styles.offer}>🎉 {t("flix10k.offerApplied")}</Text>
+                    ) : (
+                      <Text style={styles.offer}>⚠️ {t("flix10k.offerNotApplicable")}</Text>
+                    )
+                  )}
 
                   <TouchableOpacity
                     style={styles.autoRenewRow}
@@ -635,7 +664,17 @@ const Flix10kBanner = ({
         <View style={[styles.modalBackground, { zIndex: 999 }]}>
           <View style={[styles.modalContainerStatus, { borderColor: "green" }]}>
             <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>{t('storage.paymentSuccess')}</Text>
-            <Text style={[styles.subtitle, {}]}>{message}</Text> 
+            {(user?.firstTimeSubscription && user?.showFlixAd && (subscriptionAmount == "" || null) && months === 2 && !autoRenew ) ? (
+            <Text style={[styles.subtitle, {}]}>{t("flix10k.subscriptionSuccessWithMonths")}</Text> ) : subscriptionAmount !== "" && subscriptionAmount !== null && subscriptionIsActive ? (
+                <Text style={styles.subtitle}>
+                  {t("flix10k.upgradeSuccess")}
+                </Text>
+              ) : (
+                <Text style={styles.subtitle}>
+                  {t("flix10k.subscriptionSuccess")}
+                </Text>
+              )}
+
             <TouchableOpacity
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={() => handlePaymentClose("success")}
@@ -1277,12 +1316,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     marginBottom: 20,
     marginTop: 10,
     fontFamily: 'Nunito400',
     color: '#444',
-    textAlign: 'left',
+    textAlign: 'center',
   },
   subtitleFailed: {
     fontSize: 15,

@@ -161,6 +161,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { MaterialIcons } from "@expo/vector-icons";
 import { setShowFlix10KADSlice } from "../state/slices/subscriptionSlice";
 import { useTranslation } from "react-i18next";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -177,8 +178,10 @@ const FlixAdModal = ({
   const { t } = useTranslation();
   const user = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const paymentStatusAdd = useSelector((state) => state.subscription.paymentStatusAdd);
   const [open, setOpen] = useState(false);
   const [loader, setLoader] = useState(false);
+  const [paymentStatusAddStorage, setPaymentStatusAddStorage] = useState(null);
 
   const adImageUrl = "https://dev.babyflix.net/flixad.png";
 
@@ -210,7 +213,27 @@ const FlixAdModal = ({
     }
   }, [adImageUrl]);
 
+    useEffect(() => {
+    const fetchPaymentStatus = async () => {
+      try {
+        const status = await AsyncStorage.getItem("flix10kPaymentForAdd");
+        if (status) {
+          setPaymentStatusAddStorage(status); // "done" or "fail"
+  
+        }
+      } catch (err) {
+        console.error("Error reading AsyncStorage flix10kPaymentForAdd:", err);
+      }
+    };
+    fetchPaymentStatus();
+  }, []);
+
   useEffect(() => {
+
+     if (paymentStatusAddStorage) {
+      return; // don't show modal
+    }
+
     if (user?.firstTimeSubscription && user?.showFlixAd && paymentSuccess) {
       dispatch(setShowFlix10KADSlice(true));
       setTimeout(() => {
@@ -220,6 +243,7 @@ const FlixAdModal = ({
         setShowFlix10KAd(user?.showFlixAd);
       }, 1000);
     }
+
   }, [user?.firstTimeSubscription, paymentSuccess]);
 
   const handlePayRedirect = async () => {
@@ -228,24 +252,23 @@ const FlixAdModal = ({
     setLoader(true);
     try {
       await handleSubscribe();
-
-      if (user?.firstTimeSubscription && user?.showFlixAd && paymentSuccess && months === 2 && !autoRenew) {
-        setMessage(t("flix10k.subscriptionSuccessWithMonths"));
-      } else {
-        setMessage(t("flix10k.subscriptionSuccess"));
-      }
+      // if (user?.firstTimeSubscription && user?.showFlixAd && paymentSuccess && months === 2 && !autoRenew) {
+      //   setMessage(t("flix10k.subscriptionSuccessWithMonths"));
+      // } else {
+      //   setMessage(t("flix10k.subscriptionSuccess"));
+      // }
     } catch (err) {
       console.error("Subscription error:", err);
       alert("Something went wrong with subscription.");
     } finally {
       setLoader(false);
       setOpen(false);
-      setTimeout(() => {
-        dispatch(setShowFlix10KADSlice(false));
-      }, 1000);
+      // setTimeout(() => {
+      //   dispatch(setShowFlix10KADSlice(false));
+      // }, 1000);
     }
   };
-
+  
   const handleClose = () => {
     setOpen(false);
     setTimeout(() => {
@@ -253,7 +276,7 @@ const FlixAdModal = ({
     }, 1000);
   };
 
-  if (!user?.firstTimeSubscription) return null;
+  if (!user?.firstTimeSubscription || paymentStatusAddStorage) return null;
 
   return (
     <>

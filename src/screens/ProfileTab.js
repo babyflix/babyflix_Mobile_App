@@ -145,6 +145,7 @@ const ProfileTab = ({ route }) => {
 
   useEffect(() => {
     const fetchEvents = async () => {
+      console.log('EXPO_PUBLIC_API_URL',EXPO_PUBLIC_API_URL)
       setIsLoading(true);
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/patients/getPatientByEmail`, {

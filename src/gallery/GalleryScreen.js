@@ -99,6 +99,7 @@ const GalleryScreen = () => {
   const [flix10kAiImages, setFlix10kAiImages] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
   const [flix10KAD, setFlix10KAD] = useState(false);
+  const [showAfterAdd, setShowafterAdd] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -107,6 +108,7 @@ const GalleryScreen = () => {
   const forceOpenStorageModals = useSelector((state) => state.storageUI.forceOpenStorageModals);
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
    const showFlix10KAd = useSelector((state) => state.subscription.showFlix10KAd);
+   const paymentStatusAdd = useSelector((state) => state.subscription.paymentStatusAdd);
 
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
@@ -125,13 +127,30 @@ const GalleryScreen = () => {
   }, [fontsLoaded, fontError]);
 
    useEffect(() => {
+    const fetchPaymentStatus = async () => {
+      try {
+        const status = await AsyncStorage.getItem("flix10kPaymentForAdd");
+         if (status === null) {
+        setShowafterAdd(true);
+        }else{
+          setShowafterAdd(false);
+        }
+      } catch (err) {
+        console.error("Error reading AsyncStorage flix10kPaymentForAdd:", err);
+      }
+    };
+    fetchPaymentStatus();
+  }, []);
+
+
+   useEffect(() => {
     if (showFlix10KAd) {
       setFlix10KAD(false);
     }else{
       setFlix10KAD(true);
     }
-  }, [showFlix10KAd]);
-
+  
+  }, [showFlix10KAd, paymentStatusAdd]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -200,6 +219,8 @@ const GalleryScreen = () => {
           const isSameDay = storedDateMoment.isValid()
             ? storedDateMoment.isSame(today, 'day')
             : false;
+
+            console.log('isSameDay',isSameDay)
 
           if (isSameDay) {
             setShouldShowStorageModal(false);
@@ -391,9 +412,11 @@ const GalleryScreen = () => {
       setStatus(storedStatus);
       setStatus1(storedPaying);
 
+      console.log("storedStatus, storedPaying",{storedStatus, storedPaying})
       if (!storedStatus && storedPaying === 'true') {
         dispatch(clearOpenStorage2());
         await AsyncStorage.setItem('storage_modal_triggered', 'false');
+        console.log("innnnn1")
         setStorageModelStart(true);
         triggeredRef.current = false;
 
@@ -432,6 +455,7 @@ const GalleryScreen = () => {
         const shouldOpenFromRedux = openStorage2Directly && hasTriggered !== 'true' && !triggeredRef.current;
 
         if (shouldOpenFromParam || shouldOpenFromRedux) {
+          console.log("innnnn2")
           setStorageModelStart(true);
           setStorageModalKey(true);
 
@@ -462,6 +486,7 @@ const GalleryScreen = () => {
         const paying = await AsyncStorage.getItem('paying');
 
         if ((status === 'done' || status === 'fail') && paying !== 'false') {
+          console.log("innnnn3")
           setStorageModelStart(true);
           setStorageModalKey(true);
 
@@ -655,19 +680,23 @@ const GalleryScreen = () => {
         insets={insets}
       />
 
+      {flix10KAD && showAfterAdd &&
       <UpgradeReminderModal
         visible={showUpgradeReminderModal}
         message={upgradeReminderMessage}
         onClose={() => setShowUpgradeReminderModal(false)}
         onUpgrade={handleChooseClick}
       />
+      }
 
+      {flix10KAD && showAfterAdd &&
       <PlanExpiredModal
         visible={showPlanExpiredModal}
         expiredPlanName={expiredPlanName}
         onClose={() => setShowPlanExpiredModal(false)}
         onUpgrade={handleChooseClick}
       />
+      }
 
       <DeleteItemModal
         visible={showDeleteModal}
@@ -716,7 +745,7 @@ const GalleryScreen = () => {
 
       <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
 
-      {(storageModelStart || shouldShowStorageModal) && flix10KAD && (
+      {(storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
         <StorageModals
           onClose={() => setStorageModelStart(false)}
           storageModalKey={storageModalKey}
