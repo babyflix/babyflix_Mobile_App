@@ -13,6 +13,7 @@ import { useFocusEffect } from "expo-router";
 import Snackbar from "../components/Snackbar";
 import sendDeviceUserInfo, { USERACTIONS } from "../components/deviceInfo";
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ManageSubscriptions = () => {
   const user = useSelector((state) => state.auth);
@@ -126,6 +127,7 @@ const ManageSubscriptions = () => {
   console.log(`Remaining days: ${remainingDays > 0 ? remainingDays : 0}`);
 
   const handleSubscribe = async () => {
+    await AsyncStorage.setItem('flix10KPaying', 'true');
     setUpgradeModal(false);
     try {
       const payload = {
@@ -173,10 +175,20 @@ const ManageSubscriptions = () => {
         // );
       } else {
         // Android (or fallback): use WebBrowser
-        const result = await WebBrowser.openAuthSessionAsync(
+        result = await WebBrowser.openAuthSessionAsync(
           stripeUrl,
           "babyflix://"
         );
+      }
+
+      await WebBrowser.dismissBrowser();
+      
+      if (result?.type === 'success') {
+        console.log("Payment success");
+        setShowModal(false);
+      } else if (result?.type === 'cancel') {
+        console.log("Payment canceled or failed");
+        setShowModal(false);
       }
 
       setShowModal(false);

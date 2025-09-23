@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   Linking,
+  AppState,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
@@ -26,7 +27,7 @@ import * as Updates from 'expo-updates';
 import { generateImage } from "../constants/generateApi";
 import sendDeviceUserInfo, { USERACTIONS } from "../components/deviceInfo";
 import { setPaymentStatusAdd, setShowFlix10KADSlice, setSubscriptionExpired } from "../state/slices/subscriptionSlice";
-import { useNavigation, useRouter } from "expo-router";
+import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import FlixAdModal from "./FlixAdModal";
 
 const Flix10kBanner = ({
@@ -81,6 +82,74 @@ const Flix10kBanner = ({
   const [showAfterAdd, setShowafterAdd] = useState(false);
 
   const selectionCount = selectedItemsForAi.length;
+
+  //  useEffect(() => {
+  //   const fetchPaymentStatus = async () => {
+  //     try {
+  //       const status = await AsyncStorage.getItem("flix10KPaying");
+  //       console.log("status of paying",status)
+  //       if (status) {
+  //         console.log("status of paying",status)
+  //         await AsyncStorage.removeItem('flix10kPaymentForAdd');
+  //          setShowafterAdd(false);
+  //         await AsyncStorage.removeItem("flix10KPaying");
+  //       }
+  //     } catch (err) {
+  //       console.error("Error reading AsyncStorage flix10KPaying:", err);
+  //     }
+  //   };
+  //   fetchPaymentStatus();
+  // }, []);
+
+//   useFocusEffect(
+//   useCallback(() => {
+//     const fetchPaymentStatus = async () => {
+//       try {
+//         const status = await AsyncStorage.getItem("flix10KPaying");
+//         console.log("status of paying", status);
+//         if (status) {
+//           console.log("status of paying", status);
+//           await AsyncStorage.removeItem("flix10kPaymentForAdd");
+//           setShowafterAdd(false);
+//           //await AsyncStorage.removeItem("flix10KPaying");
+//         }
+//       } catch (err) {
+//         console.error("Error reading AsyncStorage flix10KPaying:", err);
+//       }
+//     };
+
+//     fetchPaymentStatus();
+
+//     // No cleanup needed here
+//   }, [])
+// );
+
+useEffect(() => {
+  const subscription = AppState.addEventListener("change", async (state) => {
+    if (state === "active") {
+      try {
+        const paying = await AsyncStorage.getItem("flix10KPaying");
+        const addPayment = await AsyncStorage.getItem("flix10kPaymentForAdd");
+
+        // If user was paying but didn't finish, clean up
+        if (paying || addPayment) {
+          console.log("User returned without completing Stripe payment, clearing state...");
+          await AsyncStorage.removeItem("flix10KPaying");
+          //await AsyncStorage.removeItem("flix10kPaymentForAdd");
+
+          dispatch(setShowFlix10KADSlice(false));
+        }
+      } catch (err) {
+        console.error("Error clearing payment state:", err);
+      }
+    }
+  });
+
+  return () => {
+    subscription.remove();
+  };
+}, []);
+
 
   useEffect(() => {
     const checkPaymentStatus = async () => {
@@ -163,6 +232,11 @@ const Flix10kBanner = ({
         } catch (error) {
           console.error("Error calling subscription API:", error);
         }
+
+        //  sendDeviceUserInfo({
+        //     action_type: USERACTIONS.PAYMENT,
+        //     action_description: `User payment failed for Flox10K plan`,
+        //   });
 
         await AsyncStorage.removeItem('flix10k_payment_status');
       }
@@ -367,6 +441,7 @@ const Flix10kBanner = ({
   };
 
   const handleSubscribe = async () => {
+    await AsyncStorage.setItem('flix10KPaying', 'true');
     try {
       const payload = {
         subscriptionId: 1,
@@ -404,13 +479,25 @@ const Flix10kBanner = ({
         //   "babyflix://payment/redirect"
         // );
       } else {
-        const result = await WebBrowser.openAuthSessionAsync(
+        result = await WebBrowser.openAuthSessionAsync(
           stripeUrl,
           "babyflix://"
         );
       }
 
+      await WebBrowser.dismissBrowser();
+
+       if (result?.type === 'success') {
+      console.log("Payment success");
       setShowModal(false);
+    } else if (result?.type === 'cancel') {
+      console.log("Payment canceled or failed");
+      setShowModal(false);
+    }
+
+      await AsyncStorage.removeItem('flix10kPaymentForAdd');
+       setShowafterAdd(false);
+       setShowModal(false);
     } catch (error) {
       console.error("Subscription error:", error.response?.data || error.message);
     }
