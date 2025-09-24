@@ -389,7 +389,7 @@
 
     "unlockTitle": "Unlock Flix10K Designer✨",
     "unlockText": "Subscribe now and transform your baby’s ultrasound images into lifelike moments you’ll cherish forever 💖",
-    "pricePerMonth": "$29.45 / month",
+    "pricePerMonth": "$19.99 / month",
     "autoRenew": "Auto-Renew",
     "whyTitle": "Why Flix10K? 💡",
 
@@ -442,7 +442,7 @@
     "autoRenewalStatus": "Auto-renewal {{status}} Successfully",
     "subscriptionSuccessWithMonths": "You have successfully subscribed FLIX10K for 3 Months.",
     "subscriptionSuccess": "You have successfully subscribed FLIX10K.",
-    "offerApplied": "Offer applied! Pay for 2 months and get 3rd month free.",
+    "offerApplied": "Offer applied!",
     "offerNotApplicable": "First-time subscription offer will not be applicable for this selection.",
     "upgradeSuccess": "You have successfully upgraded FLIX10K subscription.",
 

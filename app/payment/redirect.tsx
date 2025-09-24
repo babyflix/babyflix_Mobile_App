@@ -16,15 +16,21 @@ export default function PaymentRedirect() {
 
   useEffect(() => {
     const handleStatus = async (statusParam: string) => {
-      if (handledOnce.current) return;
-      handledOnce.current = true;
+       // Check persistent AsyncStorage flag
+    // const alreadyHandled = await AsyncStorage.getItem('payment_handled');
+    if (handledOnce.current) return;
+
+    handledOnce.current = true;
+    //await AsyncStorage.setItem('payment_handled', 'true'); // mark as handled
 
       setStatus(statusParam);
 
       if (statusParam === 'success') {
         await AsyncStorage.setItem('payment_status', 'done');
+        await AsyncStorage.setItem('forAdd', 'done');
       } else {
         await AsyncStorage.setItem('payment_status', 'fail');
+        await AsyncStorage.setItem('forAdd', 'fail');
       }
 
       await AsyncStorage.setItem('visited_after_redirect', 'true');
@@ -51,6 +57,7 @@ export default function PaymentRedirect() {
     const subscription = Linking.addListener('url', ({ url }) => {
       const status = getStatusFromUrl(url);
       if (status) handleStatus(status);
+      //subscription.remove(); // remove listener after first trigger
     });
 
     return () => subscription.remove();

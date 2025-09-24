@@ -102,7 +102,7 @@ const LoginScreen = () => {
       console.log('EXPO_PUBLIC_API_URL',EXPO_PUBLIC_API_URL)
 
       const res = await axios.post(
-        `${EXPO_PUBLIC_API_URL}/api/auth/applogin`,
+        `${EXPO_PUBLIC_API_URL}/api/auth/applogin1`,
         {
           email,
           password,

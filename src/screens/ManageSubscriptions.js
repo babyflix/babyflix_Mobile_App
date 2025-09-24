@@ -166,6 +166,7 @@ const ManageSubscriptions = () => {
       const stripeUrl = sessionData.sessionUrl;
 
       //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+      let result;
 
       if (Platform.OS === 'ios') {
         await Linking.openURL(stripeUrl);
@@ -236,7 +237,7 @@ const ManageSubscriptions = () => {
 
   console.log('additionalMonths', additionalMonths)
 
-  const amountToPay = (additionalMonths * 29.45).toFixed(2);
+  const amountToPay = (additionalMonths * subscriptionAmount).toFixed(2);
 
   // Calculate new expiry date
   // const newExpiryDate = new Date(subscription.expiryDate);

@@ -744,6 +744,7 @@ const GalleryScreen = () => {
       <LanguageModal visible={showLangModal} onClose={() => setShowLangModal(false)} />
 
       <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
+      {console.log("flix10KAD && showAfterAdd ",{flix10KAD, showAfterAdd })}
 
       {(storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
         <StorageModals

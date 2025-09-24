@@ -37,7 +37,7 @@ const AuthLoader = ({ children }) => {
 
     if (token && userData) {
       const res = await axios.post(
-        `${EXPO_PUBLIC_API_URL}/api/auth/apprefreshtoken`,
+        `${EXPO_PUBLIC_API_URL}/api/auth/apprefreshtoken1`,
         { token },
         { headers: { 'Content-Type': 'application/json' } }
       );

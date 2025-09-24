@@ -42,9 +42,9 @@ const PlanExpiredModal = ({
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               onPress={() => {
-                if (Platform.OS === 'ios') {
+                //if (Platform.OS === 'ios') {
                   onClose();
-                }
+                //}
                setTimeout(() => {
                 if (onUpgrade) onUpgrade(); 
               }, 200);

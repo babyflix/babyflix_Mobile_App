@@ -16,6 +16,7 @@ import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import sendDeviceUserInfo, { USERACTIONS } from './deviceInfo';
+import { setShowFlix10KADSlice } from '../state/slices/subscriptionSlice';
 
 const StorageModals = ({ onClose, storageModalKey }) => {
   const [showStorage1, setShowStorage1] = useState(false);
@@ -92,7 +93,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const storedStatus = await AsyncStorage.getItem('payment_status');
       const storedPaying = await AsyncStorage.getItem('paying');
 
-      console.log('[StorageModals] fetchStatusFromStorage:', storedStatus, storedPaying );
+    console.log('[StorageModals] fetchStatusFromStorage:', {storedStatus, storedPaying} );
 
       if (!storedStatus && storedPaying === 'true') {
         //console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');
@@ -186,10 +187,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
       setTimeout(async () => {
         const status = await AsyncStorage.getItem('payment_status');
+        const handled = await AsyncStorage.getItem('payment_handled');
         //console.log('[StorageModals] Final checkPaymentStatus:', status);
 
-        if (status === 'fail') {
-          //console.log('[StorageModals] Status is fail');
+        if (status === 'fail' && handled !== 'true') {
+          console.log('[StorageModals] Status is fail');
           await AsyncStorage.setItem('payment_status 1', 'fail');
           await AsyncStorage.removeItem('payment_status');
           await AsyncStorage.setItem('storage_modal_triggered', 'false');
@@ -201,13 +203,14 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             //console.log("PaymentFailure modal now");
             setShowPaymentFailure(true);
           }, 200);
+          await AsyncStorage.setItem('payment_handled', 'true');
 
           sendDeviceUserInfo({
             action_type: USERACTIONS.PAYMENT,
             action_description: `User payment failed for Storage plan`,
           });
 
-        } else if (status === 'done') {
+        } else if (status === 'done' && handled !== 'true') {
           //console.log('[StorageModals] Status is done. Updating plan...');
           await AsyncStorage.setItem('payment_status 1', 'done');
           const storedPlanId = await AsyncStorage.getItem('selected_plan_id');
@@ -230,6 +233,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               //console.log("PaymentSuccess modal now");
               setShowPaymentSuccess(true);
             }, 200);
+            await AsyncStorage.setItem('payment_handled', 'true');
 
             sendDeviceUserInfo({
               action_type: USERACTIONS.PAYMENT,
@@ -277,7 +281,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       //console.log('[StorageModals] AppState changed:', state);
       if (state === 'active') {
         //console.log('[StorageModals] App resumed - rechecking payment status');
-        setTimeout(checkPaymentStatus, 1000);
+        //setTimeout(checkPaymentStatus, 1000);
       }
     });
 
@@ -342,6 +346,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   const handlePayment = async () => {
     dispatch(setDeepLinkHandled(false));
+    await AsyncStorage.removeItem('payment_handled');
     try {
       await AsyncStorage.setItem('selected_plan_id', selectedPlan.toString());
       onClose();
@@ -588,6 +593,9 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               onPress={async () => {
                 setShowPaymentSuccess(false);
                 AsyncStorage.removeItem('payment_status 1');
+                AsyncStorage.removeItem('forAdd');
+                //await AsyncStorage.removeItem('payment_handled');
+                handledRef.current = false;
                 await getStoragePlanDetails(user.email, dispatch);
               }}
             >
@@ -612,6 +620,13 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 }
                 dispatch(clearOpenStorage2());
                 await AsyncStorage.removeItem('closePlans');
+                AsyncStorage.removeItem('forAdd');
+                //await AsyncStorage.removeItem('payment_handled');
+                handledRef.current = false;
+                //await AsyncStorage.removeItem('payment_handled');
+                // setTimeout(() => {
+                //   dispatch(setShowFlix10KADSlice(true));
+                // }, 1000); 
               }}
             >
               <Text style={styles.filledText}>{t('storage.okIGotIt')}</Text>

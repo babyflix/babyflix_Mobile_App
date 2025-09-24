@@ -219,6 +219,7 @@ const EventsScreen = () => {
       });
 
       const newEvent = response.data.data;
+      console.log("newEvent",response)
       const newEvents = await Promise.all(
         newEvent.map(async (item) => {
           const [month, day, year] = item.eventDateConverted.split("/").map(Number);
@@ -409,7 +410,9 @@ const EventsScreen = () => {
     }
 
     setModalVisible(false);
+    setTimeout(() => {
     setMobileModalVisible(true);
+    }, 300);
     setInviteType("mobile");
   };
 
@@ -525,7 +528,7 @@ const EventsScreen = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={[styles.modalTitle]}>{t('eventsScreen.shareEvent')}</Text>
-              <Text style={styles.modalTitle}>{useDynamicTranslate(previewItem.eventName)}</Text>
+              <Text style={styles.modalTitle}>{previewItem.eventName}</Text>
               <View style={{ marginLeft: 10 }}>
                 <Text>{previewItem.eventDateConverted}</Text>
                 <Text>{previewItem.eventTime}</Text>
@@ -549,7 +552,9 @@ const EventsScreen = () => {
                 activeOpacity={0.8}
                 onPress={() => {
                   setModalVisible(false);
-                  setEmailModalVisible(true);
+                  setTimeout(() => {
+                    setEmailModalVisible(true);
+                  }, 300);
                   setInvitedEmails(previewItem.emailInvites || []);
                   setInviteType("email");
                 }}

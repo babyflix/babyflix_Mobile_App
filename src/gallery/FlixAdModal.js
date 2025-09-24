@@ -158,10 +158,11 @@
 import React, { useState, useEffect } from "react";
 import { Modal, View, Image, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { setShowFlix10KADSlice } from "../state/slices/subscriptionSlice";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Video } from "expo-av";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -182,36 +183,32 @@ const FlixAdModal = ({
   const [open, setOpen] = useState(false);
   const [loader, setLoader] = useState(false);
   const [paymentStatusAddStorage, setPaymentStatusAddStorage] = useState(null);
+const [paymentStatus, setPaymentStatus] = useState(false);
+const [muted, setMuted] = useState(true);
 
-  const adImageUrl = "https://dev.babyflix.net/flixad.png";
+  const adVideoUrl  = "https://dev.babyflix.net/flixad.mp4";
 
   // store calculated image style
-  const [imageStyle, setImageStyle] = useState({ width: 200, height: 200 });
+  const [videoStyle, setVideoStyle] = useState({ width: SCREEN_WIDTH * 0.95,
+  height: (SCREEN_WIDTH * 0.95) * 15/16, // 16:9 aspect ratio
+  borderRadius: 16 });
 
-  useEffect(() => {
-    if (adImageUrl) {
-      Image.getSize(adImageUrl, (width, height) => {
-        let finalWidth = width;
-        let finalHeight = height;
-
-        // scale down if larger than screen
-        if (width > SCREEN_WIDTH * 0.9 || height > SCREEN_HEIGHT * 0.6) {
-          const widthRatio = (SCREEN_WIDTH * 0.9) / width;
-          const heightRatio = (SCREEN_HEIGHT * 0.6) / height;
-          const scale = Math.min(widthRatio, heightRatio);
-
-          finalWidth = width * scale;
-          finalHeight = height * scale;
-        }
-
-        setImageStyle({
-          width: finalWidth,
-          height: finalHeight,
-          borderRadius: 12,
-        });
-      });
+useEffect(() => {
+  const getPaymentStatus = async () => {
+    const status = await AsyncStorage.getItem('forAdd');
+    console.log(status)
+    if (status === 'done' || status === 'fail') {
+      setPaymentStatus(true); // already paid
+       setTimeout(() => {
+      dispatch(setShowFlix10KADSlice(false));
+    }, 1000);
+    } else {
+      setPaymentStatus(false);
     }
-  }, [adImageUrl]);
+  };
+
+  getPaymentStatus();
+}, []);
 
     useEffect(() => {
     const fetchPaymentStatus = async () => {
@@ -230,7 +227,7 @@ const FlixAdModal = ({
 
   useEffect(() => {
 
-     if (paymentStatusAddStorage) {
+     if (paymentStatusAddStorage || paymentStatus) {
       return; // don't show modal
     }
 
@@ -238,15 +235,17 @@ const FlixAdModal = ({
       dispatch(setShowFlix10KADSlice(true));
       setTimeout(() => {
         setOpen(true);
-        setMonths(2);
+        setMonths(1);
         setAutoRenew(false);
         setShowFlix10KAd(user?.showFlixAd);
       }, 1000);
     }
 
-  }, [user?.firstTimeSubscription, paymentSuccess]);
+  }, [user?.firstTimeSubscription, paymentSuccess, paymentStatus]);
 
   const handlePayRedirect = async () => {
+     //await AsyncStorage.removeItem('forAdd');
+     setPaymentStatus(false);
     if (!handleSubscribe) return;
 
     setLoader(true);
@@ -276,7 +275,7 @@ const FlixAdModal = ({
     }, 1000);
   };
 
-  if (!user?.firstTimeSubscription || paymentStatusAddStorage) return null;
+  if (!user?.firstTimeSubscription || paymentStatusAddStorage || paymentStatus) return null;
 
   return (
     <>
@@ -290,13 +289,43 @@ const FlixAdModal = ({
           <View style={[styles.modalContainer, { justifyContent: "center", alignItems: "center" }]}>
             {/* Close Button */}
             <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-              <MaterialIcons name="close" size={24} color="black" />
+              <MaterialIcons name="close" size={26} color="white" />
             </TouchableOpacity>
 
             {/* Ad Image */}
-            <TouchableOpacity onPress={handlePayRedirect} activeOpacity={0.8}>
+            {/*<TouchableOpacity onPress={handlePayRedirect} activeOpacity={0.8}>
               <Image source={{ uri: adImageUrl }} style={imageStyle} resizeMode="contain" />
+            </TouchableOpacity>*/}
+            <TouchableOpacity onPress={handlePayRedirect} activeOpacity={0.9}>
+              <Video
+                source={{ uri: adVideoUrl }}
+                style={[videoStyle, { backgroundColor: "black" }]}
+                resizeMode="contain"
+                shouldPlay       // auto play
+                isLooping  
+                isMuted={muted}    
+                useNativeControls={false} // hide play/pause controls
+              />
             </TouchableOpacity>
+
+             <TouchableOpacity
+          style={{
+            position: "absolute",
+            top: 6,
+            left: 6,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            borderRadius: 20,
+            padding: 6,
+            zIndex: 999,
+          }}
+          onPress={() => setMuted(!muted)}
+        >
+          <Ionicons
+            name={muted ? "volume-mute" : "volume-high"}
+            size={22}
+            color="white"
+          />
+        </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -316,18 +345,19 @@ const styles = StyleSheet.create({
     height: "auto",
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: "#fff",
+    backgroundColor: "black",
     position: "relative",
-    padding: 20,
+    padding: 10,
+    paddingTop: 40
   },
   closeButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 6,
+    right: 6,
     zIndex: 999,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "black",
     borderRadius: "50%",
-    padding: 5
+    padding: 3,
   },
   loaderContainer: {
     ...StyleSheet.absoluteFillObject,

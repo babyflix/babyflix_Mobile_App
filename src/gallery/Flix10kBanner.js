@@ -471,6 +471,7 @@ useEffect(() => {
       const stripeUrl = sessionData.sessionUrl;
 
       //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+      let result;
 
       if (Platform.OS === 'ios') {
         await Linking.openURL(stripeUrl);
@@ -518,7 +519,7 @@ console.log("showAfterAdd",showAfterAdd)
       />}
 
       {/* CASE 1: Not selecting */}
-      {(mediaData.images.length !== 0 && !selecting ) && (
+      {!selecting && (
         <LinearGradient
           colors={subscriptionExpired ? ["#f86977ff", "#dc3545"] : ["#a23586", "#d16ba5"]}
           start={{ x: 0, y: 0 }}
@@ -651,15 +652,9 @@ console.log("showAfterAdd",showAfterAdd)
                     )
                   } */}
 
-                  {user?.firstTimeSubscription && user?.showFlixAd && (
-                    (subscriptionAmount === "" || subscriptionAmount === null) && 
-                    months === 2 &&
-                    autoRenew === false ? (
+                  { user?.firstTimeSubscription && user?.showFlixAd && 
                       <Text style={styles.offer}>🎉 {t("flix10k.offerApplied")}</Text>
-                    ) : (
-                      <Text style={styles.offer}>⚠️ {t("flix10k.offerNotApplicable")}</Text>
-                    )
-                  )}
+                  }
 
                   <TouchableOpacity
                     style={styles.autoRenewRow}
@@ -751,8 +746,7 @@ console.log("showAfterAdd",showAfterAdd)
         <View style={[styles.modalBackground, { zIndex: 999 }]}>
           <View style={[styles.modalContainerStatus, { borderColor: "green" }]}>
             <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>{t('storage.paymentSuccess')}</Text>
-            {(user?.firstTimeSubscription && user?.showFlixAd && (subscriptionAmount == "" || null) && months === 2 && !autoRenew ) ? (
-            <Text style={[styles.subtitle, {}]}>{t("flix10k.subscriptionSuccessWithMonths")}</Text> ) : subscriptionAmount !== "" && subscriptionAmount !== null && subscriptionIsActive ? (
+            {subscriptionAmount !== "" && subscriptionAmount !== null && subscriptionIsActive ? (
                 <Text style={styles.subtitle}>
                   {t("flix10k.upgradeSuccess")}
                 </Text>
@@ -1089,6 +1083,7 @@ const styles = StyleSheet.create({
     //fontWeight: "bold",
     color: "#19b804ff",
     //marginBottom: 0,
+    marginTop: 5,
   },
   primaryButton: {
     flex: 1,
