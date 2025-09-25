@@ -226,7 +226,7 @@ useEffect(() => {
           console.log("Subscription API response:", response.data);
 
           sendDeviceUserInfo({
-            action_type: USERACTIONS.PAYMENT,
+            action_type: "payment failed",
             action_description: `User payment failed for Flox10K plan`,
           });
         } catch (error) {
