@@ -18,10 +18,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import sendDeviceUserInfo, { USERACTIONS } from './deviceInfo';
 import { setShowFlix10KADSlice } from '../state/slices/subscriptionSlice';
 
+let modalShown = false;
+let paymentFail = false;
+let expiredPayment = false;
+
 const StorageModals = ({ onClose, storageModalKey }) => {
+  const isPlanExpired = useSelector((state) => state.expiredPlan.isPlanExpired);
   const [showStorage1, setShowStorage1] = useState(false);
   const [showStorage2, setShowStorage2] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(2);
+  const [selectedPlan, setSelectedPlan] = useState(isPlanExpired ? 3 : 2);
   const [selectedPrice, setSelectedPrice] = useState(10);
   const [skipCount, setSkipCount] = useState(0);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -38,7 +43,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     useSelector((state) => state.storagePlan || {});
   const openStorage2Directly = useSelector(state => state.storageUI.openStorage2Directly);
   const forceOpenStorageModals = useSelector((state) => state.storageUI.forceOpenStorageModals);
-  const isPlanExpired = useSelector((state) => state.expiredPlan.isPlanExpired);
   const showUpgradeReminder = useSelector((state) => state.expiredPlan.showUpgradeReminder);
   const dispatch = useDispatch();
   const triggeredRef = useRef(false);
@@ -95,11 +99,20 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
     console.log('[StorageModals] fetchStatusFromStorage:', {storedStatus, storedPaying} );
 
-      if (!storedStatus && storedPaying === 'true') {
-        //console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');
+      if (!storagePlanPrice && !storedStatus && storedPaying === 'true') {
+        console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');
         dispatch(clearOpenStorage2());
+        if(!paymentFail){
+        paymentFail = true;
+        setIsVisible(true);
+        setTimeout(() => {
+          setShowStorage1(false);
+        }, 200);
+        triggeredRef.current = true;
+        //modalShown = true;
         await AsyncStorage.setItem('storage_modal_triggered', 'false');
-        triggeredRef.current = false;
+        //triggeredRef.current = false;
+        }
       }
     };
 
@@ -122,7 +135,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       //console.log('[StorageModals] Initial checkPaymentStatus:', { status, storedPaying });
       if (status === 'fail') {
         if (storedPaying === 'false') {
-          //console.log('[StorageModals] Showing payment failure modal due to fail status');
+          console.log('[StorageModals] Showing payment failure modal due to fail status');
           setIsVisible(true);
         }
       } else if (storageModalKey) {
@@ -154,10 +167,12 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       }
 
       const triggered = await AsyncStorage.getItem('storage_modal_triggered');
-      //console.log('[StorageModals] openStorage2Directly:', openStorage2Directly, 'triggered:', triggered);
+      console.log('[StorageModals] openStorage2Directly:', openStorage2Directly, 'triggered:', triggered);
 
       if (openStorage2Directly && triggered !== 'true') {
-        //console.log('[StorageModals] Triggering storage2 modal');
+        if(!expiredPayment){
+          expiredPayment = true;
+        console.log('[StorageModals] Triggering storage2 modal');
         triggeredRef.current = true;
         setShowStorage1(false);
         setIsVisible(false);
@@ -171,10 +186,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         dispatch(clearOpenStorage2());
         await AsyncStorage.setItem('storage_modal_triggered', 'true');
       }
+      }
     };
 
     if (openStorage2Directly) {
-      //console.log('[StorageModals] Running checkIfTriggered because openStorage2Directly is true');
+      console.log('[StorageModals] Running checkIfTriggered because openStorage2Directly is true');
       checkIfTriggered();
     }
   }, [openStorage2Directly]);
@@ -187,10 +203,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
       setTimeout(async () => {
         const status = await AsyncStorage.getItem('payment_status');
-        const handled = await AsyncStorage.getItem('payment_handled');
+        //const handled = await AsyncStorage.getItem('payment_handled');
         //console.log('[StorageModals] Final checkPaymentStatus:', status);
 
-        if (status === 'fail' && handled !== 'true') {
+        if (status === 'fail') {
           console.log('[StorageModals] Status is fail');
           await AsyncStorage.setItem('payment_status 1', 'fail');
           await AsyncStorage.removeItem('payment_status');
@@ -199,18 +215,21 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           dispatch(setForceOpenStorageModals(false));
           setShowStorage1(false);
           setShowStorage2(false);
+        if(!modalShown){
           setTimeout(() => {
             //console.log("PaymentFailure modal now");
             setShowPaymentFailure(true);
           }, 200);
-          await AsyncStorage.setItem('payment_handled', 'true');
+          modalShown = true;
 
           sendDeviceUserInfo({
             action_type: USERACTIONS.PAYMENT,
             action_description: `User payment failed for Storage plan`,
           });
+        }
+        //await AsyncStorage.setItem('payment_handled', 'true');
 
-        } else if (status === 'done' && handled !== 'true') {
+        } else if (status === 'done') {
           //console.log('[StorageModals] Status is done. Updating plan...');
           await AsyncStorage.setItem('payment_status 1', 'done');
           const storedPlanId = await AsyncStorage.getItem('selected_plan_id');
@@ -233,7 +252,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               //console.log("PaymentSuccess modal now");
               setShowPaymentSuccess(true);
             }, 200);
-            await AsyncStorage.setItem('payment_handled', 'true');
+            //await AsyncStorage.setItem('payment_handled', 'true');
 
             sendDeviceUserInfo({
               action_type: USERACTIONS.PAYMENT,
@@ -345,6 +364,9 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   };
 
   const handlePayment = async () => {
+    modalShown = false;
+    paymentFail = false;
+    expiredPayment = false;
     dispatch(setDeepLinkHandled(false));
     await AsyncStorage.removeItem('payment_handled');
     try {
@@ -529,13 +551,18 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                           name="check-circle"
                           size={20}
                           color="green"
-                          style={{ marginRight: 8 }}
+                          style={{ marginRight: 6 }}
                         />
                       )}
                       <Text style={styles.planTitleBold}>{plan.name}</Text>
                     </View>
-                    <Text style={styles.planPrice}>${plan.price_per_month}</Text>
+                     {!isPlanExpired &&<Text style={styles.planPrice}>${plan.price_per_month}</Text>}
                   </View>
+                  {isPlanExpired && (
+                    <View style={{ width: '100%', marginTop: 0, alignItems: "flex-end" }}>
+                      <Text style={styles.planPrice}>${plan.price_per_month}</Text>
+                    </View>
+                  )}
                   <Text style={styles.planSubtitle}>{plan.description}</Text>
                 </TouchableOpacity>
               ))}
@@ -614,6 +641,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={async () => {
                 setShowPaymentFailure(false);
+                modalShown = false;
                 const value = await AsyncStorage.getItem('closePlans');
                 if (!value) {
                   setIsVisible(true);
@@ -646,9 +674,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             <View style={[styles.buttonRow, { justifyContent: 'flex-end', gap: 10 }]}>
               <TouchableOpacity style={styles.outlinedButton} onPress={() => {
                 setIsVisible(false)
+                paymentFail = false;
                 setTimeout(() => {
                   setShowStorage1(true)
-                }, 2000);
+                }, 1000);
               }} >
                 <Text style={styles.outlinedText}>{t('storage.goBack')}</Text>
               </TouchableOpacity>
@@ -657,9 +686,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 activeOpacity={0.8}
                 onPress={() => {
                   setIsVisible(false);
+                  paymentFail = false;
                   setTimeout(() => {
                     setShowStorage2(true);
-                  }, 2000);
+                  }, 500);
                 }}
               >
                 <LinearGradient

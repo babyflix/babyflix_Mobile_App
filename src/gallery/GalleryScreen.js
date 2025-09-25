@@ -52,6 +52,8 @@ import PlanExpiredModal from './PlanExpiredModal.js';
 import Flix10kBanner from './Flix10kBanner.js';
 
 SplashScreen.preventAutoHideAsync();
+let upgradeModalShown = false;
+let expiredModalShown = false;
 
 const GalleryScreen = () => {
   const [fontsLoaded, fontError] = useFonts({
@@ -119,6 +121,8 @@ const GalleryScreen = () => {
   const hasHiddenModalRef = useRef(false);
   const router = useRouter();
   const { t } = useTranslation();
+  const upgradeShownRef = useRef(false);
+  const expiredShownRef = useRef(false);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -276,9 +280,13 @@ const GalleryScreen = () => {
             dispatch(setPlanExpired(true));
             setMediaData({ images: [], videos: [], babyProfile: [], predictiveBabyImages: [] });
             setShowUpgradeReminderModal(false);
+            if(!expiredModalShown){
+              console.log("showing model of expiry")
             setTimeout(() => {
               setShowPlanExpiredModal(true);
             }, 200);
+            expiredModalShown = true;
+          }
             setExpiredPlanName(translatedPlanName);
             setIsLoading(false);
             setBannerMessage(
@@ -311,7 +319,10 @@ const GalleryScreen = () => {
             });
             setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
             setBannerMessage(message);
+            if (!upgradeModalShown){
             setShowUpgradeReminderModal(true);
+            upgradeModalShown = true;
+            }
 
           } else if (daysSince === 30) {
             const remainingDays = 30 - daysSince;
@@ -321,7 +332,10 @@ const GalleryScreen = () => {
               plural: remainingDays > 1 ? 's' : ''
             });
             setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
+            if (!upgradeModalShown){
             setShowUpgradeReminderModal(true);
+            upgradeModalShown = true;
+            }
             setBannerMessage(t('gallery.plan.expiresToday', { plan: translatedPlanName }));
             dispatch(setRemainingDays(0));
 
@@ -486,6 +500,7 @@ const GalleryScreen = () => {
         const paying = await AsyncStorage.getItem('paying');
 
         if ((status === 'done' || status === 'fail') && paying !== 'false') {
+          if (!hasHandledPaymentStatusRef.current) { 
           console.log("innnnn3")
           setStorageModelStart(true);
           setStorageModalKey(true);
@@ -493,6 +508,7 @@ const GalleryScreen = () => {
           hasHandledPaymentStatusRef.current = true;
 
           await AsyncStorage.setItem('paying', 'false');
+          }
         }
       };
 
@@ -680,23 +696,35 @@ const GalleryScreen = () => {
         insets={insets}
       />
 
-      {flix10KAD && showAfterAdd &&
+      {console.log("flix10KAD && showAfterAdd 1",{flix10KAD, showAfterAdd })}
+      {/* {flix10KAD && showAfterAdd && */}
+      {/* {flix10KAD && showAfterAdd && */}
       <UpgradeReminderModal
-        visible={showUpgradeReminderModal}
+        //visible={showUpgradeReminderModal}
+         visible={flix10KAD && showAfterAdd && showUpgradeReminderModal}
         message={upgradeReminderMessage}
-        onClose={() => setShowUpgradeReminderModal(false)}
+        onClose={() => {
+          setShowUpgradeReminderModal(false);
+          upgradeModalShown= false;
+        }}
         onUpgrade={handleChooseClick}
       />
-      }
+      {/* } */}
 
-      {flix10KAD && showAfterAdd &&
+      {console.log("flix10KAD && showAfterAdd 2",{flix10KAD, showAfterAdd, expiredModalShown })}
+      {/* {flix10KAD && showAfterAdd && */}
+      {/* {flix10KAD && showAfterAdd && */}
       <PlanExpiredModal
-        visible={showPlanExpiredModal}
+        //visible={showPlanExpiredModal}
+        visible={flix10KAD && showAfterAdd && showPlanExpiredModal}
         expiredPlanName={expiredPlanName}
-        onClose={() => setShowPlanExpiredModal(false)}
+        onClose={() => {
+          setShowPlanExpiredModal(false);
+          expiredModalShown = false;
+        }}
         onUpgrade={handleChooseClick}
       />
-      }
+      {/* } */}
 
       <DeleteItemModal
         visible={showDeleteModal}
@@ -744,11 +772,14 @@ const GalleryScreen = () => {
       <LanguageModal visible={showLangModal} onClose={() => setShowLangModal(false)} />
 
       <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
-      {console.log("flix10KAD && showAfterAdd ",{flix10KAD, showAfterAdd })}
+      {console.log("flix10KAD && showAfterAdd 3",{flix10KAD, showAfterAdd })}
 
       {(storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
         <StorageModals
-          onClose={() => setStorageModelStart(false)}
+          onClose={() => {
+            setStorageModelStart(false); 
+            hasHandledPaymentStatusRef.current = false;
+          }}
           storageModalKey={storageModalKey}
           setStorageModalKey={setStorageModalKey}
         />
