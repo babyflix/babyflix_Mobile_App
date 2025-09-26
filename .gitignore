@@ -26,6 +26,20 @@ yarn-error.*
 # macos
 .DS_Store
 *.pem
+Library/
+Caches/
+Cache/
+*.log
+*.ldb
+
+# Chrome / browser caches and indexedDB
+**/Library/Application Support/Google/Chrome/**
+**/Library/Caches/Google/Chrome/**
+**/Cache_Data/
+chrome-extension_*
+
+# Apple News widget items
+**/Library/News/**
 
 # local env files
 .env*.local
@@ -33,7 +47,14 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Android / iOS
 /android
 /ios
 
+# Privacy / build files
 /privacy policy & ios_build
+
+# IDEs
+.vscode/
+.idea/
+*.iml
