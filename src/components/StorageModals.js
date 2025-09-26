@@ -161,12 +161,16 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   useEffect(() => {
     const checkIfTriggered = async () => {
+      const triggered = await AsyncStorage.getItem('storage_modal_triggered');
+      if(!triggered) {
+        triggeredRef.current = false;
+      }
       if (Platform.OS === 'android' && triggeredRef.current) {
-        //console.log('[StorageModals] Already triggered. Skipping... (Android only)');
+        console.log('[StorageModals] Already triggered. Skipping... (Android only)');
         return;
       }
 
-      const triggered = await AsyncStorage.getItem('storage_modal_triggered');
+      //const triggered = await AsyncStorage.getItem('storage_modal_triggered');
       console.log('[StorageModals] openStorage2Directly:', openStorage2Directly, 'triggered:', triggered);
 
       if (openStorage2Directly && triggered !== 'true') {
@@ -353,7 +357,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     }
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
+    expiredPayment = false; 
     setShowStorage2(false);
 
     setTimeout(() => {
@@ -498,7 +503,9 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                   setClosePlans(false);
                   await AsyncStorage.removeItem('closePlans');
                   setWasTriggered(false);
+                  console.log("plane close")
                   triggeredRef.current = false;
+                  expiredPayment = false;
                 }}
                 style={styles.closeModel}
               >

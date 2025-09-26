@@ -152,6 +152,7 @@ useEffect(() => {
       if (!deepLinkHandled) { 
         console.log("Deep link URL:", url);
         dispatch(setDeepLinkHandled(true));
+        AsyncStorage.setItem('visited_after_redirect_notification', 'true');
         router.replace(url.replace("babyflix://", "/"));
       }
     }

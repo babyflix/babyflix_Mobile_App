@@ -34,6 +34,7 @@ export default function PaymentRedirect() {
       }
 
       await AsyncStorage.setItem('visited_after_redirect', 'true');
+      await AsyncStorage.setItem('visited_after_redirect_notification', 'true');
 
       setTimeout(() => {
         router.replace('/(app)/gallery');

@@ -132,7 +132,15 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   }, [remainingDays]);
 
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(async () => {
+        const visited = await AsyncStorage.getItem('visited_after_redirect_notification');
+        const flixVisited = await AsyncStorage.getItem('flix10k_visited_after_redirect');
+
+        if (visited === 'true' || flixVisited === 'true') {
+          // 🚫 block auto modal after redirect
+          await AsyncStorage.multiRemove(['visited_after_redirect', 'flix10k_visited_after_redirect']);
+          return;
+        }
       setShowModal(true);
     });
     return () => subscription.remove();
@@ -221,6 +229,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   };
 
   const handleChooseClick = async () => {
+    await AsyncStorage.setItem('storage_modal_triggered', 'false');
     if (Platform.OS === 'ios') {
       setPlanModalVisible(false)
     }
@@ -230,7 +239,6 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     setTimeout(() => {
       dispatch(triggerOpenStorage2());
     }, 100);
-    await AsyncStorage.setItem('storage_modal_triggered', 'false');
   };
 
   useEffect(() => {
