@@ -26,40 +26,43 @@ const FlixAdModal = ({
   const [open, setOpen] = useState(false);
   const [loader, setLoader] = useState(false);
   const [paymentStatusAddStorage, setPaymentStatusAddStorage] = useState(null);
-const [paymentStatus, setPaymentStatus] = useState(false);
-const [muted, setMuted] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState(false);
+  const [muted, setMuted] = useState(false);
 
-  const adVideoUrl  = "https://dev.babyflix.net/flixad.mp4";
+  const adVideoUrl = "https://babyflix.ai/flixad.mp4";
 
-  // store calculated image style
-  const [videoStyle, setVideoStyle] = useState({ width: SCREEN_WIDTH * 0.95,
-  height: (SCREEN_WIDTH * 0.95) * 15/16, // 16:9 aspect ratio
-  borderRadius: 16 });
+  const [videoStyle, setVideoStyle] = useState({ width: SCREEN_WIDTH * 0.9, height: SCREEN_HEIGHT * 0.7 });
 
-useEffect(() => {
-  const getPaymentStatus = async () => {
-    const status = await AsyncStorage.getItem('forAdd');
-    console.log(status)
-    if (status === 'done' || status === 'fail') {
-      setPaymentStatus(true); // already paid
-       setTimeout(() => {
-      dispatch(setShowFlix10KADSlice(false));
-    }, 1000);
-    } else {
-      setPaymentStatus(false);
-    }
-  };
+  useEffect(() => {
+    const videoWidth = SCREEN_WIDTH * 0.9;
+    const videoHeight = videoWidth * (16 / 9);
+    setVideoStyle({ width: videoWidth, height: videoHeight });
+  }, []);
 
-  getPaymentStatus();
-}, []);
+  useEffect(() => {
+    const getPaymentStatus = async () => {
+      const status = await AsyncStorage.getItem('forAdd');
+      console.log(status)
+      if (status === 'done' || status === 'fail') {
+        setPaymentStatus(true);
+        setTimeout(() => {
+          dispatch(setShowFlix10KADSlice(false));
+        }, 1000);
+      } else {
+        setPaymentStatus(false);
+      }
+    };
 
-    useEffect(() => {
+    getPaymentStatus();
+  }, []);
+
+  useEffect(() => {
     const fetchPaymentStatus = async () => {
       try {
         const status = await AsyncStorage.getItem("flix10kPaymentForAdd");
         if (status) {
-          setPaymentStatusAddStorage(status); // "done" or "fail"
-  
+          setPaymentStatusAddStorage(status);
+
         }
       } catch (err) {
         console.error("Error reading AsyncStorage flix10kPaymentForAdd:", err);
@@ -70,8 +73,8 @@ useEffect(() => {
 
   useEffect(() => {
 
-     if (paymentStatusAddStorage || paymentStatus) {
-      return; // don't show modal
+    if (paymentStatusAddStorage || paymentStatus) {
+      return;
     }
 
     if (user?.firstTimeSubscription && user?.showFlixAd && paymentSuccess) {
@@ -87,18 +90,13 @@ useEffect(() => {
   }, [user?.firstTimeSubscription, paymentSuccess, paymentStatus]);
 
   const handlePayRedirect = async () => {
-     //await AsyncStorage.removeItem('forAdd');
-     setPaymentStatus(false);
+    //await AsyncStorage.removeItem('forAdd');
+    setPaymentStatus(false);
     if (!handleSubscribe) return;
 
     setLoader(true);
     try {
       await handleSubscribe();
-      // if (user?.firstTimeSubscription && user?.showFlixAd && paymentSuccess && months === 2 && !autoRenew) {
-      //   setMessage(t("flix10k.subscriptionSuccessWithMonths"));
-      // } else {
-      //   setMessage(t("flix10k.subscriptionSuccess"));
-      // }
     } catch (err) {
       console.error("Subscription error:", err);
       alert("Something went wrong with subscription.");
@@ -110,7 +108,7 @@ useEffect(() => {
       // }, 1000);
     }
   };
-  
+
   const handleClose = () => {
     setOpen(false);
     setTimeout(() => {
@@ -127,49 +125,41 @@ useEffect(() => {
           <ActivityIndicator size="large" color="#000" />
         </View>
       )}
-      <Modal visible={open} transparent={true} animationType="fade" onRequestClose={() => {}}>
+      <Modal visible={open} transparent={true} animationType="fade" onRequestClose={() => { }}>
         <View style={styles.overlay}>
-          <View style={[styles.modalContainer, { justifyContent: "center", alignItems: "center" }]}>
-            {/* Close Button */}
-            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-              <MaterialIcons name="close" size={26} color="white" />
-            </TouchableOpacity>
+          {/* <View style={[styles.modalContainer, { justifyContent: "center", alignItems: "center" }]}> */}
 
-            {/* Ad Image */}
-            {/*<TouchableOpacity onPress={handlePayRedirect} activeOpacity={0.8}>
+          {/* Ad Image */}
+          {/*<TouchableOpacity onPress={handlePayRedirect} activeOpacity={0.8}>
               <Image source={{ uri: adImageUrl }} style={imageStyle} resizeMode="contain" />
             </TouchableOpacity>*/}
-            <TouchableOpacity onPress={handlePayRedirect} activeOpacity={0.9}>
-              <Video
-                source={{ uri: adVideoUrl }}
-                style={[videoStyle, { backgroundColor: "black" }]}
-                resizeMode="contain"
-                shouldPlay       // auto play
-                isLooping  
-                isMuted={muted}    
-                useNativeControls={false} // hide play/pause controls
-              />
-            </TouchableOpacity>
+          <TouchableOpacity onPress={handlePayRedirect} activeOpacity={0.9}>
+            <Video
+              source={{ uri: adVideoUrl }}
+              style={[videoStyle, { backgroundColor: "black", borderRadius: 16, }]}
+              resizeMode="cover"
+              shouldPlay
+              isLooping
+              isMuted={muted}
+              useNativeControls={false}
+            />
+          </TouchableOpacity>
 
-             <TouchableOpacity
-          style={{
-            position: "absolute",
-            top: 6,
-            left: 6,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            borderRadius: 20,
-            padding: 6,
-            zIndex: 999,
-          }}
-          onPress={() => setMuted(!muted)}
-        >
-          <Ionicons
-            name={muted ? "volume-mute" : "volume-high"}
-            size={22}
-            color="white"
-          />
-        </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+            <Ionicons name="close-circle" size={38} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.muteButton}
+            onPress={() => setMuted(!muted)}
+          >
+            <Ionicons
+              name={muted ? "volume-mute" : "volume-high"}
+              size={28}
+              color="white"
+            />
+          </TouchableOpacity>
+          {/* </View> */}
         </View>
       </Modal>
     </>
@@ -179,28 +169,29 @@ useEffect(() => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContainer: {
     width: "90%",
-    height: "auto",
     borderRadius: 16,
     overflow: "hidden",
     backgroundColor: "black",
-    position: "relative",
-    padding: 10,
-    paddingTop: 40
+    justifyContent: "center",
+    alignItems: "center",
   },
   closeButton: {
     position: "absolute",
-    top: 6,
-    right: 6,
-    zIndex: 999,
-    backgroundColor: "black",
-    borderRadius: "50%",
-    padding: 3,
+    top: 40,
+    right: 20,
+    zIndex: 10,
+  },
+  muteButton: {
+    position: "absolute",
+    top: 40,
+    left: 22,
+    zIndex: 10,
   },
   loaderContainer: {
     ...StyleSheet.absoluteFillObject,

@@ -9,6 +9,9 @@ import {
   ScrollView,
   Image,
   Keyboard,
+  Dimensions,
+  Modal,
+  StyleSheet,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../state/slices/authSlice';
@@ -31,6 +34,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import LanguageModal from '../constants/LanguageModal';
 import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
+import { Video } from 'expo-av';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -46,10 +53,22 @@ const LoginScreen = () => {
   const [svgColor, setSvgColor] = useState(Colors.primary);
   const [isStreamStart, setIsStreamStart] = useState(false);
   const [showLangModal, setShowLangModal] = useState(false);
+  const [showVideo, setShowVideo] = useState(true);
+  const [muted, setMuted] = useState(false);
+
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
   const appVersion = Constants.expoConfig.version;
   const { t } = useTranslation();
+
+  const adVideoUrl = "https://babyflix.ai/flixad.mp4"; 
+
+  const videoStyle = {
+    width: SCREEN_WIDTH * 0.9,
+    height: (SCREEN_WIDTH * 0.9) * (16/9), 
+    borderRadius: 16,
+    backgroundColor: "black",
+  };
 
   useEffect(() => {
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -267,8 +286,59 @@ const LoginScreen = () => {
           onDismiss={() => setSnackbarVisible(false)}
         />
       </View>
+
+      <Modal visible={showVideo} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <Video
+            source={{ uri: adVideoUrl }}
+            style={videoStyle}
+            resizeMode="cover"  
+            shouldPlay
+            isLooping
+            isMuted={muted}
+          />
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowVideo(false)}
+          >
+            <Ionicons name="close-circle" size={38} color="white" />
+          </TouchableOpacity>
+
+           <TouchableOpacity
+            style={styles.muteButton}
+            onPress={() => setMuted(!muted)}
+          >
+            <Ionicons
+              name={muted ? "volume-mute" : "volume-high"}
+              size={28}
+              color="white"
+            />
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 999,
+  },
+   muteButton: {
+    position: "absolute",
+    top: 40,
+    left: 22,
+    zIndex: 999,
+  },
+});
 
 export default LoginScreen;
