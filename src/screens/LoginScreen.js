@@ -298,14 +298,14 @@ const LoginScreen = () => {
             isMuted={muted}
           />
           <TouchableOpacity
-            style={styles.closeButton}
+            style={[styles.closeButton,{ top: insets.top + 10 }]}
             onPress={() => setShowVideo(false)}
           >
             <Ionicons name="close-circle" size={38} color="white" />
           </TouchableOpacity>
 
            <TouchableOpacity
-            style={styles.muteButton}
+            style={[styles.muteButton,{ top: insets.top + 15 }]}
             onPress={() => setMuted(!muted)}
           >
             <Ionicons
@@ -329,13 +329,13 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: 40,
+    //top: 40,
     right: 20,
     zIndex: 999,
   },
    muteButton: {
     position: "absolute",
-    top: 40,
+    //top: 40,
     left: 22,
     zIndex: 999,
   },

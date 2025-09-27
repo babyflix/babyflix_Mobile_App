@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { useSharedValue } from "react-native-reanimated";
 
 const particleColors = [
   "#ff4081",
@@ -76,28 +77,37 @@ const AIGenerationModal = ({ visible }) => {
     outputRange: ["0%", "100%"],
   });
 
-  const progressColor = progressAnim.interpolate({
-  inputRange: [0, 0.5, 1],
-  outputRange: ["#667eea", "#764ba2", "#ff4081"], 
-});
+//   const progressColor = progressAnim.interpolate({
+//   inputRange: [0, 0.5, 1],
+//   outputRange: ["#667eea", "#764ba2", "#ff4081"], 
+// });
+const progress = useSharedValue(0);
+
+const progressColor =
+  progress >= 0.5 ? "#667eea" : "#ff4081"; // simple switch
 
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="fade" presentationStyle="overFullScreen">
       <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
           {/* 🔹 Robot + Particles inside same container */}
           <View style={styles.centerWrapper}>
             {/* Robot */}
-            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+            <Animated.View style={{ transform: [{ scale: pulseAnim }], 
+              shadowColor: "#667eea",
+              shadowOpacity: 0.5,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 0 }, }}
+            >
               <MaterialCommunityIcons
                 name="robot-happy"
                 size={50}
                 color="#ff4081"
-                style={{
-                  textShadowColor: "#667eea",
-                  textShadowRadius: 10,
-                }}
+                // style={{
+                //   textShadowColor: "#667eea",
+                //   textShadowRadius: 10,
+                // }}
               />
             </Animated.View>
 
@@ -116,7 +126,7 @@ const AIGenerationModal = ({ visible }) => {
                     {
                       transform: [
                         { rotate },
-                        { translateX: 30 + i * 6 },
+                        { translateX: Animated.add(new Animated.Value(30 + i*6), new Animated.Value(0)) },
                       ],
                     },
                   ]}
@@ -171,7 +181,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 10,
     elevation: 8,
-    overflow: "visible",
+    overflow: "hidden",
   },
   centerWrapper: {
     width: 120,

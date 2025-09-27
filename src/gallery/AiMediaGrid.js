@@ -224,7 +224,7 @@ const AiMediaGrid = memo(
               </View>
             )}
 
-            {!disableMenuAndSelection && (
+            {/* {!disableMenuAndSelection && (
               <View style={styles.actions}>
                 {(!hasAiVersion || isKept) ? (
                   <>
@@ -276,7 +276,64 @@ const AiMediaGrid = memo(
                   </>
                 )}
               </View>
-            )}
+            )} */}
+
+            <View style={styles.actions}>
+  {/* Keep / Regenerate (always shown when AI version exists and not yet kept) */}
+  {hasAiVersion && !isKept && (
+    <>
+      <TouchableOpacity
+        style={[styles.actionBtnDownload, { borderRadius: 50 }]}
+        onPress={() => handleKeep(item)}
+      >
+        <MaterialIcons name="check" size={18} color="white" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.actionBtnDelete, { borderRadius: 50 }]}
+        onPress={() => handleRegenerate(item)}
+      >
+        <MaterialIcons name="autorenew" size={18} color="white" />
+      </TouchableOpacity>
+    </>
+  )}
+
+  {/* Download / Share / Delete (only if not disabled & AI not blocking it) */}
+  {!disableMenuAndSelection && (!hasAiVersion || isKept) && (
+    <>
+      <TouchableOpacity
+        style={styles.actionBtnDownload}
+        onPress={() => {
+          setSelectedItem([item]);
+          setShowDownloadModal(true);
+        }}
+      >
+        <MaterialIcons name="file-download" size={18} color="white" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.actionBtnShare}
+        onPress={() => {
+          setSelectedItem([item]);
+          setShowShareModal(true);
+        }}
+      >
+        <MaterialIcons name="share" size={18} color="white" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.actionBtnDelete}
+        onPress={() => {
+          setSelectedItem([item]);
+          setShowDeleteModal(true);
+        }}
+      >
+        <MaterialIcons name="delete" size={18} color="white" />
+      </TouchableOpacity>
+    </>
+  )}
+</View>
+
 
             {/* Checkbox Selection */}
             {/* {(isSelected || flix10kSelectionMode || isAiSelected) && (

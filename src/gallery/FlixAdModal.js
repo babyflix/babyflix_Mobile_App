@@ -6,6 +6,7 @@ import { setShowFlix10KADSlice } from "../state/slices/subscriptionSlice";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Video } from "expo-av";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -28,6 +29,7 @@ const FlixAdModal = ({
   const [paymentStatusAddStorage, setPaymentStatusAddStorage] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(false);
   const [muted, setMuted] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const adVideoUrl = "https://babyflix.ai/flixad.mp4";
 
@@ -126,7 +128,7 @@ const FlixAdModal = ({
         </View>
       )}
       <Modal visible={open} transparent={true} animationType="fade" onRequestClose={() => { }}>
-        <View style={styles.overlay}>
+        <View style={[styles.overlay, { paddingTop: insets.top }]}>
           {/* <View style={[styles.modalContainer, { justifyContent: "center", alignItems: "center" }]}> */}
 
           {/* Ad Image */}
@@ -145,12 +147,12 @@ const FlixAdModal = ({
             />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+          <TouchableOpacity style={[styles.closeButton, { top: insets.top + 10 }]} onPress={handleClose}>
             <Ionicons name="close-circle" size={38} color="white" />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.muteButton}
+            style={[styles.muteButton, { top: insets.top + 15 }]}
             onPress={() => setMuted(!muted)}
           >
             <Ionicons
@@ -183,13 +185,13 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: 40,
+    //top: 40,
     right: 20,
     zIndex: 10,
   },
   muteButton: {
     position: "absolute",
-    top: 40,
+    //top: 40,
     left: 22,
     zIndex: 10,
   },
