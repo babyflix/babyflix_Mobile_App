@@ -8,8 +8,6 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Progress from 'react-native-progress';
 import AiMediaGrid from './AiMediaGrid';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import AIGenerationModal from './AIGenerationModal';
-
 const FlixTab = createMaterialTopTabNavigator();
 
 // const AiImagesTab =({ data, flix10kGenerating, flix10kResults, ...props }) => {
@@ -92,8 +90,6 @@ const ImageInfoTab = memo(({ data, flix10kGenerating, flix10kAiImages, setFlix10
           <Text style={styles.emptyText}>{t("flix10k.noAiImages")}</Text>
         </View>
       )}
-
-      <AIGenerationModal visible={flix10kGenerating} />
     </>
   );
 });

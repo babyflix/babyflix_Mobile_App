@@ -29,6 +29,7 @@ import sendDeviceUserInfo, { USERACTIONS } from "../components/deviceInfo";
 import { setPaymentStatusAdd, setShowFlix10KADSlice, setSubscriptionExpired } from "../state/slices/subscriptionSlice";
 import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import FlixAdModal from "./FlixAdModal";
+import AIGenerationModal from "./AIGenerationModal";
 
 const Flix10kBanner = ({
   mediaData,
@@ -80,6 +81,7 @@ const Flix10kBanner = ({
   const [showFlix10KAd, setShowFlix10KAd] = useState(false);
   const [message, setMessage] = useState("");
   const [showAfterAdd, setShowafterAdd] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const selectionCount = selectedItemsForAi.length;
 
@@ -310,6 +312,7 @@ useEffect(() => {
     setShowGenerationTypeModal(false)
     setLoadingAnalyze(true);
     setFlix10kGenerating(true);
+    setIsGenerating(true);
 
     try {
       const updatedItems = [];
@@ -350,6 +353,7 @@ useEffect(() => {
       console.error('Error in handleProcess:', err);
     } finally {
       setFlix10kGenerating(false);
+      setIsGenerating(false);
       setLoadingAnalyze(false);
       setShowGenerationTypeModal(false);
     }
@@ -361,6 +365,7 @@ useEffect(() => {
     setShowGenerationTypeModal(false);
     setLoadingAnalyze(true);
     setFlix10kGenerating(true);
+    setIsGenerating(true);
 
     const updatedItems = [];
      const failedItems = [];
@@ -435,6 +440,7 @@ useEffect(() => {
       throw err;
     } finally {
       setFlix10kGenerating(false);
+      setIsGenerating(false);
       setLoadingAnalyze(false);
       setShowGenerationTypeModal(false);
     }
@@ -851,6 +857,8 @@ console.log("showAfterAdd",showAfterAdd)
           </View>
         </View>
       </Modal>
+
+       <AIGenerationModal visible={isGenerating} />
     </View>
   );
 };
