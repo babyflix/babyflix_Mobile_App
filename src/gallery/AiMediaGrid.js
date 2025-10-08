@@ -83,13 +83,18 @@ const AiMediaGrid = memo(
           );
 
           sendDeviceUserInfo({
-            action_type: USERACTIONS.FLIX10KBABYPREDICTIVEIMAGE,
-            action_description: `Flox10K reGenerate predictiveimage for ${currentItem}`,
+            action_type: USERACTIONS.FLIX10KREGENERATE,
+            action_description: `Flox10K regenerate predictiveimage for ${currentItem}`,
           });
 
           //setRegeneratingIds((prev) => prev.filter((id) => id !== currentItem.id));
         } catch (err) {
           console.error("Error regenerating:", err);
+           sendDeviceUserInfo({
+            action_type: USERACTIONS.FLIX10KREGENERATE,
+            action_description: `Flox10K regenerate failed for ${currentItem} and error is ${err}`,
+          });
+
         } finally {
           setRegeneratingIds((prev) => prev.filter((id) => id !== currentItem.id));
           setRegenerationQueue((prev) => prev.slice(1));
@@ -117,8 +122,17 @@ const AiMediaGrid = memo(
           imageId: item?.id,
         });
 
+         sendDeviceUserInfo({
+            action_type: USERACTIONS.FLIX10KKEEP,
+            action_description: `Flox10K keep predictiveimage for ${item}`,
+          });
+
       } catch (err) {
         console.error("Error keeping image:", err);
+         sendDeviceUserInfo({
+            action_type: USERACTIONS.FLIX10KKEEP,
+            action_description: `Flox10K keep failed for ${item} and error is ${err}`,
+          });
       }
     };
 

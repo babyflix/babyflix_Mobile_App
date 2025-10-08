@@ -114,7 +114,7 @@
 
 // export default CustomSwipeTabs;
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -132,7 +132,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../constants/Colors";
 import { useFocusEffect } from "expo-router";
-import { setSubscriptionExpired } from "../state/slices/subscriptionSlice";
+import { setStorageTab, setSubscriptionExpired } from "../state/slices/subscriptionSlice";
 import { useDispatch } from "react-redux";
 
 const { width } = Dimensions.get("window");
@@ -142,11 +142,17 @@ const CustomSwipeTabs = ({ tabs, initialIndex = 0 }) => {
   const translateX = useSharedValue(-width * initialIndex);
     const dispatch = useDispatch();
 
+    useEffect(() => {
+  setActiveTab(initialIndex);
+  translateX.value = withTiming(-width * initialIndex, { duration: 250 });
+}, [initialIndex]);
+
    useFocusEffect(
           useCallback(() => {
             return () => {
               console.log("in Focus Effect")
               dispatch(setSubscriptionExpired(false));
+              //dispatch(setStorageTab(false));
             }
           }, [])
         );

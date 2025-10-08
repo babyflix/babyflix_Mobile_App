@@ -14,6 +14,8 @@ import Snackbar from "../components/Snackbar";
 import sendDeviceUserInfo, { USERACTIONS } from "../components/deviceInfo";
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
+//import * as RNIap from 'react-native-iap';
 
 const ManageSubscriptions = () => {
   const user = useSelector((state) => state.auth);
@@ -35,6 +37,7 @@ const ManageSubscriptions = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarType, setSnackbarType] = useState('success');
   const [error, setError] = useState('');
+  const [showAutoRenewModal, setShowAutoRenewModal] = useState(false);
 
   useEffect(() => {
     if (subscriptionExpired) {
@@ -197,6 +200,68 @@ const ManageSubscriptions = () => {
       console.error("Subscription error:", error.response?.data || error.message);
     }
   };
+
+//   const subscriptionSkus = Platform.select({
+//   ios: [
+//     'com.babyflix.flix10k.monthly',  // 1 month
+//     'com.babyflix.flix10k.quarterly', // 3 months
+//     'com.babyflix.flix10k.yearly',    // 12 months
+//   ],
+//   android: [
+//     'com.babyflix.flix10k.monthly',
+//     'com.babyflix.flix10k.quarterly',
+//     'com.babyflix.flix10k.yearly',
+//   ],
+// });
+
+// /**
+//  * Handle subscription purchase
+//  * @param {string} sku - subscription SKU for chosen duration
+//  * @param {boolean} autoRenew - user choice for auto-renewal
+//  */
+// export const handleSubscribe = async (sku, autoRenew) => {
+//   try {
+//     await RNIap.initConnection();
+
+//     const products = await RNIap.getSubscriptions(subscriptionSkus);
+//     console.log('Available subscriptions:', products);
+
+//     // Request subscription
+//     const purchase = await RNIap.requestSubscription(
+//       sku,
+//       false,       // iOS: default behavior, cannot disable programmatically
+//       autoRenew    // Android: enable/disable auto-renew
+//     );
+
+//     console.log("Purchase successful:", purchase);
+
+//     // Save locally
+//     await AsyncStorage.setItem('flix10KPaying', 'true');
+//     await AsyncStorage.setItem('flix10KAutoRenew', autoRenew ? 'true' : 'false');
+//     await AsyncStorage.setItem('flix10KSku', sku);
+
+//     // Send to backend for validation
+//     await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/validate`, {
+//       platform: Platform.OS,
+//       sku,
+//       purchaseToken: purchase.purchaseToken,       // Android
+//       transactionReceipt: purchase.transactionReceipt, // iOS
+//       autoRenew,
+//     });
+
+//     // iOS auto-renew: cannot disable programmatically
+//     if (Platform.OS === 'ios' && !autoRenew) {
+//       // Show modal or link for user to disable in App Store
+//       //Linking.openURL('itms-apps://apps.apple.com/account/subscriptions');
+//       setShowAutoRenewModal(true);
+//     }
+
+//   } catch (err) {
+//     console.error("Subscription error:", err);
+//   } finally {
+//     await RNIap.endConnection();
+//   }
+// };
 
   const expiryDateCal = new Date(subscription.expiryDate);
   const todayCal = new Date();
@@ -498,6 +563,8 @@ const ManageSubscriptions = () => {
           </View>
         </View>
       </Modal>
+
+      {/* <DisableAutoRenewModal visible={showAutoRenewModal} onClose={() => setShowAutoRenewModal(false)} /> */}
 
       <Snackbar
         visible={snackbarVisible}

@@ -4,7 +4,7 @@ export default ({ config }) => ({
   ...config,
   name: "BabyFlix",
   slug: "babyflix",
-  version: "1.1.9",
+  version: "1.2.0",
   scheme: "babyflix",
   extra: {
     eas: {

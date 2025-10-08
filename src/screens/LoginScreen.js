@@ -53,8 +53,9 @@ const LoginScreen = () => {
   const [svgColor, setSvgColor] = useState(Colors.primary);
   const [isStreamStart, setIsStreamStart] = useState(false);
   const [showLangModal, setShowLangModal] = useState(false);
-  const [showVideo, setShowVideo] = useState(true);
+  const [showVideo, setShowVideo] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
 
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
@@ -62,6 +63,7 @@ const LoginScreen = () => {
   const { t } = useTranslation();
 
   const adVideoUrl = "https://babyflix.ai/flixad.mp4"; 
+  const adImageUrl = "https://babyflix.ai/flix10klogo.png"; // Your static image
 
   const videoStyle = {
     width: SCREEN_WIDTH * 0.9,
@@ -76,6 +78,25 @@ const LoginScreen = () => {
 
     AsyncStorage.setItem('timezone', userTimezone);
   }, []);
+
+  useEffect(() => {
+  const checkFlixAdSeen = async () => {
+    try {
+      const adSeen = await AsyncStorage.getItem("flixAdSeen");
+      console.log("flixAdSeen:", adSeen);
+      if (adSeen === "true") {
+        setShowVideo(false); // 👈 Don't show video if already seen
+      } else {
+        setShowVideo(true);  // 👈 Show video if not seen or false
+      }
+    } catch (err) {
+      console.error("Error reading flixAdSeen:", err);
+    }
+  };
+
+  checkFlixAdSeen();
+}, []);
+
 
   useEffect(() => {
     const checkLanguage = async () => {
@@ -118,7 +139,7 @@ const LoginScreen = () => {
     try {
       const timezone = await AsyncStorage.getItem('timezone');
 
-      console.log('EXPO_PUBLIC_API_URL',EXPO_PUBLIC_API_URL)
+      console.log('EXPO_PUBLIC_API_URL',EXPO_PUBLIC_API_URL,email,password)
 
       const res = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/applogin1`,
@@ -162,6 +183,7 @@ const LoginScreen = () => {
         setSnackbarVisible(true);
       }
     } catch (error) {
+      console.log("❌ Login failed:", error);
       setSnackbarMessage(error.res?.data?.error || t('loginPage.messages.loginFailedTryAgain'));
       setSnackbarType('error');
       setSnackbarVisible(true);
@@ -287,35 +309,73 @@ const LoginScreen = () => {
         />
       </View>
 
-      <Modal visible={showVideo} transparent animationType="fade">
-        <View style={styles.overlay}>
-          <Video
-            source={{ uri: adVideoUrl }}
-            style={videoStyle}
-            resizeMode="cover"  
-            shouldPlay
-            isLooping
-            isMuted={muted}
-          />
-          <TouchableOpacity
-            style={[styles.closeButton,{ top: insets.top + 10 }]}
-            onPress={() => setShowVideo(false)}
-          >
-            <Ionicons name="close-circle" size={38} color="white" />
-          </TouchableOpacity>
+     <Modal visible={showVideo} transparent animationType="fade">
+  <View
+    style={[
+      styles.overlay,
+      { backgroundColor: "rgba(0,0,0,0.7)" },
+    ]}
+  >
+    {!videoEnded ? (
+      <Video
+        source={{ uri: adVideoUrl }}
+        style={videoStyle}
+        resizeMode="cover"
+        shouldPlay
+        isLooping={false}
+        isMuted={muted}
+        useNativeControls={true}
+        onPlaybackStatusUpdate={(status) => {
+          if (status.didJustFinish) setVideoEnded(true); // show promo content after video ends
+        }}
+      />
+    ) : (
+      <View style={styles.adContent}>
+        <Image
+          source={{ uri: adImageUrl }} // your static image
+          style={styles.adImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.priceText}>Only at $19.99 🎉</Text>
+        <Text style={styles.descText}>Subscribe today and unlock full access.</Text>
+        <TouchableOpacity
+          style={styles.loginNowBtn}
+          onPress={() => setShowVideo(false)} // same as close
+        >
+          <Text style={styles.loginNowText}>Login Now</Text>
+        </TouchableOpacity>
+      </View>
+    )}
 
-           <TouchableOpacity
-            style={[styles.muteButton,{ top: insets.top + 15 }]}
-            onPress={() => setMuted(!muted)}
-          >
-            <Ionicons
-              name={muted ? "volume-mute" : "volume-high"}
-              size={28}
-              color="white"
-            />
-          </TouchableOpacity>
-        </View>
-      </Modal>
+    {/* Close icon */}
+    <TouchableOpacity
+      style={[
+        styles.closeButton,
+        videoEnded
+          ? { top: insets.top + 140, right: 60 }
+          : { top: insets.top + 10, right: 20 },
+      ]}
+      onPress={() => setShowVideo(false)}
+    >
+      <Ionicons name="close-circle" size={38} color={"white"} />
+    </TouchableOpacity>
+
+    {/* Mute button only during video */}
+    {!videoEnded && (
+      <TouchableOpacity
+        style={[styles.muteButton, { top: insets.top + 15 }]}
+        onPress={() => setMuted(!muted)}
+      >
+        <Ionicons
+          name={muted ? "volume-mute" : "volume-high"}
+          size={28}
+          color="white"
+        />
+      </TouchableOpacity>
+    )}
+  </View>
+</Modal>
+
     </KeyboardAvoidingView>
   );
 };
@@ -330,7 +390,7 @@ const styles = StyleSheet.create({
   closeButton: {
     position: "absolute",
     //top: 40,
-    right: 20,
+    //right: 20,
     zIndex: 999,
   },
    muteButton: {
@@ -339,6 +399,45 @@ const styles = StyleSheet.create({
     left: 22,
     zIndex: 999,
   },
+  adContent: {
+  width: SCREEN_WIDTH * 0.7,
+  height: SCREEN_HEIGHT * 0.4,
+  borderRadius: 16,
+  backgroundColor: "#fff",
+  justifyContent: "center",
+  alignItems: "center",
+  padding: 15,
+},
+adImage: {
+  width: "60%",
+  height: "35%",
+  //marginBottom: 15,
+},
+priceText: {
+  fontSize: 20,
+  fontWeight: "bold",
+  color: "#000",
+  marginBottom: 30,
+  textAlign: "center",
+},
+descText: {
+  fontSize: 14,
+  color: "#333",
+  textAlign: "center",
+  marginBottom: 20,
+},
+loginNowBtn: {
+  backgroundColor: "#FF6B6B",
+  paddingVertical: 10,
+  paddingHorizontal: 30,
+  borderRadius: 8,
+  marginTop: 10,
+},
+loginNowText: {
+  color: "white",
+  fontSize: 16,
+  fontWeight: "bold",
+},
 });
 
 export default LoginScreen;

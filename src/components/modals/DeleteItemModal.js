@@ -52,10 +52,19 @@ const DeleteItemModal = ({ visible, selectedItems, onCancel, onDeleted, fetchMed
           data: payload,
         });
 
+        if (item.object_type === "predictiveBabyImage") {
+        sendDeviceUserInfo({
+          action_type: USERACTIONS.FLIX10KDELETE,
+          action_description: `User deleted predictiveBabyImage is ${item}`,
+        });
+         console.log('Deleted item of predictiveBabyImage:', item);
+      }else{
         sendDeviceUserInfo({
           action_type: USERACTIONS.DELETE,
-          action_description: `User deleted ${item}`,
+          action_description: `User deleted image is ${item}`,
         });
+         console.log('Deleted item of image:', item);
+      }
       }
       onDeleted();
       fetchMediaData();

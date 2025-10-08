@@ -30,6 +30,8 @@ import { setPaymentStatusAdd, setShowFlix10KADSlice, setSubscriptionExpired } fr
 import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import FlixAdModal from "./FlixAdModal";
 import AIGenerationModal from "./AIGenerationModal";
+import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
+//import * as RNIap from 'react-native-iap';
 
 const Flix10kBanner = ({
   mediaData,
@@ -62,7 +64,7 @@ const Flix10kBanner = ({
     useSelector((state) => state.storagePlan || {});
   const subscriptionActive = subscriptionIsActive
 
-  console.log("EXPO_PUBLIC_CLOUD_API_URL",EXPO_PUBLIC_CLOUD_API_URL)
+  console.log("EXPO_PUBLIC_CLOUD_API_URL", EXPO_PUBLIC_CLOUD_API_URL)
 
   console.log('subscriptionAmount, subscriptionId, subscriptionIsActive ', subscriptionAmount, subscriptionId, subscriptionIsActive)
 
@@ -82,6 +84,7 @@ const Flix10kBanner = ({
   const [message, setMessage] = useState("");
   const [showAfterAdd, setShowafterAdd] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showAutoRenewModal, setShowAutoRenewModal] = useState(false);
 
   const selectionCount = selectedItemsForAi.length;
 
@@ -103,54 +106,68 @@ const Flix10kBanner = ({
   //   fetchPaymentStatus();
   // }, []);
 
-//   useFocusEffect(
-//   useCallback(() => {
-//     const fetchPaymentStatus = async () => {
-//       try {
-//         const status = await AsyncStorage.getItem("flix10KPaying");
-//         console.log("status of paying", status);
-//         if (status) {
-//           console.log("status of paying", status);
-//           await AsyncStorage.removeItem("flix10kPaymentForAdd");
-//           setShowafterAdd(false);
-//           //await AsyncStorage.removeItem("flix10KPaying");
-//         }
-//       } catch (err) {
-//         console.error("Error reading AsyncStorage flix10KPaying:", err);
-//       }
-//     };
+  //   useFocusEffect(
+  //   useCallback(() => {
+  //     const fetchPaymentStatus = async () => {
+  //       try {
+  //         const status = await AsyncStorage.getItem("flix10KPaying");
+  //         console.log("status of paying", status);
+  //         if (status) {
+  //           console.log("status of paying", status);
+  //           await AsyncStorage.removeItem("flix10kPaymentForAdd");
+  //           setShowafterAdd(false);
+  //           //await AsyncStorage.removeItem("flix10KPaying");
+  //         }
+  //       } catch (err) {
+  //         console.error("Error reading AsyncStorage flix10KPaying:", err);
+  //       }
+  //     };
 
-//     fetchPaymentStatus();
+  //     fetchPaymentStatus();
 
-//     // No cleanup needed here
-//   }, [])
-// );
+  //     // No cleanup needed here
+  //   }, [])
+  // );
 
-useEffect(() => {
-  const subscription = AppState.addEventListener("change", async (state) => {
-    if (state === "active") {
-      try {
-        const paying = await AsyncStorage.getItem("flix10KPaying");
-        const addPayment = await AsyncStorage.getItem("flix10kPaymentForAdd");
-
-        // If user was paying but didn't finish, clean up
-        if (paying || addPayment) {
-          console.log("User returned without completing Stripe payment, clearing state...");
-          await AsyncStorage.removeItem("flix10KPaying");
-          //await AsyncStorage.removeItem("flix10kPaymentForAdd");
-
-          dispatch(setShowFlix10KADSlice(false));
-        }
-      } catch (err) {
-        console.error("Error clearing payment state:", err);
+  useEffect(() => {
+    const checkFlixAdSeen = async () => {
+      if (subscriptionActive && isSubscriptionId) {
+        await AsyncStorage.setItem("flixAdSeen", "true");
+        console.log('flixAdSeen set to true');
+      } else {
+        await AsyncStorage.setItem("flixAdSeen", "false");
+        console.log('flixAdSeen set to false');
       }
-    }
-  });
+    };
 
-  return () => {
-    subscription.remove();
-  };
-}, []);
+    checkFlixAdSeen();
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", async (state) => {
+      if (state === "active") {
+        try {
+          const paying = await AsyncStorage.getItem("flix10KPaying");
+          const addPayment = await AsyncStorage.getItem("flix10kPaymentForAdd");
+
+          // If user was paying but didn't finish, clean up
+          if (paying || addPayment) {
+            console.log("User returned without completing Stripe payment, clearing state...");
+            await AsyncStorage.removeItem("flix10KPaying");
+            //await AsyncStorage.removeItem("flix10kPaymentForAdd");
+
+            dispatch(setShowFlix10KADSlice(false));
+          }
+        } catch (err) {
+          console.error("Error clearing payment state:", err);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
 
   useEffect(() => {
@@ -172,13 +189,15 @@ useEffect(() => {
         subscribedMonths,
         stripeSessionId,
         status: apiStatus,
-        showFlix10KAd: showFlix10KAd,
+        //showFlix10KAd: showFlix10KAd,
       };
+      console.log("Calling subscription API with:", payload);
 
       if (status === 'done') {
-         //await AsyncStorage.setItem('flix10kPaymentForAdd', 'done');
-         setShowafterAdd(true);
+        //await AsyncStorage.setItem('flix10kPaymentForAdd', 'done');
+        setShowafterAdd(true);
         //dispatch(setPaymentStatusAdd(true))
+        console.log("flix10k payment success");
         setTimeout(() => {          
         setShowPaymentSuccess(true);
         }, 1000);
@@ -192,19 +211,29 @@ useEffect(() => {
           );
           console.log("Subscription API response:", response.data);
 
-          if(subscriptionIsActive){
-             sendDeviceUserInfo({
+          if (subscriptionIsActive) {
+            try {
+              await sendDeviceUserInfo({
                 action_type: USERACTIONS.UPDATESUBSCRIPTION,
                 action_description: `Existing user upgrade subscribe for Flix10K`,
               });
-          }else{
-            sendDeviceUserInfo({
-              action_type: USERACTIONS.NEWSUBCRIPTION,
-              action_description: `New user subscribe for Flix10K`,
-            });
+              console.log("Existing user upgrade subscribe for Flix10K");
+            } catch (err) {
+              console.error("Failed to send user action for existing subscription:", err);
+            }
+          } else {
+            try {
+              await sendDeviceUserInfo({
+                action_type: USERACTIONS.NEWSUBCRIPTION,
+                action_description: `New user subscribe for Flix10K`,
+              });
+              console.log("New user subscribe for Flix10K");
+            } catch (err) {
+              console.error("Failed to send user action for new subscription:", err);
+            }
           }
         } catch (error) {
-          console.error("Error calling subscription API:", error);
+          console.log("Error calling subscription API:", error);
         }
 
         await AsyncStorage.removeItem('flix10k_payment_status');
@@ -213,32 +242,43 @@ useEffect(() => {
       else if (status === 'fail') {
         //await AsyncStorage.setItem('flix10kPaymentForAdd', 'fail');
         setShowafterAdd(true);
+        console.log("flix10k payment failed");
         //dispatch(setPaymentStatusAdd(true))
         setTimeout(() => {
           setShowPaymentFailure(true);
         }, 1000);
 
-        console.log("Calling subscription API with:", payload);
+        // console.log("Calling subscription API with:", payload);
+        //  //Alert.alert("Calling subscription API with:", payload);
+
+        // try {
+        //   const response = await axios.post(
+        //     `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
+        //     payload
+        //   );
+        //   console.log("Subscription API response:", response.data);
+        //   //Alert.alert("Subscription API response:", response.data);
+
+        //   //Alert.alert("User payment failed for Flix10K");
+
+        // sendDeviceUserInfo({
+        //   action_type: "payment failed",
+        //   action_description: `User payment failed for Flox10K plan`,
+        // });
+        // } catch (error) {
+        //   console.log("Error calling subscription API:", error);
+        //    Alert.alert("Error calling subscription API:");
+        // }
 
         try {
-          const response = await axios.post(
-            `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
-            payload
-          );
-          console.log("Subscription API response:", response.data);
-
-          sendDeviceUserInfo({
+          await sendDeviceUserInfo({
             action_type: "payment failed",
             action_description: `User payment failed for Flox10K plan`,
           });
-        } catch (error) {
-          console.error("Error calling subscription API:", error);
+        } catch (err) {
+          console.error("Error sending user action:", err);
+          Alert.alert("Error sending user action:");
         }
-
-        //  sendDeviceUserInfo({
-        //     action_type: USERACTIONS.PAYMENT,
-        //     action_description: `User payment failed for Flox10K plan`,
-        //   });
 
         await AsyncStorage.removeItem('flix10k_payment_status');
       }
@@ -248,7 +288,7 @@ useEffect(() => {
   }, []);
 
   const isSubscriptionId = subscriptionId
-  const handlePress = () => {
+  const handlePress = async () => {
     if (subscriptionExpired) {
       dispatch(setSubscriptionExpired(true));
       router.push({
@@ -261,8 +301,12 @@ useEffect(() => {
     if (subscriptionActive && isSubscriptionId) {
       setSelecting(true);
       setFlix10kSelectionMode(true);
+      await AsyncStorage.setItem("flixAdSeen", "true");
+      console.log('flixAdSeen set to true');
     } else {
       setShowModal(true);
+      await AsyncStorage.setItem("flixAdSeen", "false");
+      console.log('flixAdSeen set to false');
     }
   };
 
@@ -286,16 +330,16 @@ useEffect(() => {
     if (type === "success") {
       setShowPaymentSuccess(false);
       await AsyncStorage.removeItem("flix10k_payment_status");
-       await AsyncStorage.removeItem('flix10kPaymentForAdd');
-       //dispatch(setPaymentStatusAdd(false))
-       setShowafterAdd(false);
+      await AsyncStorage.removeItem('flix10kPaymentForAdd');
+      //dispatch(setPaymentStatusAdd(false))
+      setShowafterAdd(false);
       handleRestart();
     } else if (type === "failure") {
       setShowPaymentFailure(false);
       await AsyncStorage.removeItem("flix10k_payment_status");
-       await AsyncStorage.removeItem('flix10kPaymentForAdd');
-       //dispatch(setPaymentStatusAdd(false))
-       setShowafterAdd(false);
+      await AsyncStorage.removeItem('flix10kPaymentForAdd');
+      //dispatch(setPaymentStatusAdd(false))
+      setShowafterAdd(false);
     }
   };
 
@@ -368,7 +412,7 @@ useEffect(() => {
     setIsGenerating(true);
 
     const updatedItems = [];
-     const failedItems = [];
+    const failedItems = [];
 
     try {
       for (const item of selectedItemsForAi) {
@@ -397,21 +441,21 @@ useEffect(() => {
           //   action_description: `Flox10K generate predictiveimage for ${item}`,
           // });
           if (response?.output_path) {
-          const newItem = { ...item, flix10kAiImages: response };
-          updatedItems.push(newItem);
+            const newItem = { ...item, flix10kAiImages: response };
+            updatedItems.push(newItem);
 
-          sendDeviceUserInfo({
-            action_type: USERACTIONS.FLIX10KBABYPREDICTIVEIMAGE,
-            action_description: `Flix10K generate predictive image for ${item}`,
-          });
-        } else {
-          // 🚨 no output_path → add to failedItems
-          failedItems.push(item.title);
-        }
+            sendDeviceUserInfo({
+              action_type: USERACTIONS.FLIX10KBABYPREDICTIVEIMAGE,
+              action_description: `Flix10K generate predictive image for ${item}`,
+            });
+          } else {
+            // 🚨 no output_path → add to failedItems
+            failedItems.push(item.title);
+          }
 
         } catch (err) {
           console.error("❌ Error generating item", item.id, err);
-           failedItems.push(item.object_name || item.id);
+          failedItems.push(item.object_name || item.id);
         }
       }
 
@@ -419,18 +463,18 @@ useEffect(() => {
         setFlix10kAiImages(prev => [...updatedItems, ...(prev || [])]);
       }
 
-       if (failedItems.length > 0) {
-      const msg =
-        failedItems.length === 1
-          ? `Image with image name "${failedItems[0]}" is already generated. Please try another.`
-          : `Images with image names "${failedItems.join(
+      if (failedItems.length > 0) {
+        const msg =
+          failedItems.length === 1
+            ? `Image with image name "${failedItems[0]}" is already generated. Please try another.`
+            : `Images with image names "${failedItems.join(
               ", "
             )}" are already generated. Please try another.`;
-      //showSnackbar(errorMessage, "error"); // assuming you have a snackbar util
-      setSnackbarVisible(true);
-      setSnackbarMessage(msg);
-      setSnackbarType("error")
-    }
+        //showSnackbar(errorMessage, "error"); // assuming you have a snackbar util
+        setSnackbarVisible(true);
+        setSnackbarMessage(msg);
+        setSnackbarType("error")
+      }
 
       console.log("🎉 All items processed:", updatedItems);
       cancelFlix10KPress();
@@ -494,26 +538,89 @@ useEffect(() => {
 
       await WebBrowser.dismissBrowser();
 
-       if (result?.type === 'success') {
-      console.log("Payment success");
-      setShowModal(false);
-    } else if (result?.type === 'cancel') {
-      console.log("Payment canceled or failed");
-      setShowModal(false);
-    }
+      if (result?.type === 'success') {
+        console.log("Payment success");
+        setShowModal(false);
+      } else if (result?.type === 'cancel') {
+        console.log("Payment canceled or failed");
+        setShowModal(false);
+      }
 
       await AsyncStorage.removeItem('flix10kPaymentForAdd');
-       setShowafterAdd(false);
-       setShowModal(false);
+      setShowafterAdd(false);
+      setShowModal(false);
     } catch (error) {
       console.error("Subscription error:", error.response?.data || error.message);
     }
   };
-console.log("showAfterAdd",showAfterAdd)
+
+  //   const subscriptionSkus = Platform.select({
+  //   ios: [
+  //     'com.babyflix.flix10k.monthly',  // 1 month
+  //     'com.babyflix.flix10k.quarterly', // 3 months
+  //     'com.babyflix.flix10k.yearly',    // 12 months
+  //   ],
+  //   android: [
+  //     'com.babyflix.flix10k.monthly',
+  //     'com.babyflix.flix10k.quarterly',
+  //     'com.babyflix.flix10k.yearly',
+  //   ],
+  // });
+
+  // /**
+  //  * Handle subscription purchase
+  //  * @param {string} sku - subscription SKU for chosen duration
+  //  * @param {boolean} autoRenew - user choice for auto-renewal
+  //  */
+  // export const handleSubscribe = async (sku, autoRenew) => {
+  //   try {
+  //     await RNIap.initConnection();
+
+  //     const products = await RNIap.getSubscriptions(subscriptionSkus);
+  //     console.log('Available subscriptions:', products);
+
+  //     // Request subscription
+  //     const purchase = await RNIap.requestSubscription(
+  //       sku,
+  //       false,       // iOS: default behavior, cannot disable programmatically
+  //       autoRenew    // Android: enable/disable auto-renew
+  //     );
+
+  //     console.log("Purchase successful:", purchase);
+
+  //     // Save locally
+  //     await AsyncStorage.setItem('flix10KPaying', 'true');
+  //     await AsyncStorage.setItem('flix10KAutoRenew', autoRenew ? 'true' : 'false');
+  //     await AsyncStorage.setItem('flix10KSku', sku);
+
+  //     // Send to backend for validation
+  //     await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/validate`, {
+  //       platform: Platform.OS,
+  //       sku,
+  //       purchaseToken: purchase.purchaseToken,       // Android
+  //       transactionReceipt: purchase.transactionReceipt, // iOS
+  //       autoRenew,
+  //     });
+
+  //     // iOS auto-renew: cannot disable programmatically
+  //     if (Platform.OS === 'ios' && !autoRenew) {
+  //       // Show modal or link for user to disable in App Store
+  //       //Linking.openURL('itms-apps://apps.apple.com/account/subscriptions');
+  //       setShowAutoRenewModal(true);
+  //     }
+
+  //   } catch (err) {
+  //     console.error("Subscription error:", err);
+  //   } finally {
+  //     await RNIap.endConnection();
+  //   }
+  // };
+
+  console.log("showAfterAdd", showAfterAdd)
   return (
     <View style={styles.container}>
 
-      { !showAfterAdd && <FlixAdModal
+      {!showAfterAdd && <FlixAdModal
         paymentSuccess={subscriptionAmount == "" || null}
         handleSubscribe={handleSubscribe} // from parent
         //months={months}
@@ -658,8 +765,8 @@ console.log("showAfterAdd",showAfterAdd)
                     )
                   } */}
 
-                  { user?.firstTimeSubscription && user?.showFlixAd && 
-                      <Text style={styles.offer}>🎉 {t("flix10k.offerApplied")}</Text>
+                  {user?.firstTimeSubscription && user?.showFlixAd &&
+                    <Text style={styles.offer}>🎉 {t("flix10k.offerApplied")}</Text>
                   }
 
                   <TouchableOpacity
@@ -753,14 +860,14 @@ console.log("showAfterAdd",showAfterAdd)
           <View style={[styles.modalContainerStatus, { borderColor: "green" }]}>
             <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>{t('storage.paymentSuccess')}</Text>
             {subscriptionAmount !== "" && subscriptionAmount !== null && subscriptionIsActive ? (
-                <Text style={styles.subtitle}>
-                  {t("flix10k.upgradeSuccess")}
-                </Text>
-              ) : (
-                <Text style={styles.subtitle}>
-                  {t("flix10k.subscriptionSuccess")}
-                </Text>
-              )}
+              <Text style={styles.subtitle}>
+                {t("flix10k.upgradeSuccess")}
+              </Text>
+            ) : (
+              <Text style={styles.subtitle}>
+                {t("flix10k.subscriptionSuccess")}
+              </Text>
+            )}
 
             <TouchableOpacity
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
@@ -858,7 +965,8 @@ console.log("showAfterAdd",showAfterAdd)
         </View>
       </Modal>
 
-       <AIGenerationModal visible={isGenerating} />
+      <AIGenerationModal visible={isGenerating} />
+      {/* <DisableAutoRenewModal visible={showAutoRenewModal} onClose={() => setShowAutoRenewModal(false)} /> */}
     </View>
   );
 };
@@ -1085,7 +1193,7 @@ const styles = StyleSheet.create({
     color: "#d63384",
     marginBottom: 16,
   },
-   offer: {
+  offer: {
     fontFamily: "Nunito400",
     fontSize: 12,
     //fontWeight: "bold",

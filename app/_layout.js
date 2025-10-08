@@ -35,6 +35,7 @@ import "../src/constants/i18n";
 import { setDeepLinkHandled } from '../src/state/slices/storageUISlice';
 import * as Notifications from 'expo-notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import sendDeviceUserInfo, { USERACTIONS } from '../src/components/deviceInfo';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
@@ -89,6 +90,11 @@ useEffect(() => {
   const requestPermissions = async () => {
     if (isAuthenticated) {
       const granted = await requestMediaLibraryPermission();
+       console.log("enter in layout.js 2" )
+       sendDeviceUserInfo({
+          action_type: USERACTIONS.LOGINDESC,
+          action_description: USERACTIONS.LOGINDESC,
+        });
     }
   };
   requestPermissions();
@@ -107,6 +113,7 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
+  console.log("enter in layout.js")
   const subscription = Notifications.addNotificationResponseReceivedListener(response => {
     const { data } = response.notification.request.content;
 

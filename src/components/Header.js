@@ -23,7 +23,7 @@ import LanguageModal from '../constants/LanguageModal';
 import { useTranslation } from 'react-i18next';
 import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 import 'moment/locale/es';
-import { setSubscriptionExpired } from '../state/slices/subscriptionSlice';
+import { setPlans, setStorageTab, setSubscriptionExpired } from '../state/slices/subscriptionSlice';
 
 const NOTIFICATIONS_KEY = 'APP_NOTIFICATIONS';
 
@@ -38,7 +38,7 @@ export const saveNotificationsToStorage = async (notifications) => {
 
 const Header = ({ title, showMenu = true, showProfile = true }) => {
   const [isPlanModalVisible, setPlanModalVisible] = useState(false);
-  const [plans, setPlans] = useState([]);
+  const [plans, setPlan] = useState([]);
   const [currentPlan, setCurrentPlan] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -71,6 +71,14 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   );
   const subscriptionActive = subscriptionIsActive
 
+  const storagePlanPrice = useSelector((state) => state.auth.storagePlanPrice);
+    const storagePlanDate = useSelector((state) => state.auth.storagePlan?.planDate);
+    const storagePlanName = useSelector((state) => state.auth.storagePlanName);
+    const storagePlanId = useSelector((state) => state.auth.storagePlanId);
+    const storagePlanExpired = useSelector((state) => state.auth.storagePlanExpired);
+    const storagePlanRemainingDays = useSelector((state) => state.auth.storagePlanRemainingDays);
+    const storagePlanDescription = useSelector((state) => state.auth.storagePlanDescription);
+
   const {
     notifications,
     unreadCount,
@@ -84,7 +92,8 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/getAllPlans`);
       const json = await response.json();
       if (json.actionStatus === 'success') {
-        setPlans(json.data);
+        setPlan(json.data);
+         dispatch(setPlans(json.data));
       } else {
         console.warn('Failed to fetch plans');
       }
@@ -100,20 +109,24 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   //const remainingDay = 3;
 
   useEffect(() => {
+
+    if (!storagePlanId || !storagePlanDate) return;
+    
     if (
-      remainingDays != null &&
-      remainingDays !== '' &&
-      (remainingDays <= 3 || remainingDays === 12)
+      storagePlanRemainingDays != null &&
+      storagePlanRemainingDays !== '' &&
+      (storagePlanRemainingDays <= 3 || storagePlanRemainingDays === 12)
     ) {
+      console.log('Storage plan remaining days:', storagePlanRemainingDays);
       const date = new Date().toLocaleString();
       let message = '';
-      if (remainingDays > 1) {
-        message = t('header.planExpiresDays', { count: remainingDays });
-      } else if (remainingDays === 1) {
+      if (storagePlanRemainingDays > 1) {
+        message = t('header.planExpiresDays', { count: storagePlanRemainingDays });
+      } else if (storagePlanRemainingDays === 1) {
         message = t('header.planExpiresTomorrow');
-      } else if (remainingDays === 0) {
+      } else if (storagePlanRemainingDays === 0 && !storagePlanExpired) {
         message = t('header.planExpiresToday');
-      } else if (remainingDays < 0) {
+      } else if (storagePlanExpired) {
         message = t('header.planExpired');
       }
 
@@ -129,7 +142,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       addNotification(newNotification);
 
     }
-  }, [remainingDays]);
+  }, [storagePlanRemainingDays, storagePlanExpired]);
 
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(async () => {
@@ -149,11 +162,11 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   useEffect(() => {
     if (plans.length > 0) {
       const planToShow = plans.find(
-        (plan) => plan.id === storagePlan.storagePlanId
+        (plan) => plan.id === storagePlanId
       );
       setCurrentPlan(planToShow);
     }
-  }, [plans, storagePlan.storagePlanId]);
+  }, [plans, storagePlanId]);
 
   const handleLogout = async () => {
     try {
@@ -335,13 +348,13 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         setTranslatedUserName(translated);
       }
 
-      if (currentPlan?.name) {
-        const translatedPlan = await useDynamicTranslate(currentPlan.name);
+      if (storagePlanName) {
+        const translatedPlan = await useDynamicTranslate(storagePlanName);
         setTranslatedCurrentPlan(translatedPlan);
       }
 
-      if (currentPlan?.description) {
-        const translatedDescription = await useDynamicTranslate(currentPlan.description);
+      if (storagePlanDescription) {
+        const translatedDescription = await useDynamicTranslate(storagePlanDescription);
         setTranslatedDescription(translatedDescription);
       }
     };
@@ -461,6 +474,23 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
               </TouchableOpacity>
 
+              {(storagePlan?.storagePlanId === 1 || storagePlan?.storagePlanId === 2) && (
+                <TouchableOpacity
+                  style={[styles.dropdownItem]}
+                  onPress={() => {
+                    closeDropdownHandler();
+                    dispatch(setStorageTab(true));
+                    navigation.navigate('profile', {
+                      screen: 'ProfileSettings',
+                      params: { initialTab: 'Storage' },
+                    });
+                  }}
+                >
+                  <Ionicons name="card-outline" size={20} style={styles.icon} />
+                  <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>{t('profileSettings.storageTab')}</Text>
+                </TouchableOpacity>
+              )}
+
               {(subscriptionActive && subscriptionId) && (
                 <TouchableOpacity
                   style={[styles.dropdownItem]}
@@ -548,11 +578,11 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 <Text style={styles.planSubtitle}>
                   ${currentPlan.price_per_month} / {t('header.year')} • {currentPlan.storage_limit_gb} {t('header.gb')}
                 </Text>
-                {isPlanExpired && <Text style={[styles.expiryTitle]}>{t('header.expired')}</Text>}
-                {showUpgradeReminder && <Text style={[styles.expiryTitle]}>{t('header.expiringIn')} {remainingDays} {t('header.days')}</Text>}
-                {storagePlan.storagePlanPrice == "0.00" && !isPlanExpired && !showUpgradeReminder && (
+                {storagePlanExpired && <Text style={[styles.expiryTitle]}>{t('header.expired')}</Text>}
+                {storagePlanRemainingDays <= 3 && !storagePlanExpired && <Text style={[styles.expiryTitle]}>{t('header.expiringIn')} {storagePlanRemainingDays} {t('header.days')}</Text>}
+                {storagePlanPrice && !storagePlanExpired && storagePlanRemainingDays > 3 && (
                   <Text style={[styles.expiryTitle, { color: "#e96b04", fontSize: 14 }]}>
-                    {t('header.expiringIn')} {remainingDays} {t('header.days')}
+                    {t('header.expiringIn')} {storagePlanRemainingDays} {t('header.days')}
                   </Text>
                 )}
 
@@ -565,7 +595,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 </View>
 
                 <View style={styles.actionRow}>
-                  {remainingDays >= 0 && (
+                  {!(storagePlanExpired && storagePlanPrice == "0.00") && (
                     <TouchableOpacity style={styles.actionButton} onPress={handleChangeClick}>
                       <Ionicons name="pencil" size={16} color="blue" />
                       <Text style={[styles.actionText, { color: 'blue' }]}>{t('header.change')}</Text>

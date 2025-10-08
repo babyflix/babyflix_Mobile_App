@@ -73,9 +73,9 @@ const AppUpdateModal = ({ serverUrl }) => {
             <ActivityIndicator size="large" color={Colors.primary} />
           ) : (
             <View style={styles.buttons}>
-              {!forceUpdate && (
+              {forceUpdate && (
                 <TouchableOpacity
-                  style={[styles.button, styles.skip]}
+                  style={[styles.button, styles.skip, !forceUpdate && {flex: 1}]}
                   onPress={async () => {
                     const today = moment().format('YYYY-MM-DD');
                     await AsyncStorage.setItem('skippedUpdateDate', today);
@@ -96,6 +96,7 @@ const AppUpdateModal = ({ serverUrl }) => {
                     if (!forceUpdate) setVisible(false);
                   }, 2000);
                 }}
+                //style={!forceUpdate &&{ flex: 1, borderRadius: 12, marginHorizontal: 80 }}
               >
                 <LinearGradient
                   colors={["#d63384", "#9b2c6f"]}
@@ -105,12 +106,13 @@ const AppUpdateModal = ({ serverUrl }) => {
                     styles.button,
                     styles.update,
                     {
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
                       paddingVertical: 12,
                       paddingHorizontal: 25,
-                    },
+                      borderRadius: 12,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      //minWidth: 100,
+                    }, !forceUpdate && {flex: 1}
                   ]}
                 >
                   <Text style={[styles.buttonText, { color: "#fff" }]}>
@@ -172,7 +174,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   button: {
-    flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
     marginHorizontal: 6,
@@ -186,7 +187,9 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: Colors.white,
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Nunito700',
+    zIndex: 1,
+    textAlign: "center",
   },
 });

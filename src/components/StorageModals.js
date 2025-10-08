@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import sendDeviceUserInfo, { USERACTIONS } from './deviceInfo';
 import { setShowFlix10KADSlice } from '../state/slices/subscriptionSlice';
+import * as Updates from "expo-updates";
 
 let modalShown = false;
 let paymentFail = false;
@@ -24,6 +25,7 @@ let expiredPayment = false;
 
 const StorageModals = ({ onClose, storageModalKey }) => {
   const isPlanExpired = useSelector((state) => state.expiredPlan.isPlanExpired);
+  console.log("StorageModals rendered with isPlanExpired:", isPlanExpired);
   const [showStorage1, setShowStorage1] = useState(false);
   const [showStorage2, setShowStorage2] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(isPlanExpired ? 3 : 2);
@@ -58,6 +60,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const json = await response.json();
       if (json.actionStatus === 'success') {
         const plan = json.data;
+        console.log('Fetched plans:', plan);
         const translatedPlans = await Promise.all(
           plan.map(async (plan) => ({
             ...plan,
@@ -76,7 +79,34 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
   useEffect(() => {
     fetchPlans();
+    //  const [
+    //           userId,
+    //           storagePlanId,
+    //           storagePlanPayment,
+    //           autoRenewal,
+    //           months,
+    //           session_id,
+    //         ] = await Promise.all([
+    //           AsyncStorage.getItem('userUUID'),
+    //           AsyncStorage.getItem('planId'),
+    //           AsyncStorage.getItem('storagePlanPayment'), // optional if stored earlier
+    //           AsyncStorage.getItem('autoRenewal'),
+    //           AsyncStorage.getItem('months'),
+    //           AsyncStorage.getItem('session_id'),
+    //         ]);
+
+    //         console.log('[StorageModals] Retrieved from AsyncStorage:', { userId,
+    //           storagePlanId,
+    //           storagePlanPayment,
+    //           autoRenewal,
+    //           months,
+    //           session_id,})
   }, []);
+
+   const handleRestart = async () => {
+      try { await Updates.reloadAsync(); } 
+      catch (e) { console.error("Failed to reload app:", e); }
+    };
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -240,14 +270,38 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           const planIdToUse = storedPlanId ? parseInt(storedPlanId) : null;
 
           try {
+             const [
+              userId,
+              storagePlanId,
+              storagePlanPayment,
+              autoRenewal,
+              months,
+              session_id,
+            ] = await Promise.all([
+              AsyncStorage.getItem('userUUID'),
+              AsyncStorage.getItem('planId'),
+              AsyncStorage.getItem('storagePlanPayment'), // optional if stored earlier
+              AsyncStorage.getItem('autoRenewal'),
+              AsyncStorage.getItem('months'),
+              AsyncStorage.getItem('session_id'),
+            ]);
+
+            // ✅ Prepare clean payload
+            const payload = {
+              userId : userId || user.uuid,
+              storagePlanId,
+              storagePlanPayment: 1,
+              autoRenewal,
+              months,
+              session_id,
+              status: 'SUCCESS',
+            };
+
+            console.log('[StorageModals] Updating plan with payload:', payload);
             await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: user.uuid,
-                storagePlanId: planIdToUse,
-                storagePlanPayment: 1,
-              }),
+              body: JSON.stringify(payload),
             });
             //console.log('[StorageModals] Plan updated successfully');
             setShowStorage1(false);
@@ -268,12 +322,22 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             dispatch(setUpgradeReminder(false));
           } catch (e) {
             //console.log('[StorageModals] Error updating plan:', e);
-          }
+          } finally {
+            //✅ Remove used AsyncStorage keys
+            await AsyncStorage.multiRemove([
+              'userUUID',
+              'planId',
+              'storagePlanPayment',
+              'autoRenewal',
+              'months',
+              'session_id',
+            ]);
 
-          await AsyncStorage.removeItem('payment_status');
-          await AsyncStorage.setItem('storage_modal_triggered', 'false');
-          triggeredRef.current = false;
-          setShowStorage1(false);
+                  await AsyncStorage.removeItem('payment_status');
+                  await AsyncStorage.setItem('storage_modal_triggered', 'false');
+                  triggeredRef.current = false;
+                  setShowStorage1(false);
+          }
         } else if (storageModalKey) {
           //console.log('[StorageModals] Showing storage2 due to storageModalKey in final check');
           setShowStorage2(true);
@@ -631,6 +695,9 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 //await AsyncStorage.removeItem('payment_handled');
                 handledRef.current = false;
                 await getStoragePlanDetails(user.email, dispatch);
+                setTimeout(() => {
+                  handleRestart();
+                }, 1000);
               }}
             >
               <Text style={styles.filledText}>{t('storage.okGotIt')}</Text>

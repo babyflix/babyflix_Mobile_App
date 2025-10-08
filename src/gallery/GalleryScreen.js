@@ -112,6 +112,15 @@ const GalleryScreen = () => {
    const showFlix10KAd = useSelector((state) => state.subscription.showFlix10KAd);
    const paymentStatusAdd = useSelector((state) => state.subscription.paymentStatusAdd);
 
+  const storagePlanPrice = useSelector((state) => state.auth.storagePlanPrice);
+  const storagePlanDate = useSelector((state) => state.auth.storagePlan?.planDate);
+  const storagePlanName = useSelector((state) => state.auth.storagePlanName);
+  const storagePlanId = useSelector((state) => state.auth.storagePlanId);
+  const storagePlanExpired = useSelector((state) => state.auth.storagePlanExpired);
+  const storagePlanRemainingDays = useSelector((state) => state.auth.storagePlanRemainingDays);
+
+  console.log("storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays",{storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays})
+
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
   const triggeredRef = useRef(false);
@@ -246,20 +255,192 @@ const GalleryScreen = () => {
     fetchMediaData();
   }, [flix10kSelectionMode]);
 
-  const fetchMediaData = async () => {
+  // const fetchMediaData = async () => {
+  //   setIsLoading(true);
+
+  //   try {
+  //     if (!user.email) return;
+
+  //     const res = await axios.get(
+  //       EXPO_PUBLIC_API_URL + `/api/patients/getPatientByEmail?email=${user.email}`,
+  //       { headers: { 'Content-Type': 'application/json' } }
+  //     );
+
+  //     if (res.status === 200) {
+  //       const data1 = res.data;
+  //       const { storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId } = data1;
+
+  //       if (storagePlanId == null) {
+  //         setDisableMenuAndSelection(true);
+  //       } else {
+  //         setDisableMenuAndSelection(false);
+  //       }
+
+  //       if (storagePlanPrice === '0.00' && storagePlanDate) {
+  //         const planStartDate = moment(storagePlanDate, 'MM-DD-YYYY HH:mm:ss', true);
+  //         const today = moment();
+  //         const daysSince = today.diff(planStartDate, 'days');
+
+  //         const translatedPlanName = await useDynamicTranslate(`${storagePlanName}`);
+
+  //         if (daysSince >= 31) {
+  //           const remainingDays = 30 - daysSince;
+  //           dispatch(setRemainingDays(remainingDays));
+  //           dispatch(setPlanExpired(true));
+  //           setMediaData({ images: [], videos: [], babyProfile: [], predictiveBabyImages: [] });
+  //           setShowUpgradeReminderModal(false);
+  //           if(!expiredModalShown){
+  //             console.log("showing model of expiry")
+  //           setTimeout(() => {
+  //             setShowPlanExpiredModal(true);
+  //           }, 200);
+  //           expiredModalShown = true;
+  //         }
+  //           setExpiredPlanName(translatedPlanName);
+  //           setIsLoading(false);
+  //           setBannerMessage(
+  //             t('gallery.plan.expired', { plan: translatedPlanName })
+  //           );
+  //           return;
+  //         }
+
+  //         if (daysSince === 18) {
+  //           const remainingDays = 30 - daysSince;
+  //           dispatch(setRemainingDays(remainingDays));
+
+  //           const message = t('gallery.plan.expiring', {
+  //             plan: translatedPlanName,
+  //             days: remainingDays,
+  //             plural: remainingDays > 1 ? 's' : ''
+  //           });
+  //           setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
+  //           setBannerMessage(message);
+
+  //         } else if (daysSince >= 28 && daysSince < 30) {
+  //           const remainingDays = 30 - daysSince;
+  //           dispatch(setUpgradeReminder(true));
+  //           dispatch(setRemainingDays(remainingDays));
+
+  //           const message = t('gallery.plan.expiring', {
+  //             plan: translatedPlanName,
+  //             days: remainingDays,
+  //             plural: remainingDays > 1 ? 's' : ''
+  //           });
+  //           setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
+  //           setBannerMessage(message);
+  //           if (!upgradeModalShown){
+  //           setShowUpgradeReminderModal(true);
+  //           upgradeModalShown = true;
+  //           }
+
+  //         } else if (daysSince === 30) {
+  //           const remainingDays = 30 - daysSince;
+  //           const message = t('gallery.plan.expiring', {
+  //             plan: translatedPlanName,
+  //             days: remainingDays == 0 ? 'today' : remainingDays,
+  //             plural: remainingDays > 1 ? 's' : ''
+  //           });
+  //           setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
+  //           if (!upgradeModalShown){
+  //           setShowUpgradeReminderModal(true);
+  //           upgradeModalShown = true;
+  //           }
+  //           setBannerMessage(t('gallery.plan.expiresToday', { plan: translatedPlanName }));
+  //           dispatch(setRemainingDays(0));
+
+  //         } else if (daysSince > 30) {
+  //           setBannerMessage(t('gallery.plan.expiredAlready', { plan: translatedPlanName }));
+  //           dispatch(setRemainingDays(-1));
+  //         } else {
+  //           const remainingDays = 30 - daysSince;
+  //           dispatch(setRemainingDays(remainingDays));
+  //         }
+  //       }
+
+  //       try {
+  //         const response = await axios.get(
+  //           EXPO_PUBLIC_CLOUD_API_URL + `/get-images/?machine_id=${user.machineId}&user_id=${user.uuid}&email=${user.email}`,
+  //           { headers: { 'Content-Type': 'application/json' } }
+  //         );
+
+  //         const galleryItems = response.data;
+
+  //         setFlix10kAiImages((prev) => {
+  //           if (!prev || prev.length === 0) {
+  //             return prev;
+  //           }
+
+  //           return prev.filter((flix10kAiImages) => {
+  //             if (!flix10kAiImages?.flix10kAiImages?.output_path?.gcs_url) return true;
+
+  //             const aiFileName = flix10kAiImages.flix10kAiImages.output_path.gcs_url
+  //               .split("/")
+  //               .pop();
+
+  //             const isDuplicate = galleryItems.some((galleryItem) => {
+  //               if (!galleryItem?.object_url) return false;
+
+  //               const galleryFileName = galleryItem.object_url.split("/").pop();
+
+  //               return (
+  //                 galleryItem.object_type === "predictiveBabyImage" &&
+  //                 galleryFileName === aiFileName
+  //               );
+  //             });
+
+  //             return !isDuplicate;
+  //           });
+  //         });
+
+
+  //         if (response.status === 200) {
+  //           const images = [], videos = [], babyProfile = [], predictiveBabyImages = [];
+  //           response.data.forEach(item => {
+  //             if (item.object_type === 'image') images.push(item);
+  //             else if (item.object_type === 'video') videos.push(item);
+  //             else if (item.object_type === 'babyProfile') babyProfile.push(item);
+  //             else if (item.object_type === 'predictiveBabyImage') predictiveBabyImages.push(item);
+  //           });
+  //           setMediaData({ images, videos, babyProfile, predictiveBabyImages });
+  //         }
+
+  //         dispatch(setPlanExpired(false));
+  //       } catch (error) {
+  //         await logError({
+  //           error,
+  //           data: error.response,
+  //           details: "Error in get-images API call on GalleryScreen"
+  //         });
+  //       } finally {
+  //         setIsLoading(false);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     await logError({
+  //       error,
+  //       data: error.response,
+  //       details: "Error in getPatientByEmail catch block"
+  //     });
+  //     setIsLoading(false);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+    const fetchMediaData = async () => {
     setIsLoading(true);
 
     try {
       if (!user.email) return;
 
-      const res = await axios.get(
-        EXPO_PUBLIC_API_URL + `/api/patients/getPatientByEmail?email=${user.email}`,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      // const res = await axios.get(
+      //   EXPO_PUBLIC_API_URL + `/api/patients/getPatientByEmail?email=${user.email}`,
+      //   { headers: { 'Content-Type': 'application/json' } }
+      // );
 
-      if (res.status === 200) {
-        const data1 = res.data;
-        const { storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId } = data1;
+      // if (res.status === 200) {
+      //   const data1 = res.data;
+      //   const { storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId } = data1;
 
         if (storagePlanId == null) {
           setDisableMenuAndSelection(true);
@@ -267,16 +448,19 @@ const GalleryScreen = () => {
           setDisableMenuAndSelection(false);
         }
 
+        const translatedPlanName = await useDynamicTranslate(`${storagePlanName}`);
+
         if (storagePlanPrice === '0.00' && storagePlanDate) {
-          const planStartDate = moment(storagePlanDate, 'MM-DD-YYYY HH:mm:ss', true);
-          const today = moment();
-          const daysSince = today.diff(planStartDate, 'days');
+          //const planStartDate = moment(storagePlanDate, 'MM-DD-YYYY HH:mm:ss', true);
+          //const today = moment();
+          //const daysSince = today.diff(planStartDate, 'days');
 
-          const translatedPlanName = await useDynamicTranslate(`${storagePlanName}`);
+          console.log("storagePlanExpired",storagePlanExpired)
 
-          if (daysSince >= 31) {
-            const remainingDays = 30 - daysSince;
-            dispatch(setRemainingDays(remainingDays));
+          if (storagePlanExpired) {
+            //const remainingDays = 30 - daysSince;
+            //dispatch(setRemainingDays(remainingDays));
+            console.log("showing model of expiry")
             dispatch(setPlanExpired(true));
             setMediaData({ images: [], videos: [], babyProfile: [], predictiveBabyImages: [] });
             setShowUpgradeReminderModal(false);
@@ -295,27 +479,27 @@ const GalleryScreen = () => {
             return;
           }
 
-          if (daysSince === 18) {
-            const remainingDays = 30 - daysSince;
-            dispatch(setRemainingDays(remainingDays));
+          if (storagePlanRemainingDays === 12) {
+            //const remainingDays = 30 - daysSince;
+            //dispatch(setRemainingDays(remainingDays));
 
             const message = t('gallery.plan.expiring', {
               plan: translatedPlanName,
-              days: remainingDays,
-              plural: remainingDays > 1 ? 's' : ''
+              days: storagePlanRemainingDays,
+              plural: storagePlanRemainingDays > 1 ? 's' : ''
             });
             setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
             setBannerMessage(message);
 
-          } else if (daysSince >= 28 && daysSince < 30) {
-            const remainingDays = 30 - daysSince;
+          } else if (storagePlanRemainingDays > 0 && storagePlanRemainingDays <= 3) {
+            //const remainingDays = 30 - daysSince;
             dispatch(setUpgradeReminder(true));
-            dispatch(setRemainingDays(remainingDays));
+            //dispatch(setRemainingDays(remainingDays));
 
             const message = t('gallery.plan.expiring', {
               plan: translatedPlanName,
-              days: remainingDays,
-              plural: remainingDays > 1 ? 's' : ''
+              days: storagePlanRemainingDays,
+              plural: storagePlanRemainingDays > 1 ? 's' : ''
             });
             setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
             setBannerMessage(message);
@@ -324,12 +508,12 @@ const GalleryScreen = () => {
             upgradeModalShown = true;
             }
 
-          } else if (daysSince === 30) {
-            const remainingDays = 30 - daysSince;
+          } else if (storagePlanRemainingDays === 0 && !storagePlanExpired) {
+            //const remainingDays = 30 - daysSince;
             const message = t('gallery.plan.expiring', {
               plan: translatedPlanName,
-              days: remainingDays == 0 ? 'today' : remainingDays,
-              plural: remainingDays > 1 ? 's' : ''
+              days: storagePlanRemainingDays == 0 ? 'today' : storagePlanRemainingDays,
+              plural: storagePlanRemainingDays > 1 ? 's' : ''
             });
             setUpgradeReminderMessage(`${message} ${t('gallery.plan.afterMessage')}`);
             if (!upgradeModalShown){
@@ -337,15 +521,22 @@ const GalleryScreen = () => {
             upgradeModalShown = true;
             }
             setBannerMessage(t('gallery.plan.expiresToday', { plan: translatedPlanName }));
-            dispatch(setRemainingDays(0));
+            //dispatch(setRemainingDays(0));
 
-          } else if (daysSince > 30) {
+          } else if (storagePlanExpired) {
             setBannerMessage(t('gallery.plan.expiredAlready', { plan: translatedPlanName }));
-            dispatch(setRemainingDays(-1));
-          } else {
-            const remainingDays = 30 - daysSince;
-            dispatch(setRemainingDays(remainingDays));
-          }
+            //dispatch(setRemainingDays(-1));
+          } 
+          // else {
+          //   const remainingDays = 30 - daysSince;
+          //   dispatch(setRemainingDays(remainingDays));
+          // }
+        }
+
+        if (storagePlanPrice > '0.00' && storagePlanExpired) {
+           setBannerMessage(
+              t('gallery.plan.expired', { plan: translatedPlanName })
+            );
         }
 
         try {
@@ -397,21 +588,21 @@ const GalleryScreen = () => {
 
           dispatch(setPlanExpired(false));
         } catch (error) {
-          await logError({
-            error,
-            data: error.response,
-            details: "Error in get-images API call on GalleryScreen"
-          });
+          // await logError({
+          //   error,
+          //   data: error.response,
+          //   details: "Error in get-images API call on GalleryScreen"
+          // });
         } finally {
           setIsLoading(false);
         }
-      }
+      //}
     } catch (error) {
-      await logError({
-        error,
-        data: error.response,
-        details: "Error in getPatientByEmail catch block"
-      });
+      // await logError({
+      //   error,
+      //   data: error.response,
+      //   details: "Error in getPatientByEmail catch block"
+      // });
       setIsLoading(false);
     } finally {
       setIsLoading(false);
@@ -687,6 +878,9 @@ const GalleryScreen = () => {
       <PlanBanner
         message={bannerMessage}
         onClose={() => setBannerMessage('')}
+        onUpgrade={handleChooseClick}
+        storagePlanPrice={storagePlanPrice}
+        storagePlanExpired={storagePlanExpired}
       />
 
       <MediaPreviewModal
@@ -750,6 +944,8 @@ const GalleryScreen = () => {
         setProgressValue={setDownloadProgress}
         setDownloadTitle={setDownloadTitle}
         setActiveDownloads={setActiveDownloads}
+        storagePlanPrice={storagePlanPrice}
+        storagePlanExpired={storagePlanExpired}
       />
 
       <ShareItemModal

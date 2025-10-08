@@ -11,7 +11,9 @@ import { useTranslation } from 'react-i18next';
 import ManageSubscriptions from '../screens/ManageSubscriptions.js';
 import CustomSwipeTabs from '../constants/CustomSwipeTabs.js';
 import ProfileTab from './ProfileTab.js';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import StorageTab from './StorageTab.js';
+import { setStorageTab } from '../state/slices/subscriptionSlice.js';
 
 
 const ProfileSettingsScreen = ({ route }) => {
@@ -21,7 +23,13 @@ const ProfileSettingsScreen = ({ route }) => {
     (state) => state.auth
   );
 
+  const dispatch = useDispatch();
+  const storagePlanPrice = useSelector((state) => state.auth.storagePlanPrice);
+  const storagePlanId = useSelector((state) => state.auth.storagePlanId);
+  const storagePlanExpired = useSelector((state) => state.auth.storagePlanExpired);
+
   const expired = useSelector((state) => state.subscription.expired);
+  const storageTab = useSelector((state) => state.subscription.storageTab);
   const subscriptionActive = subscriptionIsActive
   const insets = useSafeAreaInsets();
 
@@ -34,13 +42,15 @@ const ProfileSettingsScreen = ({ route }) => {
   //   }
   // }, [expired, dispatch]);
 
-  //  useFocusEffect(
-  //       useCallback(() => {
-  //         return () => {
-  //           dispatch(setSubscriptionExpired(false));
-  //         }
-  //       }, [])
-  //     );
+ useFocusEffect(
+  useCallback(() => {
+    // Screen focused, do nothing
+    return () => {
+      // Screen blurred/unmount: reset storageTab
+      dispatch(setStorageTab(false));
+    };
+  }, [])
+);
 
   const tabs = [
     { label: t("flix10k.profile"), icon: "person-circle", component: <ProfileTab /> },
@@ -53,6 +63,23 @@ if (subscriptionActive && subscriptionId) {
     component: <ManageSubscriptions />,
   });
 }
+
+if (storagePlanPrice && storagePlanId) {
+tabs.push({
+  label: t("Storage"),
+  icon: "cloud-outline",
+  component: <StorageTab />,
+});
+}
+
+let initialIndex = 0;
+tabs.forEach((tab, index) => {
+  if (storageTab && tab.label === "Storage") initialIndex = index;
+  else if (!storageTab && expired && tab.label.toLowerCase().includes("subscription")) initialIndex = index;
+});
+
+// Add a key to force remount when tab changes
+const swipeTabsKey = storageTab ? "storage-tab" : expired ? "subscription-tab" : "profile-tab";
 
   return (
     <View style={[GlobalStyles.container, Platform.OS === 'android' ? { paddingTop: insets.top } : null]}>
@@ -102,7 +129,7 @@ if (subscriptionActive && subscriptionId) {
         )}
       </Tab.Navigator> */}
 
-      <CustomSwipeTabs  key={expired ? "expired-true" : "expired-false"}  tabs={tabs} initialIndex={expired ? 1 : 0} />
+      <CustomSwipeTabs  key={swipeTabsKey}  tabs={tabs} initialIndex={initialIndex} />
 
     </View>
   );

@@ -24,7 +24,10 @@ export const USERACTIONS = {
   FLIX10: "FLIX10",
   FLIX10KBABYPROFILEIMAGE: "ai baby profile image",
   FLIX10KBABYPROFILEVIDEO: "ai baby profile video",
-  FLIX10KBABYPREDICTIVEIMAGE: "predicitive image",
+  FLIX10KBABYPREDICTIVEIMAGE: "predictive image",
+  FLIX10KKEEP: "predicitive image-keep",
+  FLIX10KREGENERATE: "predicitive image-regenerate",
+  FLIX10KDELETE: "predicitive image-delete",
 };
 
 function detectEnvironment() {

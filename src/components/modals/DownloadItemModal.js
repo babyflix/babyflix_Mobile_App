@@ -30,6 +30,8 @@ const DownloadItemModal = ({
   setProgressValue,
   setDownloadTitle,
   setActiveDownloads,
+  storagePlanPrice,
+  storagePlanExpired,
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -39,7 +41,7 @@ const DownloadItemModal = ({
   const [showConvertingMessage, setShowConvertingMessage] = useState(false);
   const [downloadResumable, setDownloadResumable] = useState(null);
   const [downloadQueue, setDownloadQueue] = useState([]);
-  const { storagePlanId, storagePlanPrice } = useSelector((state) => state.storagePlan || {});
+  const { storagePlanId } = useSelector((state) => state.storagePlan || {});
   const [mediaData, setMediaData] = useState({ convertedTitle: [], convertedType: [] });
 
   const { t } = useTranslation();
@@ -89,7 +91,7 @@ const DownloadItemModal = ({
 
       Notifications.setNotificationHandler({
         handleNotification: async () => ({
-          shouldShowAlert: true,
+          shouldShowList: true,
           shouldPlaySound: true,
           shouldSetBadge: false,
         }),
@@ -102,10 +104,13 @@ const DownloadItemModal = ({
   useEffect(() => {
     if (storagePlanId === 1 && storagePlanPrice === '0.00') {
       setSelectedQuality('sd');
-    } else if (storagePlanId > 1 && storagePlanPrice > '0.00') {
+    } else if (storagePlanId > 1 && storagePlanPrice > '0.00' && !storagePlanExpired) {
       setSelectedQuality('hd');
+    } else if (storagePlanExpired){
+      setSelectedQuality('sd');
     }
   }, [storagePlanId, storagePlanPrice]);
+
 
   //   useEffect(() => {
   //   const loadAndResumeQueue = async () => {
@@ -468,11 +473,11 @@ const DownloadItemModal = ({
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      disabled={storagePlanId === 1 && storagePlanPrice === '0.00'}
+                      disabled={storagePlanId === 1 && storagePlanPrice === '0.00' || storagePlanExpired}
                       onPress={() => setSelectedQuality('hd')}
                       style={{
                         backgroundColor: selectedQuality === 'hd' ? Colors.primary : '#ddd',
-                        opacity: (storagePlanId === 1 && storagePlanPrice === '0.00') ? 5 : 1,
+                        opacity: (storagePlanId === 1 && storagePlanPrice === '0.00' || storagePlanExpired) ? 0.5 : 1,
                         paddingVertical: 12,
                         paddingHorizontal: 24,
                         borderTopRightRadius: 10,
@@ -480,9 +485,20 @@ const DownloadItemModal = ({
                         marginHorizontal: 0,
                       }}
                     >
-                      <Text style={{ color: selectedQuality === 'hd' ? 'white' : 'black' }}>{t('downloadModal.hd')}</Text>
+                      <Text 
+                       style={{ 
+                        color: selectedQuality === 'hd' ? 'white' : 'black', 
+                        opacity: (storagePlanId === 1 && storagePlanPrice === '0.00' || storagePlanExpired) ? 0.5 : 1, 
+                       }}>
+                          {t('downloadModal.hd')}
+                      </Text>
                     </TouchableOpacity>
                   </View>
+                  {storagePlanPrice > '0.00' &&  storagePlanExpired &&(
+                    <Text style={{ color: 'red', fontSize: 13, textAlign: 'center', marginBottom: 10, paddingHorizontal: 10 }}>
+                      {t('downloadModal.hdExpired')}
+                    </Text>
+                  )}
                 </>
               )}
             </>

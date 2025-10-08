@@ -28,6 +28,17 @@ export default function PaymentRedirect() {
       if (statusParam === 'success') {
         await AsyncStorage.setItem('payment_status', 'done');
         await AsyncStorage.setItem('forAdd', 'done');
+
+        console.log('Payment successful with params:', localParams);
+
+      if (localParams?.planId) await AsyncStorage.setItem('planId', String(localParams.planId));
+      if (localParams?.redirectUrl) await AsyncStorage.setItem('redirectUrl', String(localParams.redirectUrl));
+      if (localParams?.userEmail) await AsyncStorage.setItem('userEmail', String(localParams.userEmail));
+      if (localParams?.userUUID) await AsyncStorage.setItem('userUUID', String(localParams.userUUID));
+      if (localParams?.autoRenewal) await AsyncStorage.setItem('autoRenewal', String(localParams.autoRenewal));
+      if (localParams?.months) await AsyncStorage.setItem('months', String(localParams.months));
+      if (localParams?.session_id) await AsyncStorage.setItem('session_id', String(localParams.session_id));
+
       } else {
         await AsyncStorage.setItem('payment_status', 'fail');
         await AsyncStorage.setItem('forAdd', 'fail');
