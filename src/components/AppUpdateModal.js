@@ -73,7 +73,7 @@ const AppUpdateModal = ({ serverUrl }) => {
             <ActivityIndicator size="large" color={Colors.primary} />
           ) : (
             <View style={styles.buttons}>
-              {forceUpdate && (
+              {!forceUpdate && (
                 <TouchableOpacity
                   style={[styles.button, styles.skip, !forceUpdate && {flex: 1}]}
                   onPress={async () => {
