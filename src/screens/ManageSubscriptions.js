@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, Switch, StyleSheet, ScrollView, Modal, Alert, Linking, Platform } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, Switch, StyleSheet, ScrollView, Modal, Alert, Linking, Platform, AppState } from "react-native";
 import { useSelector } from "react-redux";
 import Colors from "../constants/Colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -15,7 +15,9 @@ import sendDeviceUserInfo, { USERACTIONS } from "../components/deviceInfo";
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
-//import * as RNIap from 'react-native-iap';
+import PaymentStatusModal from "../constants/PaymentStatusModal";
+import { handleGooglePlayPayment } from "../constants/PlayBillingHandler";
+import * as RNIap from 'react-native-iap';
 
 const ManageSubscriptions = () => {
   const user = useSelector((state) => state.auth);
@@ -38,6 +40,10 @@ const ManageSubscriptions = () => {
   const [snackbarType, setSnackbarType] = useState('success');
   const [error, setError] = useState('');
   const [showAutoRenewModal, setShowAutoRenewModal] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [showPaymentFailure, setShowPaymentFailure] = useState(false);
+
+  const PLAY_STORE_SUBS_URL = "https://play.google.com/store/account/subscriptions";
 
   useEffect(() => {
     if (subscriptionExpired) {
@@ -45,6 +51,27 @@ const ManageSubscriptions = () => {
       return;
     }
   }, [subscriptionExpired])
+
+   useEffect(() => {
+    const checkAndVerify = async () => {
+      try {
+        const today = new Date();
+        const expiry = new Date(subscription.expiryDate);
+
+        // ✅ Run verification only if subscription is expired or just expired
+        if (today > expiry) {
+          console.log("⏰ Subscription expired, verifying renewal status...");
+          await verifyAutoRenewStatus(user.uuid);
+        } else {
+          console.log("✅ Subscription still active, no verification needed.");
+        }
+      } catch (err) {
+        console.error("Error verifying auto-renewal:", err);
+      }
+    };
+
+    checkAndVerify();
+  }, [subscription.expiryDate, user.uuid]);
 
   const handleUnsubscribe = () => {
     setShowModal(true);
@@ -62,6 +89,16 @@ const ManageSubscriptions = () => {
       console.error("Failed to reload app:", e);
     }
   };
+
+  const handleModalClose = (type) => {
+     //setShowafterAdd(false);
+    if (type === "success") {
+      setShowPaymentSuccess(false);
+    } else {
+      setShowPaymentFailure(false);
+    }
+  };
+
 
   const confirmUnsubscribe = async () => {
     try {
@@ -129,9 +166,146 @@ const ManageSubscriptions = () => {
 
   console.log(`Remaining days: ${remainingDays > 0 ? remainingDays : 0}`);
 
+  const verifyAutoRenewStatus = async (uuid) => {
+  try {
+    await RNIap.initConnection();
+    const purchases = await RNIap.getAvailablePurchases();
+
+    const sub = purchases.find(p => p.productId === "flix10k_subscription");
+    if (!sub) {
+      console.log("No subscription found for user.");
+      return;
+    }
+
+    const newStatus = sub.autoRenewing;
+     const expiryDate = sub.expirationDate ? new Date(sub.expirationDate) : null;
+
+    console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
+
+    // Sync with backend only if changed
+    await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
+      uuid,
+      autoRenewal: newStatus,
+      expiryDate,
+    });
+
+    console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
+
+    await RNIap.endConnection();
+  } catch (err) {
+    console.error("verifyAutoRenewStatus error:", err);
+  }
+};
+
   const handleSubscribe = async () => {
+    const isAutoRenewToggleOnly = subscription?.subscribedMonths === months && subscription?.autoRenewal !== autoRenew;
+
     await AsyncStorage.setItem('flix10KPaying', 'true');
     setUpgradeModal(false);
+    if (Platform.OS === 'android') {
+      console.log('in play billing');
+
+       if (isAutoRenewToggleOnly) {
+    console.log("User only toggled auto-renew — opening Play Store...");
+    await Linking.openURL(PLAY_STORE_SUBS_URL);
+
+    const subscriptionListener = AppState.addEventListener("change", async (state) => {
+      if (state === "active") {
+        console.log("Returned from Play Store — verifying auto-renewal...");
+        await verifyAutoRenewStatus(user.uuid);
+        subscriptionListener.remove();
+      }
+    });
+    return;
+  }
+
+        const currentPurchaseToken = false;
+        
+         const result = await handleGooglePlayPayment({
+          months,        // 1, 3, 6, 9, 12 months
+          autoRenew,     // true or false (based on toggle)
+          setShowModal,  // for closing modal after payment
+          currentPurchaseToken, // pass if user already has a subscription
+        });
+        // ✅ If successful — show success modal and send subscription API call
+        if (result.success) {
+        const uuid = user.uuid;
+        const subscriptionId = 1;
+        const stripeSessionId = "play_billing_" + Date.now();
+        const apiStatus = "SUCCESS";
+        const currentPurchaseToken = result.purchase.purchaseToken;
+
+        const payload = {
+          uuid,
+          subscriptionId,
+          autoRenewal: autoRenew,
+          subscribedMonths: months,
+          stripeSessionId,
+          status: apiStatus,
+        };
+
+        console.log("Calling subscription API with:", payload);
+
+        // setShowafterAdd(true);
+        console.log("flix10k payment success");
+
+        // Delay success modal for smoother UX
+        setTimeout(() => {
+          setShowPaymentSuccess(true);
+        }, 1000);
+
+        // Send API to backend
+        const response = await axios.post(
+          `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
+          payload
+        );
+
+        console.log("Subscription API response:", response.data);
+
+        if (subscriptionIsActive) {
+          try {
+            await sendDeviceUserInfo({
+              action_type: USERACTIONS.UPDATESUBSCRIPTION,
+              action_description: `Existing user upgrade subscribe for Flix10K`,
+            });
+            console.log("Existing user upgrade subscribe for Flix10K");
+          } catch (err) {
+            console.error("Failed to send user action for existing subscription:", err);
+          }
+        } else {
+          try {
+            await sendDeviceUserInfo({
+              action_type: USERACTIONS.NEWSUBCRIPTION,
+              action_description: `New user subscribe for Flix10K`,
+            });
+            console.log("New user subscribe for Flix10K");
+          } catch (err) {
+            console.error("Failed to send user action for new subscription:", err);
+          }
+        }
+      } else {
+        // ❌ Android payment failure
+        console.error("Android payment failed:", result.error);
+        // setShowafterAdd(true);
+        console.log("flix10k payment failed");
+
+        setTimeout(() => {
+          setShowPaymentFailure(true);
+        }, 1000);
+
+        try {
+          await sendDeviceUserInfo({
+            action_type: "payment failed",
+            action_description: `User payment failed for Flix10K plan`,
+          });
+        } catch (err) {
+          console.error("Error sending user action:", err);
+          Alert.alert("Error sending user action");
+        }
+
+        await AsyncStorage.removeItem("flix10k_payment_status");
+      }
+    } else {
     try {
       const payload = {
         subscriptionId: 1,
@@ -199,6 +373,7 @@ const ManageSubscriptions = () => {
     } catch (error) {
       console.error("Subscription error:", error.response?.data || error.message);
     }
+  }
   };
 
 //   const subscriptionSkus = Platform.select({
@@ -462,6 +637,14 @@ const ManageSubscriptions = () => {
           </View>
         </View>
       </ScrollView>
+
+      <PaymentStatusModal
+        visibleSuccess={showPaymentSuccess}
+        visibleFailure={showPaymentFailure}
+        onClose={handleModalClose}
+        subscriptionAmount={subscriptionAmount}
+        subscriptionIsActive={subscriptionIsActive}
+      />
 
       <Modal
         visible={showModal}

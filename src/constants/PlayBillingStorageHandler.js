@@ -1,0 +1,183 @@
+// // components/PlayBillingStorageHandler.js
+// import * as RNIap from 'react-native-iap';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import axios from 'axios';
+
+// export const handlePlayStorageSubscription = async ({
+//   months,
+//   autoRenew,
+//   setShowModal,
+//   currentPurchaseToken, // pass if user already has a storage subscription
+// }) => { 
+//   try {
+//     await AsyncStorage.setItem('storagePaying', 'true');
+
+//     const productId = 'storage_subscription'; // storage subscription product in Play Console
+
+//     // Map months to base plan IDs
+//     const basePlanIdMap = {
+//       1: 'storage_monthly',     // 1 month
+//       3: 'storage_quarterly',   // 3 months
+//       6: 'storage_halfyearly',  // 6 months
+//       9: 'storage_nine_months', // 9 months
+//       12: 'storage_yearly',     // 12 months
+//     };
+
+//     const basePlanId = basePlanIdMap[months];
+//     if (!basePlanId) throw new Error('Invalid storage subscription duration selected.');
+
+//     // Connect and get subscription offers
+//     await RNIap.initConnection();
+//     const subs = await RNIap.getSubscriptions([productId]);
+//     const sub = subs?.[0];
+//     if (!sub) throw new Error('Storage subscription not found in Play Store.');
+
+//     // Find correct offer token for base plan
+//     const offer = sub.subscriptionOfferDetails.find(
+//       o => o.basePlanId === basePlanId
+//     );
+//     if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
+
+//     console.log('Selected Offer:', offer);
+
+//     // Request subscription purchase
+//     const purchase = await RNIap.requestSubscription({
+//       sku: productId,
+//       subscriptionOffers: [{ offerToken: offer.offerToken }],
+//       ...(currentPurchaseToken && { oldSkuAndroid: currentPurchaseToken }), 
+//       // use old purchase token if upgrading
+//     });
+
+//     console.log('Purchase result:', purchase);
+
+//     // Send purchase data to backend for verification
+//     const response = await axios.post(
+//       `${process.env.EXPO_PUBLIC_API_URL}/api/subscription/verify-google-storage-subscription`,
+//       {
+//         purchaseToken: purchase.purchaseToken,
+//         productId: purchase.productId,
+//         basePlanId,
+//         autoRenew,
+//       },
+//       { headers: { 'Content-Type': 'application/json' } }
+//     );
+
+//     console.log('Backend verified:', response.data);
+
+//     setShowModal(false);
+//     await RNIap.endConnection();
+//     await AsyncStorage.removeItem('storagePaying');
+//   } catch (err) {
+//     console.error('Play Billing Storage Subscription Error:', err);
+//     await AsyncStorage.removeItem('storagePaying');
+//   }
+// };
+
+// components/PlayBillingStorageHandler.js
+import * as RNIap from 'react-native-iap';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
+export const handlePlayStorageSubscription = async ({
+  planType, // 1 = Basic, 2 = Pro, 3 = Recovery
+  months,
+  autoRenew,
+  setShowModal,
+  currentPurchaseToken, // for Pro upgrades
+  hasPurchasedBasic, // flag from backend/user data
+}) => { 
+  try {
+    await AsyncStorage.setItem('storagePaying', 'true');
+
+    let productId = '';
+    let basePlanIdMap = {};
+
+    if (planType === 1) {
+      // Basic plan
+      if (hasPurchasedBasic) {
+        throw new Error('Basic plan can be purchased only once.');
+      }
+      productId = 'storage_basic';
+      basePlanIdMap = { 1: 'storage_basic_monthly' }; // only 1 month
+      months = 1; // enforce 1 month
+      autoRenew = false; // no auto-renew
+    } else if (planType === 2) {
+      // Pro plan
+      productId = 'storage_pro';
+      basePlanIdMap = {
+        1: 'storage_pro_monthly',
+        3: 'storage_pro_quarterly',
+        6: 'storage_pro_halfyearly',
+        9: 'storage_pro_nine_months',
+        12: 'storage_pro_yearly',
+      };
+    } else if (planType === 3) {
+      // Recovery plan (you can set logic same as Pro or custom)
+      productId = 'storage_recovery';
+      basePlanIdMap = { 1: 'storage_recovery_monthly' }; // example: 1 month
+      months = 1;
+      autoRenew = false;
+    } else {
+      throw new Error('Invalid plan type selected.');
+    }
+
+    const basePlanId = basePlanIdMap[months];
+    if (!basePlanId) throw new Error('Invalid subscription duration selected.');
+
+    // Connect and get subscription offers
+    await RNIap.initConnection();
+    const subs = await RNIap.getSubscriptions([productId]);
+    const sub = subs?.[0];
+    if (!sub) throw new Error('Subscription not found in Play Store.');
+
+    const offer = sub.subscriptionOfferDetails.find(
+      o => o.basePlanId === basePlanId
+    );
+    if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
+
+    console.log('Selected Offer:', offer);
+
+    // Request subscription purchase
+    const purchase = await RNIap.requestSubscription({
+      sku: productId,
+      subscriptionOffers: [{ offerToken: offer.offerToken }],
+      ...(planType === 2 && currentPurchaseToken
+        ? { oldSkuAndroid: currentPurchaseToken }
+        : {}), // upgrade logic only for Pro plan
+    });
+
+    console.log('Purchase result:', purchase);
+
+    // Send purchase data to backend for verification
+    const response = await axios.post(
+      `${process.env.EXPO_PUBLIC_API_URL}/api/patients/verify-google-storage-subscription`,
+      {
+        planType,
+        purchaseToken: purchase.purchaseToken,
+        productId: purchase.productId,
+        basePlanId,
+        autoRenew,
+      },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    console.log('Backend verified:', response.data);
+
+    setShowModal(false);
+    await RNIap.endConnection();
+    await AsyncStorage.removeItem('storagePaying');
+
+     return {
+      success: true,
+      purchase,
+      verification: response.data,
+    };
+  } catch (err) {
+    console.error('Play Billing Storage Subscription Error:', err);
+    await AsyncStorage.removeItem('storagePaying');
+    return {
+      success: false,
+      error: err.message || 'Payment failed',
+    };
+  }
+};

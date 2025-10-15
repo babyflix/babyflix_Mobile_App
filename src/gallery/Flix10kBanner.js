@@ -31,6 +31,8 @@ import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import FlixAdModal from "./FlixAdModal";
 import AIGenerationModal from "./AIGenerationModal";
 import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
+import { handleGooglePlayPayment } from "../constants/PlayBillingHandler";
+import PaymentStatusModal from "../constants/PaymentStatusModal";
 //import * as RNIap from 'react-native-iap';
 
 const Flix10kBanner = ({
@@ -198,8 +200,8 @@ const Flix10kBanner = ({
         setShowafterAdd(true);
         //dispatch(setPaymentStatusAdd(true))
         console.log("flix10k payment success");
-        setTimeout(() => {          
-        setShowPaymentSuccess(true);
+        setTimeout(() => {
+          setShowPaymentSuccess(true);
         }, 1000);
 
         console.log("Calling subscription API with:", payload);
@@ -318,28 +320,37 @@ const Flix10kBanner = ({
     if (months > 1) setMonths(months - 1);
   };
 
-  const handleRestart = async () => {
-    try {
-      await Updates.reloadAsync();
-    } catch (e) {
-      console.error("Failed to reload app:", e);
-    }
-  };
+  // const handleRestart = async () => {
+  //   try {
+  //     await Updates.reloadAsync();
+  //   } catch (e) {
+  //     console.error("Failed to reload app:", e);
+  //   }
+  // };
 
-  const handlePaymentClose = async (type) => {
+  // const handlePaymentClose = async (type) => {
+  //   if (type === "success") {
+  //     setShowPaymentSuccess(false);
+  //     await AsyncStorage.removeItem("flix10k_payment_status");
+  //     await AsyncStorage.removeItem('flix10kPaymentForAdd');
+  //     //dispatch(setPaymentStatusAdd(false))
+  //     setShowafterAdd(false);
+  //     handleRestart();
+  //   } else if (type === "failure") {
+  //     setShowPaymentFailure(false);
+  //     await AsyncStorage.removeItem("flix10k_payment_status");
+  //     await AsyncStorage.removeItem('flix10kPaymentForAdd');
+  //     //dispatch(setPaymentStatusAdd(false))
+  //     setShowafterAdd(false);
+  //   }
+  // };
+
+   const handleModalClose = (type) => {
+     setShowafterAdd(false);
     if (type === "success") {
       setShowPaymentSuccess(false);
-      await AsyncStorage.removeItem("flix10k_payment_status");
-      await AsyncStorage.removeItem('flix10kPaymentForAdd');
-      //dispatch(setPaymentStatusAdd(false))
-      setShowafterAdd(false);
-      handleRestart();
-    } else if (type === "failure") {
+    } else {
       setShowPaymentFailure(false);
-      await AsyncStorage.removeItem("flix10k_payment_status");
-      await AsyncStorage.removeItem('flix10kPaymentForAdd');
-      //dispatch(setPaymentStatusAdd(false))
-      setShowafterAdd(false);
     }
   };
 
@@ -492,65 +503,155 @@ const Flix10kBanner = ({
 
   const handleSubscribe = async () => {
     await AsyncStorage.setItem('flix10KPaying', 'true');
-    try {
-      const payload = {
-        subscriptionId: 1,
-        autoRenewal: autoRenew,
-        subscribedMonths: months,
-        platform: Platform.OS,
-      };
+    if (Platform.OS === 'android') {
 
-      console.log("Subscription Payload:", payload);
+        const currentPurchaseToken = false;
 
-      const response = await axios.post(
-        `${EXPO_PUBLIC_API_URL}/api/subscription/create-checkout-session-subscription-app`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+        const result = await handleGooglePlayPayment({
+          months,        // 1, 3, 6, 9, 12 months
+          autoRenew,     // true or false (based on toggle)
+          setShowModal,  // for closing modal after payment
+          currentPurchaseToken, // pass if user already has a subscription
+        });
+        // ✅ If successful — show success modal and send subscription API call
+        if (result.success) {
+        const uuid = user.uuid;
+        const subscriptionId = 1;
+        const stripeSessionId = "play_billing_" + Date.now();
+        const apiStatus = "SUCCESS";
+        const currentPurchaseToken = result.purchase.purchaseToken;
 
-      console.log("Subscription Response:", response.data);
+        const payload = {
+          uuid,
+          subscriptionId,
+          autoRenewal: autoRenew,
+          subscribedMonths: months,
+          stripeSessionId,
+          status: apiStatus,
+        };
 
-      const sessionData = response.data;
+        console.log("Calling subscription API with:", payload);
 
-      if (!sessionData.sessionId) throw new Error("No session ID returned");
+        setShowafterAdd(true);
+        console.log("flix10k payment success");
 
-      const stripeUrl = sessionData.sessionUrl;
+        // Delay success modal for smoother UX
+        setTimeout(() => {
+          setShowPaymentSuccess(true);
+        }, 1000);
 
-      //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
-      let result;
-
-      if (Platform.OS === 'ios') {
-        await Linking.openURL(stripeUrl);
-        // const result = await WebBrowser.openAuthSessionAsync(
-        //   stripeUrl, // Stripe checkout URL
-        //   "babyflix://payment/redirect"
-        // );
-      } else {
-        result = await WebBrowser.openAuthSessionAsync(
-          stripeUrl,
-          "babyflix://"
+        // Send API to backend
+        const response = await axios.post(
+          `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
+          payload
         );
+
+        console.log("Subscription API response:", response.data);
+
+        if (subscriptionIsActive) {
+          try {
+            await sendDeviceUserInfo({
+              action_type: USERACTIONS.UPDATESUBSCRIPTION,
+              action_description: `Existing user upgrade subscribe for Flix10K`,
+            });
+            console.log("Existing user upgrade subscribe for Flix10K");
+          } catch (err) {
+            console.error("Failed to send user action for existing subscription:", err);
+          }
+        } else {
+          try {
+            await sendDeviceUserInfo({
+              action_type: USERACTIONS.NEWSUBCRIPTION,
+              action_description: `New user subscribe for Flix10K`,
+            });
+            console.log("New user subscribe for Flix10K");
+          } catch (err) {
+            console.error("Failed to send user action for new subscription:", err);
+          }
+        }
+      } else {
+        // ❌ Android payment failure
+        console.error("Android payment failed:", result.error);
+        setShowafterAdd(true);
+        console.log("flix10k payment failed");
+
+        setTimeout(() => {
+          setShowPaymentFailure(true);
+        }, 1000);
+
+        try {
+          await sendDeviceUserInfo({
+            action_type: "payment failed",
+            action_description: `User payment failed for Flix10K plan`,
+          });
+        } catch (err) {
+          console.error("Error sending user action:", err);
+          Alert.alert("Error sending user action");
+        }
+
+        await AsyncStorage.removeItem("flix10k_payment_status");
       }
+    } else {
+      try {
+        const payload = {
+          subscriptionId: 1,
+          autoRenewal: autoRenew,
+          subscribedMonths: months,
+          platform: Platform.OS,
+        };
 
-      await WebBrowser.dismissBrowser();
+        console.log("Subscription Payload:", payload);
 
-      if (result?.type === 'success') {
-        console.log("Payment success");
+        const response = await axios.post(
+          `${EXPO_PUBLIC_API_URL}/api/subscription/create-checkout-session-subscription-app`,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("Subscription Response:", response.data);
+
+        const sessionData = response.data;
+
+        if (!sessionData.sessionId) throw new Error("No session ID returned");
+
+        const stripeUrl = sessionData.sessionUrl;
+
+        //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+        let result;
+
+        if (Platform.OS === 'ios') {
+          await Linking.openURL(stripeUrl);
+          // const result = await WebBrowser.openAuthSessionAsync(
+          //   stripeUrl, // Stripe checkout URL
+          //   "babyflix://payment/redirect"
+          // );
+        } else {
+          result = await WebBrowser.openAuthSessionAsync(
+            stripeUrl,
+            "babyflix://"
+          );
+        }
+
+        await WebBrowser.dismissBrowser();
+
+        if (result?.type === 'success') {
+          console.log("Payment success");
+          setShowModal(false);
+        } else if (result?.type === 'cancel') {
+          console.log("Payment canceled or failed");
+          setShowModal(false);
+        }
+
+        await AsyncStorage.removeItem('flix10kPaymentForAdd');
+        setShowafterAdd(false);
         setShowModal(false);
-      } else if (result?.type === 'cancel') {
-        console.log("Payment canceled or failed");
-        setShowModal(false);
+      } catch (error) {
+        console.error("Subscription error:", error.response?.data || error.message);
       }
-
-      await AsyncStorage.removeItem('flix10kPaymentForAdd');
-      setShowafterAdd(false);
-      setShowModal(false);
-    } catch (error) {
-      console.error("Subscription error:", error.response?.data || error.message);
     }
   };
 
@@ -855,7 +956,7 @@ const Flix10kBanner = ({
       </Modal>
 
 
-      <Modal visible={showPaymentSuccess} transparent animationType="fade" onRequestClose={() => setShowStorage2(false)}>
+      {/* <Modal visible={showPaymentSuccess} transparent animationType="fade" onRequestClose={() => setShowStorage2(false)}>
         <View style={[styles.modalBackground, { zIndex: 999 }]}>
           <View style={[styles.modalContainerStatus, { borderColor: "green" }]}>
             <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>{t('storage.paymentSuccess')}</Text>
@@ -892,7 +993,15 @@ const Flix10kBanner = ({
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
+
+       <PaymentStatusModal
+        visibleSuccess={showPaymentSuccess}
+        visibleFailure={showPaymentFailure}
+        onClose={handleModalClose}
+        subscriptionAmount={subscriptionAmount}
+        subscriptionIsActive={subscriptionIsActive}
+      />
 
       <Modal
         transparent

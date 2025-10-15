@@ -231,6 +231,15 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     if (Platform.OS === 'ios') {
       setPlanModalVisible(false)
     }
+    if (Platform.OS === 'android') {
+       dispatch(setStorageTab(true));
+       setPlanModalVisible(false)
+      navigation.navigate('profile', {
+        screen: 'ProfileSettings',
+        params: { initialTab: 'Storage' },
+      });
+      return;
+    }
     setTimeout(() => {
       router.replace('/gallery');
     }, 200);

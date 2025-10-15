@@ -8,6 +8,7 @@ import {
   Modal,
   Linking,
   Platform,
+  AppState,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import Colors from "../constants/Colors";
@@ -27,6 +28,10 @@ import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
 import moment from "moment";
 import MonthSelectorStorage from "../constants/MonthSelectorStorage";
 import { getStoragePlanDetails } from "../components/getStoragePlanDetails";
+import { handlePlayStorageSubscription } from "../constants/PlayBillingStorageHandler";
+import { clearOpenStorage2, setForceOpenStorageModals } from "../state/slices/storageUISlice";
+import { setPlanExpired, setUpgradeReminder } from "../state/slices/expiredPlanSlice";
+import * as RNIap from 'react-native-iap';
 
 const StorageTab = () => {
   const user = useSelector((state) => state.auth);
@@ -89,12 +94,37 @@ const StorageTab = () => {
   const [showAutoRenewModal, setShowAutoRenewModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState((storagePlanExpired && storagePlanPrice === '0.00') ? 3 : 2);
   const [translatedCurrentPlan, setTranslatedCurrentPlan] = useState('');
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [showPaymentFailure, setShowPaymentFailure] = useState(false);
+
+  const PLAY_STORE_SUBS_URL = "https://play.google.com/store/account/subscriptions";
 
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (storagePlanExpired) setError("Storage Plan Expired");
   }, [storagePlanExpired]);
+
+     useEffect(() => {
+      const checkAndVerify = async () => {
+        try {
+          const today = new Date();
+          const expiry = new Date(storagePlan?.planExpiryDate);
+  
+          // ✅ Run verification only if subscription is expired or just expired
+          if (today > expiry) {
+            console.log("⏰ Subscription expired, verifying renewal status...");
+            await verifyAutoRenewStatus(user.uuid);
+          } else {
+            console.log("✅ Subscription still active, no verification needed.");
+          }
+        } catch (err) {
+          console.error("Error verifying auto-renewal:", err);
+        }
+      };
+  
+      checkAndVerify();
+    }, [storagePlan.expiryDate, user.uuid]);
 
   const handleUnsubscribe = () => setShowModal(true);
   const handleUpgradeSubscribtion = () => setUpgradeModal(true);
@@ -240,7 +270,40 @@ const StorageTab = () => {
     return plan ? plan.price_per_month : null; // returns string like "3.99" or null if not found
   };
 
+   const verifyAutoRenewStatus = async (uuid) => {
+  try {
+    await RNIap.initConnection();
+    const purchases = await RNIap.getAvailablePurchases();
+
+    const sub = purchases.find(p => p.productId === "storage_pro");
+    if (!sub) {
+      console.log("No subscription found for user.");
+      return;
+    }
+
+    const newStatus = sub.autoRenewing;
+    const expiryDate = sub.expirationDate ? new Date(sub.expirationDate) : null;
+
+    console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
+
+    // Sync with backend only if changed
+    await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal`, {
+      uuid,
+      autoRenewal: newStatus,
+      expiryDate,
+    });
+
+    console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
+
+    await RNIap.endConnection();
+  } catch (err) {
+    console.error("verifyAutoRenewStatus error:", err);
+  }
+};
+
   const handleSubscribe = async () => {
+
+    const isAutoRenewToggleOnly = calculatedSubscribedMonths === months && storagePlanAutoRenewal !== autoRenew;
     await AsyncStorage.setItem("storagePaying", "true");
     setUpgradeModal(false);
 
@@ -258,41 +321,130 @@ const StorageTab = () => {
         monthsToSend = 1;   // only 1 month
       }
 
+      if (Platform.OS === 'android') {
+        // Use Google Play Billing for Android
+        if (isAutoRenewToggleOnly) {
+            console.log("User only toggled auto-renew — opening Play Store...");
+            await Linking.openURL(PLAY_STORE_SUBS_URL);
+        
+            const subscriptionListener = AppState.addEventListener("change", async (state) => {
+              if (state === "active") {
+                console.log("Returned from Play Store — verifying auto-renewal...");
+                await verifyAutoRenewStatus(user.uuid);
+                subscriptionListener.remove();
+              }
+            });
+            return;
+          }
 
-      // Call your API
-      const sessionRes = await axios.post(
-        `${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`,
-        {
-          planId: planIdToSend,      // e.g., 2
-          autoRenewal: autoRenew,    // true or false
-          months: monthsToSend,              // e.g., 2
-          email: user.email,            // REQUIRED for Stripe checkout
-          platform: Platform.OS,       // ios / android
-          subscribedMonths: calculatedSubscribedMonths, // e.g., 1
-        },
-        {
-          headers: { "Content-Type": "application/json" },
+          const currentPurchaseToken = false;
+
+          const result = await handlePlayStorageSubscription({
+            planType: planIdToSend,              // 'basic' or 'pro'
+            months: monthsToSend,  // number of months
+            autoRenew: autoRenew,             // true/false
+            setShowModal: { setUpgradeModal },
+            currentPurchaseToken,
+            hasPurchasedBasic: false,
+          });
+
+          if (result.success) {
+          //setShowPaymentSuccess(true);
+          await AsyncStorage.setItem('payment_status 1', 'done');
+
+          // ✅ Now call your backend updatePlan API
+          const currentPurchaseToken = result.purchase.purchaseToken;
+
+          const payload = {
+            userId: user.uuid,
+            storagePlanId: selectedPlan,
+            storagePlanPayment: 1,
+            autoRenewal: autoRenew,
+            months: monthsToSend,
+            session_id: "play_billing_" + Date.now(),
+            status: "SUCCESS",
+          };
+
+          console.log("[StorageModals] Updating plan with payload:", payload);
+
+          await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          // setShowStorage1(false);
+          // setShowStorage2(false);
+          setTimeout(() => {
+            setShowPaymentSuccess(true);
+          }, 200);
+
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.PAYMENT,
+            action_description: `User payment success for storage plan`,
+          });
+
+          dispatch(setForceOpenStorageModals(false));
+          dispatch(setPlanExpired(false));
+          dispatch(setUpgradeReminder(false));
+
+        } else {
+          console.error("Android payment failed:", result.error);
+          await AsyncStorage.setItem('payment_status 1', 'fail');
+          await AsyncStorage.removeItem('payment_status');
+          await AsyncStorage.setItem('storage_modal_triggered', 'false');
+          //triggeredRef.current = false;
+          dispatch(setForceOpenStorageModals(false));
+          // setShowStorage1(false);
+          // setShowStorage2(false);
+          // if(!modalShown){
+          setTimeout(() => {
+            setShowPaymentFailure(true);
+          }, 200);
+          //modalShown = true;
+
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.PAYMENT,
+            action_description: `User payment failed for Storage plan`,
+          });
         }
-      );
 
-      const sessionData = sessionRes.data;
-
-      if (!sessionData.sessionId) throw new Error("No session ID returned");
-
-      const stripeUrl = sessionData.sessionUrl;
-      //setShowStorage2(false);
-
-      // ---- Redirect to Stripe Checkout ----
-      if (Platform.OS === "ios") {
-        // On iOS, open in Safari → deep link redirect (babyflix://...)
-        await Linking.openURL(stripeUrl);
       } else {
-        // On Android, open in browser with deep link fallback
-        const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+        // Call your API
+        const sessionRes = await axios.post(
+          `${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`,
+          {
+            planId: planIdToSend,      // e.g., 2
+            autoRenewal: autoRenew,    // true or false
+            months: monthsToSend,              // e.g., 2
+            email: user.email,            // REQUIRED for Stripe checkout
+            platform: Platform.OS,       // ios / android
+            subscribedMonths: calculatedSubscribedMonths, // e.g., 1
+          },
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
-        if (result.type === "cancel") {
-          if (isAuthenticated) {
-            router.push("/gallary");
+        const sessionData = sessionRes.data;
+
+        if (!sessionData.sessionId) throw new Error("No session ID returned");
+
+        const stripeUrl = sessionData.sessionUrl;
+        //setShowStorage2(false);
+
+        // ---- Redirect to Stripe Checkout ----
+        if (Platform.OS === "ios") {
+          // On iOS, open in Safari → deep link redirect (babyflix://...)
+          await Linking.openURL(stripeUrl);
+        } else {
+          // On Android, open in browser with deep link fallback
+          const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+
+          if (result.type === "cancel") {
+            if (isAuthenticated) {
+              router.push("/gallary");
+            }
           }
         }
       }
@@ -541,6 +693,49 @@ const StorageTab = () => {
         </View>
       </ScrollView>
 
+      <Modal visible={showPaymentSuccess} transparent animationType="fade" onRequestClose={() => setShowStorage2(false)}>
+        <View style={[styles.modalBackground, { zIndex: 999 }]}>
+          <View style={[styles.modalContainerStatus, { borderColor: "green" }]}>
+            <Text style={[styles.title, { color: "green", textAlign: 'center' }]}>{t('storage.paymentSuccess')}</Text>
+            <Text style={[styles.subtitle, {}]}>{t('storage.thankYou')}</Text>
+            <TouchableOpacity
+              style={[styles.filledButton, { paddingHorizontal: 20 }]}
+              onPress={async () => {
+                setShowPaymentSuccess(false);
+                AsyncStorage.removeItem('payment_status 1');
+                AsyncStorage.removeItem('forAdd');
+                await getStoragePlanDetails(user.email, dispatch);
+                setTimeout(() => {
+                  handleRestart();
+                }, 1000);
+              }}
+            >
+              <Text style={styles.filledText}>{t('storage.okGotIt')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showPaymentFailure} transparent animationType="fade">
+        <View style={[styles.modalBackground, { zIndex: 999 }]}>
+          <View style={[styles.modalContainerStatus, { borderColor: Colors.error, }]}>
+            <Text style={[styles.title, { color: Colors.error, textAlign: 'center' }]}>{t('storage.paymentFailed')}</Text>
+            <Text style={styles.subtitleFailed}>{t('storage.paymentError')}</Text>
+            <TouchableOpacity
+              style={[styles.filledButton, { paddingHorizontal: 20 }]}
+              onPress={async () => {
+                setShowPaymentFailure(false);
+                dispatch(clearOpenStorage2());
+                await AsyncStorage.removeItem('closePlans');
+                AsyncStorage.removeItem('forAdd');
+              }}
+            >
+              <Text style={styles.filledText}>{t('storage.okIGotIt')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <Modal
         visible={showModal}
         transparent
@@ -720,4 +915,56 @@ const styles = StyleSheet.create({
   modalConfirmText: { fontSize: 15, fontFamily: 'Nunito700', color: Colors.white },
   modalOkRow: { justifyContent: "center" },
   modalOkBtn: { padding: 12, borderRadius: 12, backgroundColor: Colors.primary, marginHorizontal: '35%', alignItems: "center" },
+  modalContainerStatus: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderWidth: 3,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+  },
+  title: {
+    fontSize: 20,
+    fontFamily: "Nunito700",
+    marginBottom: 10,
+    color: Colors.primary,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 14,
+    marginBottom: 20,
+    marginTop: 10,
+    fontFamily: "Nunito400",
+    color: "#444",
+    textAlign: "center",
+  },
+  subtitleFailed: {
+    fontSize: 15,
+    marginTop: 10,
+    marginBottom: 20,
+    fontFamily: "Nunito400",
+    color: "#b00020",
+    textAlign: "center",
+  },
+  filledButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  filledText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontFamily: "Nunito400",
+    fontSize: 14,
+  },
 });

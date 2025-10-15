@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import sendDeviceUserInfo, { USERACTIONS } from './deviceInfo';
 import { setShowFlix10KADSlice } from '../state/slices/subscriptionSlice';
 import * as Updates from "expo-updates";
+import { handlePlayStorageSubscription } from '../constants/PlayBillingStorageHandler';
 
 let modalShown = false;
 let paymentFail = false;
@@ -103,10 +104,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     //           session_id,})
   }, []);
 
-   const handleRestart = async () => {
-      try { await Updates.reloadAsync(); } 
-      catch (e) { console.error("Failed to reload app:", e); }
-    };
+  const handleRestart = async () => {
+    try { await Updates.reloadAsync(); }
+    catch (e) { console.error("Failed to reload app:", e); }
+  };
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -127,21 +128,21 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const storedStatus = await AsyncStorage.getItem('payment_status');
       const storedPaying = await AsyncStorage.getItem('paying');
 
-    console.log('[StorageModals] fetchStatusFromStorage:', {storedStatus, storedPaying} );
+      console.log('[StorageModals] fetchStatusFromStorage:', { storedStatus, storedPaying });
 
       if (!storagePlanPrice && !storedStatus && storedPaying === 'true') {
         console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');
         dispatch(clearOpenStorage2());
-        if(!paymentFail){
-        paymentFail = true;
-        setIsVisible(true);
-        setTimeout(() => {
-          setShowStorage1(false);
-        }, 200);
-        triggeredRef.current = true;
-        //modalShown = true;
-        await AsyncStorage.setItem('storage_modal_triggered', 'false');
-        //triggeredRef.current = false;
+        if (!paymentFail) {
+          paymentFail = true;
+          setIsVisible(true);
+          setTimeout(() => {
+            setShowStorage1(false);
+          }, 200);
+          triggeredRef.current = true;
+          //modalShown = true;
+          await AsyncStorage.setItem('storage_modal_triggered', 'false');
+          //triggeredRef.current = false;
         }
       }
     };
@@ -192,7 +193,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   useEffect(() => {
     const checkIfTriggered = async () => {
       const triggered = await AsyncStorage.getItem('storage_modal_triggered');
-      if(!triggered) {
+      if (!triggered) {
         triggeredRef.current = false;
       }
       if (Platform.OS === 'android' && triggeredRef.current) {
@@ -204,22 +205,22 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       console.log('[StorageModals] openStorage2Directly:', openStorage2Directly, 'triggered:', triggered);
 
       if (openStorage2Directly && triggered !== 'true') {
-        if(!expiredPayment){
+        if (!expiredPayment) {
           expiredPayment = true;
-        console.log('[StorageModals] Triggering storage2 modal');
-        triggeredRef.current = true;
-        setShowStorage1(false);
-        setIsVisible(false);
-        setTimeout(() => {
-          //console.log("Opening second modal now 3");
-          setShowStorage2(true);
-        }, 200);
-        await AsyncStorage.setItem('closePlans', 'true');
-        setClosePlans(true);
+          console.log('[StorageModals] Triggering storage2 modal');
+          triggeredRef.current = true;
+          setShowStorage1(false);
+          setIsVisible(false);
+          setTimeout(() => {
+            //console.log("Opening second modal now 3");
+            setShowStorage2(true);
+          }, 200);
+          await AsyncStorage.setItem('closePlans', 'true');
+          setClosePlans(true);
 
-        dispatch(clearOpenStorage2());
-        await AsyncStorage.setItem('storage_modal_triggered', 'true');
-      }
+          dispatch(clearOpenStorage2());
+          await AsyncStorage.setItem('storage_modal_triggered', 'true');
+        }
       }
     };
 
@@ -249,19 +250,19 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           dispatch(setForceOpenStorageModals(false));
           setShowStorage1(false);
           setShowStorage2(false);
-        if(!modalShown){
-          setTimeout(() => {
-            //console.log("PaymentFailure modal now");
-            setShowPaymentFailure(true);
-          }, 200);
-          modalShown = true;
+          if (!modalShown) {
+            setTimeout(() => {
+              //console.log("PaymentFailure modal now");
+              setShowPaymentFailure(true);
+            }, 200);
+            modalShown = true;
 
-          sendDeviceUserInfo({
-            action_type: USERACTIONS.PAYMENT,
-            action_description: `User payment failed for Storage plan`,
-          });
-        }
-        //await AsyncStorage.setItem('payment_handled', 'true');
+            sendDeviceUserInfo({
+              action_type: USERACTIONS.PAYMENT,
+              action_description: `User payment failed for Storage plan`,
+            });
+          }
+          //await AsyncStorage.setItem('payment_handled', 'true');
 
         } else if (status === 'done') {
           //console.log('[StorageModals] Status is done. Updating plan...');
@@ -270,7 +271,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           const planIdToUse = storedPlanId ? parseInt(storedPlanId) : null;
 
           try {
-             const [
+            const [
               userId,
               storagePlanId,
               storagePlanPayment,
@@ -288,7 +289,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
             // ✅ Prepare clean payload
             const payload = {
-              userId : userId || user.uuid,
+              userId: userId || user.uuid,
               storagePlanId,
               storagePlanPayment: 1,
               autoRenewal,
@@ -333,10 +334,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               'session_id',
             ]);
 
-                  await AsyncStorage.removeItem('payment_status');
-                  await AsyncStorage.setItem('storage_modal_triggered', 'false');
-                  triggeredRef.current = false;
-                  setShowStorage1(false);
+            await AsyncStorage.removeItem('payment_status');
+            await AsyncStorage.setItem('storage_modal_triggered', 'false');
+            triggeredRef.current = false;
+            setShowStorage1(false);
           }
         } else if (storageModalKey) {
           //console.log('[StorageModals] Showing storage2 due to storageModalKey in final check');
@@ -422,7 +423,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   };
 
   const handleBack = async () => {
-    expiredPayment = false; 
+    expiredPayment = false;
     setShowStorage2(false);
 
     setTimeout(() => {
@@ -446,45 +447,118 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       await AsyncStorage.setItem('paying', 'true');
       //console.log('platform.os',Platform.OS);
 
-      const sessionRes = await axios.post(`${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`, {
-        planId: selectedPlan,
-        email: user.email,
-        platform: Platform.OS,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      if (Platform.OS === 'android') {
+        // Use Google Play Billing for Android
+          const currentPurchaseToken = false;
 
-      const sessionData = sessionRes.data;
+          const result = await handlePlayStorageSubscription({
+            planType: selectedPlan,              // 'basic' or 'pro'
+            months: 1,  // number of months
+            autoRenew: false,             // true/false
+            setShowModal: { setShowStorage2 },
+            currentPurchaseToken,
+            hasPurchasedBasic,
+          });
+        if (result.success) {
+          //setShowPaymentSuccess(true);
+          await AsyncStorage.setItem('payment_status 1', 'done');
 
-      if (!sessionData.sessionId) throw new Error("No session ID returned");
+          // ✅ Now call your backend updatePlan API
+          const currentPurchaseToken = result.purchase.purchaseToken
+          const payload = {
+            userId: user.uuid,
+            storagePlanId: selectedPlan,
+            storagePlanPayment: 1,
+            autoRenewal: false,
+            months: 1,
+            session_id: "play_billing_" + Date.now(),
+            status: "SUCCESS",
+          };
 
-      const stripeUrl = sessionData.sessionUrl;
+          console.log("[StorageModals] Updating plan with payload:", payload);
 
-      setShowStorage2(false);
-      //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+          await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
 
-      if (Platform.OS === 'ios') {
-        await Linking.openURL(stripeUrl);
-        // const result = await WebBrowser.openAuthSessionAsync(
-        //   stripeUrl, // Stripe checkout URL
-        //   "babyflix://payment/redirect"
-        // );
+          setShowStorage1(false);
+          setShowStorage2(false);
+          setTimeout(() => {
+            setShowPaymentSuccess(true);
+          }, 200);
+
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.PAYMENT,
+            action_description: `User payment success for storage plan`,
+          });
+
+          dispatch(setForceOpenStorageModals(false));
+          dispatch(setPlanExpired(false));
+          dispatch(setUpgradeReminder(false));
+
+        } else {
+          console.error("Android payment failed:", result.error);
+          await AsyncStorage.setItem('payment_status 1', 'fail');
+          await AsyncStorage.removeItem('payment_status');
+          await AsyncStorage.setItem('storage_modal_triggered', 'false');
+          //triggeredRef.current = false;
+          dispatch(setForceOpenStorageModals(false));
+          setShowStorage1(false);
+          setShowStorage2(false);
+          // if(!modalShown){
+          setTimeout(() => {
+            setShowPaymentFailure(true);
+          }, 200);
+          //modalShown = true;
+
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.PAYMENT,
+            action_description: `User payment failed for Storage plan`,
+          });
+        }
 
       } else {
-        const result = await WebBrowser.openAuthSessionAsync(
-          stripeUrl,
-          "babyflix://"
-        );
+        const sessionRes = await axios.post(`${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`, {
+          planId: selectedPlan,
+          email: user.email,
+          platform: Platform.OS,
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-        if (result.type === "cancel") {
-          if (isAuthenticated) {
-            router.push('/gallary');
+        const sessionData = sessionRes.data;
+
+        if (!sessionData.sessionId) throw new Error("No session ID returned");
+
+        const stripeUrl = sessionData.sessionUrl;
+
+        setShowStorage2(false);
+        //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+
+        if (Platform.OS === 'ios') {
+          await Linking.openURL(stripeUrl);
+          // const result = await WebBrowser.openAuthSessionAsync(
+          //   stripeUrl, // Stripe checkout URL
+          //   "babyflix://payment/redirect"
+          // );
+
+        } else {
+          const result = await WebBrowser.openAuthSessionAsync(
+            stripeUrl,
+            "babyflix://"
+          );
+
+          if (result.type === "cancel") {
+            if (isAuthenticated) {
+              router.push('/gallary');
+            }
           }
         }
       }
-
     } catch (error) {
       console.error("Payment error:", error);
       await AsyncStorage.setItem('payment_status 1', 'fail');
@@ -627,7 +701,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                       )}
                       <Text style={styles.planTitleBold}>{plan.name}</Text>
                     </View>
-                     {!isPlanExpired &&<Text style={styles.planPrice}>${plan.price_per_month}</Text>}
+                    {!isPlanExpired && <Text style={styles.planPrice}>${plan.price_per_month}</Text>}
                   </View>
                   {isPlanExpired && (
                     <View style={{ width: '100%', marginTop: 0, alignItems: "flex-end" }}>
