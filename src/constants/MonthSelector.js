@@ -81,7 +81,7 @@ const MonthSelector = ({ months, setMonths, autoRenew, mode = "dropdown" }) => {
               activeOpacity={1}
               onPress={() => setShowDropdown(false)}
             >
-              <View style={styles.dropdownList}>
+              {/* <View style={styles.dropdownList}>
                 {options.map((opt) => (
                   <TouchableOpacity
                     key={opt}
@@ -97,6 +97,24 @@ const MonthSelector = ({ months, setMonths, autoRenew, mode = "dropdown" }) => {
                     </Text>
                   </TouchableOpacity>
                 ))}
+              </View> */}
+               <View style={styles.dropdownList}>
+                {options
+                  .filter((opt) => opt >= (subscription?.subscribedMonths || 0)) // 👈 show only values greater than current
+                  .map((opt) => (
+                    <TouchableOpacity
+                      key={opt}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setMonths(opt);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownText}>
+                        {opt} {opt === 1 ? t("flix10k.month") : t("flix10k.months")}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
               </View>
             </TouchableOpacity>
           </Modal>

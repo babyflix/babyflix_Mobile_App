@@ -573,7 +573,7 @@ const ManageSubscriptions = () => {
 
             {error && <Text style={styles.error}>{error}</Text>}
 
-            <MonthSelector months={months} setMonths={setMonths} autoRenew={autoRenew} mode="counter" />
+            <MonthSelector months={months} setMonths={setMonths} autoRenew={autoRenew} mode={Platform.OS === "android" ? "dropdown" : "counter"} />
 
             {additionalMonths > 0 && (
               <View style={{ marginTop: 10 }}>
