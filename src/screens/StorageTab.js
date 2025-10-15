@@ -561,7 +561,7 @@ const StorageTab = () => {
             )}
             {error && <Text style={styles.error}>{error}</Text>}
 
-            <MonthSelectorStorage months={months} setMonths={setMonths} autoRenew={autoRenew} mode="counter" />
+            <MonthSelectorStorage months={months} setMonths={setMonths} autoRenew={autoRenew} mode={Platform.OS === "android" ? "dropdown" : "counter"} />
             {console.log('additionalMonths', additionalMonths)}
             {/* { additionalMonths > 0 && (
                 <View style={{ marginTop: 10 }}>

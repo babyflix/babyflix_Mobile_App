@@ -81,7 +81,7 @@ const MonthSelectorStorage = ({ months, setMonths, autoRenew, mode = "dropdown" 
                   ? `${months} ${months === 1 ? t("flix10k.month") : t("flix10k.months")}`
                   : ""
               }
-              editable={false}
+              editable={autoRenew === 0 ? false : true}
               pointerEvents="none"
             />
             <Ionicons
@@ -102,8 +102,9 @@ const MonthSelectorStorage = ({ months, setMonths, autoRenew, mode = "dropdown" 
               style={styles.modalOverlay}
               activeOpacity={1}
               onPress={() => setShowDropdown(false)}
+              disabled={!!autoRenew}
             >
-              <View style={styles.dropdownList}>
+              {/* <View style={styles.dropdownList}>
                 {options.map((opt) => (
                   <TouchableOpacity
                     key={opt}
@@ -118,7 +119,26 @@ const MonthSelectorStorage = ({ months, setMonths, autoRenew, mode = "dropdown" 
                     </Text>
                   </TouchableOpacity>
                 ))}
-              </View>
+              </View> */}
+              <View style={styles.dropdownList}>
+  {options
+    .filter((opt) => opt !== months) // 👈 show only values greater than current
+    .map((opt) => (
+      <TouchableOpacity
+        key={opt}
+        style={styles.dropdownItem}
+        onPress={() => {
+          setMonths(opt);
+          setShowDropdown(false);
+        }}
+      >
+        <Text style={styles.dropdownText}>
+          {opt} {opt === 1 ? t("flix10k.month") : t("flix10k.months")}
+        </Text>
+      </TouchableOpacity>
+    ))}
+</View>
+
             </TouchableOpacity>
           </Modal>
         </>
