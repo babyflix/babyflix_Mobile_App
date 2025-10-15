@@ -111,5 +111,6 @@ export default ({ config }) => ({
       }
     ],
     "expo-font",
+    "react-native-iap",
   ],
 });
