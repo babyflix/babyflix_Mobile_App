@@ -12,13 +12,18 @@
       "distribution": "internal"
     },
     "production": {
+      "autoIncrement": true
+    },
+    "play": {
       "autoIncrement": true,
+      "distribution": "store",
       "android": {
-        "gradleCommand": ":app:bundlePlayRelease"
+        "buildType": "app-bundle"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "play": {}
   }
 }
