@@ -22,7 +22,7 @@ import * as RNIap from 'react-native-iap';
 const ManageSubscriptions = () => {
   const user = useSelector((state) => state.auth);
   const { t } = useTranslation();
-  const { subscriptionAmount, subscriptionId, subscriptionIsActive, subscriptionExpired, subscription } = useSelector(
+  const { subscriptionAmount, subscriptionId, subscriptionIsActive, subscriptionExpired, subscription, subscriptionCurrentPurchaseToken } = useSelector(
     (state) => state.auth
   );
   const subscriptionActive = subscriptionIsActive
@@ -178,15 +178,25 @@ const ManageSubscriptions = () => {
     }
 
     const newStatus = sub.autoRenewing;
-     const expiryDate = sub.expirationDate ? new Date(sub.expirationDate) : null;
+
+    const expiryTimestamp =
+      sub.expirationDate ||      // Android (some versions return this)
+      sub.expirationDateAndroid || // Some builds define this
+      sub.expirationDateIos ||   // iOS field
+      null;
+    const expiryDate = expiryTimestamp
+    ? new Date(Number(expiryTimestamp)).toISOString()
+    : null;
+
 
     console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
 
     // Sync with backend only if changed
-    await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
+    await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal-app`, {
       uuid,
       autoRenewal: newStatus,
       expiryDate,
+      currentPurchaseToken: sub.purchaseToken, // Android token
     });
 
     console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
@@ -219,7 +229,7 @@ const ManageSubscriptions = () => {
     return;
   }
 
-        const currentPurchaseToken = false;
+        const currentPurchaseToken = subscriptionCurrentPurchaseToken;
         
          const result = await handleGooglePlayPayment({
           months,        // 1, 3, 6, 9, 12 months
@@ -242,6 +252,8 @@ const ManageSubscriptions = () => {
           subscribedMonths: months,
           stripeSessionId,
           status: apiStatus,
+          provider: "play_billing",
+          currentPurchaseToken
         };
 
         console.log("Calling subscription API with:", payload);

@@ -77,6 +77,7 @@
 import * as RNIap from 'react-native-iap';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { EXPO_PUBLIC_API_URL } from '@env';
 
 export const handlePlayStorageSubscription = async ({
   planType, // 1 = Basic, 2 = Pro, 3 = Recovery
@@ -84,7 +85,7 @@ export const handlePlayStorageSubscription = async ({
   autoRenew,
   setShowModal,
   currentPurchaseToken, // for Pro upgrades
-  hasPurchasedBasic, // flag from backend/user data
+  //hasPurchasedBasic, // flag from backend/user data
 }) => { 
   try {
     await AsyncStorage.setItem('storagePaying', 'true');
@@ -94,9 +95,9 @@ export const handlePlayStorageSubscription = async ({
 
     if (planType === 1) {
       // Basic plan
-      if (hasPurchasedBasic) {
-        throw new Error('Basic plan can be purchased only once.');
-      }
+      // if (hasPurchasedBasic) {
+      //   throw new Error('Basic plan can be purchased only once.');
+      // }
       productId = 'storage_basic';
       basePlanIdMap = { 1: 'storage_basic_monthly' }; // only 1 month
       months = 1; // enforce 1 month
@@ -137,12 +138,14 @@ export const handlePlayStorageSubscription = async ({
 
     console.log('Selected Offer:', offer);
 
+    const oldToken = currentPurchaseToken || null;
+
     // Request subscription purchase
     const purchase = await RNIap.requestSubscription({
       sku: productId,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
-      ...(planType === 2 && currentPurchaseToken
-        ? { oldSkuAndroid: currentPurchaseToken }
+      ...(planType === 2 && oldToken
+        ? { oldSkuAndroid: oldToken }
         : {}), // upgrade logic only for Pro plan
     });
 
@@ -150,7 +153,7 @@ export const handlePlayStorageSubscription = async ({
 
     // Send purchase data to backend for verification
     const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_URL}/api/patients/verify-google-storage-subscription`,
+      `${EXPO_PUBLIC_API_URL}/api/patients/verify-google-storage-subscription-app`,
       {
         planType,
         purchaseToken: purchase.purchaseToken,

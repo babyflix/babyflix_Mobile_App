@@ -22,6 +22,7 @@ const initialState = {
   subscriptionId: '',
   subscriptionIsActive: false,
   subscriptionExpired: false,
+  subscriptionCurrentPurchaseToken: '',
   firstTimeSubscription: false,
   showFlixAd: false,
 
@@ -37,6 +38,7 @@ const initialState = {
   storagePlanWarning: false,
   storagePlanDeleted: 0,
   storagePlanAutoRenewal: 0,
+  storageCurrentPurchaseToken: '',
 };
 
 
@@ -87,6 +89,7 @@ const authSlice = createSlice({
       state.subscriptionId = subscription?.subscriptionId || '';
       state.subscriptionIsActive = subscription?.subscriptionIsActive === 1;
       state.subscriptionExpired = subscription?.subscriptionExpired || '';
+      state.subscriptionCurrentPurchaseToken = subscription?.subscriptionCurrentPurchaseToken || '';
       state.firstTimeSubscription = firstTimeSubscription;
       state.showFlixAd = showFlixAd;
       // 🔹 Storage Plan mapping
@@ -101,6 +104,7 @@ const authSlice = createSlice({
       state.storagePlanWarning = storagePlan?.planShowWarning || false;
       state.storagePlanDeleted = storagePlan?.isPlanDeleted || 0;
       state.storagePlanAutoRenewal = storagePlan?.storagePlanAutoRenewal || 0;
+      state.storageCurrentPurchaseToken = storagePlan?.storageCurrentPurchaseToken || '';
     },
     logout: (state) => {
       state.actionStatus = '';
@@ -125,6 +129,7 @@ const authSlice = createSlice({
       state.subscriptionIsActive= false;
       state.subscriptionExpired= false;
       state.firstTimeSubscription= false;
+      state.subscriptionCurrentPurchaseToken = '';
       state.showFlixAd= false;
        // 🔹 Reset storage plan
       state.storagePlan = null;
@@ -138,6 +143,7 @@ const authSlice = createSlice({
       state.storagePlanWarning = false;
       state.storagePlanDeleted = 0;
       state.storagePlanAutoRenewal = 0;
+      state.storageCurrentPurchaseToken = ''; 
     },
     updateActionStatus: (state, action) => {
       state.actionStatus = action.payload;

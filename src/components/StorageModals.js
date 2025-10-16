@@ -296,6 +296,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               months,
               session_id,
               status: 'SUCCESS',
+              provider: "ios_stripe",
             };
 
             console.log('[StorageModals] Updating plan with payload:', payload);
@@ -449,7 +450,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
       if (Platform.OS === 'android') {
         // Use Google Play Billing for Android
-          const currentPurchaseToken = false;
+          const currentPurchaseToken =  user.storageCurrentPurchaseToken ;
 
           const result = await handlePlayStorageSubscription({
             planType: selectedPlan,              // 'basic' or 'pro'
@@ -457,7 +458,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             autoRenew: false,             // true/false
             setShowModal: { setShowStorage2 },
             currentPurchaseToken,
-            hasPurchasedBasic,
+            //hasPurchasedBasic,
           });
         if (result.success) {
           //setShowPaymentSuccess(true);
@@ -473,6 +474,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             months: 1,
             session_id: "play_billing_" + Date.now(),
             status: "SUCCESS",
+            provider: "play_billing",
+            currentPurchaseToken,
           };
 
           console.log("[StorageModals] Updating plan with payload:", payload);

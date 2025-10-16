@@ -220,19 +220,25 @@ const GalleryScreen = () => {
     checkLanguage();
   }, []);
 
-   useEffect(() => {
-    const checkLanguage = async () => {
-      console.log('innnnnnnnnnnnnnnnnnnnnnnn')
-      const result = await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
-      uuid: user.uuid,
-      autoRenewal: false,
-      expiryDate: "2027-03-08T11:12:41.000Z",
-    });
+  useEffect(() => {
+  const updateAutoRenewal = async () => {
+    try {
+      const expiryDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      console.log('Updating Flix10K auto-renewal...',user.uuid, expiryDate);
+      const result = await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
+        uuid: user.uuid,
+        autoRenewal: true,
+        expiryDate,
+        currentPurchaseToken: "",
+      });
+      console.log("Auto-renewal synced with backend:", result.data);
+    } catch (error) {
+      console.error("Failed to update auto-renewal:", error);
+    }
+  };
 
-    console.log("Auto-renewal synced with backend:", result);
-    };
-    checkLanguage();
-  }, []);
+  updateAutoRenewal();
+}, []);
 
   useEffect(() => {
     const checkSkipDate = async () => {

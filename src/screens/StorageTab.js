@@ -49,6 +49,7 @@ const StorageTab = () => {
     storagePlanWarning,
     storagePlanDeleted,
     storagePlanAutoRenewal,
+    storageCurrentPurchaseToken,
   } = useSelector((state) => state.auth);
 
   // const storagePlanExpired = true;
@@ -282,15 +283,25 @@ const StorageTab = () => {
     }
 
     const newStatus = sub.autoRenewing;
-    const expiryDate = sub.expirationDate ? new Date(sub.expirationDate) : null;
+
+    const expiryTimestamp =
+      sub.expirationDate ||      // Android (some versions return this)
+      sub.expirationDateAndroid || // Some builds define this
+      sub.expirationDateIos ||   // iOS field
+      null;
+
+    const expiryDate = expiryTimestamp
+    ? new Date(Number(expiryTimestamp)).toISOString()
+    : null;
 
     console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
 
     // Sync with backend only if changed
-    await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal`, {
+    await axios.post(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
       uuid,
       autoRenewal: newStatus,
       expiryDate,
+      currentPurchaseToken: sub.purchaseToken, // Android token
     });
 
     console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
@@ -337,7 +348,7 @@ const StorageTab = () => {
             return;
           }
 
-          const currentPurchaseToken = false;
+          const currentPurchaseToken = storageCurrentPurchaseToken;
 
           const result = await handlePlayStorageSubscription({
             planType: planIdToSend,              // 'basic' or 'pro'
@@ -345,7 +356,7 @@ const StorageTab = () => {
             autoRenew: autoRenew,             // true/false
             setShowModal: { setUpgradeModal },
             currentPurchaseToken,
-            hasPurchasedBasic: false,
+            //hasPurchasedBasic: false,
           });
 
           if (result.success) {
@@ -363,6 +374,8 @@ const StorageTab = () => {
             months: monthsToSend,
             session_id: "play_billing_" + Date.now(),
             status: "SUCCESS",
+            provider: "play_billing",
+            currentPurchaseToken,
           };
 
           console.log("[StorageModals] Updating plan with payload:", payload);
@@ -525,7 +538,7 @@ const StorageTab = () => {
             <Text style={styles.cardTitle}>{storagePlanName || t("flix10k.title")}</Text>
             <Text style={styles.price}>${storagePlanPrice} / {t("flix10k.month")}</Text>
             <Text style={styles.nextBilling}>{t("flix10k.nextBilling")}: {formatDate(storagePlan?.planExpiryDate)}</Text>
-            {!storagePlanExpired && <Text style={[styles.nextBilling, { color: "#e96b04" }]}>{t('storage.remainingDay')}: {remainingDays}</Text>}
+            {!storagePlanExpired && <Text style={[styles.nextBilling, { color: "#e96b04" }]}>{t('storage.remainingDays')}: {remainingDays}</Text>}
 
             <TouchableOpacity
               style={styles.autoRenewRow}

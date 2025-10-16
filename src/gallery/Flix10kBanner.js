@@ -59,7 +59,7 @@ const Flix10kBanner = ({
   const router = useRouter();
   const navigation = useNavigation();
   const user = useSelector((state) => state.auth);
-  const { subscriptionAmount, subscriptionId, subscriptionIsActive, subscriptionExpired } = useSelector(
+  const { subscriptionAmount, subscriptionId, subscriptionIsActive, subscriptionExpired, subscriptionCurrentPurchaseToken } = useSelector(
     (state) => state.auth
   );
   const { storagePlanId, storagePlanPayment, } =
@@ -191,6 +191,7 @@ const Flix10kBanner = ({
         subscribedMonths,
         stripeSessionId,
         status: apiStatus,
+        provider: "ios_stripe",
         //showFlix10KAd: showFlix10KAd,
       };
       console.log("Calling subscription API with:", payload);
@@ -505,7 +506,7 @@ const Flix10kBanner = ({
     await AsyncStorage.setItem('flix10KPaying', 'true');
     if (Platform.OS === 'android') {
 
-        const currentPurchaseToken = false;
+        const currentPurchaseToken = subscriptionCurrentPurchaseToken;
 
         const result = await handleGooglePlayPayment({
           months,        // 1, 3, 6, 9, 12 months
@@ -528,6 +529,8 @@ const Flix10kBanner = ({
           subscribedMonths: months,
           stripeSessionId,
           status: apiStatus,
+          provider: "play_billing",
+          currentPurchaseToken,
         };
 
         console.log("Calling subscription API with:", payload);

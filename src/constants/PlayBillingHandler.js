@@ -63,6 +63,7 @@
 import * as RNIap from 'react-native-iap';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { EXPO_PUBLIC_API_URL } from '@env';
 
 export const handlePlaySubscription = async ({
   months,
@@ -101,11 +102,12 @@ export const handlePlaySubscription = async ({
 
     console.log('Selected Offer:', offer);
 
+    const oldToken = currentPurchaseToken || null;
     // Request subscription purchase
     const purchase = await RNIap.requestSubscription({
       sku: productId,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
-      ...(currentPurchaseToken && { oldSkuAndroid: currentPurchaseToken }), 
+      ...(oldToken && { oldSkuAndroid: oldToken }), 
       // <-- pass old purchase token if upgrading
     });
 
@@ -113,7 +115,7 @@ export const handlePlaySubscription = async ({
 
     // Send purchase data to backend for verification
     const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_URL}/api/subscription/verify-google-subscription`,
+      `${EXPO_PUBLIC_API_URL}/api/subscription/verify-google-subscription-app`,
       {
         purchaseToken: purchase.purchaseToken,
         productId: purchase.productId,
