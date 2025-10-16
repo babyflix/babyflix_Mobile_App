@@ -78,11 +78,10 @@ export const handlePlaySubscription = async ({
 
     // Map months to Play Store base plan IDs
    const basePlanIdMap = {
-        1: 'flix_monthly',     // 1 month
-        3: 'flix_quarterly',   // 3 months
-        6: 'flix_halfyearly',  // 6 months
-        9: 'flix_nine_months', // 9 months
-        12: 'flix_yearly',     // 12 months
+        1: 'flix-monthly',     // 1 month
+        3: 'flix-quarterly',   // 3 months
+        6: 'flix-halfyearly',  // 6 months
+        12: 'flix-yearly',     // 12 months
     };
 
     const basePlanId = basePlanIdMap[months];

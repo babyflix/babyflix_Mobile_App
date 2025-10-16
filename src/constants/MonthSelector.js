@@ -21,7 +21,7 @@ const MonthSelector = ({ months, setMonths, autoRenew, mode = "dropdown" }) => {
 
   let options = [];
   if (Platform.OS === "android") {
-    options = [1, 3, 6, 9, 12];
+    options = [1, 3, 6, 12];
   } else {
     options = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   }

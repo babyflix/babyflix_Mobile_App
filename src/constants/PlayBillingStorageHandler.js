@@ -99,23 +99,22 @@ export const handlePlayStorageSubscription = async ({
       //   throw new Error('Basic plan can be purchased only once.');
       // }
       productId = 'storage_basic';
-      basePlanIdMap = { 1: 'storage_basic_monthly' }; // only 1 month
+      basePlanIdMap = { 1: 'storage-basic-monthly' }; // only 1 month
       months = 1; // enforce 1 month
       autoRenew = false; // no auto-renew
     } else if (planType === 2) {
       // Pro plan
       productId = 'storage_pro';
       basePlanIdMap = {
-        1: 'storage_pro_monthly',
-        3: 'storage_pro_quarterly',
-        6: 'storage_pro_halfyearly',
-        9: 'storage_pro_nine_months',
-        12: 'storage_pro_yearly',
+        1: 'storage-pro-monthly',
+        3: 'storage-proplan-quarterly',
+        6: 'storage-pro-halfyearly',
+        12: 'storage-pro-yearly',
       };
     } else if (planType === 3) {
       // Recovery plan (you can set logic same as Pro or custom)
       productId = 'storage_recovery';
-      basePlanIdMap = { 1: 'storage_recovery_monthly' }; // example: 1 month
+      basePlanIdMap = { 1: 'storage-recovery-monthly' }; // example: 1 month
       months = 1;
       autoRenew = false;
     } else {

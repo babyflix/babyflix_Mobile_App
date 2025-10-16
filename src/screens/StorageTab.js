@@ -692,10 +692,10 @@ const StorageTab = () => {
               <TouchableOpacity
                 style={[
                   styles.button,
-                  additionalMonths <= 0 && { backgroundColor: Colors.gray } // make it gray when disabled
+                  //additionalMonths <= 0 && { backgroundColor: Colors.gray } // make it gray when disabled
                 ]}
                 onPress={handleUpgradeSubscribtion}
-                disabled={additionalMonths <= 0} // disables the button
+                //disabled={additionalMonths <= 0} // disables the button
               >
                 <Text style={styles.buttonText}>{t("flix10k.upgrade")}</Text>
               </TouchableOpacity>
