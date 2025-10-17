@@ -78,6 +78,8 @@ import * as RNIap from 'react-native-iap';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import log from './logger';
+import { Alert } from 'react-native';
 
 export const handlePlayStorageSubscription = async ({
   planType, // 1 = Basic, 2 = Pro, 3 = Recovery
@@ -89,6 +91,7 @@ export const handlePlayStorageSubscription = async ({
 }) => { 
   try {
     await AsyncStorage.setItem('storagePaying', 'true');
+    log.info("Storage Starting Play Billing flow for months and planType:", months, planType);
 
     let productId = '';
     let basePlanIdMap = {};
@@ -123,10 +126,25 @@ export const handlePlayStorageSubscription = async ({
 
     const basePlanId = basePlanIdMap[months];
     if (!basePlanId) throw new Error('Invalid subscription duration selected.');
+    log.info("Storage Base plan selected:", basePlanId);
+    Alert.alert('Debug', 'Step 1: Storage Init connection');
+
+    log.info("Step 1: Storage flush pending purchases");
+    await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
 
     // Connect and get subscription offers
-    await RNIap.initConnection();
+    //await RNIap.initConnection();
+     // ✅ Initialize connection
+        const connected = await RNIap.initConnection();
+        if (!connected) throw new Error('Billing connection failed.');
+
+    log.debug("Storage IAP connection initialized");
+    Alert.alert('Debug', 'Step 2: Storage Getting subscriptions');
+
     const subs = await RNIap.getSubscriptions([productId]);
+
+    log.debug("Storage Subscriptions fetched:", subs);
+
     const sub = subs?.[0];
     if (!sub) throw new Error('Subscription not found in Play Store.');
 
@@ -134,10 +152,13 @@ export const handlePlayStorageSubscription = async ({
       o => o.basePlanId === basePlanId
     );
     if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
+    Alert.alert('Debug', 'Step 3: Storage Found subscriptions');
 
     console.log('Selected Offer:', offer);
+    log.info("Storage Offer selected:", offer);
 
     const oldToken = currentPurchaseToken || null;
+    log.debug("Storage Old token:", oldToken);
 
     // Request subscription purchase
     const purchase = await RNIap.requestSubscription({
@@ -149,6 +170,9 @@ export const handlePlayStorageSubscription = async ({
     });
 
     console.log('Purchase result:', purchase);
+    log.info("Storage Purchase result:", purchase);
+
+    Alert.alert('Debug', 'Step 4: Storage Purchase verification');
 
     // Send purchase data to backend for verification
     const response = await axios.post(
@@ -164,6 +188,7 @@ export const handlePlayStorageSubscription = async ({
     );
 
     console.log('Backend verified:', response.data);
+    log.info("Storage Backend verification response:", response.data);
 
     setShowModal(false);
     await RNIap.endConnection();
@@ -175,7 +200,9 @@ export const handlePlayStorageSubscription = async ({
       verification: response.data,
     };
   } catch (err) {
-    console.error('Play Billing Storage Subscription Error:', err);
+    console.error('Storage Play Billing Subscription Error:', err);
+    log.error("Storage Play Billing Subscription Error:", err);
+    Alert.alert('Storage Play Billing Error', err?.message || JSON.stringify(err));
     await AsyncStorage.removeItem('storagePaying');
     return {
       success: false,

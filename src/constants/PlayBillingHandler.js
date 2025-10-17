@@ -60,59 +60,168 @@
 //   }
 // };
 
+// import * as RNIap from 'react-native-iap';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import axios from 'axios';
+// import { EXPO_PUBLIC_API_URL } from '@env';
+
+// export const handlePlaySubscription = async ({
+//   months,
+//   autoRenew,
+//   setShowModal,
+//   currentPurchaseToken, // <-- pass this if user already has a subscription
+// }) => { 
+//   try {
+//     await AsyncStorage.setItem('flix10KPaying', 'true');
+
+//     const productId = 'flix10k_subscription'; // same as in Play Console
+
+//     // Map months to Play Store base plan IDs
+//    const basePlanIdMap = {
+//         1: 'flix-monthly',     // 1 month
+//         3: 'flix-quarterly',   // 3 months
+//         6: 'flix-halfyearly',  // 6 months
+//         12: 'flix-yearly',     // 12 months
+//     };
+
+//     const basePlanId = basePlanIdMap[months];
+//     if (!basePlanId) throw new Error('Invalid subscription duration selected.');
+
+//     // Connect and get subscription offers
+//     await RNIap.initConnection();
+//     const subs = await RNIap.getSubscriptions([productId]);
+//     const sub = subs?.[0];
+//     if (!sub) throw new Error('Subscription not found in Play Store.');
+
+//     // Find correct offer token for base plan
+//     const offer = sub.subscriptionOfferDetails.find(
+//       o => o.basePlanId === basePlanId
+//     );
+//     if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
+
+//     console.log('Selected Offer:', offer);
+
+//     const oldToken = currentPurchaseToken || null;
+//     // Request subscription purchase
+//     const purchase = await RNIap.requestSubscription({
+//       sku: productId,
+//       subscriptionOffers: [{ offerToken: offer.offerToken }],
+//       ...(oldToken && { oldSkuAndroid: oldToken }), 
+//       // <-- pass old purchase token if upgrading
+//     });
+
+//     console.log('Purchase result:', purchase);
+
+//     // Send purchase data to backend for verification
+//     const response = await axios.post(
+//       `${EXPO_PUBLIC_API_URL}/api/subscription/verify-google-subscription-app`,
+//       {
+//         purchaseToken: purchase.purchaseToken,
+//         productId: purchase.productId,
+//         basePlanId,
+//         autoRenew,
+//       },
+//       { headers: { 'Content-Type': 'application/json' } }
+//     );
+
+//     console.log('Backend verified:', response.data);
+
+//     setShowModal(false);
+//     await RNIap.endConnection();
+//     await AsyncStorage.removeItem('flix10KPaying');
+
+//      return {
+//       success: true,
+//       purchase,
+//       verification: response.data,
+//     };
+//   } catch (err) {
+//     console.error('Play Billing Subscription Error:', err);
+//     await AsyncStorage.removeItem('flix10KPaying');
+//     return {
+//       success: false,
+//       error: err.message || 'Payment failed',
+//     };
+//   }
+// };
+
 import * as RNIap from 'react-native-iap';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { Alert } from 'react-native';
+import log from './logger';
 
 export const handlePlaySubscription = async ({
   months,
   autoRenew,
   setShowModal,
-  currentPurchaseToken, // <-- pass this if user already has a subscription
-}) => { 
+  currentPurchaseToken,
+}) => {
   try {
+    log.info("Starting Play Billing flow for months:", months);
     await AsyncStorage.setItem('flix10KPaying', 'true');
 
-    const productId = 'flix10k_subscription'; // same as in Play Console
+    const productId = 'flix10k_subscription'; // ✅ must match Play Console
 
-    // Map months to Play Store base plan IDs
-   const basePlanIdMap = {
-        1: 'flix-monthly',     // 1 month
-        3: 'flix-quarterly',   // 3 months
-        6: 'flix-halfyearly',  // 6 months
-        12: 'flix-yearly',     // 12 months
+    const basePlanIdMap = {
+      1: 'flix-monthly',
+      3: 'flix-quarterly',
+      6: 'flix-halfyearly',
+      12: 'flix-yearly',
     };
 
     const basePlanId = basePlanIdMap[months];
     if (!basePlanId) throw new Error('Invalid subscription duration selected.');
 
-    // Connect and get subscription offers
-    await RNIap.initConnection();
+    log.info("Base plan selected:", basePlanId);
+    Alert.alert('Debug', 'Step 1: Init connection');
+
+    // ✅ Flush any pending transactions first
+    await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
+
+    // ✅ Initialize connection
+    const connected = await RNIap.initConnection();
+    if (!connected) throw new Error('Billing connection failed.');
+
+     log.debug("IAP connection initialized");
+     Alert.alert('Debug', 'Step 2: Getting subscriptions');
+
+    // ✅ Get available subscriptions
     const subs = await RNIap.getSubscriptions([productId]);
+    console.log('Available subscriptions:', JSON.stringify(subs, null, 2));
+    log.debug("Subscriptions fetched:", subs);
+
     const sub = subs?.[0];
     if (!sub) throw new Error('Subscription not found in Play Store.');
 
-    // Find correct offer token for base plan
-    const offer = sub.subscriptionOfferDetails.find(
-      o => o.basePlanId === basePlanId
+    // ✅ Find correct offer
+    const offer = sub.subscriptionOfferDetails?.find(
+      (o) => o.basePlanId === basePlanId
     );
-    if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
+    if (!offer) throw new Error(`Offer not found for base plan: ${basePlanId}`);
+
+     Alert.alert('Debug', 'Step 3: Found subscriptions');
 
     console.log('Selected Offer:', offer);
+     log.info("Offer selected:", offer);
 
+    // ✅ Purchase flow
     const oldToken = currentPurchaseToken || null;
-    // Request subscription purchase
+    log.debug("Old token:", oldToken);
+
     const purchase = await RNIap.requestSubscription({
       sku: productId,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
-      ...(oldToken && { oldSkuAndroid: oldToken }), 
-      // <-- pass old purchase token if upgrading
+      ...(oldToken && { oldSkuAndroid: oldToken }),
     });
 
     console.log('Purchase result:', purchase);
+    log.info("Purchase result:", purchase);
 
-    // Send purchase data to backend for verification
+    Alert.alert('Debug', 'Step 4: Purchase verification');
+
+    // ✅ Verify with backend
     const response = await axios.post(
       `${EXPO_PUBLIC_API_URL}/api/subscription/verify-google-subscription-app`,
       {
@@ -125,19 +234,23 @@ export const handlePlaySubscription = async ({
     );
 
     console.log('Backend verified:', response.data);
+    log.info("Backend verification response:", response.data);
 
     setShowModal(false);
-    await RNIap.endConnection();
     await AsyncStorage.removeItem('flix10KPaying');
+    await RNIap.endConnection();
 
-     return {
+    return {
       success: true,
       purchase,
       verification: response.data,
     };
   } catch (err) {
     console.error('Play Billing Subscription Error:', err);
+    log.error("Play Billing Subscription Error:", err);
+    Alert.alert('Play Billing Error', err?.message || JSON.stringify(err));
     await AsyncStorage.removeItem('flix10KPaying');
+    await RNIap.endConnection();
     return {
       success: false,
       error: err.message || 'Payment failed',

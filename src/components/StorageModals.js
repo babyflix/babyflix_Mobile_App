@@ -448,6 +448,46 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       await AsyncStorage.setItem('paying', 'true');
       //console.log('platform.os',Platform.OS);
 
+      if (Platform.OS === 'android' && selectedPlan === 1) {
+        await AsyncStorage.setItem('payment_status 1', 'done');
+
+          const payload = {
+            userId: user.uuid,
+            storagePlanId: selectedPlan,
+            storagePlanPayment: 1,
+            autoRenewal: false,
+            months: 1,
+            session_id: "play_billing_" + Date.now(),
+            status: "SUCCESS",
+            provider: "play_billing",
+          };
+
+          console.log("[StorageModals] Updating plan with payload:", payload);
+
+          await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          setShowStorage1(false);
+          setShowStorage2(false);
+          setTimeout(() => {
+            setShowPaymentSuccess(true);
+          }, 200);
+
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.PAYMENT,
+            action_description: `User payment success for storage plan`,
+          });
+
+          dispatch(setForceOpenStorageModals(false));
+          dispatch(setPlanExpired(false));
+          dispatch(setUpgradeReminder(false));
+
+          return;
+      }
+
       if (Platform.OS === 'android') {
         // Use Google Play Billing for Android
           const currentPurchaseToken =  user.storageCurrentPurchaseToken ;
