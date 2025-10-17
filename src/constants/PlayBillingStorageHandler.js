@@ -144,13 +144,19 @@ export const handlePlayStorageSubscription = async ({
     console.log("Storage IAP connection initialized", connected);
     Alert.alert('Debug', 'Step 2: Storage Getting subscriptions');
 
-    const subs = await RNIap.getSubscriptions([productId]);
+    //const subs = await RNIap.getSubscriptions([productId]);
 
-    log.debug("Storage Subscriptions fetched:", subs);
-    console.log("Storage Subscriptions fetched:", subs);
+    const allSubs = await RNIap.getSubscriptions();
 
-    const sub = subs?.[0];
-    if (!sub) throw new Error('Subscription not found in Play Store.');
+    log.debug("Storage Subscriptions fetched:", allSubs);
+    console.log("Storage Subscriptions fetched:", allSubs);
+
+const sub = allSubs.find((item) => item.productId === productId);
+
+if (!sub) throw new Error(`Subscription ${productId} not found in Play Store.`);
+
+    //const sub = subs?.[0];
+    //if (!sub) throw new Error('Subscription not found in Play Store.');
     console.log("First subscription:", sub);
 
     const offer = sub.subscriptionOfferDetails.find(
@@ -167,7 +173,7 @@ export const handlePlayStorageSubscription = async ({
 
     // Request subscription purchase
     const purchase = await RNIap.requestSubscription({
-      skus: [productId],
+      sku: productId,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
       ...(planType === 2 && oldToken
         ? { oldSkuAndroid: oldToken }

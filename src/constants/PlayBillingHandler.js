@@ -191,13 +191,21 @@ export const handlePlaySubscription = async ({
      Alert.alert('Debug', 'Step 2: Getting subscriptions');
 
     // ✅ Get available subscriptions
-    const subs = await RNIap.getSubscriptions([productId]);
-    console.log('Available subscriptions:', JSON.stringify(subs, null, 2));
-    log.debug("Subscriptions fetched:", subs);
-    console.log("Subscriptions fetched:", subs)
+    // const subs = await RNIap.getSubscriptions([productId]);
+    // console.log('Available subscriptions:', JSON.stringify(subs, null, 2));
+    // log.debug("Subscriptions fetched:", subs);
+    // console.log("Subscriptions fetched:", subs)
+     const allSubs = await RNIap.getSubscriptions();
 
-    const sub = subs?.[0];
-    if (!sub) throw new Error('Subscription not found in Play Store.');
+    log.debug("Subscriptions fetched:", allSubs);
+    console.log("Subscriptions fetched:", allSubs);
+
+    const sub = allSubs.find((item) => item.productId === productId);
+
+    if (!sub) throw new Error(`Subscription ${productId} not found in Play Store.`);
+
+    //const sub = subs?.[0];
+    //if (!sub) throw new Error('Subscription not found in Play Store.');
     console.log("First subscription:", sub);
 
     // ✅ Find correct offer
@@ -215,18 +223,17 @@ export const handlePlaySubscription = async ({
     const oldToken = currentPurchaseToken || null;
     log.debug("Old token:", oldToken);
 
-    // const purchase = await RNIap.requestSubscription({
-    //   sku: productId,
-    //   subscriptionOffers: [{ offerToken: offer.offerToken }],
-    //   ...(oldToken && { oldSkuAndroid: oldToken }),
-    // });
-
     const purchase = await RNIap.requestSubscription({
-      skus: [productId],
+      sku: productId,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
       ...(oldToken && { oldSkuAndroid: oldToken }),
     });
 
+    // const purchase = await RNIap.requestSubscription({
+    //   skus: [productId],
+    //   subscriptionOffers: [{ offerToken: offer.offerToken }],
+    //   ...(oldToken && { oldSkuAndroid: oldToken }),
+    // });
 
     console.log('Purchase result:', purchase);
     log.info("Purchase result:", purchase);
