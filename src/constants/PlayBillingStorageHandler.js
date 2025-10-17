@@ -92,6 +92,7 @@ export const handlePlayStorageSubscription = async ({
   try {
     await AsyncStorage.setItem('storagePaying', 'true');
     log.info("Storage Starting Play Billing flow for months and planType:", months, planType);
+    console.log("Storage Starting Play Billing flow for months and planType:", months, planType);
 
     let productId = '';
     let basePlanIdMap = {};
@@ -127,6 +128,7 @@ export const handlePlayStorageSubscription = async ({
     const basePlanId = basePlanIdMap[months];
     if (!basePlanId) throw new Error('Invalid subscription duration selected.');
     log.info("Storage Base plan selected:", basePlanId);
+    console.log("Storage Base plan selected:", basePlanId, productId);
     Alert.alert('Debug', 'Step 1: Storage Init connection');
 
     log.info("Step 1: Storage flush pending purchases");
@@ -139,14 +141,17 @@ export const handlePlayStorageSubscription = async ({
         if (!connected) throw new Error('Billing connection failed.');
 
     log.debug("Storage IAP connection initialized");
+    console.log("Storage IAP connection initialized", connected);
     Alert.alert('Debug', 'Step 2: Storage Getting subscriptions');
 
     const subs = await RNIap.getSubscriptions([productId]);
 
     log.debug("Storage Subscriptions fetched:", subs);
+    console.log("Storage Subscriptions fetched:", subs);
 
     const sub = subs?.[0];
     if (!sub) throw new Error('Subscription not found in Play Store.');
+    console.log("First subscription:", sub);
 
     const offer = sub.subscriptionOfferDetails.find(
       o => o.basePlanId === basePlanId
@@ -162,7 +167,7 @@ export const handlePlayStorageSubscription = async ({
 
     // Request subscription purchase
     const purchase = await RNIap.requestSubscription({
-      sku: productId,
+      skus: [productId],
       subscriptionOffers: [{ offerToken: offer.offerToken }],
       ...(planType === 2 && oldToken
         ? { oldSkuAndroid: oldToken }

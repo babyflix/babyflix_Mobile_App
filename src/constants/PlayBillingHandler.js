@@ -160,6 +160,7 @@ export const handlePlaySubscription = async ({
 }) => {
   try {
     log.info("Starting Play Billing flow for months:", months);
+    console.log("Starting Play Billing flow for months:", months);
     await AsyncStorage.setItem('flix10KPaying', 'true');
 
     const productId = 'flix10k_subscription'; // ✅ must match Play Console
@@ -174,6 +175,7 @@ export const handlePlaySubscription = async ({
     const basePlanId = basePlanIdMap[months];
     if (!basePlanId) throw new Error('Invalid subscription duration selected.');
 
+    console.log("Base plan selected:", basePlanId, productId);
     log.info("Base plan selected:", basePlanId);
     Alert.alert('Debug', 'Step 1: Init connection');
 
@@ -184,6 +186,7 @@ export const handlePlaySubscription = async ({
     const connected = await RNIap.initConnection();
     if (!connected) throw new Error('Billing connection failed.');
 
+    console.log("IAP connection initialized", connected);
      log.debug("IAP connection initialized");
      Alert.alert('Debug', 'Step 2: Getting subscriptions');
 
@@ -191,9 +194,11 @@ export const handlePlaySubscription = async ({
     const subs = await RNIap.getSubscriptions([productId]);
     console.log('Available subscriptions:', JSON.stringify(subs, null, 2));
     log.debug("Subscriptions fetched:", subs);
+    console.log("Subscriptions fetched:", subs)
 
     const sub = subs?.[0];
     if (!sub) throw new Error('Subscription not found in Play Store.');
+    console.log("First subscription:", sub);
 
     // ✅ Find correct offer
     const offer = sub.subscriptionOfferDetails?.find(
@@ -210,11 +215,18 @@ export const handlePlaySubscription = async ({
     const oldToken = currentPurchaseToken || null;
     log.debug("Old token:", oldToken);
 
+    // const purchase = await RNIap.requestSubscription({
+    //   sku: productId,
+    //   subscriptionOffers: [{ offerToken: offer.offerToken }],
+    //   ...(oldToken && { oldSkuAndroid: oldToken }),
+    // });
+
     const purchase = await RNIap.requestSubscription({
-      sku: productId,
+      skus: [productId],
       subscriptionOffers: [{ offerToken: offer.offerToken }],
       ...(oldToken && { oldSkuAndroid: oldToken }),
     });
+
 
     console.log('Purchase result:', purchase);
     log.info("Purchase result:", purchase);
