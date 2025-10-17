@@ -220,25 +220,25 @@ const GalleryScreen = () => {
     checkLanguage();
   }, []);
 
-  useEffect(() => {
-  const updateAutoRenewal = async () => {
-    try {
-      const expiryDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-      console.log('Updating Flix10K auto-renewal...',user.uuid, expiryDate);
-      const result = await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
-        uuid: user.uuid,
-        autoRenewal: true,
-        expiryDate,
-        currentPurchaseToken: "",
-      });
-      console.log("Auto-renewal synced with backend:", result.data);
-    } catch (error) {
-      console.error("Failed to update auto-renewal:", error);
-    }
-  };
+//   useEffect(() => {
+//   const updateAutoRenewal = async () => {
+//     try {
+//       const expiryDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+//       console.log('Updating Flix10K auto-renewal...',user.uuid, expiryDate);
+//       const result = await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
+//         uuid: user.uuid,
+//         autoRenewal: true,
+//         expiryDate,
+//         currentPurchaseToken: "",
+//       });
+//       console.log("Auto-renewal synced with backend:", result.data);
+//     } catch (error) {
+//       console.error("Failed to update auto-renewal:", error);
+//     }
+//   };
 
-  updateAutoRenewal();
-}, []);
+//   updateAutoRenewal();
+// }, []);
 
   useEffect(() => {
     const checkSkipDate = async () => {

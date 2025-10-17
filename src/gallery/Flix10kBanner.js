@@ -31,7 +31,7 @@ import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import FlixAdModal from "./FlixAdModal";
 import AIGenerationModal from "./AIGenerationModal";
 import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
-import { handleGooglePlayPayment } from "../constants/PlayBillingHandler";
+import { handlePlaySubscription } from "../constants/PlayBillingHandler";
 import PaymentStatusModal from "../constants/PaymentStatusModal";
 //import * as RNIap from 'react-native-iap';
 
@@ -508,7 +508,7 @@ const Flix10kBanner = ({
 
         const currentPurchaseToken = subscriptionCurrentPurchaseToken;
 
-        const result = await handleGooglePlayPayment({
+        const result = await handlePlaySubscription({
           months,        // 1, 3, 6, 9, 12 months
           autoRenew,     // true or false (based on toggle)
           setShowModal,  // for closing modal after payment

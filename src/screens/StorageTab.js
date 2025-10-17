@@ -359,6 +359,8 @@ const StorageTab = () => {
             //hasPurchasedBasic: false,
           });
 
+          console.log('result', result);
+
           if (result.success) {
           //setShowPaymentSuccess(true);
           await AsyncStorage.setItem('payment_status 1', 'done');

@@ -16,8 +16,8 @@ import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
 import PaymentStatusModal from "../constants/PaymentStatusModal";
-import { handleGooglePlayPayment } from "../constants/PlayBillingHandler";
 import * as RNIap from 'react-native-iap';
+import { handlePlaySubscription } from "../constants/PlayBillingHandler";
 
 const ManageSubscriptions = () => {
   const user = useSelector((state) => state.auth);
@@ -52,7 +52,7 @@ const ManageSubscriptions = () => {
     }
   }, [subscriptionExpired])
 
-   useEffect(() => {
+  useEffect(() => {
     const checkAndVerify = async () => {
       try {
         const today = new Date();
@@ -91,7 +91,7 @@ const ManageSubscriptions = () => {
   };
 
   const handleModalClose = (type) => {
-     //setShowafterAdd(false);
+    //setShowafterAdd(false);
     if (type === "success") {
       setShowPaymentSuccess(false);
     } else {
@@ -167,78 +167,89 @@ const ManageSubscriptions = () => {
   console.log(`Remaining days: ${remainingDays > 0 ? remainingDays : 0}`);
 
   const verifyAutoRenewStatus = async (uuid) => {
-  try {
-    await RNIap.initConnection();
-    const purchases = await RNIap.getAvailablePurchases();
+    try {
+      await RNIap.initConnection();
+      const purchases = await RNIap.getAvailablePurchases();
 
-    const sub = purchases.find(p => p.productId === "flix10k_subscription");
-    if (!sub) {
-      console.log("No subscription found for user.");
-      return;
+      const sub = purchases.find(p => p.productId === "flix10k_subscription");
+      if (!sub) {
+        console.log("No subscription found for user.");
+        return;
+      }
+
+      const newStatus = sub.autoRenewing;
+
+      const expiryTimestamp =
+        sub.expirationDate ||      // Android (some versions return this)
+        sub.expirationDateAndroid || // Some builds define this
+        sub.expirationDateIos ||   // iOS field
+        null;
+      const expiryDate = expiryTimestamp
+        ? new Date(Number(expiryTimestamp)).toISOString()
+        : null;
+
+
+      console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
+
+      // Sync with backend only if changed
+      await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal-app`, {
+        uuid,
+        autoRenewal: newStatus,
+        expiryDate,
+        currentPurchaseToken: sub.purchaseToken, // Android token
+      });
+
+      console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
+
+      await RNIap.endConnection();
+    } catch (err) {
+      console.error("verifyAutoRenewStatus error:", err);
     }
-
-    const newStatus = sub.autoRenewing;
-
-    const expiryTimestamp =
-      sub.expirationDate ||      // Android (some versions return this)
-      sub.expirationDateAndroid || // Some builds define this
-      sub.expirationDateIos ||   // iOS field
-      null;
-    const expiryDate = expiryTimestamp
-    ? new Date(Number(expiryTimestamp)).toISOString()
-    : null;
-
-
-    console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
-
-    // Sync with backend only if changed
-    await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal-app`, {
-      uuid,
-      autoRenewal: newStatus,
-      expiryDate,
-      currentPurchaseToken: sub.purchaseToken, // Android token
-    });
-
-    console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
-
-    await RNIap.endConnection();
-  } catch (err) {
-    console.error("verifyAutoRenewStatus error:", err);
-  }
-};
+  };
 
   const handleSubscribe = async () => {
     const isAutoRenewToggleOnly = subscription?.subscribedMonths === months && subscription?.autoRenewal !== autoRenew;
 
     await AsyncStorage.setItem('flix10KPaying', 'true');
     setUpgradeModal(false);
+
     if (Platform.OS === 'android') {
       console.log('in play billing');
 
-       if (isAutoRenewToggleOnly) {
-    console.log("User only toggled auto-renew — opening Play Store...");
-    await Linking.openURL(PLAY_STORE_SUBS_URL);
+      if (isAutoRenewToggleOnly) {
+        console.log("User only toggled auto-renew — opening Play Store...");
+        await Linking.openURL(PLAY_STORE_SUBS_URL);
 
-    const subscriptionListener = AppState.addEventListener("change", async (state) => {
-      if (state === "active") {
-        console.log("Returned from Play Store — verifying auto-renewal...");
-        await verifyAutoRenewStatus(user.uuid);
-        subscriptionListener.remove();
+        const subscriptionListener = AppState.addEventListener("change", async (state) => {
+          if (state === "active") {
+            console.log("Returned from Play Store — verifying auto-renewal...");
+            await verifyAutoRenewStatus(user.uuid);
+            subscriptionListener.remove();
+          }
+        });
+        return;
       }
-    });
-    return;
-  }
 
-        const currentPurchaseToken = subscriptionCurrentPurchaseToken;
-        
-         const result = await handleGooglePlayPayment({
+      const currentPurchaseToken = subscriptionCurrentPurchaseToken;
+
+      let result;
+
+      try {
+        result = await handlePlaySubscription({
           months,        // 1, 3, 6, 9, 12 months
           autoRenew,     // true or false (based on toggle)
           setShowModal,  // for closing modal after payment
           currentPurchaseToken, // pass if user already has a subscription
         });
-        // ✅ If successful — show success modal and send subscription API call
-        if (result.success) {
+      } catch (err) {
+        console.error("handlePlaySubscription failed:", err);
+        result = { success: false, error: err.message };
+      }
+      // ✅ If successful — show success modal and send subscription API call
+      console.log("subscription result", result.success);
+
+      if (result.success) {
+
         const uuid = user.uuid;
         const subscriptionId = 1;
         const stripeSessionId = "play_billing_" + Date.now();
@@ -262,9 +273,7 @@ const ManageSubscriptions = () => {
         console.log("flix10k payment success");
 
         // Delay success modal for smoother UX
-        setTimeout(() => {
           setShowPaymentSuccess(true);
-        }, 1000);
 
         // Send API to backend
         const response = await axios.post(
@@ -301,154 +310,147 @@ const ManageSubscriptions = () => {
         // setShowafterAdd(true);
         console.log("flix10k payment failed");
 
-        setTimeout(() => {
-          setShowPaymentFailure(true);
-        }, 1000);
+        setShowPaymentFailure(true);
 
-        try {
-          await sendDeviceUserInfo({
-            action_type: "payment failed",
-            action_description: `User payment failed for Flix10K plan`,
-          });
-        } catch (err) {
-          console.error("Error sending user action:", err);
-          Alert.alert("Error sending user action");
-        }
+        await sendDeviceUserInfo({
+          action_type: "payment failed",
+          action_description: `User payment failed for Flix10K plan`,
+        });
 
         await AsyncStorage.removeItem("flix10k_payment_status");
       }
     } else {
-    try {
-      const payload = {
-        subscriptionId: 1,
-        autoRenewal: autoRenew,
-        subscribedMonths: months,
-        platform: Platform.OS,
-      };
+      try {
+        const payload = {
+          subscriptionId: 1,
+          autoRenewal: autoRenew,
+          subscribedMonths: months,
+          platform: Platform.OS,
+        };
 
-      console.log("Subscription Payload:", payload);
+        console.log("Subscription Payload:", payload);
 
-      const response = await axios.post(
-        `${EXPO_PUBLIC_API_URL}/api/subscription/create-checkout-session-subscription-app`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Subscription Response:", response.data);
-
-      const sessionData = response.data;
-
-      if (sessionData.success && sessionData.message) {
-        setSnackbarMessage(t("flix10k.autoRenewalStatus", { status: autoRenew ? "enabled" : "disabled" }));
-        setSnackbarType('success');
-        setSnackbarVisible(true);
-        setSuccessModal(true);
-        return;
-      }
-
-      if (!sessionData.sessionId) throw new Error("No session ID returned");
-
-      const stripeUrl = sessionData.sessionUrl;
-
-      //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
-      let result;
-
-      if (Platform.OS === 'ios') {
-        await Linking.openURL(stripeUrl);
-        // const result = await WebBrowser.openAuthSessionAsync(
-        //   stripeUrl, // Stripe checkout URL
-        //   "babyflix://payment/redirect"
-        // );
-      } else {
-        // Android (or fallback): use WebBrowser
-        result = await WebBrowser.openAuthSessionAsync(
-          stripeUrl,
-          "babyflix://"
+        const response = await axios.post(
+          `${EXPO_PUBLIC_API_URL}/api/subscription/create-checkout-session-subscription-app`,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
         );
-      }
 
-      await WebBrowser.dismissBrowser();
-      
-      if (result?.type === 'success') {
-        console.log("Payment success");
-        setShowModal(false);
-      } else if (result?.type === 'cancel') {
-        console.log("Payment canceled or failed");
-        setShowModal(false);
-      }
+        console.log("Subscription Response:", response.data);
 
-      setShowModal(false);
-    } catch (error) {
-      console.error("Subscription error:", error.response?.data || error.message);
+        const sessionData = response.data;
+
+        if (sessionData.success && sessionData.message) {
+          setSnackbarMessage(t("flix10k.autoRenewalStatus", { status: autoRenew ? "enabled" : "disabled" }));
+          setSnackbarType('success');
+          setSnackbarVisible(true);
+          setSuccessModal(true);
+          return;
+        }
+
+        if (!sessionData.sessionId) throw new Error("No session ID returned");
+
+        const stripeUrl = sessionData.sessionUrl;
+
+        //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+        let result;
+
+        if (Platform.OS === 'ios') {
+          await Linking.openURL(stripeUrl);
+          // const result = await WebBrowser.openAuthSessionAsync(
+          //   stripeUrl, // Stripe checkout URL
+          //   "babyflix://payment/redirect"
+          // );
+        } else {
+          // Android (or fallback): use WebBrowser
+          result = await WebBrowser.openAuthSessionAsync(
+            stripeUrl,
+            "babyflix://"
+          );
+        }
+
+        await WebBrowser.dismissBrowser();
+
+        if (result?.type === 'success') {
+          console.log("Payment success");
+          setShowModal(false);
+        } else if (result?.type === 'cancel') {
+          console.log("Payment canceled or failed");
+          setShowModal(false);
+        }
+
+        setShowModal(false);
+      } catch (error) {
+        console.error("Subscription error:", error.response?.data || error.message);
+      }
     }
-  }
   };
 
-//   const subscriptionSkus = Platform.select({
-//   ios: [
-//     'com.babyflix.flix10k.monthly',  // 1 month
-//     'com.babyflix.flix10k.quarterly', // 3 months
-//     'com.babyflix.flix10k.yearly',    // 12 months
-//   ],
-//   android: [
-//     'com.babyflix.flix10k.monthly',
-//     'com.babyflix.flix10k.quarterly',
-//     'com.babyflix.flix10k.yearly',
-//   ],
-// });
+  //   const subscriptionSkus = Platform.select({
+  //   ios: [
+  //     'com.babyflix.flix10k.monthly',  // 1 month
+  //     'com.babyflix.flix10k.quarterly', // 3 months
+  //     'com.babyflix.flix10k.yearly',    // 12 months
+  //   ],
+  //   android: [
+  //     'com.babyflix.flix10k.monthly',
+  //     'com.babyflix.flix10k.quarterly',
+  //     'com.babyflix.flix10k.yearly',
+  //   ],
+  // });
 
-// /**
-//  * Handle subscription purchase
-//  * @param {string} sku - subscription SKU for chosen duration
-//  * @param {boolean} autoRenew - user choice for auto-renewal
-//  */
-// export const handleSubscribe = async (sku, autoRenew) => {
-//   try {
-//     await RNIap.initConnection();
+  // /**
+  //  * Handle subscription purchase
+  //  * @param {string} sku - subscription SKU for chosen duration
+  //  * @param {boolean} autoRenew - user choice for auto-renewal
+  //  */
+  // export const handleSubscribe = async (sku, autoRenew) => {
+  //   try {
+  //     await RNIap.initConnection();
 
-//     const products = await RNIap.getSubscriptions(subscriptionSkus);
-//     console.log('Available subscriptions:', products);
+  //     const products = await RNIap.getSubscriptions(subscriptionSkus);
+  //     console.log('Available subscriptions:', products);
 
-//     // Request subscription
-//     const purchase = await RNIap.requestSubscription(
-//       sku,
-//       false,       // iOS: default behavior, cannot disable programmatically
-//       autoRenew    // Android: enable/disable auto-renew
-//     );
+  //     // Request subscription
+  //     const purchase = await RNIap.requestSubscription(
+  //       sku,
+  //       false,       // iOS: default behavior, cannot disable programmatically
+  //       autoRenew    // Android: enable/disable auto-renew
+  //     );
 
-//     console.log("Purchase successful:", purchase);
+  //     console.log("Purchase successful:", purchase);
 
-//     // Save locally
-//     await AsyncStorage.setItem('flix10KPaying', 'true');
-//     await AsyncStorage.setItem('flix10KAutoRenew', autoRenew ? 'true' : 'false');
-//     await AsyncStorage.setItem('flix10KSku', sku);
+  //     // Save locally
+  //     await AsyncStorage.setItem('flix10KPaying', 'true');
+  //     await AsyncStorage.setItem('flix10KAutoRenew', autoRenew ? 'true' : 'false');
+  //     await AsyncStorage.setItem('flix10KSku', sku);
 
-//     // Send to backend for validation
-//     await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/validate`, {
-//       platform: Platform.OS,
-//       sku,
-//       purchaseToken: purchase.purchaseToken,       // Android
-//       transactionReceipt: purchase.transactionReceipt, // iOS
-//       autoRenew,
-//     });
+  //     // Send to backend for validation
+  //     await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/validate`, {
+  //       platform: Platform.OS,
+  //       sku,
+  //       purchaseToken: purchase.purchaseToken,       // Android
+  //       transactionReceipt: purchase.transactionReceipt, // iOS
+  //       autoRenew,
+  //     });
 
-//     // iOS auto-renew: cannot disable programmatically
-//     if (Platform.OS === 'ios' && !autoRenew) {
-//       // Show modal or link for user to disable in App Store
-//       //Linking.openURL('itms-apps://apps.apple.com/account/subscriptions');
-//       setShowAutoRenewModal(true);
-//     }
+  //     // iOS auto-renew: cannot disable programmatically
+  //     if (Platform.OS === 'ios' && !autoRenew) {
+  //       // Show modal or link for user to disable in App Store
+  //       //Linking.openURL('itms-apps://apps.apple.com/account/subscriptions');
+  //       setShowAutoRenewModal(true);
+  //     }
 
-//   } catch (err) {
-//     console.error("Subscription error:", err);
-//   } finally {
-//     await RNIap.endConnection();
-//   }
-// };
+  //   } catch (err) {
+  //     console.error("Subscription error:", err);
+  //   } finally {
+  //     await RNIap.endConnection();
+  //   }
+  // };
 
   const expiryDateCal = new Date(subscription.expiryDate);
   const todayCal = new Date();
@@ -736,8 +738,8 @@ const ManageSubscriptions = () => {
             <View style={styles.modalOkRow}>
               <TouchableOpacity
                 onPress={() => {
-                  if(!autoRenew === (subscription.autoRenewal === 1 ? true : false) && !months === subscription?.subscribedMonths){
-                  handleRestart();
+                  if (!autoRenew === (subscription.autoRenewal === 1 ? true : false) && !months === subscription?.subscribedMonths) {
+                    handleRestart();
                   }
                   setSuccessModal(false);
                 }}
