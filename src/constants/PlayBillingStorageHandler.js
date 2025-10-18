@@ -146,17 +146,23 @@ export const handlePlayStorageSubscription = async ({
 
     //const subs = await RNIap.getSubscriptions([productId]);
 
-    const allSubs = await RNIap.getSubscriptions();
+    const subs = await RNIap.getSubscriptions({ skus: [productId] });
+    if (!subs || subs.length === 0) {
+      console.log(`Storage Subscription ${productId} not found in Play Store.`);
+      throw new Error(`Storage Subscription ${productId} not found in Play Store.`);
+    }
 
-    log.debug("Storage Subscriptions fetched:", allSubs);
-    console.log("Storage Subscriptions fetched:", allSubs);
+    //const allSubs = await RNIap.getSubscriptions();
 
-const sub = allSubs.find((item) => item.productId === productId);
+    log.debug("Storage Subscriptions fetched:", subs);
+    console.log("Storage Subscriptions fetched:", subs);
 
-if (!sub) throw new Error(`Subscription ${productId} not found in Play Store.`);
+// const sub = allSubs.find((item) => item.productId === productId);
 
-    //const sub = subs?.[0];
-    //if (!sub) throw new Error('Subscription not found in Play Store.');
+// if (!sub) throw new Error(`Subscription ${productId} not found in Play Store.`);
+
+    const sub = subs?.[0];
+    if (!sub) throw new Error(`Storage Subscription ${productId} not found in Play Store.`);
     console.log("First subscription:", sub);
 
     const offer = sub.subscriptionOfferDetails.find(
@@ -167,6 +173,8 @@ if (!sub) throw new Error(`Subscription ${productId} not found in Play Store.`);
 
     console.log('Selected Offer:', offer);
     log.info("Storage Offer selected:", offer);
+
+    await new Promise(res => setTimeout(res, 500));
 
     const oldToken = currentPurchaseToken || null;
     log.debug("Storage Old token:", oldToken);

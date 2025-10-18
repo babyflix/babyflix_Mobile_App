@@ -191,21 +191,25 @@ export const handlePlaySubscription = async ({
      Alert.alert('Debug', 'Step 2: Getting subscriptions');
 
     // ✅ Get available subscriptions
-    // const subs = await RNIap.getSubscriptions([productId]);
-    // console.log('Available subscriptions:', JSON.stringify(subs, null, 2));
-    // log.debug("Subscriptions fetched:", subs);
-    // console.log("Subscriptions fetched:", subs)
-     const allSubs = await RNIap.getSubscriptions();
+    const subs = await RNIap.getSubscriptions({ skus: [productId] });
+    if (!subs || subs.length === 0) {
+      console.log(`Subscription ${productId} not found in Play Store.`);
+      throw new Error(`Subscription ${productId} not found in Play Store.`);
+    }
+    console.log('Available subscriptions:', JSON.stringify(subs, null, 2));
+    log.debug("Subscriptions fetched:", subs);
+    console.log("Subscriptions fetched:", subs)
+    //  const allSubs = await RNIap.getSubscriptions();
 
-    log.debug("Subscriptions fetched:", allSubs);
-    console.log("Subscriptions fetched:", allSubs);
+    // log.debug("Subscriptions fetched:", allSubs);
+    // console.log("Subscriptions fetched:", allSubs);
 
-    const sub = allSubs.find((item) => item.productId === productId);
+    // const sub = allSubs.find((item) => item.productId === productId);
 
-    if (!sub) throw new Error(`Subscription ${productId} not found in Play Store.`);
+    // if (!sub) throw new Error(`Subscription ${productId} not found in Play Store.`);
 
-    //const sub = subs?.[0];
-    //if (!sub) throw new Error('Subscription not found in Play Store.');
+    const sub = subs?.[0];
+    if (!sub) throw new Error('Subscription not found in Play Store.');
     console.log("First subscription:", sub);
 
     // ✅ Find correct offer
@@ -214,10 +218,12 @@ export const handlePlaySubscription = async ({
     );
     if (!offer) throw new Error(`Offer not found for base plan: ${basePlanId}`);
 
-     Alert.alert('Debug', 'Step 3: Found subscriptions');
+    Alert.alert('Debug', 'Step 3: Found subscriptions');
 
     console.log('Selected Offer:', offer);
      log.info("Offer selected:", offer);
+
+     await new Promise(res => setTimeout(res, 500));
 
     // ✅ Purchase flow
     const oldToken = currentPurchaseToken || null;
