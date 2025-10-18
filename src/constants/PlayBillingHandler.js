@@ -228,9 +228,10 @@ export const handlePlaySubscription = async ({
     // ✅ Purchase flow
     const oldToken = currentPurchaseToken || null;
     log.debug("Old token:", oldToken);
+    console.log("Old token:", oldToken)
 
     const purchase = await RNIap.requestSubscription({
-      sku: productId,
+      skuOrProductId: sub.productId,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
       ...(oldToken && { oldSkuAndroid: oldToken }),
     });
