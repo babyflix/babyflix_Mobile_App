@@ -98,6 +98,7 @@ export default ({ config }) => ({
     "expo-notifications",
     "expo-av",
     "expo-localization",
+    "react-native-iap",
     [
       "expo-build-properties",
       {
@@ -111,6 +112,5 @@ export default ({ config }) => ({
       }
     ],
     "expo-font",
-    "react-native-iap",
   ],
 });
