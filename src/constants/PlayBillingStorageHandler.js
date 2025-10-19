@@ -182,7 +182,8 @@ export const handlePlayStorageSubscription = async ({
 
     // Request subscription purchase
     const purchase = await RNIap.requestSubscription({
-      skuOrProductId: sub.productId,
+      sku: sub.productId,
+      productType: RNIap.ProductType.subs,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
       ...(planType === 2 && oldToken
         ? { oldSkuAndroid: oldToken }

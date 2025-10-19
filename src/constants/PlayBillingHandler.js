@@ -231,7 +231,8 @@ export const handlePlaySubscription = async ({
     console.log("Old token:", oldToken)
 
     const purchase = await RNIap.requestSubscription({
-      skuOrProductId: sub.productId,
+      sku: sub.productId,
+      productType: RNIap.ProductType.subs,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
       ...(oldToken && { oldSkuAndroid: oldToken }),
     });
