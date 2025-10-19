@@ -180,13 +180,15 @@ export const handlePlayStorageSubscription = async ({
     log.debug("Storage Old token:", oldToken);
     console.log("Storage Old token:", oldToken);
 
+    console.log('sub.productId:', sub.productId);
+    console.log('offerToken:', offer?.offerToken);
+
     // Request subscription purchase
     const purchase = await RNIap.requestSubscription({
-      sku: sub.productId,
-      productType: RNIap.ProductType.subs,
+      skuOrProductId: sub.productId,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
       ...(planType === 2 && oldToken
-        ? { oldSkuAndroid: oldToken }
+        ? { oldPurchaseTokenAndroid: oldToken }
         : {}), // upgrade logic only for Pro plan
     });
 
