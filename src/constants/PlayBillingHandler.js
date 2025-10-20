@@ -183,6 +183,7 @@ export const handlePlaySubscription = async ({
     await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
 
     // ✅ Initialize connection
+    await RNIap.endConnection();
     const connected = await RNIap.initConnection();
     if (!connected) throw new Error('Billing connection failed.');
 
@@ -233,12 +234,24 @@ export const handlePlaySubscription = async ({
     console.log('sub.productId:', sub.productId);
     console.log('offerToken:', offer?.offerToken);
 
-    const purchase = await RNIap.requestSubscription({
-      skuOrProductId: sub.productId,
-      subscriptionOffers: [{ offerToken: offer.offerToken }],
-      ...(oldToken && { oldPurchaseTokenAndroid: oldToken }),
-    });
+    const purchaseOptions = {
+        sku: sub.productId,
+        subscriptionOffers: [{ offerToken: offer.offerToken }],
+        // Conditionally add upgrade options ONLY if a currentPurchaseToken exists
+        // ...(currentPurchaseToken && {
+        //   oldPurchaseToken: currentPurchaseToken,
+        //   prorationModeAndroid: prorationMode,
+        // }),
+      };
 
+      console.log("Requesting subscription with options:", purchaseOptions)
+
+    // const purchase = await RNIap.requestSubscription({
+    //   sku: sub.productId,
+    //   subscriptionOffers: [{ offerToken: offer.offerToken }],
+    //   //...(oldToken && { oldSkuAndroid: oldToken }),
+    // });
+    const purchase = await RNIap.requestSubscription(purchaseOptions);
     // const purchase = await RNIap.requestSubscription({
     //   skus: [productId],
     //   subscriptionOffers: [{ offerToken: offer.offerToken }],
@@ -278,11 +291,12 @@ export const handlePlaySubscription = async ({
     console.error('Play Billing Subscription Error:', err);
     log.error("Play Billing Subscription Error:", err);
     Alert.alert('Play Billing Error', err?.message || JSON.stringify(err));
-    await AsyncStorage.removeItem('flix10KPaying');
-    await RNIap.endConnection();
     return {
       success: false,
       error: err.message || 'Payment failed',
     };
-  }
+  } finally {
+  await RNIap.endConnection();
+  await AsyncStorage.removeItem('flix10KPaying');
+}
 };

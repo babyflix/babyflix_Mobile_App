@@ -137,6 +137,7 @@ export const handlePlayStorageSubscription = async ({
     // Connect and get subscription offers
     //await RNIap.initConnection();
      // ✅ Initialize connection
+        await RNIap.endConnection();
         const connected = await RNIap.initConnection();
         if (!connected) throw new Error('Billing connection failed.');
 
@@ -185,11 +186,11 @@ export const handlePlayStorageSubscription = async ({
 
     // Request subscription purchase
     const purchase = await RNIap.requestSubscription({
-      skuOrProductId: sub.productId,
+      sku: sub.productId,
       subscriptionOffers: [{ offerToken: offer.offerToken }],
-      ...(planType === 2 && oldToken
-        ? { oldPurchaseTokenAndroid: oldToken }
-        : {}), // upgrade logic only for Pro plan
+      // ...(planType === 2 && oldToken
+      //   ? { oldSkuAndroid: oldToken }
+      //   : {}), // upgrade logic only for Pro plan
     });
 
     console.log('Purchase result:', purchase);
@@ -226,10 +227,12 @@ export const handlePlayStorageSubscription = async ({
     console.error('Storage Play Billing Subscription Error:', err);
     log.error("Storage Play Billing Subscription Error:", err);
     Alert.alert('Storage Play Billing Error', err?.message || JSON.stringify(err));
-    await AsyncStorage.removeItem('storagePaying');
     return {
       success: false,
       error: err.message || 'Payment failed',
     };
-  }
+  } finally {
+  await RNIap.endConnection();
+  await AsyncStorage.removeItem('storagePaying');
+}
 };
