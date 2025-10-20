@@ -163,20 +163,22 @@ export const handlePlaySubscription = async ({
     console.log("Starting Play Billing flow for months:", months);
     await AsyncStorage.setItem('flix10KPaying', 'true');
 
-    const productId = 'flix10k_subscription'; // ✅ must match Play Console
+    //const productId = 'flix10k_subscription'; // ✅ must match Play Console
+    const productId = 'storage_recovery';
 
-    const basePlanIdMap = {
-      1: 'flix-monthly',
-      3: 'flix-quarterly',
-      6: 'flix-halfyearly',
-      12: 'flix-yearly',
-    };
+    // const basePlanIdMap = {
+    //   1: 'flix-monthly',
+    //   3: 'flix-quarterly',
+    //   6: 'flix-halfyearly',
+    //   12: 'flix-yearly',
+    // };
 
-    const basePlanId = basePlanIdMap[months];
-    if (!basePlanId) throw new Error('Invalid subscription duration selected.');
+    // const basePlanId = basePlanIdMap[months];
+    const basePlanId = 'storage-recovery-monthly';
+    // if (!basePlanId) throw new Error('Invalid subscription duration selected.');
 
-    console.log("Base plan selected:", basePlanId, productId);
-    log.info("Base plan selected:", basePlanId);
+    console.log("Base plan selected:", productId);
+    //log.info("Base plan selected:", basePlanId);
     Alert.alert('Debug', 'Step 1: Init connection');
 
     // ✅ Flush any pending transactions first
@@ -214,15 +216,15 @@ export const handlePlaySubscription = async ({
     console.log("First subscription:", sub);
 
     // ✅ Find correct offer
-    const offer = sub.subscriptionOfferDetails?.find(
-      (o) => o.basePlanId === basePlanId
-    );
-    if (!offer) throw new Error(`Offer not found for base plan: ${basePlanId}`);
+    // const offer = sub.subscriptionOfferDetails?.find(
+    //   (o) => o.basePlanId === basePlanId
+    // );
+    // if (!offer) throw new Error(`Offer not found for base plan: ${basePlanId}`);
 
     Alert.alert('Debug', 'Step 3: Found subscriptions');
 
-    console.log('Selected Offer:', offer);
-     log.info("Offer selected:", offer);
+    // console.log('Selected Offer:', offer);
+    //  log.info("Offer selected:", offer);
 
      await new Promise(res => setTimeout(res, 500));
 
@@ -232,17 +234,20 @@ export const handlePlaySubscription = async ({
     console.log("Old token:", oldToken)
 
     console.log('sub.productId:', sub.productId);
-    console.log('offerToken:', offer?.offerToken);
+    //console.log('offerToken:', offer?.offerToken);
 
-    const purchaseOptions = {
+    // const purchaseOptions = {
+    //     sku: sub.productId,
+    //     //subscriptionOffers: [{ offerToken: offer.offerToken }],
+    //     // Conditionally add upgrade options ONLY if a currentPurchaseToken exists
+    //     // ...(currentPurchaseToken && {
+    //     //   oldPurchaseToken: currentPurchaseToken,
+    //     //   prorationModeAndroid: prorationMode,
+    //     // }),
+    //   };
+     const purchaseOptions = {
         sku: sub.productId,
-        subscriptionOffers: [{ offerToken: offer.offerToken }],
-        // Conditionally add upgrade options ONLY if a currentPurchaseToken exists
-        // ...(currentPurchaseToken && {
-        //   oldPurchaseToken: currentPurchaseToken,
-        //   prorationModeAndroid: prorationMode,
-        // }),
-      };
+      }
 
       console.log("Requesting subscription with options:", purchaseOptions)
 

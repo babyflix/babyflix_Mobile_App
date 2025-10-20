@@ -103,32 +103,37 @@ export const handlePlayStorageSubscription = async ({
       //   throw new Error('Basic plan can be purchased only once.');
       // }
       productId = 'storage_basic';
-      basePlanIdMap = { 1: 'storage-basic-monthly' }; // only 1 month
+      //basePlanIdMap = { 1: 'storage-basic-monthly' }; // only 1 month
       months = 1; // enforce 1 month
       autoRenew = false; // no auto-renew
     } else if (planType === 2) {
       // Pro plan
-      productId = 'storage_pro';
-      basePlanIdMap = {
-        1: 'storage-pro-monthly',
-        3: 'storage-proplan-quarterly',
-        6: 'storage-pro-halfyearly',
-        12: 'storage-pro-yearly',
-      };
+      //productId = 'storage_pro';
+      productId = 'storage_basic';
+      // basePlanIdMap = {
+      //   1: 'storage-pro-monthly',
+      //   3: 'storage-proplan-quarterly',
+      //   6: 'storage-pro-halfyearly',
+      //   12: 'storage-pro-yearly',
+      // };
+      months = 1;
+      autoRenew = false;
     } else if (planType === 3) {
       // Recovery plan (you can set logic same as Pro or custom)
-      productId = 'storage_recovery';
-      basePlanIdMap = { 1: 'storage-recovery-monthly' }; // example: 1 month
+      //productId = 'storage_recovery';
+      productId = 'storage_basic';
+      //basePlanIdMap = { 1: 'storage-recovery-monthly' }; // example: 1 month
       months = 1;
       autoRenew = false;
     } else {
       throw new Error('Invalid plan type selected.');
     }
 
-    const basePlanId = basePlanIdMap[months];
-    if (!basePlanId) throw new Error('Invalid subscription duration selected.');
-    log.info("Storage Base plan selected:", basePlanId);
-    console.log("Storage Base plan selected:", basePlanId, productId);
+    //const basePlanId = basePlanIdMap[months];
+    const basePlanId = 'storage-basic-monthly';
+    // if (!basePlanId) throw new Error('Invalid subscription duration selected.');
+    // log.info("Storage Base plan selected:", basePlanId);
+    console.log("Storage Base plan selected:", productId);
     Alert.alert('Debug', 'Step 1: Storage Init connection');
 
     log.info("Step 1: Storage flush pending purchases");
@@ -166,14 +171,14 @@ export const handlePlayStorageSubscription = async ({
     if (!sub) throw new Error(`Storage Subscription ${productId} not found in Play Store.`);
     console.log("First subscription:", sub);
 
-    const offer = sub.subscriptionOfferDetails.find(
-      o => o.basePlanId === basePlanId
-    );
-    if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
-    Alert.alert('Debug', 'Step 3: Storage Found subscriptions');
+    // const offer = sub.subscriptionOfferDetails.find(
+    //   o => o.basePlanId === basePlanId
+    // );
+    // if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
+    // Alert.alert('Debug', 'Step 3: Storage Found subscriptions');
 
-    console.log('Selected Offer:', offer);
-    log.info("Storage Offer selected:", offer);
+    // console.log('Selected Offer:', offer);
+    // log.info("Storage Offer selected:", offer);
 
     await new Promise(res => setTimeout(res, 500));
 
@@ -182,15 +187,18 @@ export const handlePlayStorageSubscription = async ({
     console.log("Storage Old token:", oldToken);
 
     console.log('sub.productId:', sub.productId);
-    console.log('offerToken:', offer?.offerToken);
+    //console.log('offerToken:', offer?.offerToken);
 
     // Request subscription purchase
+    // const purchase = await RNIap.requestSubscription({
+    //   sku: sub.productId,
+    //   //subscriptionOffers: [{ offerToken: offer.offerToken }],
+    //   // ...(planType === 2 && oldToken
+    //   //   ? { oldSkuAndroid: oldToken }
+    //   //   : {}), // upgrade logic only for Pro plan
+    // });
     const purchase = await RNIap.requestSubscription({
       sku: sub.productId,
-      subscriptionOffers: [{ offerToken: offer.offerToken }],
-      // ...(planType === 2 && oldToken
-      //   ? { oldSkuAndroid: oldToken }
-      //   : {}), // upgrade logic only for Pro plan
     });
 
     console.log('Purchase result:', purchase);
