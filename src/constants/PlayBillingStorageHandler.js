@@ -131,9 +131,9 @@ export const handlePlayStorageSubscription = async ({
 
     //const basePlanId = basePlanIdMap[months];
     const basePlanId = 'storage-basic-monthly';
-    // if (!basePlanId) throw new Error('Invalid subscription duration selected.');
-    // log.info("Storage Base plan selected:", basePlanId);
-    console.log("Storage Base plan selected:", productId);
+     if (!basePlanId) throw new Error('Invalid subscription duration selected.');
+    log.info("Storage Base plan selected:", basePlanId);
+    console.log("Storage Base plan selected:", basePlanId, productId);
     Alert.alert('Debug', 'Step 1: Storage Init connection');
 
     log.info("Step 1: Storage flush pending purchases");
@@ -171,14 +171,14 @@ export const handlePlayStorageSubscription = async ({
     if (!sub) throw new Error(`Storage Subscription ${productId} not found in Play Store.`);
     console.log("First subscription:", sub);
 
-    // const offer = sub.subscriptionOfferDetails.find(
-    //   o => o.basePlanId === basePlanId
-    // );
-    // if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
-    // Alert.alert('Debug', 'Step 3: Storage Found subscriptions');
+    const offer = sub.subscriptionOfferDetails.find(
+      o => o.basePlanId === basePlanId
+    );
+    if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
+    Alert.alert('Debug', 'Step 3: Storage Found subscriptions');
 
-    // console.log('Selected Offer:', offer);
-    // log.info("Storage Offer selected:", offer);
+    console.log('Selected Offer:', offer);
+    log.info("Storage Offer selected:", offer);
 
     await new Promise(res => setTimeout(res, 500));
 
@@ -187,7 +187,7 @@ export const handlePlayStorageSubscription = async ({
     console.log("Storage Old token:", oldToken);
 
     console.log('sub.productId:', sub.productId);
-    //console.log('offerToken:', offer?.offerToken);
+    console.log('offerToken:', offer?.offerToken);
 
     // Request subscription purchase
     // const purchase = await RNIap.requestSubscription({
@@ -199,6 +199,7 @@ export const handlePlayStorageSubscription = async ({
     // });
     const purchase = await RNIap.requestSubscription({
       sku: sub.productId,
+      subscriptionOffers: [{ offerToken: offer.offerToken }],
     });
 
     console.log('Purchase result:', purchase);

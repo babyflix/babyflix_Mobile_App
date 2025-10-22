@@ -175,10 +175,10 @@ export const handlePlaySubscription = async ({
 
     // const basePlanId = basePlanIdMap[months];
     const basePlanId = 'storage-recovery-monthly';
-    // if (!basePlanId) throw new Error('Invalid subscription duration selected.');
+    if (!basePlanId) throw new Error('Invalid subscription duration selected.');
 
-    console.log("Base plan selected:", productId);
-    //log.info("Base plan selected:", basePlanId);
+    console.log("Base plan selected:", basePlanId, productId);
+    log.info("Base plan selected:", basePlanId);
     Alert.alert('Debug', 'Step 1: Init connection');
 
     // ✅ Flush any pending transactions first
@@ -216,15 +216,15 @@ export const handlePlaySubscription = async ({
     console.log("First subscription:", sub);
 
     // ✅ Find correct offer
-    // const offer = sub.subscriptionOfferDetails?.find(
-    //   (o) => o.basePlanId === basePlanId
-    // );
-    // if (!offer) throw new Error(`Offer not found for base plan: ${basePlanId}`);
+    const offer = sub.subscriptionOfferDetails?.find(
+      (o) => o.basePlanId === basePlanId
+    );
+    if (!offer) throw new Error(`Offer not found for base plan: ${basePlanId}`);
 
     Alert.alert('Debug', 'Step 3: Found subscriptions');
 
-    // console.log('Selected Offer:', offer);
-    //  log.info("Offer selected:", offer);
+    console.log('Selected Offer:', offer);
+    log.info("Offer selected:", offer);
 
      await new Promise(res => setTimeout(res, 500));
 
@@ -234,7 +234,7 @@ export const handlePlaySubscription = async ({
     console.log("Old token:", oldToken)
 
     console.log('sub.productId:', sub.productId);
-    //console.log('offerToken:', offer?.offerToken);
+    console.log('offerToken:', offer?.offerToken);
 
     // const purchaseOptions = {
     //     sku: sub.productId,
@@ -247,6 +247,9 @@ export const handlePlaySubscription = async ({
     //   };
      const purchaseOptions = {
         sku: sub.productId,
+         subscriptionOffers: [
+          { sku: sub.productId, offerToken: offer.offerToken }
+        ],
       }
 
       console.log("Requesting subscription with options:", purchaseOptions)
