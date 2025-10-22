@@ -103,34 +103,32 @@ export const handlePlayStorageSubscription = async ({
       //   throw new Error('Basic plan can be purchased only once.');
       // }
       productId = 'storage_basic';
-      //basePlanIdMap = { 1: 'storage-basic-monthly' }; // only 1 month
+      basePlanIdMap = { 1: 'storage-basic-monthly' }; // only 1 month
       months = 1; // enforce 1 month
       autoRenew = false; // no auto-renew
     } else if (planType === 2) {
       // Pro plan
-      //productId = 'storage_pro';
-      productId = 'storage_basic';
-      // basePlanIdMap = {
-      //   1: 'storage-pro-monthly',
-      //   3: 'storage-proplan-quarterly',
-      //   6: 'storage-pro-halfyearly',
-      //   12: 'storage-pro-yearly',
-      // };
-      months = 1;
-      autoRenew = false;
+      productId = 'storage_pro';
+      //productId = 'storage_basic';
+      basePlanIdMap = {
+        1: 'storage-pro-monthly',
+        3: 'storage-proplan-quarterly',
+        6: 'storage-pro-halfyearly',
+        12: 'storage-pro-yearly',
+      };
     } else if (planType === 3) {
       // Recovery plan (you can set logic same as Pro or custom)
-      //productId = 'storage_recovery';
-      productId = 'storage_basic';
-      //basePlanIdMap = { 1: 'storage-recovery-monthly' }; // example: 1 month
+      productId = 'storage_recovery';
+      //productId = 'storage_basic';
+      basePlanIdMap = { 1: 'storage-recovery-monthly' }; // example: 1 month
       months = 1;
       autoRenew = false;
     } else {
       throw new Error('Invalid plan type selected.');
     }
 
-    //const basePlanId = basePlanIdMap[months];
-    const basePlanId = 'storage-basic-monthly';
+    const basePlanId = basePlanIdMap[months];
+    //const basePlanId = 'storage-basic-monthly';
      if (!basePlanId) throw new Error('Invalid subscription duration selected.');
     log.info("Storage Base plan selected:", basePlanId);
     console.log("Storage Base plan selected:", basePlanId, productId);
@@ -199,7 +197,12 @@ export const handlePlayStorageSubscription = async ({
     // });
     const purchase = await RNIap.requestSubscription({
       sku: sub.productId,
-      subscriptionOffers: [{ offerToken: offer.offerToken }],
+      subscriptionOffers: [
+          { sku: sub.productId, offerToken: offer.offerToken }
+        ],
+         ...(planType === 2 && oldToken
+        ? { oldPurchaseToken: oldToken }
+        : {}),
     });
 
     console.log('Purchase result:', purchase);
@@ -222,6 +225,16 @@ export const handlePlayStorageSubscription = async ({
 
     console.log('Backend verified:', response.data);
     log.info("Storage Backend verification response:", response.data);
+
+     // ✅ Step 5: Acknowledge purchase
+    try {
+      await RNIap.acknowledgePurchaseAndroid(purchase.purchaseToken);
+      console.log('✅ Purchase acknowledged successfully');
+      log.info('Purchase acknowledged successfully');
+    } catch (ackErr) {
+      console.warn('⚠️ Acknowledge failed:', ackErr);
+      log.error('Acknowledge failed:', ackErr);
+    }
 
     setShowModal(false);
     await RNIap.endConnection();

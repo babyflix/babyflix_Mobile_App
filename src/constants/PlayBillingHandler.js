@@ -163,18 +163,18 @@ export const handlePlaySubscription = async ({
     console.log("Starting Play Billing flow for months:", months);
     await AsyncStorage.setItem('flix10KPaying', 'true');
 
-    //const productId = 'flix10k_subscription'; // ✅ must match Play Console
-    const productId = 'storage_recovery';
+    const productId = 'flix10k_subscription'; // ✅ must match Play Console
+    //const productId = 'storage_recovery';
 
-    // const basePlanIdMap = {
-    //   1: 'flix-monthly',
-    //   3: 'flix-quarterly',
-    //   6: 'flix-halfyearly',
-    //   12: 'flix-yearly',
-    // };
+    const basePlanIdMap = {
+      1: 'flix-monthly',
+      3: 'flix-quarterly',
+      6: 'flix-halfyearly',
+      12: 'flix-yearly',
+    };
 
-    // const basePlanId = basePlanIdMap[months];
-    const basePlanId = 'storage-recovery-monthly';
+    const basePlanId = basePlanIdMap[months];
+    //const basePlanId = 'storage-recovery-monthly';
     if (!basePlanId) throw new Error('Invalid subscription duration selected.');
 
     console.log("Base plan selected:", basePlanId, productId);
@@ -250,6 +250,9 @@ export const handlePlaySubscription = async ({
          subscriptionOffers: [
           { sku: sub.productId, offerToken: offer.offerToken }
         ],
+         ...(oldToken && {
+          oldPurchaseToken: oldToken,
+        }),
       }
 
       console.log("Requesting subscription with options:", purchaseOptions)
@@ -285,6 +288,16 @@ export const handlePlaySubscription = async ({
 
     console.log('Backend verified:', response.data);
     log.info("Backend verification response:", response.data);
+
+     // ✅ Step 5: Acknowledge purchase
+    try {
+      await RNIap.acknowledgePurchaseAndroid(purchase.purchaseToken);
+      console.log('✅ Purchase acknowledged successfully');
+      log.info('Purchase acknowledged successfully');
+    } catch (ackErr) {
+      console.warn('⚠️ Acknowledge failed:', ackErr);
+      log.error('Acknowledge failed:', ackErr);
+    }
 
     setShowModal(false);
     await AsyncStorage.removeItem('flix10KPaying');
