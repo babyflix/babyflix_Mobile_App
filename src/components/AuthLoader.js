@@ -88,11 +88,15 @@ const AuthLoader = ({ children }) => {
         { headers: { 'Content-Type': 'application/json' } }
       );
 
+      console.log("res.data",res.data)
+
       if (res.data?.newtoken) {
         const updatedData = {
           ...res.data,
           token: res.data.newtoken,
         };
+
+        console.log('updatedData', updatedData);
 
         await AsyncStorage.setItem('token', updatedData.token);
         await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
