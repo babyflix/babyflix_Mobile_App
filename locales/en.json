@@ -487,5 +487,11 @@
     "success": {
       "smsSent": "SMS sent successfully"
     }
-  }
+  },
+  "rateUs": {
+      "title": "Enjoying BabyFlix?",
+      "message": "We’d love your feedback! Please rate us on the store.",
+      "maybeLater": "Maybe Later",
+      "rateNow": "Rate Now"
+    }
 }

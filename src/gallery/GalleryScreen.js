@@ -50,6 +50,7 @@ import PlanBanner from './PlanBanner';
 import UpgradeReminderModal from './UpgradeReminderModal.js';
 import PlanExpiredModal from './PlanExpiredModal.js';
 import Flix10kBanner from './Flix10kBanner.js';
+import RateUsModal, { checkAndShowRateModal } from '../components/RateAppModal.js';
 
 SplashScreen.preventAutoHideAsync();
 let upgradeModalShown = false;
@@ -102,6 +103,7 @@ const GalleryScreen = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [flix10KAD, setFlix10KAD] = useState(false);
   const [showAfterAdd, setShowafterAdd] = useState(false);
+  const [showRateModal, setShowRateModal] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -171,6 +173,14 @@ const GalleryScreen = () => {
     }
     setT(t);
   }, []);
+
+   useEffect(() => {
+  // Show rate modal only after update modal or when user opens app multiple times
+  const timer = setTimeout(() => {
+    checkAndShowRateModal(setShowRateModal);
+  }, 100); // show after 3 seconds delay
+  return () => clearTimeout(timer);
+}, []);
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -968,6 +978,12 @@ const GalleryScreen = () => {
       <LanguageModal visible={showLangModal} onClose={() => setShowLangModal(false)} />
 
       <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
+
+      <RateUsModal
+        visible={showRateModal}
+        onClose={() => setShowRateModal(false)}
+      />
+
       {console.log("flix10KAD && showAfterAdd 3",{flix10KAD, showAfterAdd })}
 
       {(storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (

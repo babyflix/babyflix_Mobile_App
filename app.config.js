@@ -98,7 +98,7 @@ export default ({ config }) => ({
     "expo-notifications",
     "expo-av",
     "expo-localization",
-    "react-native-iap",
+    //"react-native-iap",
     [
       "expo-build-properties",
       {

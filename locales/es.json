@@ -487,5 +487,11 @@
     "success": {
       "smsSent": "SMS enviado correctamente"
     }
-  }
+  },
+  "rateUs": {
+      "title": "¿Disfrutando de BabyFlix?",
+      "message": "¡Nos encantaría tu opinión! Por favor, califícanos en la tienda.",
+      "maybeLater": "Tal vez más tarde",
+      "rateNow": "Calificar ahora"
+    }
 }
