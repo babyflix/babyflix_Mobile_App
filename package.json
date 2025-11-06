@@ -1,7 +1,7 @@
 {
   "name": "babyflix",
   "main": "expo-router/entry",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "scripts": {
     "dev": "cross-env EXPO_NO_TELEMETRY=1 EXPO_PUBLIC_ENV=development expo start --clear",
