@@ -63,7 +63,7 @@ const AppUpdateModal = ({ serverUrl }) => {
   if (!visible) return null;
 
   return (
-    <Modal visible={!visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>{forceUpdate ? t('appUpdate.title.force') : t('appUpdate.title.optional')}</Text>
