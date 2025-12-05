@@ -210,6 +210,7 @@
       "accountDeletionFailed": "Ocurrió un error al eliminar su cuenta.",
       "errorComparingPasswords": "Error al comparar las contraseñas",
       "pleaseSelectDueDate": "Por favor selecciona una fecha de vencimiento",
+      "pleaseSelectDob": "Por favor selecciona una fecha de nacimiento",
       "dueDateCannotBePast": "La fecha de vencimiento no puede estar en el pasado",
       "birthDateCannotBeFuture": "La fecha de nacimiento no puede estar en el futuro",
       "accountDeleted": "Cuenta eliminada",
@@ -493,5 +494,43 @@
       "message": "¡Nos encantaría tu opinión! Por favor, califícanos en la tienda.",
       "maybeLater": "Tal vez más tarde",
       "rateNow": "Calificar ahora"
-    }
+    },
+    "phoneDobModal": {
+  "titles": {
+    "phone": "Agrega tu número de teléfono",
+    "dob": "Fecha de nacimiento y fecha prevista"
+  },
+  "placeholders": {
+    "phone": "Número de teléfono",
+    "dob": "Fecha de nacimiento",
+    "dueDate": "Fecha prevista"
+  },
+  "buttons": {
+    "later": "Más tarde",
+    "skip": "Omitir",
+    "save": "Guardar",
+    "next": "Siguiente ▶",
+    "previous": "◀ Anterior"
+  },
+  "info": {
+    "phone": "Usamos tu número de teléfono para asegurar tu cuenta y enviar actualizaciones importantes.",
+    "dob": "Estos campos son opcionales, pero nos ayudan a personalizar tu experiencia con mejores recomendaciones."
+  },
+  "errors": {
+    "enterPhone": "Por favor ingresa un número de teléfono",
+    "selectCountryCode": "Por favor selecciona un código de país",
+    "selectDob": "Por favor selecciona la fecha de nacimiento",
+    "selectDueDate": "Por favor selecciona la fecha prevista",
+    "dueDatePast": "La fecha prevista no puede estar en el pasado",
+    "dobFuture": "La fecha de nacimiento no puede estar en el futuro",
+    "updatePhoneFailed": "Error al actualizar el número de teléfono",
+    "updateDatesFailed": "Error al actualizar las fechas",
+    "phoneRequiredLong": "Se requiere el número de teléfono. Después de agregarlo, podrás omitir la pantalla de fechas.",
+    "phoneRequiredShort": "Se requiere el número de teléfono."
+  },
+  "snackbar": {
+    "phoneUpdated": "Número de teléfono actualizado correctamente",
+    "datesUpdated": "Fechas actualizadas correctamente"
+  }
+}
 }

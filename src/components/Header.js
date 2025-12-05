@@ -183,7 +183,10 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         'payment_status 1',
         'paying',
         'last_skipped_plan_date',
-        'notifications'
+        'notifications',
+        'phone_verified',
+        'RATED_KEY',
+        'APP_OPEN_KEY'
       ]);
 
       dispatch(clearOpenStorage2());

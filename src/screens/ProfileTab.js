@@ -214,7 +214,7 @@ const ProfileTab = ({ route }) => {
       await AsyncStorage.multiRemove([
         'token', 'userData', 'tokenExpiry', 'storage_modal_triggered',
         'payment_status', 'payment_status 1', 'paying', 'last_skipped_plan_date',
-        'notifications'
+        'notifications','phone_verified','RATED_KEY','APP_OPEN_KEY'
       ]);
       dispatch(clearOpenStorage2());
       dispatch(setForceOpenStorageModals(false));
@@ -509,7 +509,7 @@ const ProfileTab = ({ route }) => {
         <View style={styles.infoRow}>
           <MaterialIcons name="phone" size={20} color='green' style={styles.infoIcon} />
           <Text style={styles.infoLabel}>{t('profileSettings.phone')}:</Text>
-          <Text style={styles.infoValue}>{result.countryCode + ' ' + result.phone || 'N/A'}</Text>
+          <Text style={styles.infoValue}>+{result.countryCode + ' ' + result.phone || 'N/A'}</Text>
         </View>
 
         <View style={styles.infoRow}>

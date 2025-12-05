@@ -1303,25 +1303,25 @@ const RegisterScreen = () => {
   }, []);
 
   // Helpers
-  const formatDate = (date) => {
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const year = date.getFullYear();
-    const formattedMonth = month < 10 ? `0${month}` : month;
-    const formattedDay = day < 10 ? `0${day}` : day;
-    return `${formattedMonth}/${formattedDay}/${year}`;
-  };
+  // const formatDate = (date) => {
+  //   const month = date.getMonth() + 1;
+  //   const day = date.getDate();
+  //   const year = date.getFullYear();
+  //   const formattedMonth = month < 10 ? `0${month}` : month;
+  //   const formattedDay = day < 10 ? `0${day}` : day;
+  //   return `${formattedMonth}/${formattedDay}/${year}`;
+  // };
 
-  const formatPhoneNumber = (text) => {
-    const cleaned = text.replace(/\D/g, '');
-    if (cleaned.length < 4) {
-      return cleaned;
-    } else if (cleaned.length < 7) {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
-    } else {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
-    }
-  };
+  // const formatPhoneNumber = (text) => {
+  //   const cleaned = text.replace(/\D/g, '');
+  //   if (cleaned.length < 4) {
+  //     return cleaned;
+  //   } else if (cleaned.length < 7) {
+  //     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+  //   } else {
+  //     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+  //   }
+  // };
 
   // Validation (same as original)
   const validateForm = () => {
@@ -1354,27 +1354,32 @@ const RegisterScreen = () => {
       return false;
     }
 
-    if (accountType === 'patient' && !dueDate) {
-      setError(t('registration.selectDueDate'));
+    // if (accountType === 'patient' && !dueDate) {
+    //   setError(t('registration.selectDueDate'));
+    //   return false;
+    // }
+
+    // if (dueDate) {
+    //   const [dueMonth, dueDay, dueYear] = dueDate.split('/');
+    //   const formattedDueDate = new Date(`${dueYear}-${dueMonth}-${dueDay}`);
+    //   if (formattedDueDate < new Date()) {
+    //     setError(t('registration.dueDatePast'));
+    //     return false;
+    //   }
+    // }
+
+    // if (dob) {
+    //   const [dobMonth, dobDay, dobYear] = dob.split('/');
+    //   const formattedDobDate = new Date(`${dobYear}-${dobMonth}-${dobDay}`);
+    //   if (formattedDobDate > new Date()) {
+    //     setError(t('registration.dobFuture'));
+    //     return false;
+    //   }
+    // }
+
+    if (!accountType) {
+      setError("Please Select a Account Type");
       return false;
-    }
-
-    if (dueDate) {
-      const [dueMonth, dueDay, dueYear] = dueDate.split('/');
-      const formattedDueDate = new Date(`${dueYear}-${dueMonth}-${dueDay}`);
-      if (formattedDueDate < new Date()) {
-        setError(t('registration.dueDatePast'));
-        return false;
-      }
-    }
-
-    if (dob) {
-      const [dobMonth, dobDay, dobYear] = dob.split('/');
-      const formattedDobDate = new Date(`${dobYear}-${dobMonth}-${dobDay}`);
-      if (formattedDobDate > new Date()) {
-        setError(t('registration.dobFuture'));
-        return false;
-      }
     }
 
     if (accountType === 'family' && !familyOf) {
@@ -1471,17 +1476,17 @@ const RegisterScreen = () => {
     setError('');
   };
 
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || tempDate;
-    setShowDatePicker(false);
-    const formattedDate = formatDate(currentDate);
-    if (dateField === 'dob') {
-      setTempDate(currentDate);
-      setFormData(prev => ({ ...prev, dob: formattedDate }));
-    } else if (dateField === 'dueDate') {
-      setFormData(prev => ({ ...prev, dueDate: formattedDate }));
-    }
-  };
+  // const handleDateChange = (event, selectedDate) => {
+  //   const currentDate = selectedDate || tempDate;
+  //   setShowDatePicker(false);
+  //   const formattedDate = formatDate(currentDate);
+  //   if (dateField === 'dob') {
+  //     setTempDate(currentDate);
+  //     setFormData(prev => ({ ...prev, dob: formattedDate }));
+  //   } else if (dateField === 'dueDate') {
+  //     setFormData(prev => ({ ...prev, dueDate: formattedDate }));
+  //   }
+  // };
 
   const handleAccountTypeChange = (type) => {
     setFormData(prev => ({ ...prev, accountType: type }));
@@ -1595,7 +1600,7 @@ const RegisterScreen = () => {
                 </View>
 
                 {/* DOB & DueDate (if patient) */}
-                {formData.accountType === 'patient' && (
+                {/* {formData.accountType === 'patient' && (
                   <View style={[GlobalStyles.row, { marginBottom: 0 }]}>
                     <View style={{ flex: 1, marginRight: 5 }}>
                       <View style={styles.inputRow}>
@@ -1617,7 +1622,7 @@ const RegisterScreen = () => {
                       </View>
                     </View>
                   </View>
-                )}
+                )} */}
 
                 {/* Patient-family email */}
                 {formData.accountType === 'patient-family' && (
@@ -1656,7 +1661,7 @@ const RegisterScreen = () => {
                 </View>
 
                 {/* Country + Phone */}
-                <View style={[GlobalStyles.row, { marginBottom: 0 }]}>
+                {/* <View style={[GlobalStyles.row, { marginBottom: 0 }]}>
                   <View style={{ flex: 6, marginRight: 10 }}>
                     <View style={styles.inputRow}>
                       <Icon name="public" size={20} color={Colors.gray} style={styles.leftIcon} />
@@ -1685,7 +1690,7 @@ const RegisterScreen = () => {
                       <View style={styles.rightIconPlaceholder} />
                     </View>
                   </View>
-                </View>
+                </View> */}
 
                 {showPhoneInfo && (
                   <View style={styles.phoneInfo}>
@@ -1732,7 +1737,7 @@ const RegisterScreen = () => {
               </View>
 
               {/* Date pickers */}
-              {Platform.OS === 'ios' ? (
+              {/* {Platform.OS === 'ios' ? (
                 showDatePicker && (
                   <View style={styles.iosPickerWrapper}>
                     <DateTimePicker
@@ -1765,7 +1770,7 @@ const RegisterScreen = () => {
                     locale={i18n.language === 'es' ? 'es-ES' : 'en-US'}
                   />
                 )
-              )}
+              )} */}
             </ScrollView>
 
             {isLoading && <Loader loading={true} />}

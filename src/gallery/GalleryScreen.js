@@ -51,6 +51,7 @@ import UpgradeReminderModal from './UpgradeReminderModal.js';
 import PlanExpiredModal from './PlanExpiredModal.js';
 import Flix10kBanner from './Flix10kBanner.js';
 import RateUsModal, { checkAndShowRateModal } from '../components/RateAppModal.js';
+import PhoneNumberModal from '../constants/PhoneNumberModal.js';
 
 SplashScreen.preventAutoHideAsync();
 let upgradeModalShown = false;
@@ -104,6 +105,9 @@ const GalleryScreen = () => {
   const [flix10KAD, setFlix10KAD] = useState(false);
   const [showAfterAdd, setShowafterAdd] = useState(false);
   const [showRateModal, setShowRateModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [refreshData, setRefreshData] = useState(false);
+  const [patientData, setPatientData] = useState(null);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -173,6 +177,32 @@ const GalleryScreen = () => {
     }
     setT(t);
   }, []);
+
+useEffect(() => {
+    const checkPhone = async () => {
+      const res = await axios.get(
+        EXPO_PUBLIC_API_URL + `/api/patients/getPatientByEmail?email=${user.email}`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      if (res.status === 200) {
+        const data = res.data;
+
+      setPatientData(data);
+      
+      const stored = await AsyncStorage.getItem("phone_verified");
+
+      const phoneMissing = !data?.phone && !stored;
+      const dobMissing = !data?.dob;
+      const dueMissing = !data?.dueDate;
+
+      if (phoneMissing || dobMissing || dueMissing) {
+        setShowPhoneModal(true);
+      }
+    }
+    };
+    checkPhone();
+  }, [user,refreshData]);
 
    useEffect(() => {
   // Show rate modal only after update modal or when user opens app multiple times
@@ -898,6 +928,14 @@ const GalleryScreen = () => {
         item={previewItem}
         onClose={() => setModalVisible(false)}
         insets={insets}
+      />
+
+       <PhoneNumberModal
+        visible={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        userEmail={user?.email}
+        data={patientData}
+        setRefreshData={setRefreshData}
       />
 
       {console.log("flix10KAD && showAfterAdd 1",{flix10KAD, showAfterAdd })}

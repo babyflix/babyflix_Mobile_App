@@ -210,6 +210,7 @@
       "accountDeletionFailed": "Something went wrong while deleting your account.",
       "errorComparingPasswords": "Error comparing passwords",
       "pleaseSelectDueDate": "Please select a due date",
+      "pleaseSelectDob": "Please select DOB",
       "dueDateCannotBePast": "Due date cannot be in the past",
       "birthDateCannotBeFuture": "Birth date cannot be in the future",
       "accountDeleted": "Account Deleted",
@@ -493,5 +494,43 @@
       "message": "We’d love your feedback! Please rate us on the store.",
       "maybeLater": "Maybe Later",
       "rateNow": "Rate Now"
-    }
+    },
+    "phoneDobModal": {
+  "titles": {
+    "phone": "Add Your Phone Number",
+    "dob": "Birth & Due Date"
+  },
+  "placeholders": {
+    "phone": "Phone Number",
+    "dob": "Date of Birth",
+    "dueDate": "Due Date"
+  },
+  "buttons": {
+    "later": "Later",
+    "skip": "Skip",
+    "save": "Save",
+    "next": "Next ▶",
+    "previous": "◀ Previous"
+  },
+  "info": {
+    "phone": "We use your phone number to secure your account and send important account updates.",
+    "dob": "These fields are optional, but they help us personalize your experience with better insights."
+  },
+  "errors": {
+    "enterPhone": "Please enter a phone number",
+    "selectCountryCode": "Please select a country code",
+    "selectDob": "Please select DOB",
+    "selectDueDate": "Please select a due date",
+    "dueDatePast": "Due date cannot be in the past",
+    "dobFuture": "Birth date cannot be in the future",
+    "updatePhoneFailed": "Error updating phone number",
+    "updateDatesFailed": "Error updating dates",
+    "phoneRequiredLong": "Phone number is required. After adding it, you will be able to skip the dates screen.",
+    "phoneRequiredShort": "Phone number is required."
+  },
+  "snackbar": {
+    "phoneUpdated": "Phone number updated successfully",
+    "datesUpdated": "Dates updated successfully"
+  }
+}
 }
