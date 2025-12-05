@@ -307,7 +307,7 @@ useEffect(() => {
     if (mode === "date") {
       if (!hasPhone) {
         // after saving dates → move to phone page
-        setErrorMessage(t("phoneModal.errors.phoneRequiredShort"));
+        setErrorMessage(t("phoneDobModal.errors.phoneRequiredShort"));
         setCurrentPage(0);
         setShowPhonePageOnly(true);
         setShowBothPages(false);
@@ -348,7 +348,7 @@ useEffect(() => {
 const handleSkip = () => {
   if (!hasPhone) {
     setCurrentPage(0);
-    setErrorMessage(t("phoneModal.errors.phoneRequiredLong"));
+    setErrorMessage(t("phoneDobModal.errors.phoneRequiredLong"));
   } else {
     onClose();
   }
