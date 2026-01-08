@@ -62,6 +62,7 @@ const Flix10kBanner = ({
   );
   const { storagePlanId, storagePlanPayment, } =
     useSelector((state) => state.storagePlan || {});
+  const planData = useSelector((state) => state.plan.planData);
   const subscriptionActive = subscriptionIsActive
 
   console.log("EXPO_PUBLIC_CLOUD_API_URL", EXPO_PUBLIC_CLOUD_API_URL)
@@ -750,7 +751,7 @@ const Flix10kBanner = ({
                   <Text style={styles.modalText}>
                     {t("flix10k.unlockText")}
                   </Text>
-                  <Text style={styles.price}>{t("flix10k.pricePerMonth")}</Text>
+                  <Text style={styles.price}>${planData.amount} / {t("flix10k.month")}</Text>
 
                   <MonthSelector months={months} setMonths={setMonths} autoRenew={autoRenew} mode="dropdown" />
 

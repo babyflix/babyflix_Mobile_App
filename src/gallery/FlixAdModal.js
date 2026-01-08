@@ -22,6 +22,7 @@ const FlixAdModal = ({
 }) => {
   const { t } = useTranslation();
   const user = useSelector((state) => state.auth);
+  const planData = useSelector((state) => state.plan.planData);
   const dispatch = useDispatch();
   const paymentStatusAdd = useSelector((state) => state.subscription.paymentStatusAdd);
   const [open, setOpen] = useState(false);
@@ -160,7 +161,7 @@ const FlixAdModal = ({
           ) : (
             <View style={styles.adContent}>
               <Image source={{ uri: adImageUrl }} style={styles.adImage} resizeMode="contain" />
-              <Text style={styles.priceText}>{t('flix10k.onlyAt')} 🎉</Text>
+              <Text style={styles.priceText}>{t('flix10k.onlyAt')} ${planData.amount} 🎉</Text>
               <Text style={styles.descText}>{t('flix10k.subscriptionNow')}</Text>
               <TouchableOpacity style={styles.subscribeBtn} onPress={handlePayRedirect}>
                 <Text style={styles.subscribeBtnText}>{t('flix10k.subscribeNow')}</Text>

@@ -463,7 +463,7 @@ import {
   StyleSheet,
 } from 'react-native';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials } from '../state/slices/authSlice';
 
 import GlobalStyles from '../styles/GlobalStyles';
@@ -569,6 +569,8 @@ const LoginScreen = () => {
   const [showVideo, setShowVideo] = useState(false);
   const [muted, setMuted] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
+
+  const planData = useSelector((state) => state.plan.planData);
 
   const adVideoUrl = "https://babyflix.ai/flixad.mp4";
   const adImageUrl = "https://babyflix.ai/flix10klogo.png";
@@ -814,8 +816,8 @@ const LoginScreen = () => {
             ) : (
               <View style={styles.adContent}>
                 <Image source={{ uri: adImageUrl }} style={styles.adImage} resizeMode="contain" />
-                <Text style={styles.priceText}>Only at $19.99 🎉</Text>
-                <Text style={styles.descText}>Subscribe today and unlock full access.</Text>
+                <Text style={styles.priceText}>{t('flix10k.onlyAt')} ${planData.amount} 🎉</Text>
+                <Text style={styles.descText}>{t('flix10k.subscriptionNow')}</Text>
                 <TouchableOpacity
                   style={styles.loginNowBtn}
                   onPress={() => setShowVideo(false)}

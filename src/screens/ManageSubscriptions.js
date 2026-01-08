@@ -23,6 +23,7 @@ const ManageSubscriptions = () => {
   const { subscriptionAmount, subscriptionId, subscriptionIsActive, subscriptionExpired, subscription } = useSelector(
     (state) => state.auth
   );
+  const planData = useSelector((state) => state.plan.planData);
   const subscriptionActive = subscriptionIsActive
   const [isUnsubscribed, setIsUnsubscribed] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -302,7 +303,7 @@ const ManageSubscriptions = () => {
 
   console.log('additionalMonths', additionalMonths)
 
-  const amountToPay = (additionalMonths * subscriptionAmount).toFixed(2);
+  const amountToPay = (additionalMonths * planData.amount).toFixed(2);
 
   // Calculate new expiry date
   // const newExpiryDate = new Date(subscription.expiryDate);
@@ -359,7 +360,7 @@ const ManageSubscriptions = () => {
             style={styles.profileCard}
           >
             <Text style={styles.cardTitle}>{t("flix10k.title")}</Text>
-            <Text style={styles.price}>${subscriptionAmount} / {t("flix10k.month")}</Text>
+            <Text style={styles.price}>${planData.amount} / {t("flix10k.month")}</Text>
             <Text style={styles.nextBilling}>{t("flix10k.nextBilling")}: {formatDate(subscription.expiryDate)}</Text>
             {/* <View style={styles.line} /> */}
 

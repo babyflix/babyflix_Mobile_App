@@ -36,11 +36,13 @@ import { setDeepLinkHandled } from '../src/state/slices/storageUISlice';
 import * as Notifications from 'expo-notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import sendDeviceUserInfo, { USERACTIONS } from '../src/components/deviceInfo';
+import { getFlix10KPlanApi } from '../src/components/getFlix10KPlanApi';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
   const { loading, snackbar } = useSelector((state) => state.ui);
   const user = useSelector((state) => state.auth);
+  //const plan = useSelector((state) => state.plan);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const deepLinkHandled = useSelector((state) => state.storageUI.deepLinkHandled);
   const [isConnected, setIsConnected] = useState(null);
@@ -99,6 +101,10 @@ useEffect(() => {
   };
   requestPermissions();
 }, [isAuthenticated]);
+
+useEffect(() => {
+    getFlix10KPlanApi(dispatch);
+}, [dispatch]);
 
    useEffect(() => {
     if (isAuthenticated && user?.email) {

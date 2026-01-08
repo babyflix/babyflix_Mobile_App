@@ -9,6 +9,7 @@ import storageUIReducer from './slices/storageUISlice';
 import expiredPlanReducer from './slices/expiredPlanSlice';
 import flix10kSliceReducer from './slices/flix10kSlice';
 import subscriptionReducer from "./slices/subscriptionSlice";
+import planReducer from "./slices/planSlice";
 
 export const store = configureStore({
   reducer: {
@@ -22,5 +23,6 @@ export const store = configureStore({
     expiredPlan: expiredPlanReducer,
     flix10kSlice: flix10kSliceReducer,
     subscription: subscriptionReducer,
+    plan: planReducer,
   },
 });
