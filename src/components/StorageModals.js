@@ -392,6 +392,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const handleSkip = async () => {
     if (skippedPlanCount < 3) {
       setShowStorage1(false);
+      onClose();
     }
 
     try {
@@ -570,6 +571,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                   console.log("plane close")
                   triggeredRef.current = false;
                   expiredPayment = false;
+                  onClose();
                 }}
                 style={styles.closeModel}
               >
@@ -690,6 +692,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={async () => {
                 setShowPaymentSuccess(false);
+                onClose();
                 AsyncStorage.removeItem('payment_status 1');
                 AsyncStorage.removeItem('forAdd');
                 //await AsyncStorage.removeItem('payment_handled');
@@ -729,6 +732,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 // setTimeout(() => {
                 //   dispatch(setShowFlix10KADSlice(true));
                 // }, 1000); 
+                onClose();
               }}
             >
               <Text style={styles.filledText}>{t('storage.okIGotIt')}</Text>

@@ -50,7 +50,8 @@ const Flix10kBanner = ({
   setFlix10kAiImages,
   setSnackbarVisible,
   setSnackbarMessage,
-  setSnackbarType
+  setSnackbarType,
+  setModalLock,
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -630,6 +631,7 @@ const Flix10kBanner = ({
         setAutoRenew={setAutoRenew}
         setShowFlix10KAd={setShowFlix10KAd}
         setMessage={setMessage}
+        setModalLock={setModalLock}
       />}
 
       {/* CASE 1: Not selecting */}

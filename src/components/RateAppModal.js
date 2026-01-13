@@ -47,7 +47,7 @@ const RateUsModal = ({ visible, onClose }) => {
   };
 
   return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
+    <Modal transparent visible={visible} animationType="fade" >
       <View style={styles.overlay}>
         <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
           <Text style={styles.title}>{t("rateUs.title")}</Text>
@@ -69,22 +69,25 @@ const RateUsModal = ({ visible, onClose }) => {
 };
 
 // 🧠 Helper function — tracks open count and shows modal after threshold
-export const checkAndShowRateModal = async (setShowModal) => {
+export const checkAndShowRateModal = async () => {
   try {
     const rated = await AsyncStorage.getItem(RATED_KEY);
     console.log("rated",rated)
-    if (rated === 'true') return; // user already rated
+    if (rated === 'true') return false; // user already rated
 
     const openCount = parseInt((await AsyncStorage.getItem(APP_OPEN_KEY)) || '0', 10);
     const newCount = openCount + 1;
     await AsyncStorage.setItem(APP_OPEN_KEY, String(newCount));
 
     if (newCount >= APP_OPEN_THRESHOLD) {
-      setShowModal(true);
+      // setShowModal(true);
       await AsyncStorage.setItem(APP_OPEN_KEY, '0'); // reset
+      return true; // ✅ REQUEST rate modal
     }
+    return false;
   } catch (err) {
     console.log('Error tracking app opens:', err);
+    return false;
   }
 };
 

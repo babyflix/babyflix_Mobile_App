@@ -569,6 +569,7 @@ const LoginScreen = () => {
   const [showVideo, setShowVideo] = useState(false);
   const [muted, setMuted] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [languageChecked, setLanguageChecked] = useState(false);
 
   const planData = useSelector((state) => state.plan.planData);
 
@@ -597,18 +598,31 @@ const LoginScreen = () => {
       const lang = await AsyncStorage.getItem("appLanguage");
       if (!lang) setShowLangModal(true);
       else i18n.changeLanguage(lang);
+      setLanguageChecked(true);
     };
     checkLanguage();
   }, []);
 
   // Video display
   useEffect(() => {
+  if (!languageChecked) return;
+
+   console.log("languageChecked, showLangModal, showVideo:",languageChecked, showLangModal, showVideo);
     const checkFlixAdSeen = async () => {
       const adSeen = await AsyncStorage.getItem("flixAdSeen");
-      setShowVideo(adSeen !== "true");
+      // setShowVideo(adSeen !== "true");
+      if (
+        adSeen !== "true" &&
+        !showLangModal &&
+        !showVideo
+      ) {
+        console.log("video paying")
+        setShowVideo(true);
+      }
     };
     checkFlixAdSeen();
-  }, []);
+
+  }, [showLangModal, languageChecked]);
 
   // SVG color change on keyboard open/close
   useEffect(() => {
@@ -696,6 +710,10 @@ const LoginScreen = () => {
     }
   };
 
+  const closeAd = async () => {
+    //await AsyncStorage.setItem("flixAdSeen", "true");
+    setShowVideo(false);
+  };
 
 
   // ===============================
@@ -797,22 +815,35 @@ const LoginScreen = () => {
         />
 
         {/* VIDEO MODAL */}
-        <Modal visible={showVideo} transparent animationType="fade">
+        <Modal visible={showVideo} transparent animationType="fade" statusBarTranslucent>
           <View style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.7)" }]}>
 
             {!videoEnded ? (
+              <View
+                style={{
+                  width: SCREEN_WIDTH * 0.9,
+                  height: (SCREEN_WIDTH * 0.9) * (16 / 9),
+                  backgroundColor: "black",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                }}
+              >
               <Video
                 source={{ uri: adVideoUrl }}
                 style={videoStyle}
-                resizeMode="cover"
+                resizeMode="contain"
                 shouldPlay
                 isLooping={false}
                 isMuted={muted}
-                useNativeControls={true}
+                useNativeControls={false}
                 onPlaybackStatusUpdate={(status) => {
-                  if (status.didJustFinish) setVideoEnded(true);
+                  if (status.didJustFinish) {
+                    setVideoEnded(true);
+                    //AsyncStorage.setItem("flixAdSeen", "true");
+                  }
                 }}
               />
+              </View>
             ) : (
               <View style={styles.adContent}>
                 <Image source={{ uri: adImageUrl }} style={styles.adImage} resizeMode="contain" />
@@ -833,7 +864,7 @@ const LoginScreen = () => {
                 styles.closeButton,
                 videoEnded ? { top: insets.top + 140, right: 60 } : { top: insets.top + 10, right: 20 },
               ]}
-              onPress={() => setShowVideo(false)}
+              onPress={closeAd}
             >
               <Ionicons name="close-circle" size={38} color="white" />
             </TouchableOpacity>

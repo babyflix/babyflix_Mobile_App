@@ -62,6 +62,17 @@ const GalleryScreen = () => {
     'ShadowsIntoLight': ShadowsIntoLight_400Regular,
   });
 
+  const MODALS = {
+  LANGUAGE: 'LANGUAGE',
+  APP_UPDATE: 'APP_UPDATE',
+  PHONE: 'PHONE',
+  AD: 'AD',
+  PLAN_EXPIRED: 'PLAN_EXPIRED',
+  UPGRADE: 'UPGRADE',
+  RATE: 'RATE',
+  STORAGE: 'STORAGE',
+};
+
   const [isLoading, setIsLoading] = useState(true);
   const [mediaData, setMediaData] = useState({ images: [], videos: [], babyProfile: [], predictiveBabyImages: [] });
   const [previewItem, setPreviewItem] = useState();
@@ -95,7 +106,7 @@ const GalleryScreen = () => {
   const [disableMenuAndSelection, setDisableMenuAndSelection] = useState(false);
   const [bannerMessage, setBannerMessage] = useState('');
   const [tL, setT] = useState(null);
-  const [showLangModal, setShowLangModal] = useState(false);
+  //const [showLangModal, setShowLangModal] = useState(false);
   const [flix10kSelectionMode, setFlix10kSelectionMode] = useState(false);
   const [selectedItemsForAi, setSelectedItemsForAi] = useState([]);
   const [flix10kGenerating, setFlix10kGenerating] = useState(false);
@@ -104,10 +115,22 @@ const GalleryScreen = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [flix10KAD, setFlix10KAD] = useState(false);
   const [showAfterAdd, setShowafterAdd] = useState(false);
-  const [showRateModal, setShowRateModal] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  //const [showRateModal, setShowRateModal] = useState(false);
+  //const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [refreshData, setRefreshData] = useState(false);
   const [patientData, setPatientData] = useState(null);
+  const [activeModal, setActiveModal] = useState(null);
+  const [modalChecks, setModalChecks] = useState({
+    language: null,
+    appUpdate: null,
+    phone: null,
+    ad: null,
+    plan: null,
+    rate: null,
+    storage: null,
+  });
+  const [storageFlowActive, setStorageFlowActive] = useState(true);
+  const [modalLock, setModalLock] = useState(true);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -140,6 +163,10 @@ const GalleryScreen = () => {
   const expiredShownRef = useRef(false);
 
   useEffect(() => {
+    setModalLock(true);
+  }, []);
+
+  useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
@@ -165,6 +192,7 @@ const GalleryScreen = () => {
    useEffect(() => {
     if (showFlix10KAd) {
       setFlix10KAD(false);
+      //setStorageFlowActive(true);
     }else{
       setFlix10KAD(true);
     }
@@ -179,6 +207,7 @@ const GalleryScreen = () => {
   }, []);
 
 useEffect(() => {
+  if (modalLock) return;
     const checkPhone = async () => {
       const res = await axios.get(
         EXPO_PUBLIC_API_URL + `/api/patients/getPatientByEmail?email=${user.email}`,
@@ -197,20 +226,27 @@ useEffect(() => {
       const dueMissing = !data?.dueDate;
 
       if (phoneMissing || dobMissing || dueMissing) {
-        setShowPhoneModal(true);
+        //setShowPhoneModal(true);
+        setModalChecks(p => ({ ...p, phone: 'NEEDED' }));
       }
     }
     };
     checkPhone();
-  }, [user,refreshData]);
+  }, [user,refreshData,modalLock]);
 
    useEffect(() => {
   // Show rate modal only after update modal or when user opens app multiple times
-  const timer = setTimeout(() => {
-    checkAndShowRateModal(setShowRateModal);
+  console.log("modalLock",modalLock)
+  if (modalLock) return;
+  const timer = setTimeout(async () => {
+    //checkAndShowRateModal(setShowRateModal);
+     const shouldShow = await checkAndShowRateModal();
+    if (shouldShow) {
+      setModalChecks(p => ({ ...p, rate: 'NEEDED' }));
+    }
   }, 100); // show after 3 seconds delay
   return () => clearTimeout(timer);
-}, []);
+}, [modalLock]);
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -249,16 +285,18 @@ useEffect(() => {
   );
 
   useEffect(() => {
+    if (modalLock) return;
     const checkLanguage = async () => {
       const lang = await AsyncStorage.getItem("appLanguage");
       if (!lang) {
-        setShowLangModal(true);
+        //setShowLangModal(true);
+        setModalChecks(p => ({ ...p, language: 'NEEDED' }));
       } else {
         i18n.changeLanguage(lang);
       }
     };
     checkLanguage();
-  }, []);
+  }, [modalLock]);
 
   useEffect(() => {
     const checkSkipDate = async () => {
@@ -277,11 +315,17 @@ useEffect(() => {
 
           if (isSameDay) {
             setShouldShowStorageModal(false);
+            setStorageFlowActive(false);
+           // setModalLock(false);
           } else {
             setShouldShowStorageModal(true);
+            setStorageFlowActive(true);
+            //setModalLock(true);
           }
         } else {
           setShouldShowStorageModal(false);
+          setStorageFlowActive(false);
+          //setModalLock(false);
         }
       } catch (error) {
         console.error('Error checking skip date:', error);
@@ -663,6 +707,7 @@ useEffect(() => {
         await AsyncStorage.setItem('storage_modal_triggered', 'false');
         console.log("innnnn1")
         setStorageModelStart(true);
+        setStorageFlowActive(true);
         triggeredRef.current = false;
 
         if (isAuthenticated) {
@@ -702,6 +747,7 @@ useEffect(() => {
         if (shouldOpenFromParam || shouldOpenFromRedux) {
           console.log("innnnn2")
           setStorageModelStart(true);
+          setStorageFlowActive(true);
           setStorageModalKey(true);
 
           if (shouldOpenFromParam) {
@@ -734,6 +780,7 @@ useEffect(() => {
           if (!hasHandledPaymentStatusRef.current) { 
           console.log("innnnn3")
           setStorageModelStart(true);
+          setStorageFlowActive(true);
           setStorageModalKey(true);
 
           hasHandledPaymentStatusRef.current = true;
@@ -775,6 +822,34 @@ useEffect(() => {
 
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+  if (modalLock) return;
+  if (storageFlowActive) return;
+  if (activeModal) return;
+
+  console.log("modalChecks",modalChecks)
+
+  if (modalChecks.language === 'NEEDED') {
+    setActiveModal(MODALS.LANGUAGE);
+    return;
+  }
+
+  if (modalChecks.phone === 'NEEDED') {
+    setActiveModal(MODALS.PHONE);
+    return;
+  }
+
+  if (modalChecks.appUpdate === 'NEEDED') {
+    setActiveModal(MODALS.APP_UPDATE);
+    return;
+  }
+
+  if (modalChecks.rate === 'NEEDED') {
+    setActiveModal(MODALS.RATE);
+    return;
+  }
+}, [modalChecks, activeModal, storageFlowActive, modalLock]);
 
   const handlePreview = (item) => {
     if (!item.object_url) {
@@ -870,6 +945,7 @@ useEffect(() => {
         setSnackbarVisible={setSnackbarVisible}
         setSnackbarMessage={setSnackbarMessage}
         setSnackbarType={setSnackbarType}
+        setModalLock={setModalLock}
       />
 
       {isLoading ? (
@@ -931,8 +1007,11 @@ useEffect(() => {
       />
 
        <PhoneNumberModal
-        visible={showPhoneModal}
-        onClose={() => setShowPhoneModal(false)}
+        visible={activeModal === MODALS.PHONE}
+        onClose={() => {
+          setModalChecks(p => ({ ...p, phone: 'DONE' }));
+          setActiveModal(null);
+        }}
         userEmail={user?.email}
         data={patientData}
         setRefreshData={setRefreshData}
@@ -1013,13 +1092,32 @@ useEffect(() => {
         activeDownloads={activeDownloads}
       />
 
-      <LanguageModal visible={showLangModal} onClose={() => setShowLangModal(false)} />
+      <LanguageModal visible={activeModal === MODALS.LANGUAGE} 
+        onClose={() => {
+          setModalChecks(p => ({ ...p, language: 'DONE' }));
+          setActiveModal(null);
+        }}
+      />
 
-      <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} />
+      {/* <AppUpdateModal serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`} /> */}
+      <AppUpdateModal
+        serverUrl={`${EXPO_PUBLIC_API_URL}/api/app-version`}
+        visible={activeModal === MODALS.APP_UPDATE}
+        onUpdateRequired={() =>{
+          setModalChecks(p => ({ ...p, appUpdate: 'NEEDED' }));
+        }}
+        onClose={() => {
+          setModalChecks(p => ({ ...p, appUpdate: 'DONE' }));
+          setActiveModal(null);
+        }}
+      />
 
       <RateUsModal
-        visible={showRateModal}
-        onClose={() => setShowRateModal(false)}
+        visible={activeModal === MODALS.RATE}
+        onClose={() => {
+          setModalChecks(p => ({ ...p, rate: 'DONE' }));
+          setActiveModal(null);
+        }}
       />
 
       {console.log("flix10KAD && showAfterAdd 3",{flix10KAD, showAfterAdd })}
@@ -1029,6 +1127,9 @@ useEffect(() => {
           onClose={() => {
             setStorageModelStart(false); 
             hasHandledPaymentStatusRef.current = false;
+            setStorageFlowActive(false);   // ✅ IMPORTANT
+            setModalLock(false); 
+            setActiveModal(null);  
           }}
           storageModalKey={storageModalKey}
           setStorageModalKey={setStorageModalKey}

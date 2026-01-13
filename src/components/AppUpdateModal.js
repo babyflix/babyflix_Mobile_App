@@ -17,8 +17,8 @@ import { useDynamicTranslate } from '../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const AppUpdateModal = ({ serverUrl }) => {
-  const [visible, setVisible] = useState(false);
+const AppUpdateModal = ({ serverUrl, visible, onClose, onUpdateRequired }) => {
+  //const [visible, setVisible] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
   const [storeLinks, setStoreLinks] = useState({ android: '', ios: '' });
@@ -41,12 +41,22 @@ const AppUpdateModal = ({ serverUrl }) => {
         const latestVersion = Platform.OS === 'android' ? data.latestVersion : data.appleLatestVersion;
         const currentVersion = Constants.expoConfig.version;
 
+        // if (latestVersion && latestVersion !== currentVersion) {
+        //   setStoreLinks({ android: data.androidUrl, ios: data.iosUrl });
+        //   setForceUpdate(data.forceUpdate);
+        //   setUpdateMessage(await useDynamicTranslate(`${data.message}`) || t('appUpdate.message'));
+        //   setVisible(true);
+        // }
         if (latestVersion && latestVersion !== currentVersion) {
           setStoreLinks({ android: data.androidUrl, ios: data.iosUrl });
           setForceUpdate(data.forceUpdate);
-          setUpdateMessage(await useDynamicTranslate(`${data.message}`) || t('appUpdate.message'));
-          setVisible(true);
+          setUpdateMessage(
+            (await useDynamicTranslate(`${data.message}`)) || t('appUpdate.message')
+          );
+
+          onUpdateRequired(); // ✅ tell GalleryScreen
         }
+
       } catch (err) {
         console.error("Failed to check update:", err);
       }
@@ -79,7 +89,8 @@ const AppUpdateModal = ({ serverUrl }) => {
                   onPress={async () => {
                     const today = moment().format('YYYY-MM-DD');
                     await AsyncStorage.setItem('skippedUpdateDate', today);
-                    setVisible(false);
+                    //setVisible(false);
+                    onClose();
                   }}
 
                 >
@@ -93,7 +104,7 @@ const AppUpdateModal = ({ serverUrl }) => {
                   openAppStore();
                   setTimeout(() => {
                     setIsLoading(false);
-                    if (!forceUpdate) setVisible(false);
+                    if (!forceUpdate) onClose();
                   }, 2000);
                 }}
                 //style={!forceUpdate &&{ flex: 1, borderRadius: 12, marginHorizontal: 80 }}
