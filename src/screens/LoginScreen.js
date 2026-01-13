@@ -489,6 +489,7 @@ import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
 
 import { Video } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
+import i18n from '../constants/i18n';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -593,15 +594,48 @@ const LoginScreen = () => {
     AsyncStorage.setItem('timezone', userTimezone);
   }, []);
 
+  // useEffect(() => {
+  //   const checkLanguage = async () => {
+  //     console.log("checking laguage")
+  //     const lang = await AsyncStorage.getItem("appLanguage");
+  //     if (!lang) setShowLangModal(true);
+  //     else i18n.changeLanguage(lang);
+
+  //     console.log("i am here")
+  //     setLanguageChecked(true);
+  //   };
+  //   checkLanguage();
+  // }, []);
+
   useEffect(() => {
-    const checkLanguage = async () => {
+  let isMounted = true;
+
+  const checkLanguage = async () => {
+    
+    try {
       const lang = await AsyncStorage.getItem("appLanguage");
-      if (!lang) setShowLangModal(true);
-      else i18n.changeLanguage(lang);
+
+      if (!isMounted) return;
+
+      if (!lang) {
+        setShowLangModal(true);
+      } else {
+        i18n.changeLanguage(lang);
+      }
+
       setLanguageChecked(true);
-    };
-    checkLanguage();
-  }, []);
+    } catch (e) {
+      console.error("Language check failed", e);
+    }
+  };
+
+  checkLanguage();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 
   // Video display
   useEffect(() => {
@@ -862,7 +896,7 @@ const LoginScreen = () => {
             <TouchableOpacity
               style={[
                 styles.closeButton,
-                videoEnded ? { top: insets.top + 140, right: 60 } : { top: insets.top + 10, right: 20 },
+                videoEnded ? { top: insets.top + 140, right: 60 } : { top: insets.top + 25, right: 20 },
               ]}
               onPress={closeAd}
             >
@@ -872,7 +906,7 @@ const LoginScreen = () => {
             {/* Mute */}
             {!videoEnded && (
               <TouchableOpacity
-                style={[styles.muteButton, { top: insets.top + 15 }]}
+                style={[styles.muteButton, { top: insets.top + 25 }]}
                 onPress={() => setMuted(prev => !prev)}
               >
                 <Ionicons name={muted ? "volume-mute" : "volume-high"} size={28} color="white" />

@@ -130,10 +130,10 @@ const FlixAdModal = ({
     <>
       {loader && (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#000" />
+          <ActivityIndicator size="large" color="#000"/>
         </View>
       )}
-      <Modal visible={open} transparent={true} animationType="fade" >
+      <Modal visible={open} transparent={true} animationType="fade" statusBarTranslucent>
         <View
           style={[
             styles.overlay,
@@ -148,18 +148,28 @@ const FlixAdModal = ({
               <Image source={{ uri: adImageUrl }} style={imageStyle} resizeMode="contain" />
             </TouchableOpacity>*/}
           {!videoEnded ? (
+             <View
+                style={{
+                  width: SCREEN_WIDTH * 0.9,
+                  height: (SCREEN_WIDTH * 0.9) * (16 / 9),
+                  backgroundColor: "black",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                }}
+              >
             <Video
               source={{ uri: adVideoUrl }}
               style={[videoStyle, { borderRadius: 16, backgroundColor: "black", }]}
-              resizeMode="cover"
+              resizeMode="contain"
               shouldPlay
               isLooping={false}
               isMuted={muted}
-              useNativeControls={true}
+              useNativeControls={false}
               onPlaybackStatusUpdate={(status) => {
                 if (status.didJustFinish) setVideoEnded(true);
               }}
             />
+            </View>
           ) : (
             <View style={styles.adContent}>
               <Image source={{ uri: adImageUrl }} style={styles.adImage} resizeMode="contain" />
@@ -172,7 +182,7 @@ const FlixAdModal = ({
           )}
 
           <TouchableOpacity
-            style={[styles.closeButton, videoEnded ? { top: insets.top + 140, right: 60 } : { top: insets.top + 10, right: 20 }]}
+            style={[styles.closeButton, videoEnded ? { top: insets.top + 150, right: 60 } : { top: insets.top + 25, right: 20 }]}
             onPress={handleClose}
           >
             <Ionicons name="close-circle" size={38} color={"white"} />
@@ -180,7 +190,7 @@ const FlixAdModal = ({
 
           {!videoEnded && (
             <TouchableOpacity
-              style={[styles.muteButton, { top: insets.top + 15 }]}
+              style={[styles.muteButton, { top: insets.top + 25 }]}
               onPress={() => setMuted(!muted)}
             >
               <Ionicons name={muted ? "volume-mute" : "volume-high"} size={28} color="white" />
