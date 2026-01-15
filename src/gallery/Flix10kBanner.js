@@ -279,7 +279,7 @@ const Flix10kBanner = ({
           });
         } catch (err) {
           console.error("Error sending user action:", err);
-          Alert.alert("Error sending user action:");
+          //Alert.alert("Error sending user action:");
         }
 
         await AsyncStorage.removeItem('flix10k_payment_status');
