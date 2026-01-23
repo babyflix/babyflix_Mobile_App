@@ -448,6 +448,7 @@
     "onlyAt": "Solo por",
     "subscriptionNow": "Suscríbete hoy y obtén acceso completo.",
     "loginNow": "Iniciar sesión ahora",
+    "autoRenewInfoIOS": "La renovación automática se puede gestionar en las suscripciones de Apple",
     "tabs": {
       "babyProfile": "Perfil del bebé",
       "predictiveBabyImages": "Imágenes predictivas"

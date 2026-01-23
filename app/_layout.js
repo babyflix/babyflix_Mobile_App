@@ -37,6 +37,12 @@ import * as Notifications from 'expo-notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import sendDeviceUserInfo, { USERACTIONS } from '../src/components/deviceInfo';
 import { getFlix10KPlanApi } from '../src/components/getFlix10KPlanApi';
+import {
+  initAppleIAP,
+  setupApplePurchaseListener,
+} from '../src/constants/AppleIAPHandler';
+import { restoreIOSStoragePurchase } from '../src/constants/iosRestoreStorageIAP';
+import { restoreIOSFlix10KPurchase } from '../src/constants/AppleIAPFlix10KRestore';
 
 const LayoutContent = () => {
   const dispatch = useDispatch();
@@ -111,6 +117,42 @@ useEffect(() => {
       getStoragePlanDetails(user.email, dispatch);
     }
   }, [isAuthenticated, user?.email]);
+
+  useEffect(() => {
+  if (Platform.OS === 'ios') {
+    initAppleIAP();
+
+    setupApplePurchaseListener({
+      onSuccess: () => setShowPaymentSuccess(true),
+      onFailure: () => setShowPaymentFailure(true),
+    });
+  }
+}, []);
+
+useEffect(() => {
+  if (Platform.OS === 'ios' && user?.uuid) {
+    restoreIOSStoragePurchase({
+      userId: user.uuid,
+      userEmail: user.email,
+      dispatch,
+      getStoragePlanDetails,
+      silent: true,
+    });
+  }
+}, []);
+
+useEffect(() => {
+  if (Platform.OS === 'ios' && user?.uuid) {
+    restoreIOSFlix10KPurchase({
+      userId: user.uuid,
+      userEmail: user.email,
+      dispatch,
+      getFlix10KPlanApi,
+      silent: true,
+    });
+  }
+}, []);
+
 
   useEffect(() => {
   if (user?.uuid) {

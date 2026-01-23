@@ -108,6 +108,11 @@ export default ({ config }) => ({
         },
         android: {
           jsEngine: "hermes",
+          extraProguardRules: `
+          <application>
+            <activity android:launchMode="singleTask" />
+          </application>
+        `,
         },
       }
     ],

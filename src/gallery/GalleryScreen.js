@@ -299,6 +299,20 @@ useEffect(() => {
   }, [modalLock]);
 
   useEffect(() => {
+    const checkLanguage = async () => {
+      console.log('innnnnnnnnnnnnnnnnnnnnnnn')
+      const result = await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
+      uuid: user.uuid,
+      autoRenewal: false,
+      expiryDate: "2027-03-08T11:12:41.000Z",
+    });
+
+    console.log("Auto-renewal synced with backend:", result);
+    };
+    checkLanguage();
+  }, []);
+
+  useEffect(() => {
     const checkSkipDate = async () => {
       try {
         const storedDateRaw = await AsyncStorage.getItem('last_skipped_plan_date');

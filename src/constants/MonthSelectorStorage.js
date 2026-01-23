@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -20,7 +21,12 @@ const MonthSelectorStorage = ({ months, setMonths, autoRenew, mode = "dropdown" 
   const [subscribedMonths, setSubscribedMonths] = useState(0);
   const { t } = useTranslation();
 
-  const options = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  let options = [];
+    if (Platform.OS === "android") {
+      options = [1, 3, 6, 12];
+    } else {
+      options = [1, 3, 6, 12];
+    }
 
   function formatDateToDDMMYYYY(date) {
     return moment(date).format("DD/MM/YYYY");
@@ -93,11 +99,12 @@ const MonthSelectorStorage = ({ months, setMonths, autoRenew, mode = "dropdown" 
             onRequestClose={() => setShowDropdown(false)}
           >
             <TouchableOpacity
-              style={styles.modalOverlay}
+              style={[styles.modalOverlay]}
               activeOpacity={1}
               onPress={() => setShowDropdown(false)}
+              //disabled={!!autoRenew}
             >
-              <View style={styles.dropdownList}>
+              {/* <View style={styles.dropdownList}>
                 {options.map((opt) => (
                   <TouchableOpacity
                     key={opt}
@@ -112,6 +119,24 @@ const MonthSelectorStorage = ({ months, setMonths, autoRenew, mode = "dropdown" 
                     </Text>
                   </TouchableOpacity>
                 ))}
+              </View> */}
+              <View style={styles.dropdownList}>
+                {options
+                  .filter((opt) => opt >= calculatedSubscribedMonths) // 👈 show only values greater than current
+                  .map((opt) => (
+                    <TouchableOpacity
+                      key={opt}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setMonths(opt);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownText}>
+                        {opt} {opt === 1 ? t("flix10k.month") : t("flix10k.months")}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
               </View>
             </TouchableOpacity>
           </Modal>

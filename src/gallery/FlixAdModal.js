@@ -19,7 +19,7 @@ const FlixAdModal = ({
   setAutoRenew,
   setShowFlix10KAd,
   setMessage,
-  setModalLock
+  //setModalLock
 }) => {
   const { t } = useTranslation();
   const user = useSelector((state) => state.auth);
@@ -121,7 +121,7 @@ const FlixAdModal = ({
     setTimeout(() => {
       dispatch(setShowFlix10KADSlice(false));
     }, 500);
-    setModalLock(false);
+    //setModalLock(false);
   };
 
   if (!user?.firstTimeSubscription || paymentStatusAddStorage || paymentStatus) return null;

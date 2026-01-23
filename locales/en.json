@@ -448,6 +448,7 @@
     "onlyAt": "Only at",
     "subscriptionNow": "Subscribe today and unlock full access.",
     "loginNow": "Login now",
+    "autoRenewInfoIOS": "Auto-renew can be managed in Apple Subscriptions",
     "tabs": {
       "babyProfile": "Baby Profile",
       "predictiveBabyImages": "Predictive Baby Images"

@@ -183,10 +183,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         'payment_status 1',
         'paying',
         'last_skipped_plan_date',
-        'notifications',
-        'phone_verified',
-        'RATED_KEY',
-        'APP_OPEN_KEY'
+        'notifications'
       ]);
 
       dispatch(clearOpenStorage2());
@@ -233,6 +230,15 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   const handleChangeClick = async () => {
     if (Platform.OS === 'ios') {
       setPlanModalVisible(false)
+    }
+    if (Platform.OS === 'android') {
+       dispatch(setStorageTab(true));
+       setPlanModalVisible(false)
+      navigation.navigate('profile', {
+        screen: 'ProfileSettings',
+        params: { initialTab: 'Storage' },
+      });
+      return;
     }
     setTimeout(() => {
       router.replace('/gallery');

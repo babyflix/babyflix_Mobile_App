@@ -18,6 +18,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import sendDeviceUserInfo, { USERACTIONS } from './deviceInfo';
 import { setShowFlix10KADSlice } from '../state/slices/subscriptionSlice';
 import * as Updates from "expo-updates";
+import { handlePlayStorageSubscription } from '../constants/PlayBillingStorageHandler';
+import { handleIOSStorageSubscription } from '../constants/iosStorageIAP';
+import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
 
 let modalShown = false;
 let paymentFail = false;
@@ -53,6 +56,19 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const { t } = useTranslation();
   const handledRef = useRef(false);
   const showStorage1Ref = useRef(false);
+
+   useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    if (!user?.uuid || !user?.email) return;
+
+     restoreIOSStoragePurchase({
+        userId: user.uuid,
+        userEmail: user.email,
+        dispatch,
+        getStoragePlanDetails,
+        silent: true,
+      });
+  }, []);
 
   const fetchPlans = async () => {
     try {
@@ -103,10 +119,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     //           session_id,})
   }, []);
 
-   const handleRestart = async () => {
-      try { await Updates.reloadAsync(); } 
-      catch (e) { console.error("Failed to reload app:", e); }
-    };
+  const handleRestart = async () => {
+    try { await Updates.reloadAsync(); }
+    catch (e) { console.error("Failed to reload app:", e); }
+  };
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -127,21 +143,21 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const storedStatus = await AsyncStorage.getItem('payment_status');
       const storedPaying = await AsyncStorage.getItem('paying');
 
-    console.log('[StorageModals] fetchStatusFromStorage:', {storedStatus, storedPaying} );
+      console.log('[StorageModals] fetchStatusFromStorage:', { storedStatus, storedPaying });
 
       if (!storagePlanPrice && !storedStatus && storedPaying === 'true') {
         console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');
         dispatch(clearOpenStorage2());
-        if(!paymentFail){
-        paymentFail = true;
-        setIsVisible(true);
-        setTimeout(() => {
-          setShowStorage1(false);
-        }, 200);
-        triggeredRef.current = true;
-        //modalShown = true;
-        await AsyncStorage.setItem('storage_modal_triggered', 'false');
-        //triggeredRef.current = false;
+        if (!paymentFail) {
+          paymentFail = true;
+          setIsVisible(true);
+          setTimeout(() => {
+            setShowStorage1(false);
+          }, 200);
+          triggeredRef.current = true;
+          //modalShown = true;
+          await AsyncStorage.setItem('storage_modal_triggered', 'false');
+          //triggeredRef.current = false;
         }
       }
     };
@@ -192,7 +208,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   useEffect(() => {
     const checkIfTriggered = async () => {
       const triggered = await AsyncStorage.getItem('storage_modal_triggered');
-      if(!triggered) {
+      if (!triggered) {
         triggeredRef.current = false;
       }
       if (Platform.OS === 'android' && triggeredRef.current) {
@@ -204,22 +220,22 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       console.log('[StorageModals] openStorage2Directly:', openStorage2Directly, 'triggered:', triggered);
 
       if (openStorage2Directly && triggered !== 'true') {
-        if(!expiredPayment){
+        if (!expiredPayment) {
           expiredPayment = true;
-        console.log('[StorageModals] Triggering storage2 modal');
-        triggeredRef.current = true;
-        setShowStorage1(false);
-        setIsVisible(false);
-        setTimeout(() => {
-          //console.log("Opening second modal now 3");
-          setShowStorage2(true);
-        }, 200);
-        await AsyncStorage.setItem('closePlans', 'true');
-        setClosePlans(true);
+          console.log('[StorageModals] Triggering storage2 modal');
+          triggeredRef.current = true;
+          setShowStorage1(false);
+          setIsVisible(false);
+          setTimeout(() => {
+            //console.log("Opening second modal now 3");
+            setShowStorage2(true);
+          }, 200);
+          await AsyncStorage.setItem('closePlans', 'true');
+          setClosePlans(true);
 
-        dispatch(clearOpenStorage2());
-        await AsyncStorage.setItem('storage_modal_triggered', 'true');
-      }
+          dispatch(clearOpenStorage2());
+          await AsyncStorage.setItem('storage_modal_triggered', 'true');
+        }
       }
     };
 
@@ -249,19 +265,19 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           dispatch(setForceOpenStorageModals(false));
           setShowStorage1(false);
           setShowStorage2(false);
-        if(!modalShown){
-          setTimeout(() => {
-            //console.log("PaymentFailure modal now");
-            setShowPaymentFailure(true);
-          }, 200);
-          modalShown = true;
+          if (!modalShown) {
+            setTimeout(() => {
+              //console.log("PaymentFailure modal now");
+              setShowPaymentFailure(true);
+            }, 200);
+            modalShown = true;
 
-          sendDeviceUserInfo({
-            action_type: USERACTIONS.PAYMENT,
-            action_description: `User payment failed for Storage plan`,
-          });
-        }
-        //await AsyncStorage.setItem('payment_handled', 'true');
+            sendDeviceUserInfo({
+              action_type: USERACTIONS.PAYMENT,
+              action_description: `User payment failed for Storage plan`,
+            });
+          }
+          //await AsyncStorage.setItem('payment_handled', 'true');
 
         } else if (status === 'done') {
           //console.log('[StorageModals] Status is done. Updating plan...');
@@ -270,7 +286,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           const planIdToUse = storedPlanId ? parseInt(storedPlanId) : null;
 
           try {
-             const [
+            const [
               userId,
               storagePlanId,
               storagePlanPayment,
@@ -288,13 +304,14 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
             // ✅ Prepare clean payload
             const payload = {
-              userId : userId || user.uuid,
+              userId: userId || user.uuid,
               storagePlanId,
               storagePlanPayment: 1,
               autoRenewal,
               months,
               session_id,
               status: 'SUCCESS',
+              provider: "ios_iap",
             };
 
             console.log('[StorageModals] Updating plan with payload:', payload);
@@ -333,10 +350,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               'session_id',
             ]);
 
-                  await AsyncStorage.removeItem('payment_status');
-                  await AsyncStorage.setItem('storage_modal_triggered', 'false');
-                  triggeredRef.current = false;
-                  setShowStorage1(false);
+            await AsyncStorage.removeItem('payment_status');
+            await AsyncStorage.setItem('storage_modal_triggered', 'false');
+            triggeredRef.current = false;
+            setShowStorage1(false);
           }
         } else if (storageModalKey) {
           //console.log('[StorageModals] Showing storage2 due to storageModalKey in final check');
@@ -392,7 +409,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const handleSkip = async () => {
     if (skippedPlanCount < 3) {
       setShowStorage1(false);
-      onClose();
     }
 
     try {
@@ -423,13 +439,13 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   };
 
   const handleBack = async () => {
-    expiredPayment = false; 
+    expiredPayment = false;
     setShowStorage2(false);
 
-    setTimeout(() => {
-      setShowStorage1(true);
-    }, 1000);
-    //setShowStorage1(false);
+    // setTimeout(() => {
+    //   setShowStorage1(true);
+    // }, 1000);
+    setShowStorage1(false);
     //setIsVisible(true);
   };
 
@@ -447,45 +463,198 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       await AsyncStorage.setItem('paying', 'true');
       //console.log('platform.os',Platform.OS);
 
-      const sessionRes = await axios.post(`${EXPO_PUBLIC_API_URL}/api/create-checkout-session-app`, {
-        planId: selectedPlan,
-        email: user.email,
-        platform: Platform.OS,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      if ((Platform.OS === 'android' || Platform.OS === 'ios') && selectedPlan === 1) {
+        await AsyncStorage.setItem('payment_status 1', 'done');
 
-      const sessionData = sessionRes.data;
+          const payload = {
+            userId: user.uuid,
+            storagePlanId: selectedPlan,
+            storagePlanPayment: 1,
+            autoRenewal: false,
+            months: 1,
+            session_id: Platform.OS === 'android' ? "play_billing_" + Date.now() : "ios_iap_" + Date.now(),
+            status: "SUCCESS",
+            provider: Platform.OS === 'android' ? "play_billing" : "ios_iap",
+          };
 
-      if (!sessionData.sessionId) throw new Error("No session ID returned");
+          console.log("[StorageModals] Updating plan with payload:", payload);
 
-      const stripeUrl = sessionData.sessionUrl;
+          await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
 
-      setShowStorage2(false);
-      //const result = await WebBrowser.openAuthSessionAsync(stripeUrl, "babyflix://");
+          setShowStorage1(false);
+          setShowStorage2(false);
+          setTimeout(() => {
+            setShowPaymentSuccess(true);
+          }, 200);
 
-      if (Platform.OS === 'ios') {
-        await Linking.openURL(stripeUrl);
-        // const result = await WebBrowser.openAuthSessionAsync(
-        //   stripeUrl, // Stripe checkout URL
-        //   "babyflix://payment/redirect"
-        // );
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.PAYMENT,
+            action_description: `User payment success for storage plan`,
+          });
 
-      } else {
-        const result = await WebBrowser.openAuthSessionAsync(
-          stripeUrl,
-          "babyflix://"
-        );
+          dispatch(setForceOpenStorageModals(false));
+          dispatch(setPlanExpired(false));
+          dispatch(setUpgradeReminder(false));
 
-        if (result.type === "cancel") {
-          if (isAuthenticated) {
-            router.push('/gallary');
-          }
-        }
+          return;
       }
 
+      if (Platform.OS === 'android') {
+        // Use Google Play Billing for Android
+          const currentPurchaseToken =  user.storageCurrentPurchaseToken ;
+
+          const result = await handlePlayStorageSubscription({
+            planType: selectedPlan,              // 'basic' or 'pro'
+            months: 1,  // number of months
+            autoRenew: false,             // true/false
+            setShowModal: { setShowStorage2 },
+            currentPurchaseToken,
+            //hasPurchasedBasic,
+          });
+        if (result.success) {
+          //setShowPaymentSuccess(true);
+          await AsyncStorage.setItem('payment_status 1', 'done');
+
+          // ✅ Now call your backend updatePlan API
+          const currentPurchaseToken = result.purchase.purchaseToken
+          const payload = {
+            userId: user.uuid,
+            storagePlanId: selectedPlan,
+            storagePlanPayment: 1,
+            autoRenewal: false,
+            months: 1,
+            session_id: "play_billing_" + Date.now(),
+            status: "SUCCESS",
+            provider: "play_billing",
+            currentPurchaseToken,
+          };
+
+          console.log("[StorageModals] Updating plan with payload:", payload);
+
+          await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          setShowStorage1(false);
+          setShowStorage2(false);
+          setTimeout(() => {
+            setShowPaymentSuccess(true);
+          }, 200);
+
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.PAYMENT,
+            action_description: `User payment success for storage plan`,
+          });
+
+          dispatch(setForceOpenStorageModals(false));
+          dispatch(setPlanExpired(false));
+          dispatch(setUpgradeReminder(false));
+
+        } else {
+          console.error("Android payment failed:", result.error);
+          await AsyncStorage.setItem('payment_status 1', 'fail');
+          await AsyncStorage.removeItem('payment_status');
+          await AsyncStorage.setItem('storage_modal_triggered', 'false');
+          //triggeredRef.current = false;
+          dispatch(setForceOpenStorageModals(false));
+          setShowStorage1(false);
+          setShowStorage2(false);
+          // if(!modalShown){
+          setTimeout(() => {
+            setShowPaymentFailure(true);
+          }, 200);
+          //modalShown = true;
+
+          sendDeviceUserInfo({
+            action_type: USERACTIONS.PAYMENT,
+            action_description: `User payment failed for Storage plan`,
+          });
+        }
+
+      } else {
+        await handleIOSStorageSubscription({
+          planId: selectedPlan,
+          months,
+          userId: user.uuid,
+
+          onSuccess: async ({ autoRenewal, expiryDate, originalTransactionId }) => {
+            try {
+               await AsyncStorage.setItem('payment_status 1', 'done');
+              // 1️⃣ Update plan on backend (IMPORTANT)
+              const payload = {
+                userId: user.uuid,
+                storagePlanId: selectedPlan,
+                storagePlanPayment: 1,
+                autoRenewal: true, // Apple subscriptions are auto-renew by default
+                months: 1, // or map based on productId if needed
+                session_id: "ios_iap_" + originalTransactionId,
+                status: "SUCCESS",
+                provider: "ios_iap",
+              };
+
+              console.log("[iOS IAP] Updating plan with payload:", payload);
+
+              await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+
+              // 2️⃣ Close modals
+              setShowStorage1(false);
+              setShowStorage2(false);
+
+              // 3️⃣ Show success UI
+              setTimeout(() => {
+                setShowPaymentSuccess(true);
+              }, 200);
+
+              // 4️⃣ Refresh plan data
+              await getStoragePlanDetails(user.email, dispatch);
+
+              // 5️⃣ Reset UI state
+              dispatch(setForceOpenStorageModals(false));
+              dispatch(setPlanExpired(false));
+              dispatch(setUpgradeReminder(false));
+
+              // 6️⃣ Analytics / logs
+              sendDeviceUserInfo({
+                action_type: USERACTIONS.PAYMENT,
+                action_description: `User payment success for storage plan (iOS IAP)`,
+              });
+            } catch (err) {
+              console.error("[iOS IAP] updatePlan failed:", err);
+              setShowPaymentFailure(true);
+            }
+          },
+
+          onFailure: async (err) => {
+            await AsyncStorage.setItem('payment_status 1', 'fail');
+            await AsyncStorage.removeItem('payment_status');
+            await AsyncStorage.setItem('storage_modal_triggered', 'false');
+            //triggeredRef.current = false;
+            dispatch(setForceOpenStorageModals(false));
+            setShowStorage1(false);
+            setShowStorage2(false);
+            setTimeout(() => {
+              setShowPaymentFailure(true);
+            }, 200);
+
+            sendDeviceUserInfo({
+              action_type: USERACTIONS.PAYMENT,
+              action_description: `User payment failed for storage plan (iOS IAP)`,
+            });
+          },
+        });
+
+        return;
+      }
     } catch (error) {
       console.error("Payment error:", error);
       await AsyncStorage.setItem('payment_status 1', 'fail');
@@ -571,7 +740,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                   console.log("plane close")
                   triggeredRef.current = false;
                   expiredPayment = false;
-                  onClose();
                 }}
                 style={styles.closeModel}
               >
@@ -629,7 +797,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                       )}
                       <Text style={styles.planTitleBold}>{plan.name}</Text>
                     </View>
-                     {!isPlanExpired &&<Text style={styles.planPrice}>${plan.price_per_month}</Text>}
+                    {!isPlanExpired && <Text style={styles.planPrice}>${plan.price_per_month}</Text>}
                   </View>
                   {isPlanExpired && (
                     <View style={{ width: '100%', marginTop: 0, alignItems: "flex-end" }}>
@@ -692,7 +860,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               style={[styles.filledButton, { paddingHorizontal: 20 }]}
               onPress={async () => {
                 setShowPaymentSuccess(false);
-                onClose();
                 AsyncStorage.removeItem('payment_status 1');
                 AsyncStorage.removeItem('forAdd');
                 //await AsyncStorage.removeItem('payment_handled');
@@ -732,7 +899,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 // setTimeout(() => {
                 //   dispatch(setShowFlix10KADSlice(true));
                 // }, 1000); 
-                onClose();
               }}
             >
               <Text style={styles.filledText}>{t('storage.okIGotIt')}</Text>
