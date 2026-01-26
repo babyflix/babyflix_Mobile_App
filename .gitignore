@@ -48,7 +48,7 @@ chrome-extension_*
 *.tsbuildinfo
 
 # Android / iOS
-/android
+# /android
 /ios
 
 # Privacy / build files
