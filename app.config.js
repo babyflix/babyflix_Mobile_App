@@ -26,6 +26,9 @@ export default ({ config }) => ({
     bundleIdentifier: "com.babyflix.mobile.app",
     "associatedDomains": ["applinks:babyflix.ai"],
     icon: "./assets/icon.png",
+    entitlements: {
+      "com.apple.developer.in-app-payments": []
+    },
     splash: {
       image: "./assets/icon-foreground.png", 
       resizeMode: "contain",    
