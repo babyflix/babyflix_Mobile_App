@@ -19,8 +19,9 @@ import PaymentStatusModal from "../constants/PaymentStatusModal";
 import * as RNIap from 'react-native-iap';
 import { handlePlaySubscription } from "../constants/PlayBillingHandler";
 import { handleAppleFlix10KPayment } from "../constants/AppleIAPHandler";
-import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
-import { getFlix10KPlanApi } from "../components/getFlix10KPlanApi";
+// import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
+// import { restoreIOSFlix10KPurchase } from '../constants/AppleIAPFlix10KRestore';
+// import { getFlix10KPlanApi } from "../components/getFlix10KPlanApi";
 
 const ManageSubscriptions = () => {
   const user = useSelector((state) => state.auth);
@@ -56,34 +57,34 @@ const ManageSubscriptions = () => {
     }
   }, [subscriptionExpired])
 
-  useEffect(() => {
-    const checkAndVerify = async () => {
-      try {
-        const today = new Date();
-        const expiry = new Date(subscription.expiryDate);
+  // useEffect(() => {
+  //   const checkAndVerify = async () => {
+  //     try {
+  //       const today = new Date();
+  //       const expiry = new Date(subscription.expiryDate);
 
-        // ✅ Run verification only if subscription is expired or just expired
-        if (today > expiry) {
-          console.log("⏰ Subscription expired, verifying renewal status...");
-          await verifyAutoRenewStatus(user.uuid);
+  //       // ✅ Run verification only if subscription is expired or just expired
+  //       if (today > expiry) {
+  //         console.log("⏰ Subscription expired, verifying renewal status...");
+  //         await verifyAutoRenewStatus(user.uuid);
 
-          restoreIOSStoragePurchase({
-            userId: user.uuid,
-            userEmail: user.email,
-            dispatch,
-            getFlix10KPlanApi,
-            silent: true,
-          });
-        } else {
-          console.log("✅ Subscription still active, no verification needed.");
-        }
-      } catch (err) {
-        console.error("Error verifying auto-renewal:", err);
-      }
-    };
+  //         restoreIOSFlix10KPurchase({
+  //           userId: user.uuid,
+  //           userEmail: user.email,
+  //           dispatch,
+  //           getFlix10KPlanApi,
+  //           silent: true,
+  //         });
+  //       } else {
+  //         console.log("✅ Subscription still active, no verification needed.");
+  //       }
+  //     } catch (err) {
+  //       console.error("Error verifying auto-renewal:", err);
+  //     }
+  //   };
 
-    checkAndVerify();
-  }, [subscription.expiryDate, user.uuid]);
+  //   checkAndVerify();
+  // }, [subscription.expiryDate, user.uuid]);
 
   const handleUnsubscribe = () => {
     setShowModal(true);

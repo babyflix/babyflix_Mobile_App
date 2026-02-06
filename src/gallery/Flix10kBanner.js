@@ -34,8 +34,8 @@ import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
 import { handleGooglePlayPayment } from "../constants/PlayBillingHandler";
 import PaymentStatusModal from "../constants/PaymentStatusModal";
 import { handleAppleFlix10KPayment } from "../constants/AppleIAPHandler";
-import { getFlix10KPlanApi } from "../components/getFlix10KPlanApi";
-import { restoreIOSFlix10KPurchase } from "../constants/AppleIAPFlix10KRestore";
+// import { getFlix10KPlanApi } from "../components/getFlix10KPlanApi";
+// import { restoreIOSFlix10KPurchase } from "../constants/AppleIAPFlix10KRestore";
 //import * as RNIap from 'react-native-iap';
 
 const Flix10kBanner = ({
@@ -135,17 +135,17 @@ const Flix10kBanner = ({
   //   }, [])
   // );
 
-  useEffect(() => {
-    if (Platform.OS === 'ios' && user?.uuid) {
-      restoreIOSFlix10KPurchase({
-        userId: user.uuid,
-        userEmail: user.email,
-        dispatch,
-        getFlix10KPlanApi,
-        silent: true,
-      });
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (Platform.OS === 'ios' && user?.uuid) {
+  //     restoreIOSFlix10KPurchase({
+  //       userId: user.uuid,
+  //       userEmail: user.email,
+  //       dispatch,
+  //       getFlix10KPlanApi,
+  //       silent: true,
+  //     });
+  //   }
+  // }, []);
 
   useEffect(() => {
     const checkFlixAdSeen = async () => {

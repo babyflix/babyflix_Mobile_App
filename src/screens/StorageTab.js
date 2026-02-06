@@ -34,7 +34,7 @@ import { clearOpenStorage2, setForceOpenStorageModals } from "../state/slices/st
 import { setPlanExpired, setUpgradeReminder } from "../state/slices/expiredPlanSlice";
 import * as RNIap from 'react-native-iap';
 import { handleIOSStorageSubscription } from "../constants/iosStorageIAP";
-import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
+//import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
 
 const StorageTab = () => {
   const user = useSelector((state) => state.auth);
@@ -109,34 +109,34 @@ const StorageTab = () => {
     if (storagePlanExpired) setError("Storage Plan Expired");
   }, [storagePlanExpired]);
 
-     useEffect(() => {
-      const checkAndVerify = async () => {
-        try {
-          const today = new Date();
-          const expiry = new Date(storagePlan?.planExpiryDate);
+    //  useEffect(() => {
+    //   const checkAndVerify = async () => {
+    //     try {
+    //       const today = new Date();
+    //       const expiry = new Date(storagePlan?.planExpiryDate);
   
-          // ✅ Run verification only if subscription is expired or just expired
-          if (today > expiry) {
-            console.log("⏰ Subscription expired, verifying renewal status...");
-            await verifyAutoRenewStatus(user.uuid);
+    //       // ✅ Run verification only if subscription is expired or just expired
+    //       if (today > expiry) {
+    //         console.log("⏰ Subscription expired, verifying renewal status...");
+    //         await verifyAutoRenewStatus(user.uuid);
             
-            restoreIOSStoragePurchase({
-              userId: user.uuid,
-              userEmail: user.email,
-              dispatch,
-              getStoragePlanDetails,
-              silent: true,
-            });
-          } else {
-            console.log("✅ Subscription still active, no verification needed.");
-          }
-        } catch (err) {
-          console.error("Error verifying auto-renewal:", err);
-        }
-      };
+    //         restoreIOSStoragePurchase({
+    //           userId: user.uuid,
+    //           userEmail: user.email,
+    //           dispatch,
+    //           getStoragePlanDetails,
+    //           silent: true,
+    //         });
+    //       } else {
+    //         console.log("✅ Subscription still active, no verification needed.");
+    //       }
+    //     } catch (err) {
+    //       console.error("Error verifying auto-renewal:", err);
+    //     }
+    //   };
   
-      checkAndVerify();
-    }, [storagePlan.expiryDate, user.uuid]);
+    //   checkAndVerify();
+    // }, [storagePlan.expiryDate, user.uuid]);
 
   const handleUnsubscribe = () => setShowModal(true);
   const handleUpgradeSubscribtion = () => setUpgradeModal(true);

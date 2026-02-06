@@ -20,7 +20,7 @@ import { setShowFlix10KADSlice } from '../state/slices/subscriptionSlice';
 import * as Updates from "expo-updates";
 import { handlePlayStorageSubscription } from '../constants/PlayBillingStorageHandler';
 import { handleIOSStorageSubscription } from '../constants/iosStorageIAP';
-import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
+//import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
 
 let modalShown = false;
 let paymentFail = false;
@@ -57,18 +57,18 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const handledRef = useRef(false);
   const showStorage1Ref = useRef(false);
 
-   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
-    if (!user?.uuid || !user?.email) return;
+  //  useEffect(() => {
+  //   if (Platform.OS !== 'ios') return;
+  //   if (!user?.uuid || !user?.email) return;
 
-     restoreIOSStoragePurchase({
-        userId: user.uuid,
-        userEmail: user.email,
-        dispatch,
-        getStoragePlanDetails,
-        silent: true,
-      });
-  }, []);
+  //    restoreIOSStoragePurchase({
+  //       userId: user.uuid,
+  //       userEmail: user.email,
+  //       dispatch,
+  //       getStoragePlanDetails,
+  //       silent: true,
+  //     });
+  // }, []);
 
   const fetchPlans = async () => {
     try {
