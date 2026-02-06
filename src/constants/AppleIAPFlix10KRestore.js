@@ -129,46 +129,46 @@ export const handleAppleFlix10KPayment = async ({
 
   const productId = FLIX10K_PRODUCTS[months];
 
-  Alert.alert('Flix10K IAP', `Starting payment\nMonths: ${months}\nProduct: ${productId}`);
+  //Alert.alert('Flix10K IAP', `Starting payment\nMonths: ${months}\nProduct: ${productId}`);
 
   if (!productId) {
-    Alert.alert('Error', 'Invalid product selected');
+    //Alert.alert('Error', 'Invalid product selected');
     return;
   }
 
   try {
     // 1️⃣ Init IAP
-    Alert.alert('Step 1', 'Initializing Apple IAP connection');
+    //Alert.alert('Step 1', 'Initializing Apple IAP connection');
     await RNIap.initConnection();
 
     // 2️⃣ Set local paying flag
-    Alert.alert('Step 2', 'Setting flix10KPaying flag');
+    //Alert.alert('Step 2', 'Setting flix10KPaying flag');
     await AsyncStorage.setItem('flix10KPaying', 'true');
 
     // 3️⃣ Request subscription
-    Alert.alert('Step 3', `Requesting subscription\nSKU: ${productId}`);
+    //Alert.alert('Step 3', `Requesting subscription\nSKU: ${productId}`);
     const purchase = await RNIap.requestSubscription(productId);
 
-    Alert.alert(
-      'Purchase Result',
-      JSON.stringify(
-        {
-          productId: purchase?.productId,
-          transactionId: purchase?.transactionId,
-          originalTransactionId: purchase?.originalTransactionIdentifier,
-        },
-        null,
-        2
-      )
-    );
+    // Alert.alert(
+    //   'Purchase Result',
+    //   JSON.stringify(
+    //     {
+    //       productId: purchase?.productId,
+    //       transactionId: purchase?.transactionId,
+    //       originalTransactionId: purchase?.originalTransactionIdentifier,
+    //     },
+    //     null,
+    //     2
+    //   )
+    // );
 
     if (!purchase?.transactionReceipt) {
-      Alert.alert('Error', 'No receipt received from Apple');
+      //Alert.alert('Error', 'No receipt received from Apple');
       throw new Error('No receipt received');
     }
 
     // 4️⃣ Verify receipt with backend
-    Alert.alert('Step 4', 'Verifying receipt with backend');
+    //Alert.alert('Step 4', 'Verifying receipt with backend');
 
     const verifyRes = await axios.post(
       `${EXPO_PUBLIC_API_URL}/api/subscription/verify-ios-flix10k-subscription`,
@@ -179,20 +179,20 @@ export const handleAppleFlix10KPayment = async ({
       }
     );
 
-    Alert.alert(
-      'Verify Response',
-      JSON.stringify(verifyRes.data, null, 2)
-    );
+    // Alert.alert(
+    //   'Verify Response',
+    //   JSON.stringify(verifyRes.data, null, 2)
+    // );
 
     const verifyData = verifyRes.data;
 
     if (verifyData.status !== 'active') {
-      Alert.alert('Error', 'Subscription not active after verification');
+      //Alert.alert('Error', 'Subscription not active after verification');
       throw new Error('Subscription not active');
     }
 
     // 5️⃣ Save subscription in DB
-    Alert.alert('Step 5', 'Saving subscription to database');
+    //Alert.alert('Step 5', 'Saving subscription to database');
 
     const payload = {
       uuid: user.uuid,
@@ -204,7 +204,7 @@ export const handleAppleFlix10KPayment = async ({
       provider: 'ios_iap',
     };
 
-    Alert.alert('Subscription Payload', JSON.stringify(payload, null, 2));
+    //Alert.alert('Subscription Payload', JSON.stringify(payload, null, 2));
 
     await axios.post(
       `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
@@ -212,34 +212,34 @@ export const handleAppleFlix10KPayment = async ({
     );
 
     // 6️⃣ Success UI
-    Alert.alert('Success', 'Flix10K subscription completed successfully');
+    //Alert.alert('Success', 'Flix10K subscription completed successfully');
 
     setShowafterAdd(true);
     setTimeout(() => {
-      Alert.alert('UI', 'Showing success modal');
+      //Alert.alert('UI', 'Showing success modal');
       setShowPaymentSuccess(true);
     }, 800);
   } catch (err) {
     if (err?.code === 'E_USER_CANCELLED') {
-      Alert.alert('Cancelled', 'User cancelled Apple subscription');
+      //Alert.alert('Cancelled', 'User cancelled Apple subscription');
       return;
     }
 
-    Alert.alert(
-      'IAP Error',
-      err?.message || JSON.stringify(err, null, 2)
-    );
+    // Alert.alert(
+    //   'IAP Error',
+    //   err?.message || JSON.stringify(err, null, 2)
+    // );
 
     setShowafterAdd(true);
     setTimeout(() => {
-      Alert.alert('UI', 'Showing failure modal');
+      //Alert.alert('UI', 'Showing failure modal');
       setShowPaymentFailure(true);
     }, 800);
   } finally {
     // 7️⃣ Cleanup
-    Alert.alert('Cleanup', 'Clearing local flags and closing IAP connection');
+    //Alert.alert('Cleanup', 'Clearing local flags and closing IAP connection');
 
     await AsyncStorage.removeItem('flix10KPaying');
-    await RNIap.endConnection();
+    // await RNIap.endConnection();
   }
 };

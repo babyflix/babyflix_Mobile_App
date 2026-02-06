@@ -110,61 +110,61 @@ export const handleIOSStorageSubscription = async ({
 }) => {
   if (Platform.OS !== 'ios') return;
 
-  Alert.alert(
-    'Storage IAP',
-    `Starting iOS Storage purchase\nPlanId: ${planId}\nMonths: ${months}`
-  );
+  // Alert.alert(
+  //   'Storage IAP',
+  //   `Starting iOS Storage purchase\nPlanId: ${planId}\nMonths: ${months}`
+  // );
 
   try {
     // 1️⃣ Reset + Init connection
-    Alert.alert('Step 1', 'Initializing Apple IAP connection');
+    //Alert.alert('Step 1', 'Initializing Apple IAP connection');
     await RNIap.endConnection();
     await RNIap.initConnection();
 
     // 2️⃣ Resolve productId
     const productId = getIOSStorageProductId(months, planId);
 
-    Alert.alert(
-      'Step 2',
-      `Resolved Product ID:\n${productId}`
-    );
+    // Alert.alert(
+    //   'Step 2',
+    //   `Resolved Product ID:\n${productId}`
+    // );
 
     if (!productId) {
-      Alert.alert('Error', 'Invalid storage product selected');
+      //Alert.alert('Error', 'Invalid storage product selected');
       throw new Error('Invalid productId');
     }
 
     // 3️⃣ Request subscription
-    Alert.alert(
-      'Step 3',
-      `Requesting subscription from Apple\nSKU: ${productId}`
-    );
+    // Alert.alert(
+    //   'Step 3',
+    //   `Requesting subscription from Apple\nSKU: ${productId}`
+    // );
 
     const purchase = await RNIap.requestSubscription({
       sku: productId,
     });
 
-    Alert.alert(
-      'Purchase Result',
-      JSON.stringify(
-        {
-          productId: purchase?.productId,
-          transactionId: purchase?.transactionId,
-          originalTransactionId:
-            purchase?.originalTransactionIdentifier,
-        },
-        null,
-        2
-      )
-    );
+    // Alert.alert(
+    //   'Purchase Result',
+    //   JSON.stringify(
+    //     {
+    //       productId: purchase?.productId,
+    //       transactionId: purchase?.transactionId,
+    //       originalTransactionId:
+    //         purchase?.originalTransactionIdentifier,
+    //     },
+    //     null,
+    //     2
+    //   )
+    // );
 
     if (!purchase?.transactionReceipt) {
-      Alert.alert('Error', 'No receipt received from Apple');
+      //Alert.alert('Error', 'No receipt received from Apple');
       throw new Error('No receipt received from Apple');
     }
 
     // 4️⃣ Verify receipt with backend
-    Alert.alert('Step 4', 'Verifying receipt with backend');
+    //Alert.alert('Step 4', 'Verifying receipt with backend');
 
     const verifyRes = await axios.post(
       `${EXPO_PUBLIC_API_URL}/api/patients/verify-ios-storage-subscription`,
@@ -175,16 +175,16 @@ export const handleIOSStorageSubscription = async ({
       }
     );
 
-    Alert.alert(
-      'Verify Response',
-      JSON.stringify(verifyRes.data, null, 2)
-    );
+    // Alert.alert(
+    //   'Verify Response',
+    //   JSON.stringify(verifyRes.data, null, 2)
+    // );
 
     if (verifyRes.data?.status !== 'active') {
-      Alert.alert(
-        'Verification Failed',
-        'Subscription not active after verification'
-      );
+      // Alert.alert(
+      //   'Verification Failed',
+      //   'Subscription not active after verification'
+      // );
       throw new Error('Subscription verification failed');
     }
 
@@ -194,10 +194,10 @@ export const handleIOSStorageSubscription = async ({
     });
 
     // 5️⃣ Success callback
-    Alert.alert(
-      'Success',
-      'Storage subscription verified successfully'
-    );
+    // Alert.alert(
+    //   'Success',
+    //   'Storage subscription verified successfully'
+    // );
 
     onSuccess?.({
       productId,
@@ -208,25 +208,25 @@ export const handleIOSStorageSubscription = async ({
     });
   } catch (err) {
     if (err?.code === 'E_USER_CANCELLED') {
-      Alert.alert(
-        'Cancelled',
-        'User cancelled Apple subscription'
-      );
+      // Alert.alert(
+      //   'Cancelled',
+      //   'User cancelled Apple subscription'
+      // );
       return;
     }
 
-    Alert.alert(
-      'Storage IAP Error',
-      err?.message || JSON.stringify(err, null, 2)
-    );
+    // Alert.alert(
+    //   'Storage IAP Error',
+    //   err?.message || JSON.stringify(err, null, 2)
+    // );
 
     onFailure?.(err);
   } finally {
     // 6️⃣ Cleanup
-    Alert.alert(
-      'Cleanup',
-      'Closing Apple IAP connection'
-    );
-    await RNIap.endConnection();
+    // Alert.alert(
+    //   'Cleanup',
+    //   'Closing Apple IAP connection'
+    // );
+    //await RNIap.endConnection();
   }
 };

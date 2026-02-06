@@ -52,14 +52,14 @@ import PlanExpiredModal from './PlanExpiredModal.js';
 import Flix10kBanner from './Flix10kBanner.js';
 import RateUsModal, { checkAndShowRateModal } from '../components/RateAppModal.js';
 import PhoneNumberModal from '../constants/PhoneNumberModal.js';
-import {
-  initAppleIAP,
-  setupApplePurchaseListener,
-} from '../constants/AppleIAPHandler.js';
-import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
-import { restoreIOSFlix10KPurchase } from '../constants/AppleIAPFlix10KRestore';
-import { getFlix10KPlanApi } from '../components/getFlix10KPlanApi.js';
-import { getStoragePlanDetails } from '../components/getStoragePlanDetails.js';
+// import {
+//   initAppleIAP,
+//   setupApplePurchaseListener,
+// } from '../constants/iapConnectionManager';
+// import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
+// import { restoreIOSFlix10KPurchase } from '../constants/AppleIAPFlix10KRestore';
+// import { getFlix10KPlanApi } from '../components/getFlix10KPlanApi.js';
+// import { getStoragePlanDetails } from '../components/getStoragePlanDetails.js';
 
 SplashScreen.preventAutoHideAsync();
 let upgradeModalShown = false;
@@ -175,69 +175,66 @@ const GalleryScreen = () => {
     setModalLock(true);
   }, []);
 
-  useEffect(() => {
-  if (Platform.OS !== 'ios') return;
+//   useEffect(() => {
+//   const setupIAP = async () => {
+//     await initAppleIAP();
 
-  const timer = setTimeout(async () => {
-    try {
-      await initAppleIAP();
-      setupApplePurchaseListener({
-        onSuccess: handleSuccess,
-        onFailure: handleFailure,
-      });
-    } catch (e) {
-      console.log('IAP init error', e);
-    }
-  }, 800); // delay is IMPORTANT
+//     setupApplePurchaseListener({
+//       onSuccess: (purchase) => {
+//         console.log('Purchase success', purchase);
+//       },
+//       onFailure: (error) => {
+//         console.log('Purchase failed', error);
+//       }
+//     });
+//   };
 
-  return () => {
-    clearTimeout(timer);
-  };
-}, []);
+//   setupIAP();
+// }, []);
 
-useEffect(() => {
-  if (Platform.OS !== 'ios') return;
-  if (!user?.uuid || !user?.email) return;
-  if (hasAutoRestoredRef.current) return;
+// useEffect(() => {
+//   if (Platform.OS !== 'ios') return;
+//   if (!user?.uuid || !user?.email) return;
+//   if (hasAutoRestoredRef.current) return;
 
-  hasAutoRestoredRef.current = true;
+//   hasAutoRestoredRef.current = true;
 
-  let cancelled = false;
+//   let cancelled = false;
 
-  const autoRestore = async () => {
-    try {
-      // ⏳ Allow app + StoreKit to fully stabilize
-      await new Promise(res => setTimeout(res, 1500));
-      if (cancelled) return;
+//   const autoRestore = async () => {
+//     try {
+//       // ⏳ Allow app + StoreKit to fully stabilize
+//       await new Promise(res => setTimeout(res, 1500));
+//       if (cancelled) return;
 
-      console.log('Silent auto-restore on app open');
+//       console.log('Silent auto-restore on app open');
 
-      await restoreIOSStoragePurchase({
-        userId: user.uuid,
-        userEmail: user.email,
-        dispatch,
-        getStoragePlanDetails,
-        silent: true, // 🔑 REQUIRED
-      });
+//       await restoreIOSStoragePurchase({
+//         userId: user.uuid,
+//         userEmail: user.email,
+//         dispatch,
+//         getStoragePlanDetails,
+//         silent: true, // 🔑 REQUIRED
+//       });
 
-      await restoreIOSFlix10KPurchase({
-        userId: user.uuid,
-        userEmail: user.email,
-        dispatch,
-        getFlix10KPlanApi,
-        silent: true, // 🔑 REQUIRED
-      });
-    } catch (e) {
-      console.log('Auto restore failed safely:', e);
-    }
-  };
+//       await restoreIOSFlix10KPurchase({
+//         userId: user.uuid,
+//         userEmail: user.email,
+//         dispatch,
+//         getFlix10KPlanApi,
+//         silent: true, // 🔑 REQUIRED
+//       });
+//     } catch (e) {
+//       console.log('Auto restore failed safely:', e);
+//     }
+//   };
 
-  autoRestore();
+//   autoRestore();
 
-  return () => {
-    cancelled = true;
-  };
-}, [user?.uuid, user?.email]);
+//   return () => {
+//     cancelled = true;
+//   };
+// }, [user?.uuid, user?.email]);
 
 
   useEffect(() => {

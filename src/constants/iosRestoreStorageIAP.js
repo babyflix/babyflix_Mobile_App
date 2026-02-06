@@ -85,6 +85,6 @@ export const restoreIOSStoragePurchase = async ({
   } catch (error) {
     console.error('[iOS Restore] Failed:', error);
   } finally {
-    await RNIap.endConnection();
+    //await RNIap.endConnection();
   }
 };
