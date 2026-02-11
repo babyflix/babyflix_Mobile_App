@@ -680,6 +680,19 @@ const Flix10kBanner = ({
   //   }
   // };
 
+  const getDiscountText = () => {
+  switch (months) {
+    case 3:
+      return "🎉 You will get 10% off";
+    case 6:
+      return "🎉 You will get 15% off";
+    case 12:
+      return "🎉 You will get 20% off";
+    default:
+      return null; // for 1 month or others
+  }
+};
+
   console.log("showAfterAdd", showAfterAdd)
   return (
     <View style={styles.container}>
@@ -829,10 +842,10 @@ const Flix10kBanner = ({
                     )
                   } */}
 
-                  {user?.firstTimeSubscription && user?.showFlixAd &&
-                    <Text style={styles.offer}>🎉 {t("flix10k.offerApplied")}</Text>
-                  }
-                  
+                  {user?.firstTimeSubscription && user?.showFlixAd && getDiscountText() && (
+                    <Text style={styles.offer}>{getDiscountText()}</Text>
+                  )}
+
                   {Platform.OS === 'android' && (
                   <TouchableOpacity
                     style={styles.autoRenewRow}

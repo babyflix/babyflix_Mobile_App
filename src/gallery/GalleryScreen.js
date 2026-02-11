@@ -58,8 +58,10 @@ import PhoneNumberModal from '../constants/PhoneNumberModal.js';
 // } from '../constants/iapConnectionManager';
 // import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
 // import { restoreIOSFlix10KPurchase } from '../constants/AppleIAPFlix10KRestore';
-// import { getFlix10KPlanApi } from '../components/getFlix10KPlanApi.js';
-// import { getStoragePlanDetails } from '../components/getStoragePlanDetails.js';
+ import { getFlix10KPlanApi } from '../components/getFlix10KPlanApi.js';
+ import { getStoragePlanDetails } from '../components/getStoragePlanDetails.js';
+import { checkIOSFlix10KRenewal } from '../constants/checkIOSFlix10KRenewal.js';
+import { checkIOSStorageRenewal } from '../constants/checkIOSStorageRenewal.js';
 
 SplashScreen.preventAutoHideAsync();
 let upgradeModalShown = false;
@@ -156,6 +158,10 @@ const GalleryScreen = () => {
   const storagePlanExpired = useSelector((state) => state.auth.storagePlanExpired);
   const storagePlanRemainingDays = useSelector((state) => state.auth.storagePlanRemainingDays);
 
+  const { subscriptionAmount, subscriptionId, subscriptionIsActive, subscriptionExpired } = useSelector(
+      (state) => state.auth
+    );
+
   console.log("storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays",{storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays})
 
   const dispatch = useDispatch();
@@ -236,6 +242,65 @@ const GalleryScreen = () => {
 //   };
 // }, [user?.uuid, user?.email]);
 
+useEffect(() => {
+  if (!user?.uuid) return;
+
+  // ❌ New user → never bought
+  if (!subscriptionId) return;
+
+  // ❌ If no expiry date
+  if (!subscriptionExpired) return;
+
+  const today = new Date();
+  const expiry = new Date(subscriptionExpired);
+
+  // ❌ still valid
+  if (expiry > today) return;
+
+  console.log('Flix expired & date passed → checking Apple');
+
+  checkIOSFlix10KRenewal({
+    userId: user.uuid,
+    userEmail: user.email,
+    dispatch,
+    getFlix10KPlanApi,
+  });
+
+}, [
+  user?.uuid,
+  subscriptionId,
+  subscriptionExpired,
+]);
+
+useEffect(() => {
+  if (!user?.uuid) return;
+
+  // ❌ New user → never purchased
+  if (!storagePlanId) return;
+
+  // ❌ No expiry date
+  if (!storagePlanExpired) return;
+
+  const today = new Date();
+  const expiry = new Date(storagePlanExpired);
+
+  // ❌ still valid
+  if (expiry > today) return;
+
+  console.log('Storage expired & date passed → checking Apple');
+
+  checkIOSStorageRenewal({
+    userId: user.uuid,
+    userEmail: user.email,
+    dispatch,
+    getStoragePlanDetails,
+  });
+
+}, [
+  user?.uuid,
+  storagePlanId,
+  storagePlanExpired,
+]);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

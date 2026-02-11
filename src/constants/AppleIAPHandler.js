@@ -83,8 +83,6 @@ export const handleAppleFlix10KPayment = async ({
       throw new Error('Subscription not active');
     }
 
-    await RNIap.finishTransaction({ purchase, isConsumable: false });
-
     //Alert.alert('Step 5', 'Saving subscription to database');
     // ✅ Update Flix10K subscription in DB
     const payload = {
@@ -103,6 +101,8 @@ export const handleAppleFlix10KPayment = async ({
       `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
       payload
     );
+
+    await RNIap.finishTransaction({ purchase, isConsumable: false });
 
     //Alert.alert('Success', 'Flix10K subscription completed successfully');
 

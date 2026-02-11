@@ -533,6 +533,14 @@ const ManageSubscriptions = () => {
     );
   }
 
+  const discountMap = {
+    3: 10,
+    6: 15,
+    12: 20,
+  };
+
+  const discount = discountMap[months]; // undefined for 1 month
+
   return (
     <>
       <ScrollView contentContainerStyle={styles.container}>
@@ -585,8 +593,14 @@ const ManageSubscriptions = () => {
 
             <MonthSelector months={months} setMonths={setMonths} autoRenew={autoRenew} mode={"dropdown"} />
 
+            {discount && (
+              <Text style={styles.offer}>
+                🎉 You will get {discount}% off
+              </Text>
+            )}
+
             {additionalMonths > 0 && (
-              <View style={{ marginTop: 10 }}>
+              <View style={{ marginTop: 5 }}>
                 <Text style={{ fontFamily: "Nunito400", fontSize: 12, color: "#333", marginBottom: 4 }}>
                   {t("flix10k.additionalMonths")}
                 </Text>
@@ -971,5 +985,11 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito700",
     fontSize: 14,
     color: "#333",
+  },
+  offer: {
+    fontFamily: "Nunito700",
+    fontSize: 13,
+    color: "#19b804",
+    marginTop: 6,
   },
 });
