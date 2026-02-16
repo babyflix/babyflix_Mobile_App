@@ -272,14 +272,19 @@ export const handlePlaySubscription = async ({
     console.log('Purchase result:', purchase);
     log.info("Purchase result:", purchase);
 
+    const purchaseItem = Array.isArray(purchase) ? purchase[0] : purchase;
+
+    console.log("Sending token:", purchaseItem.purchaseToken);
+    console.log("Sending product:", purchaseItem.productId);
+
     Alert.alert('Debug', 'Step 4: Purchase verification');
 
     // ✅ Verify with backend
     const response = await axios.post(
       `${EXPO_PUBLIC_API_URL}/api/subscription/verify-google-subscription-app`,
       {
-        purchaseToken: purchase.purchaseToken,
-        productId: purchase.productId,
+        purchaseToken: purchaseItem.purchaseToken,
+        productId: purchaseItem.productId,
         basePlanId,
         autoRenew,
       },
@@ -291,7 +296,7 @@ export const handlePlaySubscription = async ({
 
      // ✅ Step 5: Acknowledge purchase
     try {
-      await RNIap.acknowledgePurchaseAndroid(purchase.purchaseToken);
+      await RNIap.acknowledgePurchaseAndroid(purchaseItem.purchaseToken);
       console.log('✅ Purchase acknowledged successfully');
       log.info('Purchase acknowledged successfully');
     } catch (ackErr) {

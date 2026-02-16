@@ -208,6 +208,11 @@ export const handlePlayStorageSubscription = async ({
     console.log('Purchase result:', purchase);
     log.info("Storage Purchase result:", purchase);
 
+    const purchaseItem = Array.isArray(purchase) ? purchase[0] : purchase;
+
+    console.log("Sending token:", purchaseItem.purchaseToken);
+    console.log("Sending product:", purchaseItem.productId);
+
     Alert.alert('Debug', 'Step 4: Storage Purchase verification');
 
     // Send purchase data to backend for verification
@@ -215,8 +220,8 @@ export const handlePlayStorageSubscription = async ({
       `${EXPO_PUBLIC_API_URL}/api/patients/verify-google-storage-subscription-app`,
       {
         planType,
-        purchaseToken: purchase.purchaseToken,
-        productId: purchase.productId,
+        purchaseToken: purchaseItem.purchaseToken,
+        productId: purchaseItem.productId,
         basePlanId,
         autoRenew,
       },
@@ -228,7 +233,7 @@ export const handlePlayStorageSubscription = async ({
 
      // ✅ Step 5: Acknowledge purchase
     try {
-      await RNIap.acknowledgePurchaseAndroid(purchase.purchaseToken);
+      await RNIap.acknowledgePurchaseAndroid(purchaseItem.purchaseToken);
       console.log('✅ Purchase acknowledged successfully');
       log.info('Purchase acknowledged successfully');
     } catch (ackErr) {
