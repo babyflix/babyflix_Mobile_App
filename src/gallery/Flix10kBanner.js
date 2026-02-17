@@ -216,9 +216,6 @@ const Flix10kBanner = ({
         setShowafterAdd(true);
         //dispatch(setPaymentStatusAdd(true))
         console.log("flix10k payment success");
-        setTimeout(() => {
-          setShowPaymentSuccess(true);
-        }, 1000);
 
         console.log("Calling subscription API with:", payload);
 
@@ -255,6 +252,10 @@ const Flix10kBanner = ({
         }
 
         await AsyncStorage.removeItem('flix10k_payment_status');
+
+        setTimeout(() => {
+          setShowPaymentSuccess(true);
+        }, 1000);
       }
 
       else if (status === 'fail') {
@@ -521,7 +522,9 @@ const Flix10kBanner = ({
     await AsyncStorage.setItem('flix10KPaying', 'true');
     if (Platform.OS === 'android') {
 
-        const currentPurchaseToken = false;
+        const purchaseItem = Array.isArray(result.purchase)
+          ? result.purchase[0]
+          : result.purchase;
 
         const result = await handlePlaySubscription({
           months,        // 1, 3, 6, 9, 12 months
@@ -535,7 +538,7 @@ const Flix10kBanner = ({
         const subscriptionId = 1;
         const stripeSessionId = "play_billing_" + Date.now();
         const apiStatus = "SUCCESS";
-        const currentPurchaseToken = result.purchase.purchaseToken;
+        const currentPurchaseToken = purchaseItem.purchaseToken;
 
         const payload = {
           uuid,
@@ -544,17 +547,13 @@ const Flix10kBanner = ({
           subscribedMonths: months,
           stripeSessionId,
           status: apiStatus,
+          currentPurchaseToken,
         };
 
         console.log("Calling subscription API with:", payload);
 
         setShowafterAdd(true);
         console.log("flix10k payment success");
-
-        // Delay success modal for smoother UX
-        setTimeout(() => {
-          setShowPaymentSuccess(true);
-        }, 1000);
 
         // Send API to backend
         const response = await axios.post(
@@ -585,6 +584,11 @@ const Flix10kBanner = ({
             console.error("Failed to send user action for new subscription:", err);
           }
         }
+
+         // Delay success modal for smoother UX
+        setTimeout(() => {
+          setShowPaymentSuccess(true);
+        }, 1000);
       } else {
         // ❌ Android payment failure
         console.error("Android payment failed:", result.error);

@@ -373,11 +373,16 @@ const StorageTab = () => {
           console.log('result', result);
 
           if (result.success) {
+
+          const purchaseItem = Array.isArray(result.purchase)
+          ? result.purchase[0]
+          : result.purchase;
+          
           //setShowPaymentSuccess(true);
           await AsyncStorage.setItem('payment_status 1', 'done');
 
           // ✅ Now call your backend updatePlan API
-          const currentPurchaseToken = result.purchase.purchaseToken;
+          const currentPurchaseToken = purchaseItem.purchaseToken;
 
           const payload = {
             userId: user.uuid,
@@ -401,9 +406,6 @@ const StorageTab = () => {
 
           // setShowStorage1(false);
           // setShowStorage2(false);
-          setTimeout(() => {
-            setShowPaymentSuccess(true);
-          }, 200);
 
           sendDeviceUserInfo({
             action_type: USERACTIONS.PAYMENT,
@@ -413,6 +415,10 @@ const StorageTab = () => {
           dispatch(setForceOpenStorageModals(false));
           dispatch(setPlanExpired(false));
           dispatch(setUpgradeReminder(false));
+
+          setTimeout(() => {
+            setShowPaymentSuccess(true);
+          }, 200);
 
         } else {
           console.error("Android payment failed:", result.error);
@@ -479,10 +485,6 @@ const StorageTab = () => {
               body: JSON.stringify(payload),
             });
 
-            setTimeout(() => {
-              setShowPaymentSuccess(true);
-            }, 200);
-
             sendDeviceUserInfo({
               action_type: USERACTIONS.PAYMENT,
               action_description: 'User payment success for storage plan (iOS IAP)',
@@ -491,6 +493,10 @@ const StorageTab = () => {
             dispatch(setForceOpenStorageModals(false));
             dispatch(setPlanExpired(false));
             dispatch(setUpgradeReminder(false));
+
+            setTimeout(() => {
+              setShowPaymentSuccess(true);
+            }, 200);
           },
 
           onFailure: async () => {

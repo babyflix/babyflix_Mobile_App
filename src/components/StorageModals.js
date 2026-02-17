@@ -323,10 +323,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             //console.log('[StorageModals] Plan updated successfully');
             setShowStorage1(false);
             setShowStorage2(false);
-            setTimeout(() => {
-              //console.log("PaymentSuccess modal now");
-              setShowPaymentSuccess(true);
-            }, 200);
+           
             //await AsyncStorage.setItem('payment_handled', 'true');
 
             sendDeviceUserInfo({
@@ -337,6 +334,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             dispatch(setForceOpenStorageModals(false));
             dispatch(setPlanExpired(false));
             dispatch(setUpgradeReminder(false));
+
+             setTimeout(() => {
+              //console.log("PaymentSuccess modal now");
+              setShowPaymentSuccess(true);
+            }, 200);
           } catch (e) {
             //console.log('[StorageModals] Error updating plan:', e);
           } finally {
@@ -442,10 +444,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     expiredPayment = false;
     setShowStorage2(false);
 
-    // setTimeout(() => {
-    //   setShowStorage1(true);
-    // }, 1000);
-    setShowStorage1(false);
+    setTimeout(() => {
+      setShowStorage1(true);
+    }, 1000);
+    //setShowStorage1(false);
     //setIsVisible(true);
   };
 
@@ -487,9 +489,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
           setShowStorage1(false);
           setShowStorage2(false);
-          setTimeout(() => {
-            setShowPaymentSuccess(true);
-          }, 200);
 
           sendDeviceUserInfo({
             action_type: USERACTIONS.PAYMENT,
@@ -499,6 +498,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           dispatch(setForceOpenStorageModals(false));
           dispatch(setPlanExpired(false));
           dispatch(setUpgradeReminder(false));
+
+          setTimeout(() => {
+            setShowPaymentSuccess(true);
+          }, 200);
 
           return;
       }
@@ -516,11 +519,16 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             //hasPurchasedBasic,
           });
         if (result.success) {
+
+          const purchaseItem = Array.isArray(result.purchase)
+          ? result.purchase[0]
+          : result.purchase;
+
           //setShowPaymentSuccess(true);
           await AsyncStorage.setItem('payment_status 1', 'done');
 
           // ✅ Now call your backend updatePlan API
-          const currentPurchaseToken = result.purchase.purchaseToken
+          const currentPurchaseToken = purchaseItem.purchaseToken
           const payload = {
             userId: user.uuid,
             storagePlanId: selectedPlan,
@@ -543,10 +551,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
           setShowStorage1(false);
           setShowStorage2(false);
-          setTimeout(() => {
-            setShowPaymentSuccess(true);
-          }, 200);
-
+         
           sendDeviceUserInfo({
             action_type: USERACTIONS.PAYMENT,
             action_description: `User payment success for storage plan`,
@@ -555,6 +560,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           dispatch(setForceOpenStorageModals(false));
           dispatch(setPlanExpired(false));
           dispatch(setUpgradeReminder(false));
+
+           setTimeout(() => {
+            setShowPaymentSuccess(true);
+          }, 200);
 
         } else {
           console.error("Android payment failed:", result.error);
@@ -610,11 +619,6 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               setShowStorage1(false);
               setShowStorage2(false);
 
-              // 3️⃣ Show success UI
-              setTimeout(() => {
-                setShowPaymentSuccess(true);
-              }, 200);
-
               // 4️⃣ Refresh plan data
               await getStoragePlanDetails(user.email, dispatch);
 
@@ -628,6 +632,12 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 action_type: USERACTIONS.PAYMENT,
                 action_description: `User payment success for storage plan (iOS IAP)`,
               });
+
+              // 3️⃣ Show success UI
+              setTimeout(() => {
+                setShowPaymentSuccess(true);
+              }, 200);
+
             } catch (err) {
               console.error("[iOS IAP] updatePlan failed:", err);
               setShowPaymentFailure(true);

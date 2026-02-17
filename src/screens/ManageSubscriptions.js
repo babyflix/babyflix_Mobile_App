@@ -287,11 +287,15 @@ const ManageSubscriptions = () => {
 
       if (result.success) {
 
+        const purchaseItem = Array.isArray(result.purchase)
+          ? result.purchase[0]
+          : result.purchase;
+
         const uuid = user.uuid;
         const subscriptionId = 1;
         const stripeSessionId = "play_billing_" + Date.now();
         const apiStatus = "SUCCESS";
-        const currentPurchaseToken = result.purchase.purchaseToken;
+        const currentPurchaseToken = purchaseItem.purchaseToken;
 
         const payload = {
           uuid,
@@ -308,9 +312,6 @@ const ManageSubscriptions = () => {
 
         // setShowafterAdd(true);
         console.log("flix10k payment success");
-
-        // Delay success modal for smoother UX
-          setShowPaymentSuccess(true);
 
         // Send API to backend
         const response = await axios.post(
@@ -341,6 +342,10 @@ const ManageSubscriptions = () => {
             console.error("Failed to send user action for new subscription:", err);
           }
         }
+
+        // Delay success modal for smoother UX
+          setShowPaymentSuccess(true);
+
       } else {
         // ❌ Android payment failure
         console.error("Android payment failed:", result.error);

@@ -241,6 +241,7 @@ export const handlePlayStorageSubscription = async ({
 
      // ✅ Step 5: Acknowledge purchase
     try {
+      console.log("token",token)
       await RNIap.acknowledgePurchaseAndroid(token);
       console.log('✅ Purchase acknowledged successfully');
       log.info('Purchase acknowledged successfully');
