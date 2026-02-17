@@ -277,6 +277,7 @@ const ManageSubscriptions = () => {
           autoRenew,     // true or false (based on toggle)
           setShowModal,  // for closing modal after payment
           currentPurchaseToken, // pass if user already has a subscription
+          userUuid: user.uuid,
         });
       } catch (err) {
         console.error("handlePlaySubscription failed:", err);
@@ -287,39 +288,39 @@ const ManageSubscriptions = () => {
 
       if (result.success) {
 
-        const purchaseItem = Array.isArray(result.purchase)
-          ? result.purchase[0]
-          : result.purchase;
+        // const purchaseItem = Array.isArray(result.purchase)
+        //   ? result.purchase[0]
+        //   : result.purchase;
 
-        const uuid = user.uuid;
-        const subscriptionId = 1;
-        const stripeSessionId = "play_billing_" + Date.now();
-        const apiStatus = "SUCCESS";
-        const currentPurchaseToken = purchaseItem.purchaseToken;
+        // const uuid = user.uuid;
+        // const subscriptionId = 1;
+        // const stripeSessionId = "play_billing_" + Date.now();
+        // const apiStatus = "SUCCESS";
+        // const currentPurchaseToken = purchaseItem.purchaseToken;
 
-        const payload = {
-          uuid,
-          subscriptionId,
-          autoRenewal: autoRenew,
-          subscribedMonths: months,
-          stripeSessionId,
-          status: apiStatus,
-          provider: "play_billing",
-          currentPurchaseToken
-        };
+        // const payload = {
+        //   uuid,
+        //   subscriptionId,
+        //   autoRenewal: autoRenew,
+        //   subscribedMonths: months,
+        //   stripeSessionId,
+        //   status: apiStatus,
+        //   provider: "play_billing",
+        //   currentPurchaseToken
+        // };
 
-        console.log("Calling subscription API with:", payload);
+        // console.log("Calling subscription API with:", payload);
 
-        // setShowafterAdd(true);
-        console.log("flix10k payment success");
+        // // setShowafterAdd(true);
+        // console.log("flix10k payment success");
 
-        // Send API to backend
-        const response = await axios.post(
-          `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
-          payload
-        );
+        // // Send API to backend
+        // const response = await axios.post(
+        //   `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
+        //   payload
+        // );
 
-        console.log("Subscription API response:", response.data);
+        // console.log("Subscription API response:", response.data);
 
         if (subscriptionIsActive) {
           try {

@@ -365,7 +365,7 @@ const StorageTab = () => {
             planType: planIdToSend,              // 'basic' or 'pro'
             months: monthsToSend,  // number of months
             autoRenew: autoRenew,             // true/false
-            setShowModal: { setUpgradeModal },
+            setShowModal: setUpgradeModal,
             currentPurchaseToken,
             //hasPurchasedBasic: false,
           });

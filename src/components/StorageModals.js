@@ -514,7 +514,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             planType: selectedPlan,              // 'basic' or 'pro'
             months: 1,  // number of months
             autoRenew: false,             // true/false
-            setShowModal: { setShowStorage2 },
+            setShowModal: setShowStorage2,
             currentPurchaseToken,
             //hasPurchasedBasic,
           });

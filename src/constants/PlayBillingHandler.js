@@ -157,6 +157,7 @@ export const handlePlaySubscription = async ({
   autoRenew,
   setShowModal,
   currentPurchaseToken,
+  userUuid,
 }) => {
   try {
     log.info("Starting Play Billing flow for months:", months);
@@ -314,6 +315,39 @@ export const handlePlaySubscription = async ({
         console.warn("⚠️ Acknowledge failed:", ackErr);
         await AsyncStorage.setItem("pendingAckToken", token);
       }
+    }
+
+    // ✅ SAVE SUBSCRIPTION TO DATABASE
+    const subscriptionPayload = {
+      uuid: userUuid,
+      subscriptionId: 1,
+      autoRenewal: autoRenew,
+      subscribedMonths: months,
+      stripeSessionId: "play_billing_" + Date.now(),
+      status: "SUCCESS",
+      provider: "play_billing",
+      currentPurchaseToken: token,
+    };
+
+    console.log("Calling subscription API with:", subscriptionPayload);
+
+    // await axios.post(
+    //   `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
+    //   subscriptionPayload
+    // );
+
+    // console.log("Subscription API saved successfully");
+
+    try {
+      const subscriptionResponse = await axios.post(
+        `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
+        subscriptionPayload
+      );
+
+      console.log("Subscription API response:", subscriptionResponse.data);
+    } catch (apiErr) {
+      console.error("Subscription API error:", apiErr.response?.data || apiErr.message);
+      throw apiErr; // optional
     }
 
     setShowModal(false);
