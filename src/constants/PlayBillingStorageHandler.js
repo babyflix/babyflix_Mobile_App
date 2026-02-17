@@ -140,7 +140,7 @@ export const handlePlayStorageSubscription = async ({
     // Connect and get subscription offers
     //await RNIap.initConnection();
      // ✅ Initialize connection
-        await RNIap.endConnection();
+        //await RNIap.endConnection();
         const connected = await RNIap.initConnection();
         if (!connected) throw new Error('Billing connection failed.');
 
@@ -240,19 +240,23 @@ export const handlePlayStorageSubscription = async ({
     }
 
      // ✅ Step 5: Acknowledge purchase
-    try {
-      console.log("token",token)
-      await RNIap.acknowledgePurchaseAndroid(token);
-      console.log('✅ Purchase acknowledged successfully');
-      log.info('Purchase acknowledged successfully');
-    } catch (ackErr) {
-      console.warn('⚠️ Acknowledge failed:', ackErr);
-      await AsyncStorage.setItem("pendingAckToken", token);
-      log.error('Acknowledge failed:', ackErr);
+    if (!purchaseItem?.isAcknowledgedAndroid) {
+      try {
+        console.log("token",token)
+        await RNIap.acknowledgePurchaseAndroid({
+          token: token,
+        });
+        console.log('✅ Purchase acknowledged successfully');
+        log.info('Purchase acknowledged successfully');
+      } catch (ackErr) {
+        console.warn('⚠️ Acknowledge failed:', ackErr);
+        await AsyncStorage.setItem("pendingAckToken", token);
+        log.error('Acknowledge failed:', ackErr);
+      }
     }
 
     setShowModal(false);
-    await RNIap.endConnection();
+    //await RNIap.endConnection();
     await AsyncStorage.removeItem('storagePaying');
 
      return {

@@ -185,7 +185,7 @@ export const handlePlaySubscription = async ({
     await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
 
     // ✅ Initialize connection
-    await RNIap.endConnection();
+    //await RNIap.endConnection();
     const connected = await RNIap.initConnection();
     if (!connected) throw new Error('Billing connection failed.');
 
@@ -303,20 +303,22 @@ export const handlePlaySubscription = async ({
     }
 
      // ✅ Step 5: Acknowledge purchase
-    try {
-      console.log("token",token)
-      await RNIap.acknowledgePurchaseAndroid(token);
-      console.log('✅ Purchase acknowledged successfully');
-      log.info('Purchase acknowledged successfully');
-    } catch (ackErr) {
-      console.warn('⚠️ Acknowledge failed:', ackErr);
-      await AsyncStorage.setItem("pendingAckToken", token);
-      log.error('Acknowledge failed:', ackErr);
+    if (!purchaseItem?.isAcknowledgedAndroid) {
+      try {
+        console.log("Acknowledging token:", token);
+        await RNIap.acknowledgePurchaseAndroid({
+          token: token,
+        });
+        console.log("✅ Purchase acknowledged successfully");
+      } catch (ackErr) {
+        console.warn("⚠️ Acknowledge failed:", ackErr);
+        await AsyncStorage.setItem("pendingAckToken", token);
+      }
     }
 
     setShowModal(false);
     await AsyncStorage.removeItem('flix10KPaying');
-    await RNIap.endConnection();
+    //await RNIap.endConnection();
 
     return {
       success: true,

@@ -161,31 +161,31 @@ const Flix10kBanner = ({
     checkFlixAdSeen();
   }, []);
 
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", async (state) => {
-      if (state === "active") {
-        try {
-          const paying = await AsyncStorage.getItem("flix10KPaying");
-          const addPayment = await AsyncStorage.getItem("flix10kPaymentForAdd");
+  // useEffect(() => {
+  //   const subscription = AppState.addEventListener("change", async (state) => {
+  //     if (state === "active") {
+  //       try {
+  //         const paying = await AsyncStorage.getItem("flix10KPaying");
+  //         const addPayment = await AsyncStorage.getItem("flix10kPaymentForAdd");
 
-          // If user was paying but didn't finish, clean up
-          if (paying || addPayment) {
-            console.log("User returned without completing Stripe payment, clearing state...");
-            await AsyncStorage.removeItem("flix10KPaying");
-            //await AsyncStorage.removeItem("flix10kPaymentForAdd");
+  //         // If user was paying but didn't finish, clean up
+  //         if (paying || addPayment) {
+  //           console.log("User returned without completing Stripe payment, clearing state...");
+  //           await AsyncStorage.removeItem("flix10KPaying");
+  //           //await AsyncStorage.removeItem("flix10kPaymentForAdd");
 
-            dispatch(setShowFlix10KADSlice(false));
-          }
-        } catch (err) {
-          console.error("Error clearing payment state:", err);
-        }
-      }
-    });
+  //           dispatch(setShowFlix10KADSlice(false));
+  //         }
+  //       } catch (err) {
+  //         console.error("Error clearing payment state:", err);
+  //       }
+  //     }
+  //   });
 
-    return () => {
-      subscription.remove();
-    };
-  }, []);
+  //   return () => {
+  //     subscription.remove();
+  //   };
+  // }, []);
 
 
   useEffect(() => {
