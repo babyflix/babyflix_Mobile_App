@@ -245,7 +245,7 @@ const ManageSubscriptions = () => {
   };
 
   const handleSubscribe = async () => {
-    const isAutoRenewToggleOnly = subscription?.subscribedMonths === months && subscription?.autoRenewal !== autoRenew;
+    const isAutoRenewToggleOnly = !subscriptionExpired && subscription?.subscribedMonths === months && subscription?.autoRenewal !== autoRenew;
 
     await AsyncStorage.setItem('flix10KPaying', 'true');
     setUpgradeModal(false);
@@ -603,10 +603,11 @@ const ManageSubscriptions = () => {
 
             <MonthSelector months={months} setMonths={setMonths} autoRenew={autoRenew} mode={"dropdown"} />
 
-            {discount && (
-              <Text style={styles.offer}>
-                🎉 You will get {discount}% off
-              </Text>
+            {discount &&
+              subscription?.subscribedMonths !== months && (
+                <Text style={styles.offer}>
+                  🎉 You will get {discount}% off
+                </Text>
             )}
 
             {additionalMonths > 0 && (

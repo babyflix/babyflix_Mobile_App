@@ -383,10 +383,11 @@ const StorageTab = () => {
 
           // ✅ Now call your backend updatePlan API
           const currentPurchaseToken = purchaseItem.purchaseToken;
+          const storagePlanId = selectedPlan === 3 ? 2 : selectedPlan;
 
           const payload = {
             userId: user.uuid,
-            storagePlanId: selectedPlan,
+            storagePlanId,
             storagePlanPayment: 1,
             autoRenewal: autoRenew,
             months: monthsToSend,

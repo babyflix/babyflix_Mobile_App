@@ -529,9 +529,11 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
           // ✅ Now call your backend updatePlan API
           const currentPurchaseToken = purchaseItem.purchaseToken
+          const storagePlanId = selectedPlan === 3 ? 2 : selectedPlan; // Map to backend plan IDs if needed
+          
           const payload = {
             userId: user.uuid,
-            storagePlanId: selectedPlan,
+            storagePlanId,
             storagePlanPayment: 1,
             autoRenewal: false,
             months: 1,
