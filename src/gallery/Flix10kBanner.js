@@ -520,8 +520,11 @@ const Flix10kBanner = ({
 
   const handleSubscribe = async () => {
     await AsyncStorage.setItem('flix10KPaying', 'true');
-    if (Platform.OS === 'android') {
+    console.log("handleSubscribe called");
 
+    setShowModal(false); 
+    if (Platform.OS === 'android') {
+        console.log("calling handlePlaySubscription");
         const result = await handlePlaySubscription({
           months,        // 1, 3, 6, 9, 12 months
           autoRenew,     // true or false (based on toggle)
@@ -883,10 +886,7 @@ const Flix10kBanner = ({
 
                   <View style={styles.actionRow}>
                     <TouchableOpacity
-                      onPress={() => {
-                        setShowModal(false);
-                        handleSubscribe();
-                      }}
+                      onPress={handleSubscribe}
                       activeOpacity={0.8}
                     >
                       <LinearGradient

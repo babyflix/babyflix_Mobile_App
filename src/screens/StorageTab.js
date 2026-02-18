@@ -396,13 +396,56 @@ const StorageTab = () => {
             currentPurchaseToken,
           };
 
-          console.log("[StorageModals] Updating plan with payload:", payload);
+          // console.log("[StorageModals] Updating plan with payload:", payload);
 
-          await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+          // await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+          //   method: "PUT",
+          //   headers: { "Content-Type": "application/json" },
+          //   body: JSON.stringify(payload),
+          // });
+
+          try {
+          console.log("📤 Calling updatePlan API with payload:", payload);
+
+          const response = await fetch(
+            `${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            }
+          );
+
+          // Parse JSON safely
+          const data = await response.json();
+
+          console.log("✅ updatePlan API response status:", response.status);
+          console.log("✅ updatePlan API response body:", data);
+
+          if (!response.ok) {
+            throw new Error(
+              data?.message ||
+              data?.error ||
+              "updatePlan API failed with status " + response.status
+            );
+          }
+
+          console.log("🎉 Storage plan updated successfully:", data);
+
+        } catch (err) {
+          console.error("❌ updatePlan API ERROR:");
+          console.error("Message:", err.message);
+          console.error("Full error object:", err);
+
+          Alert.alert(
+            "Update Plan Error",
+            err.message || "Something went wrong while updating the plan"
+          );
+
+          throw err; // optional (only if you want parent catch to handle it)
+        }
 
           // setShowStorage1(false);
           // setShowStorage2(false);

@@ -344,8 +344,12 @@ const ManageSubscriptions = () => {
           }
         }
 
+        console.log("After userActionsend")
+
         // Delay success modal for smoother UX
+        setTimeout(() => {
           setShowPaymentSuccess(true);
+        }, 1000);
 
       } else {
         // ❌ Android payment failure

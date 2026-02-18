@@ -346,7 +346,11 @@ export const handlePlaySubscription = async ({
 
       console.log("Subscription API response:", subscriptionResponse.data);
     } catch (apiErr) {
-      console.error("Subscription API error:", apiErr.response?.data || apiErr.message);
+      console.log("Subscription API error FULL:", {
+        message: apiErr.message,
+        status: apiErr.response?.status,
+        data: apiErr.response?.data,
+      });
       throw apiErr; // optional
     }
 
