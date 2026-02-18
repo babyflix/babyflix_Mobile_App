@@ -253,6 +253,7 @@ export const handlePlaySubscription = async ({
         ],
          ...(oldToken && {
           oldPurchaseToken: oldToken,
+          prorationModeAndroid: RNIap.ProrationModes.IMMEDIATE_WITH_TIME_PRORATION,
         }),
       }
 

@@ -201,7 +201,7 @@ export const handlePlayStorageSubscription = async ({
           { sku: sub.productId, offerToken: offer.offerToken }
         ],
          ...(planType === 2 && oldToken
-        ? { oldPurchaseToken: oldToken }
+        ? { oldPurchaseToken: oldToken, prorationModeAndroid: RNIap.ProrationModes.IMMEDIATE_WITH_TIME_PRORATION, }
         : {}),
     });
 

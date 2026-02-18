@@ -158,56 +158,76 @@ const StorageTab = () => {
   }, [user, snackbarMessage]);
 
   const confirmUnsubscribe = async () => {
-    try {
-      const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.uuid,
-          storagePlanId: null,
-          storagePlanPayment: null,
-          storagePlanDeleteDate: moment().format('DD-MM-YYYY hh:mm'),
-          isPlanDeleted: 1,
-        }),
-      });
+
+    setShowModal(false);
+
+    const url =
+        Platform.OS === 'ios'
+          ? 'https://apps.apple.com/account/subscriptions'
+          : 'https://play.google.com/store/account/subscriptions';
+    
+        Alert.alert(
+          'Manage Subscription',
+          'To cancel your subscription, please manage it from your store settings. Your access will continue until the current plan period ends.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open Subscriptions',
+              onPress: () => Linking.openURL(url),
+            },
+          ]
+        );
+
+    // try {
+    //   const response = await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
+    //     method: 'PUT',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({
+    //       userId: user.uuid,
+    //       storagePlanId: null,
+    //       storagePlanPayment: null,
+    //       storagePlanDeleteDate: moment().format('DD-MM-YYYY hh:mm'),
+    //       isPlanDeleted: 1,
+    //     }),
+    //   });
 
 
-      const data = await response.json();
+    //   const data = await response.json();
 
-      if (response.ok && data.actionStatus === 'success') {
+    //   if (response.ok && data.actionStatus === 'success') {
 
-        setSnackbarMessage(t('storage.deletedSuccessfully', { planName: translatedCurrentPlan }));
-        setSnackbarType('success');
-        setSnackbarVisible(true);
+        // setSnackbarMessage(t('storage.deletedSuccessfully', { planName: translatedCurrentPlan }));
+        // setSnackbarType('success');
+        // setSnackbarVisible(true);
 
-        await getStoragePlanDetails(user.email, dispatch);
+        //await getStoragePlanDetails(user.email, dispatch);
         //setPlanModalVisible(false)
-        setIsUnsubscribed(true);
-        setShowModal(false);
-        sendDeviceUserInfo({
-          action_type: USERACTIONS.UNSUBSCRIBE,
-          action_description: `User Unsubscribe storage plan`,
-        });
+        //setIsUnsubscribed(true);
+        
+        // sendDeviceUserInfo({
+        //   action_type: USERACTIONS.UNSUBSCRIBE,
+        //   action_description: `User Unsubscribe storage plan`,
+        // });
 
-        setTimeout(async () => {
-          handleRestart();
-        }, 3000);
-      } else {
-        console.error('❌ Failed to delete plan:', data.message);
+    //     setTimeout(async () => {
+    //       handleRestart();
+    //     }, 3000);
+    //   } else {
+    //     console.error('❌ Failed to delete plan:', data.message);
 
-        setSnackbarMessage(t('storage.failedToDeletePlan'));
-        setSnackbarType('error');
-        setSnackbarVisible(true);
-      }
-    } catch (error) {
-      console.error('❌ Error deleting plan:', error);
+    //     setSnackbarMessage(t('storage.failedToDeletePlan'));
+    //     setSnackbarType('error');
+    //     setSnackbarVisible(true);
+    //   }
+    // } catch (error) {
+    //   console.error('❌ Error deleting plan:', error);
 
-      setSnackbarMessage(t('storage.somethingWentWrong'));
-      setSnackbarType('error');
-      setSnackbarVisible(true);
-    }
+    //   setSnackbarMessage(t('storage.somethingWentWrong'));
+    //   setSnackbarType('error');
+    //   setSnackbarVisible(true);
+    // }
   };
 
   const cancelUnsubscribe = () => setShowModal(false);
@@ -325,7 +345,7 @@ const StorageTab = () => {
 
   const handleSubscribe = async () => {
 
-    const isAutoRenewToggleOnly = calculatedSubscribedMonths === months && storagePlanAutoRenewal !== autoRenew;
+    const isAutoRenewToggleOnly = !storagePlanExpired && calculatedSubscribedMonths === months && storagePlanAutoRenewal !== autoRenew;
     await AsyncStorage.setItem("storagePaying", "true");
     setUpgradeModal(false);
 
@@ -632,6 +652,11 @@ const StorageTab = () => {
     );
   }
 
+  const shouldDisableUpgrade =
+  !storagePlanExpired &&
+  calculatedSubscribedMonths === months &&
+  storagePlanAutoRenewal === autoRenew;
+
   return (
     <>
       <ScrollView contentContainerStyle={styles.container}>
@@ -794,9 +819,11 @@ const StorageTab = () => {
               <TouchableOpacity
                 style={[
                   styles.button,
+                  shouldDisableUpgrade && { backgroundColor: Colors.gray }
                   //additionalMonths <= 0 && { backgroundColor: Colors.gray } // make it gray when disabled
                 ]}
                 onPress={handleUpgradeSubscribtion}
+                disabled={shouldDisableUpgrade}
                 //disabled={additionalMonths <= 0} // disables the button
               >
                 <Text style={styles.buttonText}>{t("flix10k.upgrade")}</Text>

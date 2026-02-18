@@ -115,65 +115,65 @@ const ManageSubscriptions = () => {
 
   const confirmUnsubscribe = async () => {
   // 🍎 iOS: redirect to Apple Subscriptions
-  if (Platform.OS === 'ios') {
-    setShowModal(false);
+  setShowModal(false);
+
+  const url =
+    Platform.OS === 'ios'
+      ? 'https://apps.apple.com/account/subscriptions'
+      : 'https://play.google.com/store/account/subscriptions';
 
     Alert.alert(
       'Manage Subscription',
-      'To cancel your subscription, please manage it from Apple Subscriptions. Your access will continue until the current period ends.',
+      'To cancel your subscription, please manage it from your store settings. Your access will continue until the current plan period ends.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Open Subscriptions',
-          onPress: () =>
-            Linking.openURL('https://apps.apple.com/account/subscriptions'),
+          onPress: () => Linking.openURL(url),
         },
       ]
     );
 
-    return; // ⛔ stop here (no backend call)
-  }
-
   // 🤖 Android: backend unsubscribe (existing logic)
-  try {
-    const payload = {
-      uuid: user.uuid,
-      subscriptionId: subscriptionId,
-    };
+  // try {
+  //   const payload = {
+  //     uuid: user.uuid,
+  //     subscriptionId: subscriptionId,
+  //   };
 
-    const response = await axios.post(
-      `${EXPO_PUBLIC_API_URL}/api/subscription/unsubscribe`,
-      payload
-    );
+  //   const response = await axios.post(
+  //     `${EXPO_PUBLIC_API_URL}/api/subscription/unsubscribe`,
+  //     payload
+  //   );
 
-    if (response.status === 200) {
-      console.log("Unsubscribe response:", response.data);
+  //   if (response.status === 200) {
+  //     console.log("Unsubscribe response:", response.data);
 
-      setSnackbarMessage(t("flix10k.unsubscribeSuccess"));
-      setSnackbarType('success');
-      setSnackbarVisible(true);
+      // setSnackbarMessage(t("flix10k.unsubscribeSuccess"));
+      // setSnackbarType('success');
+      // setSnackbarVisible(true);
 
-      setIsUnsubscribed(true);
-      setShowModal(false);
+      // //setIsUnsubscribed(true);
+      // setShowModal(false);
 
-      sendDeviceUserInfo({
-        action_type: USERACTIONS.UNSUBSCRIBE,
-        action_description: `User Unsubscribe Flix10K plan`,
-      });
+      // sendDeviceUserInfo({
+      //   action_type: USERACTIONS.UNSUBSCRIBE,
+      //   action_description: `User Unsubscribe Flix10K plan`,
+      // });
 
-      setTimeout(async () => {
-        handleRestart();
-      }, 3000);
-    } else {
-      throw new Error('Unsubscribe failed');
-    }
-  } catch (error) {
-    console.error("Unsubscribe error:", error);
+      // setTimeout(async () => {
+      //   handleRestart();
+      // }, 3000);
+  //   } else {
+  //     throw new Error('Unsubscribe failed');
+  //   }
+  // } catch (error) {
+  //   console.error("Unsubscribe error:", error);
 
-    setSnackbarMessage(t("flix10k.unsubscribeError"));
-    setSnackbarType('error');
-    setSnackbarVisible(true);
-  }
+  //   setSnackbarMessage(t("flix10k.unsubscribeError"));
+  //   setSnackbarType('error');
+  //   setSnackbarVisible(true);
+  // }
 };
 
 
@@ -551,6 +551,13 @@ const ManageSubscriptions = () => {
 
   const discount = discountMap[months]; // undefined for 1 month
 
+  // Disable upgrade button if ACTIVE and nothing changed
+const shouldDisableUpgrade =
+  subscriptionIsActive &&
+  !subscriptionExpired &&
+  subscription?.subscribedMonths === months &&
+  subscription?.autoRenewal === autoRenew;
+
   return (
     <>
       <ScrollView contentContainerStyle={styles.container}>
@@ -627,9 +634,13 @@ const ManageSubscriptions = () => {
             )}
 
             <View style={styles.btnRow}>
-              <TouchableOpacity onPress={handleUpgradeSubscribtion} activeOpacity={0.8}>
+              <TouchableOpacity onPress={handleUpgradeSubscribtion} activeOpacity={0.8} disabled={shouldDisableUpgrade}>
                 <LinearGradient
-                  colors={["#d63384", "#9b2c6f"]}
+                  colors={
+                    shouldDisableUpgrade
+                      ? ["#ccc", "#ccc"]
+                      : ["#d63384", "#9b2c6f"]
+                  }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.upgradeBtn}

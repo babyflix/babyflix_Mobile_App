@@ -522,6 +522,8 @@ const Flix10kBanner = ({
     await AsyncStorage.setItem('flix10KPaying', 'true');
     console.log("handleSubscribe called");
 
+    const currentPurchaseToken = null;
+
     //setShowModal(false); 
     if (Platform.OS === 'android') {
         console.log("calling handlePlaySubscription");
