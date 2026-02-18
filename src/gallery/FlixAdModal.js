@@ -89,7 +89,7 @@ const FlixAdModal = ({
       setTimeout(() => {
         setOpen(true);
         setMonths(1);
-        setAutoRenew(false);
+        setAutoRenew(true);
         setShowFlix10KAd(user?.showFlixAd);
       }, 1000);
     }

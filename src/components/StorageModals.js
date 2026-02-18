@@ -513,7 +513,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           const result = await handlePlayStorageSubscription({
             planType: selectedPlan,              // 'basic' or 'pro'
             months: 1,  // number of months
-            autoRenew: false,             // true/false
+            autoRenew: true,             // true/false
             setShowModal: setShowStorage2,
             currentPurchaseToken,
             //hasPurchasedBasic,
@@ -530,12 +530,12 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           // ✅ Now call your backend updatePlan API
           const currentPurchaseToken = purchaseItem.purchaseToken
           const storagePlanId = selectedPlan === 3 ? 2 : selectedPlan; // Map to backend plan IDs if needed
-          
+
           const payload = {
             userId: user.uuid,
             storagePlanId,
             storagePlanPayment: 1,
-            autoRenewal: false,
+            autoRenewal: true,
             months: 1,
             session_id: "play_billing_" + Date.now(),
             status: "SUCCESS",

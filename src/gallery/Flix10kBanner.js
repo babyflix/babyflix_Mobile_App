@@ -77,7 +77,7 @@ const Flix10kBanner = ({
   const [showModal, setShowModal] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [months, setMonths] = useState(1);
-  const [autoRenew, setAutoRenew] = useState(false);
+  const [autoRenew, setAutoRenew] = useState(true);
 
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [showPaymentFailure, setShowPaymentFailure] = useState(false);
