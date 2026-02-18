@@ -631,7 +631,7 @@ const StorageTab = () => {
       amountToPay = (months * parseFloat(storagePlanPrice || 0)).toFixed(2);
     }
 
-    newExpiryDate = storagePlanExpired ? new Date() : new Date(storagePlan?.planExpiryDate);
+    newExpiryDate = storagePlanExpired ? new Date() : new Date();
     if ((storagePlanExpired ? months : months) > 0) {
       newExpiryDate.setMonth(
         newExpiryDate.getMonth() + (storagePlanExpired ? months : months)
@@ -652,8 +652,11 @@ const StorageTab = () => {
     );
   }
 
+  const isFreePlan = storagePlanPrice === "0.00";
+
   const shouldDisableUpgrade =
   !storagePlanExpired &&
+  !isFreePlan &&
   calculatedSubscribedMonths === months &&
   storagePlanAutoRenewal === autoRenew;
 

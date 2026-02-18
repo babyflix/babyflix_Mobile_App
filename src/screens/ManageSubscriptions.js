@@ -532,7 +532,7 @@ const ManageSubscriptions = () => {
       newExpiryDate.setMonth(newExpiryDate.getMonth() + months);
     }
   } else {
-    newExpiryDate = new Date(subscription.expiryDate);
+    newExpiryDate = new Date();
     if (additionalMonths > 0) {
       newExpiryDate.setMonth(newExpiryDate.getMonth() + months);
       console.log('newExpiryDate.', months)
