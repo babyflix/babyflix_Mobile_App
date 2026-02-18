@@ -626,15 +626,15 @@ const StorageTab = () => {
       : (months > calculatedSubscribedMonths ? months - calculatedSubscribedMonths : 0);
 
     if (storagePlanPrice === "0.00") {
-      amountToPay = (additionalMonths * parseFloat(getPlanPrice(2) || 0)).toFixed(2);
+      amountToPay = (months * parseFloat(getPlanPrice(2) || 0)).toFixed(2);
     } else {
-      amountToPay = (additionalMonths * parseFloat(storagePlanPrice || 0)).toFixed(2);
+      amountToPay = (months * parseFloat(storagePlanPrice || 0)).toFixed(2);
     }
 
     newExpiryDate = storagePlanExpired ? new Date() : new Date(storagePlan?.planExpiryDate);
-    if ((storagePlanExpired ? months : additionalMonths) > 0) {
+    if ((storagePlanExpired ? months : months) > 0) {
       newExpiryDate.setMonth(
-        newExpiryDate.getMonth() + (storagePlanExpired ? months : additionalMonths)
+        newExpiryDate.getMonth() + (storagePlanExpired ? months : months)
       );
     }
   }

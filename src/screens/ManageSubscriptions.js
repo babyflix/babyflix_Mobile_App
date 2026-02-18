@@ -245,7 +245,9 @@ const ManageSubscriptions = () => {
   };
 
   const handleSubscribe = async () => {
-    const isAutoRenewToggleOnly = !subscriptionExpired && subscription?.subscribedMonths === months && subscription?.autoRenewal !== autoRenew;
+    const backendAutoRenewal = subscription?.autoRenewal === 1;
+
+    const isAutoRenewToggleOnly = !subscriptionExpired && subscription?.subscribedMonths === months && backendAutoRenewal !== autoRenew;
 
     await AsyncStorage.setItem('flix10KPaying', 'true');
     setUpgradeModal(false);
@@ -489,6 +491,14 @@ const ManageSubscriptions = () => {
   //     ? months - subscription.subscribedMonths
   //     : 0;
 
+    const discountMap = {
+      3: 10,
+      6: 15,
+      12: 20,
+    };
+
+    const discount = discountMap[months]; // undefined for 1 month
+
   const additionalMonths = subscriptionExpired
     ? (months >= 1 ? months : 0)
     : (months > subscription.subscribedMonths
@@ -497,7 +507,17 @@ const ManageSubscriptions = () => {
 
   console.log('additionalMonths', additionalMonths)
 
-  const amountToPay = (additionalMonths * planData.amount).toFixed(2);
+  //const amountToPay = (months * planData.amount).toFixed(2);
+
+  const baseAmount = months * planData.amount;
+
+  const discountPercent = discountMap[months] || 0;
+
+  const discountAmount = (baseAmount * discountPercent) / 100;
+
+  const finalAmount = baseAmount - discountAmount;
+
+  const amountToPay = finalAmount.toFixed(2);
 
   // Calculate new expiry date
   // const newExpiryDate = new Date(subscription.expiryDate);
@@ -514,8 +534,8 @@ const ManageSubscriptions = () => {
   } else {
     newExpiryDate = new Date(subscription.expiryDate);
     if (additionalMonths > 0) {
-      newExpiryDate.setMonth(newExpiryDate.getMonth() + additionalMonths);
-      console.log('newExpiryDate.', additionalMonths)
+      newExpiryDate.setMonth(newExpiryDate.getMonth() + months);
+      console.log('newExpiryDate.', months)
     }
   }
 
@@ -543,20 +563,14 @@ const ManageSubscriptions = () => {
     );
   }
 
-  const discountMap = {
-    3: 10,
-    6: 15,
-    12: 20,
-  };
-
-  const discount = discountMap[months]; // undefined for 1 month
+  const backendAutoRenew = subscription?.autoRenewal === 1;
 
   // Disable upgrade button if ACTIVE and nothing changed
 const shouldDisableUpgrade =
   subscriptionIsActive &&
   !subscriptionExpired &&
   subscription?.subscribedMonths === months &&
-  subscription?.autoRenewal === autoRenew;
+  backendAutoRenew === autoRenew;
 
   return (
     <>
