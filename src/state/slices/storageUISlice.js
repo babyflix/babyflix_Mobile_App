@@ -6,6 +6,7 @@ const storageUISlice = createSlice({
     openStorage2Directly: false,
     forceOpenStorageModals: false,
     deepLinkHandled: false,
+    galleryRefreshKey: 0,
   },
   reducers: {
     triggerOpenStorage2: (state) => {
@@ -20,6 +21,9 @@ const storageUISlice = createSlice({
     setDeepLinkHandled: (state, action) => {
       state.deepLinkHandled = action.payload; // true or false
     },
+    triggerGalleryRefresh: (state) => {
+      state.galleryRefreshKey += 1; // 🔥 important (not boolean)
+    },
   },
 });
 
@@ -28,6 +32,7 @@ export const {
   clearOpenStorage2,
   setForceOpenStorageModals,
   setDeepLinkHandled,
+  triggerGalleryRefresh,
 } = storageUISlice.actions;
 
 export default storageUISlice.reducer;

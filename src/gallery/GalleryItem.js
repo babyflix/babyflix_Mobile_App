@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,15 @@ import Colors from '../constants/Colors.js';
 import MediaMenu from './MediaMenu';
 import { defaultThumbnail } from '../../assets/images/Pause_video.js';
 import moment from 'moment-timezone';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 const itemSize = (width - 40) / 2.2;
 
 const GalleryItem = ({
+  mediaData,
   item,
   isSelected,
   isMenuVisible,
@@ -36,9 +39,55 @@ const GalleryItem = ({
   flix10kSelectionMode,
   selectedItemsForAi,
   toggleItemSelection,
+  onRequireSubscription,
 }) => {
   const dispatch = useDispatch();
   const scaleAnim = useRef(new Animated.Value(1)).current;
+   const [freeCreditUsed, setFreeCreditUsed] = useState(false);
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
+
+  // ✅ selector
+  const { subscriptionId, subscriptionIsActive } = useSelector(
+    (state) => state.auth
+  );
+
+  // 🔍 check if user already has predictive image in gallery
+const hasPredictiveImage = Array.isArray(mediaData)
+  ? mediaData.some(m => m?.object_type === "predictiveBabyImage")
+  : (
+      mediaData?.predictiveBabyImages &&
+      mediaData.predictiveBabyImages.length > 0
+    );
+
+  console.log("subscriptionId, subscriptionIsActive", subscriptionId, subscriptionIsActive)
+  // ✅ MUST BE HERE (top-level)
+  const isSubscribed = !!subscriptionIsActive && !!subscriptionId;
+  const isFreeUser = !isSubscribed;
+  const freeCreditAvailable = isFreeUser && !freeCreditUsed && !hasPredictiveImage;
+
+  console.log("isSubscribed, isFreeUser, freeCreditAvailable", isSubscribed, isFreeUser, freeCreditAvailable)
+
+  useEffect(() => {
+    const loadCredit = async () => {
+      const used = await AsyncStorage.getItem('freeFlixCreditUsed');
+      setFreeCreditUsed(used === 'true');
+    };
+
+    loadCredit();
+  }, []);
+
+ const isAiSelected =
+    Array.isArray(selectedItemsForAi) &&
+    selectedItemsForAi.includes(item.id || item);
+
+  const selectedCount = Array.isArray(selectedItemsForAi)
+      ? selectedItemsForAi.length
+      : 0;
+
+      console.log("isAiSelected",isAiSelected,selectedItemsForAi)
+    // ⭐ free user single-select rule
+    const isOtherItemDisabled  =
+      freeCreditAvailable && selectedCount >= 1 && !isAiSelected;
 
   const formatCreatedAtToIST = (created_at) => {
     const istDate = moment.utc(created_at).tz('Asia/Kolkata');
@@ -62,12 +111,34 @@ const GalleryItem = ({
   };
 
   const handlePress = () => {
+    if (isOtherItemDisabled) {
+      return;
+    }
     if (selectionMode || flix10kSelectionMode) {
       onToggleSelection(item);
       toggleItemSelection(item);
     } else {
       onPreview(item);
     }
+  };
+
+  const handleConvertPress = (e) => {
+    e?.stopPropagation?.(); // ⭐⭐⭐ VERY IMPORTANT
+
+    if (isFreeUser && (freeCreditUsed || hasPredictiveImage)) {
+      setShowSubscribeModal(true); // we will add this
+      return;
+    }
+
+    console.log("isOtherItemDisabled",isOtherItemDisabled)
+
+    if (isOtherItemDisabled) {
+      console.log("here")
+      return;
+    }
+
+    toggleItemSelection(item, { forceSingle: true });
+    onToggleSelection(item);
   };
 
   // const handleLongPress = () => {
@@ -78,7 +149,7 @@ const GalleryItem = ({
 
   return (
     <>
-      <TouchableOpacity style={[styles.card, (isSelected || selectedItemsForAi) && styles.selectedMediaItem,]}
+      <TouchableOpacity style={[styles.card, (isSelected || isAiSelected) && styles.selectedMediaItem,]}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={handlePress}
@@ -97,6 +168,17 @@ const GalleryItem = ({
             //onLongPress={handleLongPress}
             activeOpacity={0.8}
           >
+            {item.object_type === 'image' && (
+            <TouchableOpacity
+              style={styles.convertBtn}
+              onPress={(e) => handleConvertPress(e)}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="auto-fix-high" size={14} color="#fff" />
+              <Text style={styles.convertText}>CONVERT</Text>
+            </TouchableOpacity>
+          )}
+
             <Image
               source={{
                 uri:
@@ -149,7 +231,7 @@ const GalleryItem = ({
         {!disableMenuAndSelection &&
           <View style={styles.actions}>
             <TouchableOpacity
-              style={styles.actionBtnDownload}
+              style={[styles.actionBtnDownload, !isSubscribed && { marginRight: 12,marginLeft: 20,}]}
               onPress={() => {
                 setSelectedItem([item]);
                 setShowDownloadModal(true);
@@ -160,7 +242,7 @@ const GalleryItem = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionBtnShare}
+              style={[styles.actionBtnShare, !isSubscribed && { marginRight: 20,marginLeft: 12,}]}
               onPress={() => {
                 setSelectedItem([item]);
                 setShowShareModal(true);
@@ -170,6 +252,7 @@ const GalleryItem = ({
               {/* <Text style={styles.actionText}>Share</Text> */}
             </TouchableOpacity>
 
+            {isSubscribed && (
             <TouchableOpacity
               style={styles.actionBtnDelete}
               onPress={() => {
@@ -180,6 +263,7 @@ const GalleryItem = ({
               <MaterialIcons name="delete" size={18} color="white" />
               {/* <Text style={styles.actionText}>Delete</Text> */}
             </TouchableOpacity>
+            )}
           </View>
         }
 
@@ -210,20 +294,73 @@ const GalleryItem = ({
           />
         </>
       )} */}
-        {(isSelected || flix10kSelectionMode || selectedItemsForAi) && (
-          <View style={[styles.selectionOverlayPrev, (isSelected || selectedItemsForAi) && styles.selectionOverlay]}>
+        {(isSelected || flix10kSelectionMode || isAiSelected) && (
+          <View style={[styles.selectionOverlayPrev, (isSelected || isAiSelected) && styles.selectionOverlay]}>
             <MaterialIcons
               name={
-                isSelected || selectedItemsForAi
+                (isSelected || isAiSelected)
                   ? 'check-box'
+                  : isOtherItemDisabled
+                  ? 'check-box-outline-blank'
                   : 'check-box-outline-blank'
               }
-              size={isSelected || selectedItemsForAi ? 22 : 25}
-              color={Colors.primary}
+              size={isSelected || isAiSelected ? 22 : 25}
+              color={
+                (isSelected || isAiSelected)
+                  ? Colors.primary
+                  : isOtherItemDisabled
+                  ? '#bbb'
+                  : Colors.primary
+              }
             />
           </View>
         )}
       </TouchableOpacity>
+
+      <Modal
+        transparent
+        visible={showSubscribeModal}
+        animationType="fade"
+        onRequestClose={() => setShowSubscribeModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.paywallBox}>
+
+            {/* ⭐ Title */}
+            <Text style={styles.paywallTitle}>
+              Subscribe Flix10K
+            </Text>
+
+            {/* ⭐ Subtitle */}
+            <Text style={styles.paywallText}>
+              To continue generating AI images, please subscribe to Flix10K and unlock unlimited baby predictions.
+            </Text>
+
+            {/* ⭐ Buttons */}
+            <View style={styles.paywallActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setShowSubscribeModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.proceedBtn}
+                onPress={() => {
+                  setShowSubscribeModal(false);
+                  onRequireSubscription?.();
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.proceedText}>Proceed</Text>
+              </TouchableOpacity>
+            </View>
+
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
@@ -321,7 +458,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     marginTop: 6,
     paddingVertical: 6,
     //backgroundColor: '#f5f5f5',
@@ -363,6 +500,109 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontFamily: 'Nunito400',
   },
+
+  convertBtn: {
+  position: 'absolute',
+  bottom: 8,
+  alignSelf: 'center',
+  backgroundColor: '#a23b72',
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 6,
+  flexDirection: 'row',
+  alignItems: 'center',
+  zIndex: 5,
+},
+
+convertText: {
+  color: '#fff',
+  fontSize: 11,
+  fontFamily: 'Nunito700',
+  marginLeft: 4,
+},
+paywallBox: {
+  width: '85%',
+  backgroundColor: '#fff',
+  borderRadius: 20,
+  paddingVertical: 24,
+  paddingHorizontal: 20,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.15,
+  shadowRadius: 20,
+  elevation: 10,
+  alignItems: 'center',
+},
+
+paywallTitle: {
+  fontSize: 20,
+  fontFamily: 'Nunito700',
+  color: '#9b2c6f',
+  marginBottom: 10,
+  textAlign: 'center',
+},
+
+paywallText: {
+  fontSize: 14,
+  fontFamily: 'Nunito400',
+  color: '#555',
+  textAlign: 'center',
+  lineHeight: 20,
+},
+
+paywallActions: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginTop: 24,
+  width: '100%',
+},
+
+proceedBtn: {
+  flex: 1,
+  backgroundColor: '#d63384',
+  paddingVertical: 12,
+  borderRadius: 12,
+  alignItems: 'center',
+  marginLeft: 8,
+  shadowColor: '#d63384',
+  shadowOpacity: 0.3,
+  shadowRadius: 6,
+  elevation: 4,
+},
+
+proceedText: {
+  color: '#fff',
+  fontFamily: 'Nunito700',
+  fontSize: 14,
+},
+
+cancelBtn: {
+  flex: 1,
+  borderWidth: 1.5,
+  borderColor: '#d63384',
+  paddingVertical: 11,
+  borderRadius: 12,
+  alignItems: 'center',
+  marginRight: 8,
+  backgroundColor: '#fff',
+},
+
+cancelBtnText: {
+  color: '#d63384',
+  fontFamily: 'Nunito700',
+  fontSize: 14,
+},
+
+modalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.55)',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+disabledCardSoft: {
+  opacity: 0.65, // 👈 softer
+},
 });
 
-export default React.memo(GalleryItem);
+export default GalleryItem;

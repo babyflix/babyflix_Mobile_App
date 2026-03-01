@@ -21,7 +21,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-const MediaPreviewModal = ({ visible, item, onClose, insets }) => {
+const MediaPreviewModal = ({ 
+  visible, 
+  item, 
+  items = [],
+  currentIndex = 0,
+  setCurrentIndex, 
+  onClose, 
+  insets }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -30,6 +37,8 @@ const MediaPreviewModal = ({ visible, item, onClose, insets }) => {
   const opacity = useSharedValue(0);
 
   const { t } = useTranslation();
+
+  console.log("in mediapreview")
 
   useEffect(() => {
     if (visible) {
@@ -82,17 +91,44 @@ const MediaPreviewModal = ({ visible, item, onClose, insets }) => {
   };
 
   if (!item || !item.object_url) return null;
+
+  const isLocalGenerated = !!item?.flix10kAiImages;
+
+  const isPredictive = item?.object_type === "predictiveBabyImage";
+  const hasThumbnail =
+  item?.thumbnail_url && item.thumbnail_url.trim() !== "";
+
+// ⭐ ORIGINAL resolver (SAME as grid)
+const originalUrl =
+  // ✅ LOCAL generated → use object_url
+  isLocalGenerated
+    ? item.object_url
+
+    // ✅ predictive → ONLY if thumbnail exists
+    : isPredictive && hasThumbnail
+    ? item.thumbnail_url
+
+    // ❌ predictive without thumbnail → no original
+    : null;
+
+const hasOriginal = !!originalUrl;
   
   let objectUrl;
   let ObjectTitle;
 
-  if (item.flix10kAiImages){
-    objectUrl = item?.flix10kAiImages?.output_path?.gcs_url;
-    ObjectTitle = item?.flix10kAiImages?.output_path?.object_name;
-  }else{
-    objectUrl = item?.object_url;
-    ObjectTitle = item?.title;
-  }
+  // if (item.flix10kAiImages){
+  //   objectUrl = item?.flix10kAiImages?.output_path?.gcs_url;
+  //   ObjectTitle = item?.flix10kAiImages?.output_path?.object_name;
+  // }else{
+  //   objectUrl = item?.object_url;
+  //   ObjectTitle = item?.title;
+  // }
+
+  objectUrl =
+  item?.flix10kAiImages?.output_path?.gcs_url || item?.object_url;
+
+ObjectTitle =
+  item?.flix10kAiImages?.output_path?.object_name || item?.title;
 
   return (
     <Modal
@@ -134,7 +170,27 @@ const MediaPreviewModal = ({ visible, item, onClose, insets }) => {
               isMuted={isMuted}
               resizeMode="contain"
             />
+          ) : (isLocalGenerated || (isPredictive && hasOriginal)) ? (
+            // ⭐⭐⭐ SIDE BY SIDE VIEW
+            <View style={styles.comparePreviewContainer}>
+              
+              {/* LEFT — ORIGINAL */}
+              <Image
+                source={{ uri: originalUrl }}
+                style={styles.comparePreviewImage}
+                resizeMode="contain"
+              />
+
+              {/* RIGHT — GENERATED */}
+              <Image
+                source={{ uri: objectUrl }}
+                style={styles.comparePreviewImage}
+                resizeMode="contain"
+              />
+
+            </View>
           ) : (
+            // ✅ fallback (your old behavior)
             <Image
               source={{ uri: objectUrl }}
               style={[
@@ -245,6 +301,41 @@ const MediaPreviewModal = ({ visible, item, onClose, insets }) => {
           <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
             <MaterialIcons name="close" size={28} color="white" />
           </TouchableOpacity>
+
+          <View style={styles.navButtons}>
+            
+            {/* PREVIOUS */}
+            <TouchableOpacity
+              disabled={currentIndex === 0}
+              style={[
+                styles.navBtn,
+                currentIndex === 0 && { opacity: 0.3 },
+              ]}
+              onPress={() => setCurrentIndex((prev) => prev - 1)}
+            >
+              <MaterialIcons name="chevron-left" size={28} color="#fff" />
+            </TouchableOpacity>
+
+            {/* 🔥 COUNTER (NEW) */}
+            <View style={styles.counterContainer}>
+              <Text style={styles.counterText}>
+                {items.length > 0 ? currentIndex + 1 : 0} / {items.length}
+              </Text>
+            </View>
+
+            {/* NEXT */}
+            <TouchableOpacity
+              disabled={currentIndex === items.length - 1}
+              style={[
+                styles.navBtn,
+                currentIndex === items.length - 1 && { opacity: 0.3 },
+              ]}
+              onPress={() => setCurrentIndex((prev) => prev + 1)}
+            >
+              <MaterialIcons name="chevron-right" size={28} color="#fff" />
+            </TouchableOpacity>
+
+          </View>
         </Animated.View>
       </View>
     </Modal>
@@ -383,6 +474,49 @@ infoText: {
   marginLeft: 4,
 },
 
+comparePreviewContainer: {
+  flexDirection: "row",
+  width: "100%",
+  height: "77%",
+  gap: 6,
+},
+
+comparePreviewImage: {
+  flex: 1,
+  height: "100%",
+  borderRadius: 10,
+},
+
+navButtons: {
+  position: "absolute",
+  top: "92%",
+  left: 0,
+  right: 0,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  paddingHorizontal: 10,
+  zIndex: 999,
+},
+
+navBtn: {
+  backgroundColor: "rgba(0,0,0,0.5)",
+  padding: 6,
+  borderRadius: 20,
+},
+counterContainer: {
+  justifyContent: "center",
+  alignItems: "center",
+  paddingHorizontal: 14,
+  paddingVertical: 4,
+  backgroundColor: "rgba(0,0,0,0.6)",
+  borderRadius: 20,
+},
+
+counterText: {
+  color: "#fff",
+  fontSize: 14,
+  fontFamily: "Nunito700",
+},
 });
 
 export default MediaPreviewModal;

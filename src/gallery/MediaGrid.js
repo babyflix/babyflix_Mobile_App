@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 const MediaGrid = React.memo(({
   data = [],
   type = 'all',
+  mediaData,
   onPreview,
   refreshing,
   onRefresh,
@@ -31,6 +32,7 @@ const MediaGrid = React.memo(({
   flix10kResults,
   setFlix10kResults,
   selectedType,
+  onRequireSubscription,
 }) => {
   const { t } = useTranslation();
   const flatListRef = useRef();
@@ -56,13 +58,14 @@ const MediaGrid = React.memo(({
     }
   }, [disableMenuAndSelection, selectionMode, selectedItems]);
 
-  const renderItem = useCallback(({ item }) => (
+  const renderItem = useCallback(({ item, index }) => (
     <>
       <GalleryItem
+        mediaData={mediaData}
         item={item}
         isSelected={selectedItems.some(i => i.id === item.id)}
         isMenuVisible={activeMenuId === item.id}
-        onPreview={onPreview}
+        onPreview={(it) => onPreview?.(it, index, filteredData)} // ⭐ MAGIC LINE
         onToggleSelection={toggleSelection}
         selectionMode={selectionMode}
         disableMenuAndSelection={disableMenuAndSelection}
@@ -73,8 +76,9 @@ const MediaGrid = React.memo(({
         setShowDownloadModal={setShowDownloadModal}
         setShowShareModal={setShowShareModal}
         flix10kSelectionMode={flix10kSelectionMode}
-        selectedItemsForAi={selectedItemsForAi.some(i => i.id === item.id)}
+        selectedItemsForAi={selectedItemsForAi}
         toggleItemSelection={toggleItemSelection}
+        onRequireSubscription={onRequireSubscription}
       />
     </>
   ), [selectedItems, activeMenuId, selectionMode, disableMenuAndSelection, selectedItemsForAi]);

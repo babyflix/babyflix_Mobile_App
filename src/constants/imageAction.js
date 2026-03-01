@@ -7,7 +7,9 @@ const BASE_URL = NEXT_PUBLIC_BUCKET_URL;
 export const callImageAction = async ({ object_name, action, user, imageUrl, imageId }) => {
   try {
     console.log('User',object_name, action, imageUrl, imageId)
-    if (!user?.uuid || !user?.machineId) {
+
+    console.log("user info",user)
+    if (!user?.uuid) {
       throw new Error("Missing user_id or machine_id in auth slice");
     }
     console.log("`${BASE_URL}/image_action`",`${BASE_URL}/image_action`)
@@ -16,7 +18,7 @@ export const callImageAction = async ({ object_name, action, user, imageUrl, ima
     const response = await axios.post(`${BASE_URL}/image_action`, {
       object_name,
       action,
-      machine_id: user.machineId,
+      machine_id: user.machineId || "NA",
       user_id: user.uuid,
       image_url: imageUrl,
       image_id: String(imageId),

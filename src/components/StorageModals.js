@@ -21,6 +21,7 @@ import * as Updates from "expo-updates";
 import { handlePlayStorageSubscription } from '../constants/PlayBillingStorageHandler';
 import { handleIOSStorageSubscription } from '../constants/iosStorageIAP';
 //import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
+import { triggerGalleryRefresh } from '../state/slices/storageUISlice';
 
 let modalShown = false;
 let paymentFail = false;
@@ -56,6 +57,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
   const { t } = useTranslation();
   const handledRef = useRef(false);
   const showStorage1Ref = useRef(false);
+
+  
 
   //  useEffect(() => {
   //   if (Platform.OS !== 'ios') return;
@@ -432,6 +435,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
       if (data.actionStatus === 'success') {
         setShowStorage2(false);
+        dispatch(triggerGalleryRefresh());
+        onClose?.();
       } else {
         console.error('Skip failed:', data.message);
       }

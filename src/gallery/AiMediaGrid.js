@@ -46,6 +46,14 @@ const AiMediaGrid = memo(
     const [isProcessing, setIsProcessing] = useState(false);
     const [keptItems, setKeptItems] = useState([]);
     const user = useSelector((state) => state.auth);
+    const { subscriptionId, subscriptionIsActive } = useSelector(
+        (state) => state.auth
+      );
+
+    const filteredData = (data || []).filter(item => item && item.id);
+    const isSubscribed = !!subscriptionIsActive && !!subscriptionId;
+
+    //console.log("filteredData", filteredData);
 
     const enqueueRegeneration = (item) => {
       setRegenerationQueue((prev) => [...prev, item]);
@@ -84,7 +92,7 @@ const AiMediaGrid = memo(
 
           sendDeviceUserInfo({
             action_type: USERACTIONS.FLIX10KREGENERATE,
-            action_description: `Flox10K regenerate predictiveimage for ${currentItem}`,
+            action_description: `Flix10K regenerate predictiveimage for ${currentItem}`,
           });
 
           //setRegeneratingIds((prev) => prev.filter((id) => id !== currentItem.id));
@@ -92,7 +100,7 @@ const AiMediaGrid = memo(
           console.error("Error regenerating:", err);
            sendDeviceUserInfo({
             action_type: USERACTIONS.FLIX10KREGENERATE,
-            action_description: `Flox10K regenerate failed for ${currentItem} and error is ${err}`,
+            action_description: `Flix10K regenerate failed for ${currentItem} and error is ${err}`,
           });
 
         } finally {
@@ -113,6 +121,8 @@ const AiMediaGrid = memo(
     const handleKeep = async (item) => {
       setKeptItems((prev) => [...prev, item.id]);
 
+      console.log("Keeping item:", item);
+
       try {
         await callImageAction({
           object_name: item?.flix10kAiImages?.output_path?.object_name,
@@ -124,7 +134,7 @@ const AiMediaGrid = memo(
 
          sendDeviceUserInfo({
             action_type: USERACTIONS.FLIX10KKEEP,
-            action_description: `Flox10K keep predictiveimage for ${item}`,
+            action_description: `Flix10K keep predictiveimage for ${item}`,
           });
 
       } catch (err) {
@@ -137,20 +147,45 @@ const AiMediaGrid = memo(
     };
 
     const renderItem = useCallback(
-      ({ item }) => {
+      ({ item, index }) => {
         if (!item) return null;
 
+        //console.log("items in flix10k tab",item)
         //const isSelected = selectedItems.some((i) => i.id === item.id);
         //const isAiSelected = selectedItemsForAi.some((i) => i.id === item.id);
         const result = item.flix10kResult || {};
 
+        //console.log("rendering items",item)
+
         const isKept = keptItems.includes(item.id);
         const hasAiVersion = !!item?.flix10kAiImages;
+        const isPredictive = item.object_type === "predictiveBabyImage";
+        //console.log("item item",item)
+
+       const isLocalGenerated = !!item?.flix10kAiImages;
+
+        const hasThumbnail =
+  item?.thumbnail_url && item.thumbnail_url.trim() !== "";
+
+// ⭐ FINAL original resolver
+const originalUrl =
+  // ✅ LOCAL GENERATED → always use object_url
+  isLocalGenerated
+    ? item.object_url
+
+    // ✅ BACKEND predictive → only if thumbnail exists
+    : isPredictive && hasThumbnail
+    ? item.thumbnail_url
+
+    // ❌ predictive without thumbnail → no original
+    : null;
+
+        const hasOriginal = !!originalUrl;
 
         return (
           <TouchableOpacity
             style={styles.card}
-            onPress={() => onPreview && onPreview(item)}
+            onPress={() => onPreview && onPreview(item, index, filteredData)}
             activeOpacity={0.85}
           >
             {item.object_type === "video" ? (
@@ -177,7 +212,29 @@ const AiMediaGrid = memo(
                   {t("flix10k.regenerating")}
                 </Text>
               </View>
+            ) : (isLocalGenerated || (isPredictive && hasOriginal)) ? (
+              // ⭐⭐⭐ ADD THIS BLOCK
+              <View style={styles.compareContainer}>
+                
+                {/* ✅ LEFT — ORIGINAL */}
+                <Image
+                  source={{ uri: originalUrl }}
+                  style={styles.compareImage}
+                />
+
+                {/* ✅ RIGHT — GENERATED */}
+                <Image
+                  source={{
+                    uri:
+                      item?.flix10kAiImages?.output_path?.gcs_url ||
+                      item.object_url,
+                  }}
+                  style={styles.compareImage}
+                />
+
+              </View>
             ) : (
+              // fallback normal image
               <Image
                 source={{
                   uri:
@@ -316,7 +373,7 @@ const AiMediaGrid = memo(
   {!disableMenuAndSelection && (!hasAiVersion || isKept) && (
     <>
       <TouchableOpacity
-        style={styles.actionBtnDownload}
+        style={[styles.actionBtnDownload, !isSubscribed && { marginRight: 12,marginLeft: 20,}]}
         onPress={() => {
           setSelectedItem([item]);
           setShowDownloadModal(true);
@@ -326,7 +383,7 @@ const AiMediaGrid = memo(
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.actionBtnShare}
+        style={[styles.actionBtnShare, !isSubscribed && { marginRight: 20,marginLeft: 12,}]}
         onPress={() => {
           setSelectedItem([item]);
           setShowShareModal(true);
@@ -335,6 +392,7 @@ const AiMediaGrid = memo(
         <MaterialIcons name="share" size={18} color="white" />
       </TouchableOpacity>
 
+     {isSubscribed && (
       <TouchableOpacity
         style={styles.actionBtnDelete}
         onPress={() => {
@@ -344,6 +402,7 @@ const AiMediaGrid = memo(
       >
         <MaterialIcons name="delete" size={18} color="white" />
       </TouchableOpacity>
+      )}
     </>
   )}
 </View>
@@ -372,7 +431,7 @@ const AiMediaGrid = memo(
     return (
       <FlatList
         // data={data}
-        data={(data || []).filter(item => item && item.id)}
+        data={filteredData}
         renderItem={renderItem}
         numColumns={2}
         contentContainerStyle={styles.gridContainer}
@@ -499,6 +558,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
 
+  compareContainer: {
+  flexDirection: "row",
+  width: "100%",
+  height: 132,
+  gap: 4,
+},
+
+compareImage: {
+  flex: 1,
+  height: "100%",
+  borderRadius: 10,
+},
 });
 
 export default AiMediaGrid;

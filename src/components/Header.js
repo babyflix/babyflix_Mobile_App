@@ -183,7 +183,8 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
         'payment_status 1',
         'paying',
         'last_skipped_plan_date',
-        'notifications'
+        'notifications',
+        //'freeFlixCreditUsed'
       ]);
 
       dispatch(clearOpenStorage2());

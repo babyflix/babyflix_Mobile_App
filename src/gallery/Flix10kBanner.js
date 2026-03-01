@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -55,7 +55,10 @@ const Flix10kBanner = ({
   setFlix10kAiImages,
   setSnackbarVisible,
   setSnackbarMessage,
-  setSnackbarType
+  setSnackbarType,
+  hasGalleryContent,
+  forceOpenFromOutside,
+  clearForceOpen,
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -68,6 +71,9 @@ const Flix10kBanner = ({
   );
   const { storagePlanId, storagePlanPayment, } =
     useSelector((state) => state.storagePlan || {});
+
+  const autoOpenedRef = useRef(false);
+  const generationStartedRef = useRef(false);
   const subscriptionActive = subscriptionIsActive
 
   console.log("EXPO_PUBLIC_CLOUD_API_URL", EXPO_PUBLIC_CLOUD_API_URL)
@@ -91,8 +97,22 @@ const Flix10kBanner = ({
   const [showAfterAdd, setShowafterAdd] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showAutoRenewModal, setShowAutoRenewModal] = useState(false);
+  const [freeCreditUsed, setFreeCreditUsed] = useState(false);
 
-  const selectionCount = selectedItemsForAi.length;
+  // 🔍 check if user already has predictive image in gallery
+const hasPredictiveImage = Array.isArray(mediaData)
+  ? mediaData.some(item => item?.object_type === "predictiveBabyImage")
+  : (
+      mediaData?.predictiveBabyImages &&
+      mediaData.predictiveBabyImages.length > 0
+    );
+
+  // 🔐 subscription status
+  const isSubscribed = subscriptionIsActive && subscriptionId;
+  const isFreeUser = !isSubscribed;
+  const canUseFreeCredit = isFreeUser && !freeCreditUsed && !hasPredictiveImage;
+
+  const selectionCount = selectedItemsForAi.length || 0;
 
   //  useEffect(() => {
   //   const fetchPaymentStatus = async () => {
@@ -306,8 +326,71 @@ const Flix10kBanner = ({
     checkPaymentStatus();
   }, []);
 
+  useEffect(() => {
+    if (selectedItemsForAi?.length > 0) {
+      setSelecting(true);
+    }
+  }, [selectedItemsForAi]);
+
+  useEffect(() => {
+    if (
+      selecting &&
+      selectedItemsForAi?.length > 0 &&
+      !autoOpenedRef.current &&
+      !generationStartedRef.current // ⭐ IMPORTANT GUARD
+    ) {
+      autoOpenedRef.current = true;
+
+      const timer = setTimeout(() => {
+        setSelectedType("predictiveBaby");
+        setShowGenerationTypeModal(true);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+
+    // reset when cleared
+    if (selectedItemsForAi?.length === 0) {
+      autoOpenedRef.current = false;
+      generationStartedRef.current = false; // ⭐ RESET HERE
+    }
+  }, [selecting, selectedItemsForAi]);
+
+  useEffect(() => {
+    const loadCredit = async () => {
+      const used = await AsyncStorage.getItem("freeFlixCreditUsed");
+      setFreeCreditUsed(used === "true");
+    };
+
+    loadCredit();
+  }, []);
+
+  useEffect(() => {
+    if (freeCreditUsed && !isSubscribed) {
+      setSelecting(false);
+      setSelectedItemsForAi([]);
+    }
+  }, [freeCreditUsed, isSubscribed]);
+
+  useEffect(() => {
+    if (forceOpenFromOutside) {
+      setSelecting(false);
+      setFlix10kSelectionMode(false);
+      setShowModal(true); // opens Case 1
+
+      clearForceOpen?.(); // reset flag
+    }
+  }, [forceOpenFromOutside]);
+
   const isSubscriptionId = subscriptionId
+
   const handlePress = async () => {
+
+    if (isFreeUser && (freeCreditUsed || hasPredictiveImage)) {
+      setShowModal(true);
+      return;
+    }
+
     if (subscriptionExpired) {
       dispatch(setSubscriptionExpired(true));
       router.push({
@@ -317,7 +400,7 @@ const Flix10kBanner = ({
       return;
     }
 
-    if (subscriptionActive && isSubscriptionId) {
+    if ((subscriptionActive && isSubscriptionId) || canUseFreeCredit) {
       setSelecting(true);
       setFlix10kSelectionMode(true);
       await AsyncStorage.setItem("flixAdSeen", "true");
@@ -372,6 +455,7 @@ const Flix10kBanner = ({
   };
 
   const cancelFlix10KPress = () => {
+    //console.log("media data",mediaData)
     setSelecting(false);
     setFlix10kSelectionMode(false);
     setSelectedItemsForAi([]);
@@ -380,6 +464,8 @@ const Flix10kBanner = ({
 
   const handleProcess = async () => {
     if (!selectedType || selectedItemsForAi.length === 0) return;
+
+    generationStartedRef.current = true;
 
     setShowGenerationTypeModal(false)
     setLoadingAnalyze(true);
@@ -433,6 +519,8 @@ const Flix10kBanner = ({
 
   const handleGenerate = async () => {
     if (!selectedType || selectedItemsForAi.length === 0) return;
+
+    generationStartedRef.current = true;
 
     setShowGenerationTypeModal(false);
     setLoadingAnalyze(true);
@@ -489,6 +577,10 @@ const Flix10kBanner = ({
 
       if (updatedItems.length > 0) {
         setFlix10kAiImages(prev => [...updatedItems, ...(prev || [])]);
+        if (isFreeUser && !freeCreditUsed && updatedItems.length > 0) {
+          await AsyncStorage.setItem("freeFlixCreditUsed", "true");
+          setFreeCreditUsed(true);
+        }
       }
 
       if (failedItems.length > 0) {
@@ -708,7 +800,7 @@ const Flix10kBanner = ({
   return (
     <View style={styles.container}>
 
-      {!showAfterAdd && <FlixAdModal
+      {!showAfterAdd && hasGalleryContent && <FlixAdModal
         paymentSuccess={subscriptionAmount == "" || null}
         handleSubscribe={handleSubscribe} // from parent
         //months={months}
@@ -754,6 +846,14 @@ const Flix10kBanner = ({
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
+
+             {canUseFreeCredit && (
+                <View style={styles.freeBadge}>
+                  <Text style={styles.freeBadgeText}>
+                    Free Trial For 1 Image
+                  </Text>
+                </View>
+              )}
           </LinearGradient>
         </LinearGradient>
       )}
@@ -1651,6 +1751,27 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito400',
     fontSize: 14,
   },
+  flixButtonWrapper: {
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+freeBadge: {
+  position: "absolute",
+  bottom: 4,
+  backgroundColor: "#fff",
+  borderColor: "#d63384",
+  borderWidth: 1,
+  paddingHorizontal: 8,
+  paddingVertical: 1,
+  borderRadius: 10,
+},
+
+freeBadgeText: {
+  fontSize: 10,
+  color: "#d63384",
+  fontFamily: "Nunito700",
+},
 });
 
 export default Flix10kBanner;

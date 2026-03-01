@@ -87,6 +87,8 @@ const GalleryScreen = () => {
   const [mediaData, setMediaData] = useState({ images: [], videos: [], babyProfile: [], predictiveBabyImages: [] });
   const [previewItem, setPreviewItem] = useState();
   const [modalVisible, setModalVisible] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [previewList, setPreviewList] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState([]);
@@ -141,6 +143,8 @@ const GalleryScreen = () => {
   });
   const [storageFlowActive, setStorageFlowActive] = useState(true);
   const [modalLock, setModalLock] = useState(true);
+  const [hasGalleryContent, setHasGalleryContent] = useState(false);
+  const [forceOpenFlixBanner, setForceOpenFlixBanner] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -176,9 +180,12 @@ const GalleryScreen = () => {
   const upgradeShownRef = useRef(false);
   const expiredShownRef = useRef(false);
   const hasAutoRestoredRef = useRef(false);
+  const galleryRefreshKey = useSelector(
+    (state) => state.storageUI.galleryRefreshKey
+  );
 
   useEffect(() => {
-    setModalLock(true);
+    setModalLock(false);
   }, []);
 
 //   useEffect(() => {
@@ -368,12 +375,13 @@ useEffect(() => {
     }
     };
     checkPhone();
-  }, [user,refreshData,modalLock]);
+  }, [user,refreshData,modalLock,galleryRefreshKey]);
 
    useEffect(() => {
   // Show rate modal only after update modal or when user opens app multiple times
   console.log("modalLock",modalLock)
   if (modalLock) return;
+  if (!hasGalleryContent) return;
   const timer = setTimeout(async () => {
     //checkAndShowRateModal(setShowRateModal);
      const shouldShow = await checkAndShowRateModal();
@@ -382,7 +390,7 @@ useEffect(() => {
     }
   }, 100); // show after 3 seconds delay
   return () => clearTimeout(timer);
-}, [modalLock]);
+}, [modalLock,galleryRefreshKey,hasGalleryContent]);
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -432,7 +440,7 @@ useEffect(() => {
       }
     };
     checkLanguage();
-  }, [modalLock]);
+  }, [modalLock,galleryRefreshKey]);
 
   useEffect(() => {
     const checkLanguage = async () => {
@@ -451,6 +459,13 @@ useEffect(() => {
   useEffect(() => {
     const checkSkipDate = async () => {
       try {
+
+         if (!hasGalleryContent) {
+            //setShouldShowStorageModal(false);
+            setStorageFlowActive(false);
+            return;
+          }
+
         const storedDateRaw = await AsyncStorage.getItem('last_skipped_plan_date');
         const storedDate = storedDateRaw?.trim();
         const today = moment();
@@ -818,6 +833,14 @@ useEffect(() => {
               else if (item.object_type === 'predictiveBabyImage') predictiveBabyImages.push(item);
             });
             setMediaData({ images, videos, babyProfile, predictiveBabyImages });
+
+            const totalItems =
+              images.length +
+              videos.length +
+              babyProfile.length +
+              predictiveBabyImages.length;
+
+            setHasGalleryContent(totalItems > 0);
           }
 
           dispatch(setPlanExpired(false));
@@ -999,13 +1022,24 @@ useEffect(() => {
     setActiveModal(MODALS.RATE);
     return;
   }
-}, [modalChecks, activeModal, storageFlowActive, modalLock]);
+}, [modalChecks, activeModal, storageFlowActive, modalLock, galleryRefreshKey]);
 
-  const handlePreview = (item) => {
+  // const handlePreview = (item) => {
+  //   if (!item.object_url) {
+  //     item.object_url = img;
+  //   }
+  //   setPreviewItem(item);
+  //   setModalVisible(true);
+  // };
+
+  const handlePreview = (item, index, list) => {
     if (!item.object_url) {
       item.object_url = img;
     }
+
     setPreviewItem(item);
+    setPreviewIndex(index);
+    setPreviewList(list || []);
     setModalVisible(true);
   };
 
@@ -1057,10 +1091,44 @@ useEffect(() => {
     setShowShareModal(false);
   };
 
-  const toggleItemSelection = (id) => {
-    setSelectedItemsForAi((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+  const handleRequireSubscription = () => {
+    setForceOpenFlixBanner(true);
+  };
+
+  // const toggleItemSelection = (id) => {
+  //   setSelectedItemsForAi((prev) =>
+  //     prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+  //   );
+  // };
+
+  const toggleItemSelection = (itemOrId, options = {}) => {
+    const id = itemOrId;
+
+    // 🚨 BLOCK: free user already used credit
+    // if (isFreeUser && freeCreditUsed) {
+    //   setFlix10kSelectionMode(false);
+    //   setSelectedItemsForAi([]);
+    //   setShowModal?.(true); // optional upsell
+    //   return;
+    // }
+
+    setFlix10kSelectionMode(true);
+
+    setSelectedItemsForAi((prev = []) => {
+      // 🆓 FREE USER → allow ONLY ONE image
+      // if (canUseFreeCredit) {
+      //   return [id];
+      // }
+
+      // 💎 SUBSCRIBED → normal behavior
+      if (options.forceSingle) {
+        return [id];
+      }
+
+      return prev.includes(id)
+        ? prev.filter((item) => item !== id)
+        : [...prev, id];
+    });
   };
 
   const handleFlix10KPress = () => {
@@ -1096,6 +1164,9 @@ useEffect(() => {
         setSnackbarMessage={setSnackbarMessage}
         setSnackbarType={setSnackbarType}
         setModalLock={setModalLock}
+        hasGalleryContent ={hasGalleryContent}
+        forceOpenFromOutside={forceOpenFlixBanner}
+        clearForceOpen={() => setForceOpenFlixBanner(false)}
       />
 
       {isLoading ? (
@@ -1129,6 +1200,7 @@ useEffect(() => {
           flix10kAiImages={flix10kAiImages}
           setFlix10kAiImages={setFlix10kAiImages}
           setSelectedType={setSelectedType}
+          onRequireSubscription={handleRequireSubscription}
         />
       )}
 
@@ -1151,7 +1223,10 @@ useEffect(() => {
 
       <MediaPreviewModal
         visible={modalVisible}
-        item={previewItem}
+        item={previewList[previewIndex]}
+        items={previewList}
+        currentIndex={previewIndex}
+        setCurrentIndex={setPreviewIndex}
         onClose={() => setModalVisible(false)}
         insets={insets}
       />
@@ -1272,7 +1347,7 @@ useEffect(() => {
 
       {console.log("flix10KAD && showAfterAdd 3",{flix10KAD, showAfterAdd })}
 
-      {(storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
+      {hasGalleryContent && (storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
         <StorageModals
           onClose={() => {
             setStorageModelStart(false); 
