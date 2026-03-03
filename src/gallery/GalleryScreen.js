@@ -463,7 +463,7 @@ useEffect(() => {
          if (!hasGalleryContent) {
             //setShouldShowStorageModal(false);
             setStorageFlowActive(false);
-            return;
+            //return;
           }
 
         const storedDateRaw = await AsyncStorage.getItem('last_skipped_plan_date');
@@ -502,7 +502,7 @@ useEffect(() => {
 
   useEffect(() => {
     fetchMediaData();
-  }, [flix10kSelectionMode]);
+  }, [flix10kSelectionMode, hasGalleryContent]);
 
   // const fetchMediaData = async () => {
   //   setIsLoading(true);
@@ -1345,7 +1345,7 @@ useEffect(() => {
         }}
       />
 
-      {console.log("flix10KAD && showAfterAdd 3",{flix10KAD, showAfterAdd })}
+      {console.log("flix10KAD && showAfterAdd 3",{flix10KAD, showAfterAdd, hasGalleryContent,storageModelStart,shouldShowStorageModal})}
 
       {hasGalleryContent && (storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
         <StorageModals
