@@ -808,7 +808,15 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             )}
 
             <View style={styles.modalHeader}>
-              <Text style={[styles.title, { textAlign: 'center' }]}>{t('storage.selectPlan')}</Text>
+
+              <Text style={[styles.title, { textAlign: 'center' }]}>
+                BabyFlix Storage Plans
+              </Text>
+
+              {/* <Text style={[styles.title, { textAlign: 'center',fontSize: 16 }]}>
+                {t('storage.selectPlan')}
+              </Text> */}
+
             </View>
             {plans
               .filter((plan) => {
@@ -857,7 +865,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                       )}
                       <Text style={styles.planTitleBold}>{plan.name}</Text>
                     </View>
-                    {!isPlanExpired && <Text style={styles.planPrice}>${plan.price_per_month}</Text>}
+                    {!isPlanExpired && <Text style={styles.planPrice}>${plan.price_per_month} / month</Text>}
                   </View>
                   {isPlanExpired && (
                     <View style={{ width: '100%', marginTop: 0, alignItems: "flex-end" }}>
@@ -867,6 +875,16 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                   <Text style={styles.planSubtitle}>{plan.description}</Text>
                 </TouchableOpacity>
               ))}
+
+              <Text style={{ 
+                fontSize: 12, 
+                color: "#666", 
+                textAlign: "center", 
+                marginTop: 10,
+                fontFamily: "Nunito400"
+              }}>
+                This is an auto-renewable subscription.You can manage your subscription anytime from Apple Subscriptions.
+              </Text>
 
             <View style={styles.buttonRow}>
               <TouchableOpacity style={styles.outlinedButton} onPress={handleBack}>
@@ -906,6 +924,34 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 18 }}>
+              <Text
+                style={{ color: "#007AFF", fontSize: 12 }}
+                onPress={() =>
+                  Linking.openURL("https://sites.google.com/view/babyflix-privacy-policy/home")
+                }
+              >
+                Privacy Policy
+              </Text>
+
+              <Text style={{ marginHorizontal: 8, color: "#999", fontSize: 12 }}>
+                |
+              </Text>
+
+              <Text
+                style={{ color: "#007AFF", fontSize: 12 }}
+                 onPress={() =>
+                    Linking.openURL(
+                      Platform.OS === "ios"
+                        ? "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+                        : "https://babyflix.ai/terms"
+                    )
+                  }
+              >
+                Terms of Use
+              </Text>
             </View>
           </View>
         </View>

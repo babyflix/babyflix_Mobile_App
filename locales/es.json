@@ -320,7 +320,7 @@
     "goBack": "← REGRESAR",
     "remainingDays": "Días Restantes",
     "sdExpired": "Tu plan gratuito SD ha expirado. Recupera tus imágenes y videos obteniendo el plan de recuperación con un mes del plan HD por {{price}}.",
-    "selectedMonths": "Los meses seleccionados se agregarán a tu suscripción actual. Se requiere pago por los meses adicionales y el plan SD gratuito solo es gratis por un mes. Ahora necesitas obtener el plan HD por {{price}}.",
+    "selectedMonths": "La suscripción seleccionada comenzará a partir de hoy y no se añadirá a tu suscripción actual. Se requiere pago por los meses seleccionados. El plan SD es gratuito solo por un mes; por favor, actualiza al plan HD por {{price}} al mes.",
     "deletedSuccessfully": "{{planName}} eliminado con éxito",
     "failedToDeletePlan": "No se pudo eliminar el plan",
     "somethingWentWrong": "Algo salió mal"
@@ -380,7 +380,7 @@
     }
   },
   "flix10k": {
-    "title": "Flix10K",
+    "title": "Flix10K Premium",
     "babyFirstMoments": "De las imágenes de ultrasonido a sonrisas: observa los primeros momentos de tu bebé cobrar vida con nuestra IA.",
     "flix10kDesigner": "Diseñador Flix10K",
     "selectImages": "✨Selecciona tus imágenes favoritas y mira la magia suceder✨",
@@ -434,7 +434,7 @@
     "autoRenewStatus": "La renovación automática se ha {{status}} correctamente.",
     "ok": "Aceptar",
     "autoRenewUpdate": "La actualización de la renovación automática se puede realizar después de {{date}} (dentro de los 15 días posteriores al vencimiento)",
-    "additionalMonths": "Los meses seleccionados se añadirán a tu suscripción actual. Se requiere pago por los meses adicionales.",
+    "additionalMonths": "La suscripción seleccionada comenzará hoy y no se añadirá a tu suscripción actual. Se requiere pago para activar la suscripción seleccionada.",
     "amountToPay": "Monto a pagar: ${{amount}}",
     "newExpiry": "Nueva fecha de vencimiento: {{date}}",
     "unsubscribeSuccess": "Flix10K se canceló correctamente",
@@ -448,7 +448,7 @@
     "onlyAt": "Solo por",
     "subscriptionNow": "Suscríbete hoy y obtén acceso completo.",
     "loginNow": "Iniciar sesión ahora",
-    "autoRenewInfoIOS": "La renovación automática se puede gestionar en las suscripciones de Apple",
+    "autoRenewInfoIOS": "Esta es una suscripción con renovación automática.Puedes gestionar tu suscripción en cualquier momento desde Suscripciones de Apple.",
     "tabs": {
       "babyProfile": "Perfil del bebé",
       "predictiveBabyImages": "Imágenes predictivas"

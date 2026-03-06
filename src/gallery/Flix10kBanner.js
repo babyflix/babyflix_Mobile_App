@@ -938,6 +938,9 @@ const hasPredictiveImage = Array.isArray(mediaData)
                   <Text style={styles.modalText}>
                     {t("flix10k.unlockText")}
                   </Text>
+                  <Text style={[styles.price,{fontSize:18, marginBottom:8}]}>
+                  Flix10K Premium
+                  </Text>
                   <Text style={styles.price}>${planData.amount} / {t("flix10k.month")}</Text>
 
                   <MonthSelector months={months} setMonths={setMonths} autoRenew={autoRenew} mode="dropdown" />
@@ -953,7 +956,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
                     )
                   } */}
 
-                  {user?.firstTimeSubscription && user?.showFlixAd && getDiscountText() && (
+                  {user?.firstTimeSubscription && getDiscountText() && (
                     <Text style={styles.offer}>{getDiscountText()}</Text>
                   )}
 
@@ -981,10 +984,36 @@ const hasPredictiveImage = Array.isArray(mediaData)
                   )}
 
                   {Platform.OS === 'ios' && (
-                    <Text style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+                    <Text style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
                       {t("flix10k.autoRenewInfoIOS")}
                     </Text>
                   )}
+
+                 <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 8 }}>
+                    <Text
+                      style={{ color: "#007AFF", fontSize: 12 }}
+                      onPress={() =>
+                        Linking.openURL("https://sites.google.com/view/babyflix-privacy-policy/home")
+                      }
+                    >
+                      Privacy Policy
+                    </Text>
+
+                    <Text style={{ marginHorizontal: 8, color: "#999", fontSize: 12 }}>|</Text>
+
+                    <Text
+                      style={{ color: "#007AFF", fontSize: 12 }}
+                      onPress={() =>
+                        Linking.openURL(
+                          Platform.OS === "ios"
+                            ? "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+                            : "https://babyflix.ai/terms"
+                        )
+                      }
+                    >
+                      Terms of Use
+                    </Text>
+                  </View>
 
                   <View style={styles.actionRow}>
                     <TouchableOpacity

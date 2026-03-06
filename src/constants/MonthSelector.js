@@ -47,11 +47,11 @@ const MonthSelector = ({ months, setMonths, autoRenew, mode = "dropdown" }) => {
         <>
           <TouchableOpacity
             style={styles.dropdownBox}
-            onPress={() => !autoRenew && setShowDropdown(true)}
+            onPress={() => setShowDropdown(true)}
             activeOpacity={0.7}
           >
             <TextInput
-              style={[styles.dropdownInput, autoRenew && styles.disabledInput]}
+              style={[styles.dropdownInput]}
               placeholder={t("flix10k.selectMonths")}
               value={
                 months
@@ -65,7 +65,7 @@ const MonthSelector = ({ months, setMonths, autoRenew, mode = "dropdown" }) => {
             <Ionicons
               name="chevron-down"
               size={20}
-              color={autoRenew ? "#aaa" : "#333"}
+              color={"#333"}
               style={styles.dropdownIcon}
             />
           </TouchableOpacity>

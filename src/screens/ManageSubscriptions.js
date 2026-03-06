@@ -607,7 +607,13 @@ const shouldDisableUpgrade =
               </View>
             </TouchableOpacity>
 
-            {showAutoRenewMsg && (
+            {(Platform.OS === "ios") && (
+            <Text style={{ fontSize: 12, color: "#666", marginTop: 6, marginBottom: 10 }}>
+              Auto-renewable subscription. Manage or cancel anytime in Apple Subscriptions.
+            </Text>
+            )}
+
+            {/* {showAutoRenewMsg && (
               <Text
                 style={{
                   fontFamily: "Nunito400",
@@ -618,7 +624,7 @@ const shouldDisableUpgrade =
               >
                 {t("flix10k.autoRenewUpdate", { date: formatFullDate(allowDate) })}
               </Text>
-            )}
+            )} */}
 
             {error && <Text style={styles.error}>{error}</Text>}
 
@@ -669,6 +675,30 @@ const shouldDisableUpgrade =
                 <Text style={styles.unsubscribeText}>{t("flix10k.unsubscribe")}</Text>
               </TouchableOpacity>
             </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 16 }}>
+            <Text
+              style={{ color: "#007AFF" }}
+              onPress={() => Linking.openURL("https://sites.google.com/view/babyflix-privacy-policy/home")}
+            >
+              Privacy Policy
+            </Text>
+
+            <Text style={{ marginHorizontal: 8, color: "#999" }}>|</Text>
+
+            <Text
+              style={{ color: "#007AFF" }}
+              onPress={() =>
+                Linking.openURL(
+                  Platform.OS === "ios"
+                    ? "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+                    : "https://babyflix.ai/terms"
+                )
+              }
+            >
+              Terms of Use
+            </Text>
+          </View>
 
           </LinearGradient>
         </View>

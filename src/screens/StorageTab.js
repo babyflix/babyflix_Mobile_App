@@ -665,7 +665,8 @@ const StorageTab = () => {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.profileCardWrapper}>
           <LinearGradient colors={["rgb(252,231,243)", "rgb(243,232,255)", "rgb(224,242,254)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.profileCard}>
-            <Text style={styles.cardTitle}>{storagePlanName || t("flix10k.title")}</Text>
+            <Text style={[styles.cardTitle,{marginBottom: 5}]}>{"BabyFlix Storage"}</Text>
+            <Text style={[styles.cardTitle,{fontSize: 16}]}>{storagePlanName}</Text>
             <Text style={styles.price}>${storagePlanPrice} / {t("flix10k.month")}</Text>
             <Text style={styles.nextBilling}>{t("flix10k.nextBilling")}: {formatDate(storagePlan?.planExpiryDate)}</Text>
             {!storagePlanExpired && <Text style={[styles.nextBilling, { color: "#e96b04" }]}>{t('storage.remainingDays')}: {remainingDays}</Text>}
@@ -689,6 +690,12 @@ const StorageTab = () => {
                 />
               </View>
             </TouchableOpacity>
+
+            {(Platform.OS === "ios") && (
+            <Text style={{ fontSize: 12, color: "#666", marginTop: 4, marginBottom: 10 }}>
+              Auto-renewable subscription. Manage or cancel anytime in Apple Subscriptions.
+            </Text>
+            )}
 
             {showAutoRenewMsg && (
               <Text
@@ -757,7 +764,7 @@ const StorageTab = () => {
                 </Text>
               </View>
             ) : (
-              additionalMonths > 0 && (
+              (additionalMonths > 0 || (!storagePlanExpired && storagePlanPrice === "0.00")) && (
                 <View style={{ marginTop: 10 }}>
                   {/* <Text
                     style={{
@@ -834,7 +841,68 @@ const StorageTab = () => {
 
               <TouchableOpacity style={[styles.button, { backgroundColor: Colors.danger, borderWidth: 1, borderColor: Colors.primary }]} onPress={handleUnsubscribe}><Text style={[styles.buttonText, { color: Colors.primary }]}>{t("flix10k.unsubscribe")}</Text></TouchableOpacity>
             </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 10 }}>
+            <Text
+              style={{ color: "#007AFF", fontSize: 12 }}
+              onPress={() =>
+                Linking.openURL("https://sites.google.com/view/babyflix-privacy-policy/home")
+              }
+            >
+              Privacy Policy
+            </Text>
+
+            <Text style={{ marginHorizontal: 8, color: "#999", fontSize: 12 }}>
+              |
+            </Text>
+
+            <Text
+              style={{ color: "#007AFF", fontSize: 12 }}
+              onPress={() =>
+                Linking.openURL(
+                  Platform.OS === "ios"
+                    ? "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+                    : "https://babyflix.ai/terms"
+                )
+              }
+            >
+              Terms of Use
+            </Text>
+          </View>
+
           </LinearGradient>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Why Storage Plan?</Text>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="cloud-upload" size={20} color={Colors.primary} style={styles.icon} />
+            <Text style={styles.infoText}>
+              Securely store your baby memories in the cloud
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="image-multiple" size={20} color={Colors.primary} style={styles.icon} />
+            <Text style={styles.infoText}>
+              Upload and keep unlimited pregnancy images and videos
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="shield-lock" size={20} color={Colors.primary} style={styles.icon} />
+            <Text style={styles.infoText}>
+              Safe and private storage for your family memories
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="devices" size={20} color={Colors.primary} style={styles.icon} />
+            <Text style={styles.infoText}>
+              Access your media anytime from any device
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -1112,4 +1180,33 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito400",
     fontSize: 14,
   },
+  card: {
+  backgroundColor: Colors.white,
+  borderRadius: 16,
+  padding: 20,
+  marginBottom: 16,
+  shadowColor: "#000",
+  shadowOpacity: 0.08,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 5,
+  elevation: 3,
+},
+
+infoRow: {
+  flexDirection: "row",
+  alignItems: "flex-start",
+  marginBottom: 12,
+},
+
+icon: {
+  marginRight: 8,
+  marginTop: 2,
+},
+
+infoText: {
+  flex: 1,
+  fontFamily: "Nunito400",
+  fontSize: 14,
+  color: Colors.textPrimary,
+},
 });

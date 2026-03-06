@@ -320,7 +320,7 @@
     "goBack": "← GO BACK",
     "remainingDays": "Remaining Days",
     "sdExpired": "Your SD - free plan is expired. Please recover your images and videos by getting the recovery plan with one month HD plan worth {{price}}.",
-    "selectedMonths": "Selected months will add to your current subscription. Payment required for additional months and SD - free plan is only free for one month, now you need to get HD plan worth {{price}}.",
+    "selectedMonths": "The selected subscription will start from today and will not be added to your current subscription. Payment is required for the selected months. The SD plan is free only for one month; please upgrade to the HD plan for {{price}} per month.",
     "deletedSuccessfully": "{{planName}} deleted successfully",
     "failedToDeletePlan": "Failed to delete plan",
     "somethingWentWrong": "Something went wrong"
@@ -380,7 +380,7 @@
     }
   },
   "flix10k": {
-    "title": "Flix10K",
+    "title": "Flix10K Premium",
     "babyFirstMoments": "From ultrasound images to smiles — watch your baby’s first moments come alive with our AI.",
     "flix10kDesigner": "Flix10K Designer",
     "selectImages": "✨Select your favorite images and watch magic happen✨",
@@ -434,7 +434,7 @@
     "autoRenewStatus": "Auto-renewal {{status}} successfully.",
     "ok": "Ok",
     "autoRenewUpdate": "Auto-renewal update can be done after {{date}} (within 15 days of expiry)",
-    "additionalMonths": "Selected months will add to your current subscription. Payment required for additional months.",
+    "additionalMonths": "The selected subscription will start today and will not be added to your current subscription. Payment is required to activate the selected subscription.",
     "amountToPay": "Amount to Pay: ${{amount}}",
     "newExpiry": "New Expiry: {{date}}",
     "unsubscribeSuccess": "Flix10K Unsubscribe Successfully",
@@ -448,7 +448,7 @@
     "onlyAt": "Only at",
     "subscriptionNow": "Subscribe today and unlock full access.",
     "loginNow": "Login now",
-    "autoRenewInfoIOS": "Auto-renew can be managed in Apple Subscriptions",
+    "autoRenewInfoIOS": "This is an auto-renewable subscription.You can manage your subscription anytime from Apple Subscriptions.",
     "tabs": {
       "babyProfile": "Baby Profile",
       "predictiveBabyImages": "Predictive Baby Images"
