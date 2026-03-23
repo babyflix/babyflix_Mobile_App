@@ -77,6 +77,7 @@ import * as RNIap from 'react-native-iap';
 import axios from 'axios';
 import { Alert, Platform } from 'react-native';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { sendLog } from './logger';
 
 /**
  * Storage IAP product mapping (Apple)
@@ -115,14 +116,27 @@ export const handleIOSStorageSubscription = async ({
   //   `Starting iOS Storage purchase\nPlanId: ${planId}\nMonths: ${months}`
   // );
 
+  const log = (msg, type = "INFO") =>
+  sendLog({
+    message: msg,
+    screen: "StorageSubscription",
+    log_type: type,
+    user_id: userId,
+  });
+
+  log(`IAP START | planId=${planId}, months=${months}`);
+
   try {
     // 1️⃣ Reset + Init connection
     //Alert.alert('Step 1', 'Initializing Apple IAP connection');
+    log("Initializing IAP connection");
     await RNIap.endConnection();
     await RNIap.initConnection();
+    log("IAP connection initialized");
 
     // 2️⃣ Resolve productId
     const productId = getIOSStorageProductId(months, planId);
+    log(`ProductId resolved: ${productId}`);
 
     // Alert.alert(
     //   'Step 2',
@@ -131,6 +145,7 @@ export const handleIOSStorageSubscription = async ({
 
     if (!productId) {
       //Alert.alert('Error', 'Invalid storage product selected');
+      log("Invalid productId", "ERROR");
       throw new Error('Invalid productId');
     }
 
@@ -140,9 +155,12 @@ export const handleIOSStorageSubscription = async ({
     //   `Requesting subscription from Apple\nSKU: ${productId}`
     // );
 
+    log(`Requesting subscription for ${productId}`);
     const purchase = await RNIap.requestSubscription({
       sku: productId,
     });
+
+    log(`Purchase success: ${purchase?.productId}`);
 
     // Alert.alert(
     //   'Purchase Result',
@@ -159,12 +177,15 @@ export const handleIOSStorageSubscription = async ({
     // );
 
     if (!purchase?.transactionReceipt) {
+      log("No receipt received", "ERROR");
       //Alert.alert('Error', 'No receipt received from Apple');
       throw new Error('No receipt received from Apple');
     }
 
     // 4️⃣ Verify receipt with backend
     //Alert.alert('Step 4', 'Verifying receipt with backend');
+
+    log("Sending receipt to backend");
 
     const verifyRes = await axios.post(
       `${EXPO_PUBLIC_API_URL}/api/patients/verify-ios-storage-subscription`,
@@ -174,6 +195,8 @@ export const handleIOSStorageSubscription = async ({
         productId,
       }
     );
+
+    log(`Verify status: ${verifyRes.data?.status}`);
 
     // Alert.alert(
     //   'Verify Response',
@@ -185,6 +208,7 @@ export const handleIOSStorageSubscription = async ({
       //   'Verification Failed',
       //   'Subscription not active after verification'
       // );
+      log("Subscription not active after verification", "ERROR");
       throw new Error('Subscription verification failed');
     }
 
@@ -192,6 +216,8 @@ export const handleIOSStorageSubscription = async ({
       purchase,
       isConsumable: false,
     });
+
+    log("Transaction finished successfully");
 
     // 5️⃣ Success callback
     // Alert.alert(
@@ -207,11 +233,13 @@ export const handleIOSStorageSubscription = async ({
         purchase.originalTransactionIdentifier,
     });
   } catch (err) {
+    log(`ERROR: ${err?.message || JSON.stringify(err)}`, "ERROR");
     if (err?.code === 'E_USER_CANCELLED') {
       // Alert.alert(
       //   'Cancelled',
       //   'User cancelled Apple subscription'
       // );
+      log("User cancelled purchase");
       return;
     }
 

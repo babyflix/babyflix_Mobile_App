@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, Platform } from 'react-native';
 import axios from 'axios';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { sendLog } from './logger';
 
 const FLIX10K_PRODUCTS = {
   1: 'flix10k_monthly',
@@ -20,26 +21,46 @@ export const handleAppleFlix10KPayment = async ({
 }) => {
   if (Platform.OS !== 'ios') return;
 
+  const log = (msg, type = "INFO") =>
+  sendLog({
+    message: msg,
+    screen: "Flix10KSubscription",
+    log_type: type,
+    user_id: user?.uuid,
+  });
+
   const productId = FLIX10K_PRODUCTS[months];
+
+  log(`IAP START | months=${months}, productId=${productId}`);
 
   //Alert.alert('Flix10K IAP', `Starting payment\nMonths: ${months}\nProduct: ${productId}`);
 
    if (!productId) {
     //Alert.alert('Error', 'Invalid product selected');
+    log("Invalid product selected", "ERROR");
     return;
   }
 
   try {
     //Alert.alert('Step 1', 'Initializing Apple IAP connection');
+     log("Initializing IAP connection");
     await RNIap.initConnection();
+
+    log("IAP connection initialized");
+
+    log("Setting flix10KPaying flag");
 
     //Alert.alert('Step 2', 'Setting flix10KPaying flag');
     await AsyncStorage.setItem('flix10KPaying', 'true');
+
+    log(`Requesting subscription: ${productId}`);
 
     //Alert.alert('Step 3', `Requesting subscription from Apple\nSKU: ${productId}`);
     const purchase = await RNIap.requestSubscription({
       sku: productId,
     });
+
+    log(`Purchase success: ${purchase?.productId}`);
 
     //  Alert.alert(
     //   'Purchase Result',
@@ -56,11 +77,14 @@ export const handleAppleFlix10KPayment = async ({
 
     if (!purchase?.transactionReceipt) {
       //Alert.alert('Error', 'No receipt received from Apple');
+      log("No receipt received from Apple", "ERROR");
       throw new Error('No receipt received');
     }
 
     //Alert.alert('Step 4', 'Verifying receipt with backend');
     // 🔐 Verify receipt with backend
+
+    log("Sending receipt to backend");
     const verifyRes = await axios.post(
       `${EXPO_PUBLIC_API_URL}/api/subscription/verify-ios-flix10k-subscription`,
       {
@@ -72,6 +96,8 @@ export const handleAppleFlix10KPayment = async ({
 
     const verifyData = verifyRes.data;
 
+    log(`Verify response: ${JSON.stringify(verifyData)}`);
+
     // Alert.alert(
     //   'Verify Response',
     //   JSON.stringify(verifyRes.data, null, 2)
@@ -80,11 +106,13 @@ export const handleAppleFlix10KPayment = async ({
 
     if (verifyData.status !== 'active') {
        //Alert.alert('Error', 'Subscription not active after verification');
+       log("Subscription not active after verification", "ERROR");
       throw new Error('Subscription not active');
     }
 
     //Alert.alert('Step 5', 'Saving subscription to database');
     // ✅ Update Flix10K subscription in DB
+    log("Saving subscription to DB");
     const payload = {
       uuid: user.uuid,
       subscriptionId: 1,
@@ -102,9 +130,13 @@ export const handleAppleFlix10KPayment = async ({
       payload
     );
 
+    log("Subscription saved successfully");
+
     await RNIap.finishTransaction({ purchase, isConsumable: false });
 
     //Alert.alert('Success', 'Flix10K subscription completed successfully');
+
+    log("Transaction finished successfully");
 
     setShowafterAdd(true);
     setTimeout(() => {
@@ -113,8 +145,10 @@ export const handleAppleFlix10KPayment = async ({
     }, 800);
   } catch (err) {
     console.error('[Flix10K iOS IAP]', err);
+    log(`ERROR: ${err?.message || JSON.stringify(err)}`, "ERROR");
 
     if (err?.code === 'E_USER_CANCELLED') {
+      log("User cancelled purchase");
       //Alert.alert('Cancelled', 'User cancelled Apple subscription');
       return;
     }
@@ -126,11 +160,13 @@ export const handleAppleFlix10KPayment = async ({
 
     setShowafterAdd(true);
     setTimeout(() => {
+      log("Showing failure modal", "ERROR");
       //Alert.alert('UI', 'Showing failure modal');
       setShowPaymentFailure(true);
     }, 800);
   } finally {
     //Alert.alert('Cleanup', 'Clearing local flags and closing IAP connection');
+    log("Cleaning up AsyncStorage + connection");
     await AsyncStorage.removeItem('flix10KPaying');
     // await RNIap.endConnection();
   }

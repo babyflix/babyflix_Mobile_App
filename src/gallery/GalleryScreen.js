@@ -62,6 +62,7 @@ import PhoneNumberModal from '../constants/PhoneNumberModal.js';
  import { getStoragePlanDetails } from '../components/getStoragePlanDetails.js';
 import { checkIOSFlix10KRenewal } from '../constants/checkIOSFlix10KRenewal.js';
 import { checkIOSStorageRenewal } from '../constants/checkIOSStorageRenewal.js';
+import { sendLog } from '../constants/logger.js';
 
 SplashScreen.preventAutoHideAsync();
 let upgradeModalShown = false;
@@ -675,6 +676,31 @@ useEffect(() => {
   //     setIsLoading(false);
   //   }
   // };
+
+  // const log = (msg, type = "INFO 2") =>
+  // sendLog({
+  //   message: msg,
+  //   screen: "Gallery 2",
+  //   log_type: type,
+  //   user_id: user.uuid,
+  // });
+
+  //   useEffect(() => {
+  //     const testLog = async () => {
+  //     const logresult = await sendLog({
+  //       message: "Gallery screen visited",
+  //       screen: "gallery",
+  //       log_type: "info",
+  //       user_id: user.uuid,
+  //     });
+
+  //     console.log("logresult 1", logresult);
+
+  //     log(`Gallery screen visited using log function`);
+  //   };
+
+  //   testLog();
+  //    }, []);
 
     const fetchMediaData = async () => {
     setIsLoading(true);
