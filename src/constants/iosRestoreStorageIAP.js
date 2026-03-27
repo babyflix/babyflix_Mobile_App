@@ -1,6 +1,7 @@
 import * as RNIap from 'react-native-iap';
 import { Platform } from 'react-native';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { Alert } from 'react-native';
 
 /**
  * Restore iOS Storage Subscription
@@ -21,12 +22,21 @@ export const restoreIOSStoragePurchase = async ({
     const purchases = await RNIap.getAvailablePurchases();
     console.log('[iOS Restore] Purchases:', purchases);
 
-    const storagePurchase = purchases.find(
+    // const storagePurchase = purchases.find(
+    //   p => p.productId && p.productId.startsWith('storage_')
+    // );
+
+    const storagePurchases = purchases.filter(
       p => p.productId && p.productId.startsWith('storage_')
     );
 
+    const storagePurchase = storagePurchases.sort(
+      (a, b) => b.transactionDate - a.transactionDate
+    )[0];
+
     if (!storagePurchase) {
       console.log('[iOS Restore] No active storage subscription found');
+      Alert.alert('No valid subscription found to restore.');
       return;
     }
 
@@ -70,8 +80,11 @@ export const restoreIOSStoragePurchase = async ({
           uuid: userId,
           autoRenewal: verifyData.autoRenewal,
           expiryDate: verifyData.expiryDate,
-          currentPurchaseToken: storagePurchase.originalTransactionId,
-          source: 'system', // 👈 prevents email spam
+          currentPurchaseToken: 
+          storagePurchase.originalTransactionId || 
+          storagePurchase.originalTransactionIdentifier || 
+          storagePurchase.originalTransactionIdentifierIOS,
+          source: 'Restore Button', // 👈 prevents email spam
         }),
       }
     );
@@ -79,11 +92,12 @@ export const restoreIOSStoragePurchase = async ({
     // 🔄 Refresh Redux + UI
     await getStoragePlanDetails(userEmail, dispatch);
 
-    if (!silent) {
-      alert('Your storage subscription has been restored.');
-    }
+    
+      Alert.alert('Your storage subscription has been restored.');
+    
   } catch (error) {
     console.error('[iOS Restore] Failed:', error);
+    Alert.alert('Restore failed. Please try again.');
   } finally {
     //await RNIap.endConnection();
   }

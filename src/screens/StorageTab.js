@@ -34,6 +34,7 @@ import { clearOpenStorage2, setForceOpenStorageModals } from "../state/slices/st
 import { setPlanExpired, setUpgradeReminder } from "../state/slices/expiredPlanSlice";
 import * as RNIap from 'react-native-iap';
 import { handleIOSStorageSubscription } from "../constants/iosStorageIAP";
+import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
 //import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
 
 const StorageTab = () => {
@@ -869,6 +870,36 @@ const StorageTab = () => {
               Terms of Use
             </Text>
           </View>
+
+          {Platform.OS === "ios" && (
+            <TouchableOpacity
+              onPress={() => {
+                if (!user?.uuid || !user?.email) {
+                  Alert.alert('User not logged in');
+                  return;
+                }
+
+                restoreIOSStoragePurchase({
+                  userId: user.uuid,
+                  userEmail: user.email,
+                  dispatch,
+                  getStoragePlanDetails,
+                });
+              }}
+              style={{ marginTop: 12 }}
+            >
+              <Text
+                style={{
+                  color: "#007AFF",
+                  fontSize: 14,
+                  textAlign: "center",
+                  fontWeight: "500",
+                }}
+              >
+                Restore Purchase
+              </Text>
+            </TouchableOpacity>
+          )}
 
           </LinearGradient>
         </View>

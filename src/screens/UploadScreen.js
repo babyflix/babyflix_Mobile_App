@@ -180,8 +180,10 @@ const UploadScreen = () => {
         formData.append('totalChunks', chunk.totalChunks.toString());
         formData.append('title', media.fileName || 'Untitled');
         formData.append('object_type', media.type || 'unknown');
-        formData.append('machine_id', user.role === 'user' ? user.machineId : '');
+        formData.append('machine_id', user.role === 'user' && user.machineId ? user.machineId : 'NA');
         formData.append('user_id', user.role === 'user' ? user.uuid : '');
+
+        //console.log("formdata of upload",formData, user);
 
         const response = await axios.post(UPLOAD_API_URL, formData, {
           headers: {
@@ -189,6 +191,8 @@ const UploadScreen = () => {
             accept: 'application/json',
           },
         });
+
+        //console.log("upload response", response.data);
 
         setUploadProgress(Math.round(((chunk.index + 1) / chunk.totalChunks) * 100));
         if (response.data?.message) {

@@ -22,6 +22,7 @@ import { handlePlayStorageSubscription } from '../constants/PlayBillingStorageHa
 import { handleIOSStorageSubscription } from '../constants/iosStorageIAP';
 //import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
 import { triggerGalleryRefresh } from '../state/slices/storageUISlice';
+import { restoreIOSStoragePurchase } from '../constants/iosRestoreStorageIAP';
 
 let modalShown = false;
 let paymentFail = false;
@@ -782,6 +783,37 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               </TouchableOpacity>
 
             </View>
+            {Platform.OS === 'ios' && (
+                <TouchableOpacity
+                  onPress={() => {
+                    if (Platform.OS !== 'ios') return;
+
+                    if (!user?.uuid || !user?.email) {
+                      Alert.alert('User not logged in');
+                      return;
+                    }
+
+                    restoreIOSStoragePurchase({
+                      userId: user.uuid,
+                      userEmail: user.email,
+                      dispatch,
+                      getStoragePlanDetails,
+                    });
+                  }}
+                  style={{ marginTop: 12 }}
+                >
+                  <Text
+                    style={{
+                      color: '#007AFF',
+                      fontSize: 14,
+                      textAlign: 'center',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Restore Purchase
+                  </Text>
+                </TouchableOpacity>
+              )}
           </View>
         </View>
       </Modal>

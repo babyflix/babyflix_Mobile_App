@@ -12,6 +12,8 @@ const FLIX10K_PRODUCTS = {
   12: 'flix10k_yearly',
 };
 
+let isProcessing = false;
+
 export const handleAppleFlix10KPayment = async ({
   months,
   user,
@@ -29,6 +31,13 @@ export const handleAppleFlix10KPayment = async ({
     user_id: user?.uuid,
   });
 
+  if (isProcessing) {
+    log("Blocked duplicate IAP call");
+    return;
+  }
+
+  isProcessing = true;
+
   const productId = FLIX10K_PRODUCTS[months];
 
   log(`IAP START | months=${months}, productId=${productId}`);
@@ -38,6 +47,7 @@ export const handleAppleFlix10KPayment = async ({
    if (!productId) {
     //Alert.alert('Error', 'Invalid product selected');
     log("Invalid product selected", "ERROR");
+    isProcessing = false;
     return;
   }
 
@@ -47,6 +57,28 @@ export const handleAppleFlix10KPayment = async ({
     await RNIap.initConnection();
 
     log("IAP connection initialized");
+
+     // ✅ Fetch products from Apple
+    log("Fetching subscriptions from Apple");
+
+    const products = await RNIap.getSubscriptions({
+      skus: Object.values(FLIX10K_PRODUCTS),
+    });
+
+    log(`Available products: ${JSON.stringify(products)}`);
+
+    if (!products || products.length === 0) {
+      throw new Error("No products returned from App Store");
+    }
+
+    const productExists = products.find(
+      (p) => p.productId === productId
+    );
+
+    if (!productExists) {
+      log(`Product not found: ${productId}`, "ERROR");
+      throw new Error("Product not available in App Store");
+    }
 
     log("Setting flix10KPaying flag");
 
@@ -147,6 +179,8 @@ export const handleAppleFlix10KPayment = async ({
     console.error('[Flix10K iOS IAP]', err);
     log(`ERROR: ${err?.message || JSON.stringify(err)}`, "ERROR");
 
+    isProcessing = false;
+
     if (err?.code === 'E_USER_CANCELLED') {
       log("User cancelled purchase");
       //Alert.alert('Cancelled', 'User cancelled Apple subscription');
@@ -169,5 +203,6 @@ export const handleAppleFlix10KPayment = async ({
     log("Cleaning up AsyncStorage + connection");
     await AsyncStorage.removeItem('flix10KPaying');
     // await RNIap.endConnection();
+    isProcessing = false;
   }
 };

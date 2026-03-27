@@ -34,6 +34,8 @@ import DisableAutoRenewModal from "../constants/DisableAutoRenewModal";
 import { handlePlaySubscription } from "../constants/PlayBillingHandler";
 import PaymentStatusModal from "../constants/PaymentStatusModal";
 import { handleAppleFlix10KPayment } from "../constants/AppleIAPHandler";
+import { getFlix10KPlanApi } from "../components/getFlix10KPlanApi";
+import { restoreIOSFlix10KPurchase } from "../constants/AppleIAPFlix10KRestore";
 // import { getFlix10KPlanApi } from "../components/getFlix10KPlanApi";
 // import { restoreIOSFlix10KPurchase } from "../constants/AppleIAPFlix10KRestore";
 //import * as RNIap from 'react-native-iap';
@@ -610,6 +612,22 @@ const hasPredictiveImage = Array.isArray(mediaData)
     }
   };
 
+  const handleRestoreFlix10K = () => {
+    if (Platform.OS !== 'ios') return;
+
+    if (!user?.uuid) {
+      Alert.alert('User not logged in');
+      return;
+    }
+
+    restoreIOSFlix10KPurchase({
+      userId: user.uuid,
+      userEmail: user.email,
+      dispatch,
+      getFlix10KPlanApi,
+    });
+  };
+
   const handleSubscribe = async () => {
     await AsyncStorage.setItem('flix10KPaying', 'true');
     console.log("handleSubscribe called");
@@ -711,6 +729,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
         await AsyncStorage.removeItem("flix10k_payment_status");
       }
     } else {
+      console.log("calling for ios")
       await handleAppleFlix10KPayment({
       months,
       user,
@@ -1014,6 +1033,24 @@ const hasPredictiveImage = Array.isArray(mediaData)
                       Terms of Use
                     </Text>
                   </View>
+
+                  {Platform.OS === 'ios' && (
+                    <TouchableOpacity
+                      onPress={handleRestoreFlix10K}
+                      style={{ marginTop: 12 }}
+                    >
+                      <Text
+                        style={{
+                          color: '#007AFF',
+                          fontSize: 14,
+                          textAlign: 'center',
+                          fontWeight: '500',
+                        }}
+                      >
+                        Restore Purchase
+                      </Text>
+                    </TouchableOpacity>
+                  )}
 
                   <View style={styles.actionRow}>
                     <TouchableOpacity

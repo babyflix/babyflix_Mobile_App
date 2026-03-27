@@ -651,7 +651,7 @@ const LoginScreen = () => {
         !showVideo
       ) {
         console.log("video paying")
-        setShowVideo(true);
+        //setShowVideo(true);
       }
     };
     checkFlixAdSeen();

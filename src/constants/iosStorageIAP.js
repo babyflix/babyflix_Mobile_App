@@ -90,6 +90,8 @@ const IOS_STORAGE_PRODUCTS = {
   12: 'storage_yearly',
 };
 
+let isProcessing = false;
+
 /**
  * Convert months → Apple productId
  */
@@ -124,6 +126,13 @@ export const handleIOSStorageSubscription = async ({
     user_id: userId,
   });
 
+   if (isProcessing) {
+    log("Blocked duplicate IAP call");
+    return;
+  }
+
+  isProcessing = true;
+
   log(`IAP START | planId=${planId}, months=${months}`);
 
   try {
@@ -147,6 +156,28 @@ export const handleIOSStorageSubscription = async ({
       //Alert.alert('Error', 'Invalid storage product selected');
       log("Invalid productId", "ERROR");
       throw new Error('Invalid productId');
+    }
+
+    // ✅ Fetch products from Apple
+    log("Fetching subscriptions from Apple");
+
+    const products = await RNIap.getSubscriptions({
+      skus: Object.values(IOS_STORAGE_PRODUCTS),
+    });
+
+    log(`Available products: ${JSON.stringify(products)}`);
+
+    if (!products || products.length === 0) {
+      throw new Error("No products returned from App Store");
+    }
+
+    const productExists = products.find(
+      (p) => p.productId === productId
+    );
+
+    if (!productExists) {
+      log(`Product not found: ${productId}`, "ERROR");
+      throw new Error("Product not available in App Store");
     }
 
     // 3️⃣ Request subscription
@@ -234,6 +265,7 @@ export const handleIOSStorageSubscription = async ({
     });
   } catch (err) {
     log(`ERROR: ${err?.message || JSON.stringify(err)}`, "ERROR");
+    isProcessing = false;
     if (err?.code === 'E_USER_CANCELLED') {
       // Alert.alert(
       //   'Cancelled',
@@ -256,5 +288,6 @@ export const handleIOSStorageSubscription = async ({
     //   'Closing Apple IAP connection'
     // );
     //await RNIap.endConnection();
+    isProcessing = false;
   }
 };

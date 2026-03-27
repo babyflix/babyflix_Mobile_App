@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TextInput, Switch, StyleSheet, ScrollView, Modal, Alert, Linking, Platform, AppState } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Colors from "../constants/Colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,9 +19,10 @@ import PaymentStatusModal from "../constants/PaymentStatusModal";
 import * as RNIap from 'react-native-iap';
 import { handlePlaySubscription } from "../constants/PlayBillingHandler";
 import { handleAppleFlix10KPayment } from "../constants/AppleIAPHandler";
+import { restoreIOSFlix10KPurchase } from "../constants/AppleIAPFlix10KRestore";
 // import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
 // import { restoreIOSFlix10KPurchase } from '../constants/AppleIAPFlix10KRestore';
-// import { getFlix10KPlanApi } from "../components/getFlix10KPlanApi";
+import { getFlix10KPlanApi } from "../components/getFlix10KPlanApi";
 
 const ManageSubscriptions = () => {
   const user = useSelector((state) => state.auth);
@@ -49,6 +50,8 @@ const ManageSubscriptions = () => {
   const [showPaymentFailure, setShowPaymentFailure] = useState(false);
 
   const PLAY_STORE_SUBS_URL = "https://play.google.com/store/account/subscriptions";
+
+   const dispatch = useDispatch();
 
   useEffect(() => {
     if (subscriptionExpired) {
@@ -699,6 +702,36 @@ const shouldDisableUpgrade =
               Terms of Use
             </Text>
           </View>
+
+          {Platform.OS === "ios" && (
+            <TouchableOpacity
+              onPress={() => {
+                if (!user?.uuid || !user?.email) {
+                  Alert.alert('User not logged in');
+                  return;
+                }
+
+                restoreIOSFlix10KPurchase({
+                  userId: user.uuid,
+                  userEmail: user.email,
+                  dispatch,
+                  getFlix10KPlanApi,
+                });
+              }}
+              style={{ marginTop: 12 }}
+            >
+              <Text
+                style={{
+                  color: "#007AFF",
+                  fontSize: 14,
+                  textAlign: "center",
+                  fontWeight: "500",
+                }}
+              >
+                Restore Purchase
+              </Text>
+            </TouchableOpacity>
+          )}
 
           </LinearGradient>
         </View>
