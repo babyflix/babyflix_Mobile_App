@@ -138,7 +138,7 @@ export const handleIOSStorageSubscription = async ({
   try {
     // 1️⃣ Reset + Init connection
     //Alert.alert('Step 1', 'Initializing Apple IAP connection');
-    log("Initializing IAP connection");
+    //log("Initializing IAP connection");
     await RNIap.endConnection();
     await RNIap.initConnection();
     log("IAP connection initialized");
@@ -165,7 +165,7 @@ export const handleIOSStorageSubscription = async ({
       skus: Object.values(IOS_STORAGE_PRODUCTS),
     });
 
-    log(`Available products: ${JSON.stringify(products)}`);
+    log(`Products count: ${products.length}`);
 
     if (!products || products.length === 0) {
       throw new Error("No products returned from App Store");

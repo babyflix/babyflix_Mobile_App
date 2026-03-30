@@ -53,19 +53,19 @@ export const handleAppleFlix10KPayment = async ({
 
   try {
     //Alert.alert('Step 1', 'Initializing Apple IAP connection');
-     log("Initializing IAP connection");
+     //log("Initializing IAP connection");
     await RNIap.initConnection();
 
     log("IAP connection initialized");
 
      // ✅ Fetch products from Apple
-    log("Fetching subscriptions from Apple");
+    //log("Fetching subscriptions from Apple");
 
     const products = await RNIap.getSubscriptions({
       skus: Object.values(FLIX10K_PRODUCTS),
     });
 
-    log(`Available products: ${JSON.stringify(products)}`);
+    log(`Products count: ${products.length}`);
 
     if (!products || products.length === 0) {
       throw new Error("No products returned from App Store");
@@ -80,7 +80,7 @@ export const handleAppleFlix10KPayment = async ({
       throw new Error("Product not available in App Store");
     }
 
-    log("Setting flix10KPaying flag");
+    //log("Setting flix10KPaying flag");
 
     //Alert.alert('Step 2', 'Setting flix10KPaying flag');
     await AsyncStorage.setItem('flix10KPaying', 'true');
@@ -170,7 +170,8 @@ export const handleAppleFlix10KPayment = async ({
 
     log("Transaction finished successfully");
 
-    setShowafterAdd(true);
+    //setShowafterAdd(true);
+    setShowafterAdd?.(true);
     setTimeout(() => {
       //Alert.alert('UI', 'Showing success modal');
       setShowPaymentSuccess(true)
@@ -192,7 +193,8 @@ export const handleAppleFlix10KPayment = async ({
     //   err?.message || JSON.stringify(err, null, 2)
     // );
 
-    setShowafterAdd(true);
+    //setShowafterAdd(true);
+    setShowafterAdd?.(true);
     setTimeout(() => {
       log("Showing failure modal", "ERROR");
       //Alert.alert('UI', 'Showing failure modal');

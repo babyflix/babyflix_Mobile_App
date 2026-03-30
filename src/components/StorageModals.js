@@ -640,10 +640,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       } else {
         await handleIOSStorageSubscription({
           planId: selectedPlan,
-          months,
+          months: 1,
           userId: user.uuid,
 
-          onSuccess: async ({ autoRenewal, expiryDate, originalTransactionId }) => {
+          onSuccess: async ({ productId, autoRenewal, expiryDate, originalTransactionId }) => {
             try {
                await AsyncStorage.setItem('payment_status 1', 'done');
               // 1️⃣ Update plan on backend (IMPORTANT)

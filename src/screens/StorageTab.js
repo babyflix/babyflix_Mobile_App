@@ -529,19 +529,18 @@ const StorageTab = () => {
           months: monthsToSend,       // selected months
           userId: user.uuid,
 
-          onSuccess: async ({ autoRenewal, expiryDate, originalTransactionId }) => {
+          onSuccess: async ({ productId,autoRenewal, expiryDate, originalTransactionId }) => {
             // ✅ Update backend
             await AsyncStorage.setItem('payment_status 1', 'done');
             const payload = {
               userId: user.uuid,
               storagePlanId: planIdToSend,
               storagePlanPayment: 1,
-              autoRenewal: autoRenew,
+              autoRenewal: autoRenew || autoRenewal,
               months: monthsToSend,
               session_id: "ios_iap_" + originalTransactionId,
               status: 'SUCCESS',
               provider: 'ios_iap',
-              productId,
             };
 
             await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
