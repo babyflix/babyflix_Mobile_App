@@ -17,7 +17,7 @@ export const getFlix10KPlanApi = async (dispatch) => {
 
     const result = await response.json();
 
-    console.log("Flix10K storage plan details",result)
+    //console.log("Flix10K storage plan details",result)
 
     if (result.actionStatus === "success") {
       dispatch(getPlanSuccess(result.data));

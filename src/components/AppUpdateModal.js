@@ -13,7 +13,7 @@ import Constants from 'expo-constants';
 import Colors from '../constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -51,7 +51,7 @@ const AppUpdateModal = ({ serverUrl, visible, onClose, onUpdateRequired }) => {
           setStoreLinks({ android: data.androidUrl, ios: data.iosUrl });
           setForceUpdate(data.forceUpdate);
           setUpdateMessage(
-            (await useDynamicTranslate(`${data.message}`)) || t('appUpdate.message')
+            (await dynamicTranslate(`${data.message}`)) || t('appUpdate.message')
           );
 
           onUpdateRequired(); // ✅ tell GalleryScreen

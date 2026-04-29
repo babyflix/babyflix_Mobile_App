@@ -74,7 +74,7 @@ const ImageInfoTab = memo(({ data, flix10kGenerating, flix10kAiImages, setFlix10
   ];
   const hasResults = (combinedResults?.length || 0) > 0;
 
-  console.log("ImageInfoTab flix10kAiImages:", flix10kAiImages);
+  //console.log("ImageInfoTab flix10kAiImages:", flix10kAiImages);
 
   return (
     <>

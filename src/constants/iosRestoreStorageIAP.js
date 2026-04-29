@@ -20,7 +20,7 @@ export const restoreIOSStoragePurchase = async ({
     await RNIap.initConnection();
 
     const purchases = await RNIap.getAvailablePurchases();
-    console.log('[iOS Restore] Purchases:', purchases);
+    //console.log('[iOS Restore] Purchases:', purchases);
 
     // const storagePurchase = purchases.find(
     //   p => p.productId && p.productId.startsWith('storage_')
@@ -35,7 +35,7 @@ export const restoreIOSStoragePurchase = async ({
     )[0];
 
     if (!storagePurchase) {
-      console.log('[iOS Restore] No active storage subscription found');
+      //console.log('[iOS Restore] No active storage subscription found');
       Alert.alert('No valid subscription found to restore.');
       return;
     }
@@ -57,7 +57,7 @@ export const restoreIOSStoragePurchase = async ({
     const verifyData = await verifyRes.json();
 
     if (verifyData?.status !== 'active') {
-      console.log('[iOS Restore] Subscription not active');
+      //console.log('[iOS Restore] Subscription not active');
       return;
     }
 

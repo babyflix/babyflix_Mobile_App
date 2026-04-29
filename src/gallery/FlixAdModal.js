@@ -49,7 +49,7 @@ const FlixAdModal = ({
   useEffect(() => {
     const getPaymentStatus = async () => {
       const status = await AsyncStorage.getItem('forAdd');
-      console.log(status)
+      //console.log(status)
       if (status === 'done' || status === 'fail') {
         setPaymentStatus(true);
         setTimeout(() => {

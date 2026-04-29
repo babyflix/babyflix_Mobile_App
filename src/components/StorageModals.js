@@ -12,7 +12,7 @@ import { getStoragePlanDetails } from './getStoragePlanDetails';
 import moment from 'moment';
 import { setPlanExpired, setUpgradeReminder } from '../state/slices/expiredPlanSlice';
 import { useRouter } from 'expo-router';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import sendDeviceUserInfo, { USERACTIONS } from './deviceInfo';
@@ -30,7 +30,7 @@ let expiredPayment = false;
 
 const StorageModals = ({ onClose, storageModalKey }) => {
   const isPlanExpired = useSelector((state) => state.expiredPlan.isPlanExpired);
-  console.log("StorageModals rendered with isPlanExpired:", isPlanExpired);
+  //console.log("StorageModals rendered with isPlanExpired:", isPlanExpired);
   const [showStorage1, setShowStorage1] = useState(false);
   const [showStorage2, setShowStorage2] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(isPlanExpired ? 3 : 2);
@@ -80,12 +80,12 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const json = await response.json();
       if (json.actionStatus === 'success') {
         const plan = json.data;
-        console.log('Fetched plans:', plan);
+        //console.log('Fetched plans:', plan);
         const translatedPlans = await Promise.all(
           plan.map(async (plan) => ({
             ...plan,
-            name: await useDynamicTranslate(plan.name),
-            description: await useDynamicTranslate(plan.description),
+            name: await dynamicTranslate(plan.name),
+            description: await dynamicTranslate(plan.description),
           }))
         );
         setPlans(translatedPlans);
@@ -147,10 +147,10 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       const storedStatus = await AsyncStorage.getItem('payment_status');
       const storedPaying = await AsyncStorage.getItem('paying');
 
-      console.log('[StorageModals] fetchStatusFromStorage:', { storedStatus, storedPaying });
+      //console.log('[StorageModals] fetchStatusFromStorage:', { storedStatus, storedPaying });
 
       if (!storagePlanPrice && !storedStatus && storedPaying === 'true') {
-        console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');
+        //console.log('[StorageModals] Clearing openStorage2 due to paying:true but no status');
         dispatch(clearOpenStorage2());
         if (!paymentFail) {
           paymentFail = true;
@@ -185,7 +185,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
       //console.log('[StorageModals] Initial checkPaymentStatus:', { status, storedPaying });
       if (status === 'fail') {
         if (storedPaying === 'false') {
-          console.log('[StorageModals] Showing payment failure modal due to fail status');
+          //console.log('[StorageModals] Showing payment failure modal due to fail status');
           setIsVisible(true);
         }
       } else if (storageModalKey) {
@@ -216,17 +216,17 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         triggeredRef.current = false;
       }
       if (Platform.OS === 'android' && triggeredRef.current) {
-        console.log('[StorageModals] Already triggered. Skipping... (Android only)');
+        //console.log('[StorageModals] Already triggered. Skipping... (Android only)');
         return;
       }
 
       //const triggered = await AsyncStorage.getItem('storage_modal_triggered');
-      console.log('[StorageModals] openStorage2Directly:', openStorage2Directly, 'triggered:', triggered);
+      //console.log('[StorageModals] openStorage2Directly:', openStorage2Directly, 'triggered:', triggered);
 
       if (openStorage2Directly && triggered !== 'true') {
         if (!expiredPayment) {
           expiredPayment = true;
-          console.log('[StorageModals] Triggering storage2 modal');
+          //console.log('[StorageModals] Triggering storage2 modal');
           triggeredRef.current = true;
           setShowStorage1(false);
           setIsVisible(false);
@@ -244,7 +244,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     };
 
     if (openStorage2Directly) {
-      console.log('[StorageModals] Running checkIfTriggered because openStorage2Directly is true');
+      //console.log('[StorageModals] Running checkIfTriggered because openStorage2Directly is true');
       checkIfTriggered();
     }
   }, [openStorage2Directly]);
@@ -261,7 +261,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
         //console.log('[StorageModals] Final checkPaymentStatus:', status);
 
         if (status === 'fail') {
-          console.log('[StorageModals] Status is fail');
+          //console.log('[StorageModals] Status is fail');
           await AsyncStorage.setItem('payment_status 1', 'fail');
           await AsyncStorage.removeItem('payment_status');
           await AsyncStorage.setItem('storage_modal_triggered', 'false');
@@ -318,7 +318,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
               provider: "ios_iap",
             };
 
-            console.log('[StorageModals] Updating plan with payload:', payload);
+            //console.log('[StorageModals] Updating plan with payload:', payload);
             await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -485,7 +485,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             provider: Platform.OS === 'android' ? "play_billing" : "ios_iap",
           };
 
-          console.log("[StorageModals] Updating plan with payload:", payload);
+          //console.log("[StorageModals] Updating plan with payload:", payload);
 
           await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
             method: "PUT",
@@ -558,7 +558,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           // });
 
           try {
-          console.log("📤 Calling updatePlan API with payload:", payload);
+          //console.log("📤 Calling updatePlan API with payload:", payload);
 
           const response = await fetch(
             `${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`,
@@ -574,8 +574,8 @@ const StorageModals = ({ onClose, storageModalKey }) => {
           // Parse JSON safely
           const data = await response.json();
 
-          console.log("✅ updatePlan API response status:", response.status);
-          console.log("✅ updatePlan API response body:", data);
+          //console.log("✅ updatePlan API response status:", response.status);
+          //console.log("✅ updatePlan API response body:", data);
 
           if (!response.ok) {
             throw new Error(
@@ -585,7 +585,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             );
           }
 
-          console.log("🎉 Storage plan updated successfully:", data);
+          //console.log("🎉 Storage plan updated successfully:", data);
 
         } catch (err) {
           console.error("❌ updatePlan API ERROR:");
@@ -658,7 +658,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                 provider: "ios_iap",
               };
 
-              console.log("[iOS IAP] Updating plan with payload:", payload);
+              //console.log("[iOS IAP] Updating plan with payload:", payload);
 
               await fetch(`${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`, {
                 method: "PUT",
@@ -829,7 +829,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
                   setClosePlans(false);
                   await AsyncStorage.removeItem('closePlans');
                   setWasTriggered(false);
-                  console.log("plane close")
+                  //console.log("plane close")
                   triggeredRef.current = false;
                   expiredPayment = false;
                 }}

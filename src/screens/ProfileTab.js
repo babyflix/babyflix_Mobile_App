@@ -31,7 +31,7 @@ import { closeDropdown } from '../state/slices/headerSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clearOpenStorage2, setForceOpenStorageModals } from '../state/slices/storageUISlice';
 import { useTranslation } from 'react-i18next';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../constants/useDynamicTranslate';
 import Colors from '../constants/Colors.js';
 import ManageSubscriptions from '../screens/ManageSubscriptions.js';
 import { TabView, TabBar } from 'react-native-tab-view';
@@ -100,7 +100,7 @@ const ProfileTab = ({ route }) => {
 
   const Tab = createMaterialTopTabNavigator();
 
-  console.log('expired', expired)
+  //console.log('expired', expired)
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -124,7 +124,7 @@ const ProfileTab = ({ route }) => {
       const translateCountries = async () => {
         const formatted = await Promise.all(
           countries.map(async (country) => {
-            const translatedName = await useDynamicTranslate(country.country_name);
+            const translatedName = await dynamicTranslate(country.country_name);
             return {
               label: `+${country.phonecode} ${translatedName}`,
               value: `${country.phonecode}`,
@@ -154,16 +154,16 @@ const ProfileTab = ({ route }) => {
         });
         if (response.data) {
           setResult(response.data);
-          const translatedName = await useDynamicTranslate(response.data.firstname + ' ' + response.data.lastname);
-          const translatedDueDate = await useDynamicTranslate(response.data.dueDate);
-          const translatedDob = await useDynamicTranslate(response.data.dob);
-          const translatedEmail = await useDynamicTranslate(response.data.email);
-          const translatedPhone = await useDynamicTranslate(response.data.countryCode + ' ' + response.data.phone);
-          const translatedBabyName = await useDynamicTranslate(response.data.babyName);
-          const translatedBabySex = await useDynamicTranslate(response.data.babySex);
-          const translatedCompanyName = await useDynamicTranslate(response.data.companyName);
-          const translatedLocationName = await useDynamicTranslate(response.data.locationName);
-          const translatedMachineName = await useDynamicTranslate(response.data.machineName);
+          const translatedName = await dynamicTranslate(response.data.firstname + ' ' + response.data.lastname);
+          const translatedDueDate = await dynamicTranslate(response.data.dueDate);
+          const translatedDob = await dynamicTranslate(response.data.dob);
+          const translatedEmail = await dynamicTranslate(response.data.email);
+          const translatedPhone = await dynamicTranslate(response.data.countryCode + ' ' + response.data.phone);
+          const translatedBabyName = await dynamicTranslate(response.data.babyName);
+          const translatedBabySex = await dynamicTranslate(response.data.babySex);
+          const translatedCompanyName = await dynamicTranslate(response.data.companyName);
+          const translatedLocationName = await dynamicTranslate(response.data.locationName);
+          const translatedMachineName = await dynamicTranslate(response.data.machineName);
           setTranslatedData({
             translatedName,
             translatedDueDate,
@@ -257,7 +257,7 @@ const ProfileTab = ({ route }) => {
       if (response.data.actionStatus === "success") {
         setResetPasswordModalVisible(false);
         setErrorMessage('');
-        setSnackbarMessage(useDynamicTranslate(response.data.message));
+        setSnackbarMessage(dynamicTranslate(response.data.message));
         setSnackbarType('success');
         setSnackbarVisible(true);
 
@@ -268,7 +268,7 @@ const ProfileTab = ({ route }) => {
       } else {
         setResetPasswordModalVisible(false);
         setErrorMessage('');
-        setSnackbarMessage(useDynamicTranslate(response.data.message));
+        setSnackbarMessage(dynamicTranslate(response.data.message));
         setSnackbarType('error');
         setSnackbarVisible(true);
       }

@@ -21,7 +21,7 @@ import { useNotifications } from '../constants/NotificationContext';
 import i18n from '../constants/i18n';
 import LanguageModal from '../constants/LanguageModal';
 import { useTranslation } from 'react-i18next';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../constants/useDynamicTranslate';
 import 'moment/locale/es';
 import { setPlans, setStorageTab, setSubscriptionExpired } from '../state/slices/subscriptionSlice';
 
@@ -117,7 +117,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
       storagePlanRemainingDays !== '' &&
       (storagePlanRemainingDays <= 3 || storagePlanRemainingDays === 12)
     ) {
-      console.log('Storage plan remaining days:', storagePlanRemainingDays);
+      //console.log('Storage plan remaining days:', storagePlanRemainingDays);
       const date = new Date().toLocaleString();
       let message = '';
       if (storagePlanRemainingDays > 1) {
@@ -354,17 +354,17 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     const translateDynamicTexts = async () => {
       if (user?.firstName && user?.lastName) {
         const fullName = `${user.firstName} ${user.lastName}`;
-        const translated = await useDynamicTranslate(fullName);
+        const translated = await dynamicTranslate(fullName);
         setTranslatedUserName(translated);
       }
 
       if (storagePlanName) {
-        const translatedPlan = await useDynamicTranslate(storagePlanName);
+        const translatedPlan = await dynamicTranslate(storagePlanName);
         setTranslatedCurrentPlan(translatedPlan);
       }
 
       if (storagePlanDescription) {
-        const translatedDescription = await useDynamicTranslate(storagePlanDescription);
+        const translatedDescription = await dynamicTranslate(storagePlanDescription);
         setTranslatedDescription(translatedDescription);
       }
     };

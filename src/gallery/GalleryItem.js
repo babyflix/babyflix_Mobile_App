@@ -59,13 +59,13 @@ const hasPredictiveImage = Array.isArray(mediaData)
       mediaData.predictiveBabyImages.length > 0
     );
 
-  console.log("subscriptionId, subscriptionIsActive", subscriptionId, subscriptionIsActive)
+  //console.log("subscriptionId, subscriptionIsActive", subscriptionId, subscriptionIsActive)
   // ✅ MUST BE HERE (top-level)
   const isSubscribed = !!subscriptionIsActive && !!subscriptionId;
   const isFreeUser = !isSubscribed;
   const freeCreditAvailable = isFreeUser && !freeCreditUsed && !hasPredictiveImage;
 
-  console.log("isSubscribed, isFreeUser, freeCreditAvailable", isSubscribed, isFreeUser, freeCreditAvailable)
+  //console.log("isSubscribed, isFreeUser, freeCreditAvailable", isSubscribed, isFreeUser, freeCreditAvailable)
 
   useEffect(() => {
     const loadCredit = async () => {
@@ -84,7 +84,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
       ? selectedItemsForAi.length
       : 0;
 
-      console.log("isAiSelected",isAiSelected,selectedItemsForAi)
+      //console.log("isAiSelected",isAiSelected,selectedItemsForAi)
     // ⭐ free user single-select rule
     const isOtherItemDisabled  =
       freeCreditAvailable && selectedCount >= 1 && !isAiSelected;
@@ -130,10 +130,10 @@ const hasPredictiveImage = Array.isArray(mediaData)
       return;
     }
 
-    console.log("isOtherItemDisabled",isOtherItemDisabled)
+    //console.log("isOtherItemDisabled",isOtherItemDisabled)
 
     if (isOtherItemDisabled) {
-      console.log("here")
+      //console.log("here")
       return;
     }
 

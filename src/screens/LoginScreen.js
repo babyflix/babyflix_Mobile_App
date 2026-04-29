@@ -571,6 +571,8 @@ const LoginScreen = () => {
   const [muted, setMuted] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
   const [languageChecked, setLanguageChecked] = useState(false);
+  const [identifiers, setIdentifiers] = useState([]);
+  const [isDirectLogin, setIsDirectLogin] = useState(false);
 
   const planData = useSelector((state) => state.plan.planData);
 
@@ -590,9 +592,27 @@ const LoginScreen = () => {
   // ===============================
 
   useEffect(() => {
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    AsyncStorage.setItem('timezone', userTimezone);
+    fetchDirectLoginConfig();
   }, []);
+
+  const fetchDirectLoginConfig = async () => {
+    try {
+      const res = await axios.get(
+        `${EXPO_PUBLIC_API_URL}/api/auth/direct-login-config`
+      );
+
+      if (res.data?.identifiers) {
+        setIdentifiers(res.data.identifiers);
+      }
+    } catch (error) {
+      console.log("Direct login config error", error);
+    }
+  };
+
+    useEffect(() => {
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      AsyncStorage.setItem('timezone', userTimezone);
+    }, []);
 
   // useEffect(() => {
   //   const checkLanguage = async () => {
@@ -641,7 +661,7 @@ const LoginScreen = () => {
   useEffect(() => {
   if (!languageChecked) return;
 
-   console.log("languageChecked, showLangModal, showVideo:",languageChecked, showLangModal, showVideo);
+   //console.log("languageChecked, showLangModal, showVideo:",languageChecked, showLangModal, showVideo);
     const checkFlixAdSeen = async () => {
       const adSeen = await AsyncStorage.getItem("flixAdSeen");
       // setShowVideo(adSeen !== "true");
@@ -650,7 +670,7 @@ const LoginScreen = () => {
         !showLangModal &&
         !showVideo
       ) {
-        console.log("video paying")
+        //console.log("video paying")
         //setShowVideo(true);
       }
     };
@@ -668,13 +688,29 @@ const LoginScreen = () => {
     };
   }, []);
 
+  const handleEmailChange = (text) => {
+    setEmail(text);
 
+    const match = text.match(/@([^\.]+)/);
+
+    if (match && match[1]) {
+      const domainName = match[1].toLowerCase();
+
+      if (identifiers.includes(domainName)) {
+        setIsDirectLogin(true);
+        setPassword('');
+        return;
+      }
+    }
+
+    setIsDirectLogin(false);
+  };
 
   // ===============================
   //         LOGIN FUNCTION
   // ===============================
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!email || (!password && !isDirectLogin)) {
       setSnackbarMessage(t('loginPage.messages.fillAllFields'));
       setSnackbarType('error');
       setSnackbarVisible(true);
@@ -689,18 +725,23 @@ const LoginScreen = () => {
       return;
     }
 
-    const pwRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]:;"'<>,.?/-]).{6,}$/;
+    if (!isDirectLogin) {
+    //const pwRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]:;"'<>,.?/-]).{6,}$/;
+    const pwRegex = /^.{6,}$/;
     if (!pwRegex.test(password)) {
-      setSnackbarMessage(t('loginPage.messages.invalidPassword'));
+      setSnackbarMessage(t('Minimum 6 characters required for password'));
       setSnackbarType('error');
       setSnackbarVisible(true);
       return;
     }
+  }
 
     setIsLoading(true);
 
     try {
       const timezone = await AsyncStorage.getItem('timezone');
+
+      //console.log("dev or prod",EXPO_PUBLIC_API_URL)
 
       const res = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/auth/applogin1`,
@@ -712,6 +753,8 @@ const LoginScreen = () => {
           },
         }
       );
+
+      //console.log('login data',res.data)
 
       if (res.data.token) {
         await AsyncStorage.setItem('token', res.data.token);
@@ -782,12 +825,13 @@ const LoginScreen = () => {
               iconName="email"
               placeholder={t('loginPage.email')}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
             />
 
             {/* PASSWORD */}
+            {!isDirectLogin && (
             <IconInput
               iconName="lock"
               placeholder={t('loginPage.password')}
@@ -797,6 +841,7 @@ const LoginScreen = () => {
               rightIcon={isPasswordVisible ? "visibility" : "visibility-off"}
               onRightIconPress={() => setIsPasswordVisible(prev => !prev)}
             />
+            )}
 
             {/* Forgot Password */}
             <TouchableOpacity onPress={() => router.push('forgot-password')}>
@@ -811,7 +856,9 @@ const LoginScreen = () => {
               onPress={handleLogin}
             >
               <Icon name="login" size={20} color={Colors.white} style={{ marginRight: 10 }} />
-              <Text style={GlobalStyles.buttonText}>{t('loginPage.loginButton')}</Text>
+              <Text style={GlobalStyles.buttonText}>
+                {isDirectLogin ? "Direct Login" : t('loginPage.loginButton')}
+              </Text>
             </TouchableOpacity>
 
             {/* SIGNUP */}

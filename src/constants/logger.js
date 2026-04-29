@@ -75,7 +75,7 @@ export const sendLog = async ({
     const json = await res.json(); // 👈 get response
     return json; // 👈 return response
   } catch (error) {
-    console.log("LOG ERROR:", error);
+    //console.log("LOG ERROR:", error);
     return null;
   }
 };

@@ -4,7 +4,7 @@ export default ({ config }) => ({
   ...config,
   name: "BabyFlix",
   slug: "babyflix",
-  version: "1.2.1",
+  version: "1.2.2",
   scheme: "babyflix",
   extra: {
     eas: {
@@ -91,6 +91,14 @@ export default ({ config }) => ({
   },
   plugins: [
     "expo-router",
+     [
+      "expo-media-library",
+      {
+        photosPermission: "Allow BabyFlix to access your media.",
+        savePhotosPermission: "Allow BabyFlix to save images and videos.",
+        granularPermissions: ["photo", "video"]
+      }
+    ],
     [
       "expo-image-picker",
       {

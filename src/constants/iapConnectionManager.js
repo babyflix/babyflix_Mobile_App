@@ -14,9 +14,9 @@ export const initAppleIAP = async () => {
     await RNIap.initConnection();
     isInitialized = true;
 
-    console.log('✅ Apple IAP Connected');
+    //console.log('✅ Apple IAP Connected');
   } catch (error) {
-    console.log('❌ IAP init failed:', error);
+    //console.log('❌ IAP init failed:', error);
   }
 };
 
@@ -34,19 +34,19 @@ export const setupApplePurchaseListener = ({ onSuccess, onFailure }) => {
           onSuccess?.(purchase);
         }
       } catch (e) {
-        console.log('Purchase update error:', e);
+        //console.log('Purchase update error:', e);
         onFailure?.(e);
       }
     });
 
     purchaseErrorSubscription = RNIap.purchaseErrorListener((error) => {
-      console.log('Purchase error:', error);
+      //console.log('Purchase error:', error);
       onFailure?.(error);
     });
 
-    console.log('✅ IAP listeners attached');
+    //console.log('✅ IAP listeners attached');
   } catch (error) {
-    console.log('Listener setup failed:', error);
+    // console.log('Listener setup failed:', error);
   }
 };
 
@@ -60,5 +60,5 @@ export const removeApplePurchaseListener = () => {
   purchaseUpdateSubscription = null;
   purchaseErrorSubscription = null;
 
-  console.log('🧹 IAP listeners removed');
+  //console.log('🧹 IAP listeners removed');
 };

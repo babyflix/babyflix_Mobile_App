@@ -28,7 +28,7 @@ import Snackbar from '../components/Snackbar';
 import * as Animatable from 'react-native-animatable';
 import { logError } from '../components/logError';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -191,7 +191,7 @@ const EventsScreen = () => {
   useEffect(() => {
     if (previewItem?.userName) {
       (async () => {
-        const translated = await useDynamicTranslate(previewItem.userName);
+        const translated = await dynamicTranslate(previewItem.userName);
         setTranslatedPreviewUserName(translated || previewItem.userName);
       })();
     }
@@ -219,7 +219,7 @@ const EventsScreen = () => {
       });
 
       const newEvent = response.data.data;
-      console.log("newEvent",response)
+      //console.log("newEvent",response)
       const newEvents = await Promise.all(
         newEvent.map(async (item) => {
           const [month, day, year] = item.eventDateConverted.split("/").map(Number);
@@ -228,8 +228,8 @@ const EventsScreen = () => {
 
           return {
             ...item,
-            translatedMonth: await useDynamicTranslate(monthName),
-            translatedName: await useDynamicTranslate(item.eventName),
+            translatedMonth: await dynamicTranslate(monthName),
+            translatedName: await dynamicTranslate(item.eventName),
           };
         })
       );

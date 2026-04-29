@@ -150,7 +150,7 @@ const CustomSwipeTabs = ({ tabs, initialIndex = 0 }) => {
    useFocusEffect(
           useCallback(() => {
             return () => {
-              console.log("in Focus Effect")
+              //console.log("in Focus Effect")
               dispatch(setSubscriptionExpired(false));
               //dispatch(setStorageTab(false));
             }

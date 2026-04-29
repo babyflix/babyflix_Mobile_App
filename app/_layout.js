@@ -98,7 +98,7 @@ useEffect(() => {
   const requestPermissions = async () => {
     if (isAuthenticated) {
       const granted = await requestMediaLibraryPermission();
-       console.log("enter in layout.js 2" )
+       //console.log("enter in layout.js 2" )
        sendDeviceUserInfo({
           action_type: USERACTIONS.LOGINDESC,
           action_description: USERACTIONS.LOGINDESC,
@@ -161,7 +161,7 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  console.log("enter in layout.js")
+  //console.log("enter in layout.js")
   const subscription = Notifications.addNotificationResponseReceivedListener(response => {
     const { data } = response.notification.request.content;
 
@@ -205,7 +205,7 @@ useEffect(() => {
   const sub = Linking.addEventListener("url", ({ url }) => {
     if (url.includes("payment-redirect")) {
       if (!deepLinkHandled) { 
-        console.log("Deep link URL:", url);
+        //console.log("Deep link URL:", url);
         dispatch(setDeepLinkHandled(true));
         AsyncStorage.setItem('visited_after_redirect_notification', 'true');
         router.replace(url.replace("babyflix://", "/"));

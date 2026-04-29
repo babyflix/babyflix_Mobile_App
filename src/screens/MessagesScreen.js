@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useKeyboardTabBarEffect from '../hooks/useKeyboardTabBarEffect';
 import { logError } from '../components/logError';
 import { useTranslation } from 'react-i18next';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../constants/useDynamicTranslate';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 dayjs.extend(calendar);
@@ -99,7 +99,7 @@ const MessagesScreen = () => {
   const unreadMessages = useSelector((state) => state.header.unreadMessages);
   const user = useSelector((state) => state.auth);
   const insets = useSafeAreaInsets();
-  const translate = useDynamicTranslate;
+  const translate = dynamicTranslate;
   const lang = (AsyncStorage.getItem('appLanguage')) || 'en';
 
   useFocusEffect(

@@ -38,7 +38,7 @@ const MediaPreviewModal = ({
 
   const { t } = useTranslation();
 
-  console.log("in mediapreview")
+  //console.log("in mediapreview")
 
   useEffect(() => {
     if (visible) {

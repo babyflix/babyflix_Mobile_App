@@ -21,7 +21,7 @@ export const checkIOSStorageRenewal = async ({
     );
 
     if (!storagePurchase?.transactionReceipt) {
-      console.log('No Storage purchase found in Apple');
+      //console.log('No Storage purchase found in Apple');
       return;
     }
 
@@ -37,7 +37,7 @@ export const checkIOSStorageRenewal = async ({
     const verifyData = verifyRes.data;
 
     if (verifyData?.status !== 'active') {
-      console.log('Still expired from Apple');
+      //console.log('Still expired from Apple');
       return;
     }
 
@@ -54,8 +54,8 @@ export const checkIOSStorageRenewal = async ({
 
     await getStoragePlanDetails(userEmail, dispatch);
 
-    console.log('Storage renewed → DB updated');
+    //console.log('Storage renewed → DB updated');
   } catch (err) {
-    console.log('Storage renewal check failed', err);
+    //console.log('Storage renewal check failed', err);
   }
 };

@@ -12,7 +12,7 @@ import * as Notifications from 'expo-notifications';
 import DownloadQueue from '../DownloadQueue';
 import { useDownloadQueueHandler } from '../useDownloadQueueHandler';
 import { useSelector } from 'react-redux';
-import { useDynamicTranslate } from '../../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import sendDeviceUserInfo, { USERACTIONS } from '../deviceInfo';
@@ -64,10 +64,10 @@ const DownloadItemModal = ({
   useEffect(() => {
     const handleSelectedItems = async () => {
       const convertedTitle = await Promise.all(
-        titles.map(title => useDynamicTranslate(title))
+        titles.map(title => dynamicTranslate(title))
       );
       const convertedType = await Promise.all(
-        types.map(type => useDynamicTranslate(type))
+        types.map(type => dynamicTranslate(type))
       );
 
       setMediaData({ convertedTitle, convertedType });
@@ -154,7 +154,7 @@ const DownloadItemModal = ({
 
           await AsyncStorage.removeItem('pausedDownload');
 
-          setSnackbarMessage(t('downloadModal.snackbar.downloadResume', { title: await useDynamicTranslate(`${item.title}`) }));
+          setSnackbarMessage(t('downloadModal.snackbar.downloadResume', { title: await dynamicTranslate(`${item.title}`) }));
           setSnackbarType('success');
           setSnackbarVisible(true);
           setDownloadingProgress(false);
@@ -195,9 +195,9 @@ const DownloadItemModal = ({
           imageUrl,
         })
       );
-      const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
+      const { status: existingStatus } = await MediaLibrary.getPermissionsAsync(false, ["photo", "video"]);
       if (existingStatus !== 'granted') {
-        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
+        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync(false, ["photo", "video"]);
         if (newStatus !== 'granted') {
           Alert.alert(t('downloadModal.permissionRequired'), t('downloadModal.allowAccess'));
           setDownloadingProgress(false);
@@ -228,7 +228,7 @@ const DownloadItemModal = ({
 
       await showCompletionNotification(title, downloadedFile.uri, 'video/*');
 
-      setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await useDynamicTranslate(`${filename}`) }));
+      setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await dynamicTranslate(`${filename}`) }));
       setSnackbarType('success');
       setSnackbarVisible(true);
       sendDeviceUserInfo({
@@ -292,7 +292,7 @@ const DownloadItemModal = ({
       onDownload,
     });
 
-    setSnackbarMessage(t('downloadModal.snackbar.addedQueue', { title: await useDynamicTranslate(`${item.title}`) }));
+    setSnackbarMessage(t('downloadModal.snackbar.addedQueue', { title: await dynamicTranslate(`${item.title}`) }));
     setSnackbarType('info');
     setSnackbarVisible(true);
     setActiveDownloads(prev => prev + 1);
@@ -368,9 +368,9 @@ const DownloadItemModal = ({
 
       await AsyncStorage.removeItem('pendingConversion');
 
-      const { status: existingStatus } = await MediaLibrary.getPermissionsAsync();
+      const { status: existingStatus } = await MediaLibrary.getPermissionsAsync(false, ["photo", "video"]);
       if (existingStatus !== 'granted') {
-        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
+        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync(false, ["photo", "video"]);
         if (newStatus !== 'granted') throw new Error(t('downloadModal.permissionDenied'));
       }
 
@@ -398,7 +398,7 @@ const DownloadItemModal = ({
 
       await showCompletionNotification(item.title, result.uri, 'video/*');
 
-      setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await useDynamicTranslate(`${item.title}`) }));
+      setSnackbarMessage(t('downloadModal.snackbar.downloadSuccess', { title: await dynamicTranslate(`${item.title}`) }));
       setSnackbarType('success');
       setSnackbarVisible(true);
       sendDeviceUserInfo({

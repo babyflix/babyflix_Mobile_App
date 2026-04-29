@@ -4,7 +4,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { modalStyles as styles } from '../../styles/GlobalStyles';
 import { EXPO_PUBLIC_CLOUD_API_URL } from '@env';
-import { useDynamicTranslate } from '../../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../../constants/useDynamicTranslate';
 import { useTranslation } from 'react-i18next';
 import Colors from '../../constants/Colors';
 import sendDeviceUserInfo, { USERACTIONS } from '../deviceInfo';
@@ -20,10 +20,10 @@ const DeleteItemModal = ({ visible, selectedItems, onCancel, onDeleted, fetchMed
   useEffect(() => {
     const handleSelectedItems = async () => {
       const convertedTitle = await Promise.all(
-        titles.map(title => useDynamicTranslate(title))
+        titles.map(title => dynamicTranslate(title))
       );
       const convertedType = await Promise.all(
-        types.map(type => useDynamicTranslate(type))
+        types.map(type => dynamicTranslate(type))
       );
 
       setMediaData({ convertedTitle, convertedType });
@@ -57,13 +57,13 @@ const DeleteItemModal = ({ visible, selectedItems, onCancel, onDeleted, fetchMed
           action_type: USERACTIONS.FLIX10KDELETE,
           action_description: `User deleted predictiveBabyImage is ${item}`,
         });
-         console.log('Deleted item of predictiveBabyImage:', item);
+         //console.log('Deleted item of predictiveBabyImage:', item);
       }else{
         sendDeviceUserInfo({
           action_type: USERACTIONS.DELETE,
           action_description: `User deleted image is ${item}`,
         });
-         console.log('Deleted item of image:', item);
+         //console.log('Deleted item of image:', item);
       }
       }
       onDeleted();

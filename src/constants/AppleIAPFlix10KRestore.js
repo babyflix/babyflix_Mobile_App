@@ -15,7 +15,7 @@ export const restoreIOSFlix10KPurchase = async ({
     await RNIap.initConnection();
 
     const purchases = await RNIap.getAvailablePurchases();
-    console.log('[iOS Flix10K Restore] Purchases:', purchases);
+    //console.log('[iOS Flix10K Restore] Purchases:', purchases);
 
     // ✅ Get all flix purchases
     const flixPurchases = purchases.filter(

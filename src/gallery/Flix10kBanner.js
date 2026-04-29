@@ -173,10 +173,10 @@ const hasPredictiveImage = Array.isArray(mediaData)
     const checkFlixAdSeen = async () => {
       if (subscriptionActive && isSubscriptionId) {
         await AsyncStorage.setItem("flixAdSeen", "true");
-        console.log('flixAdSeen set to true');
+        //console.log('flixAdSeen set to true');
       } else {
         await AsyncStorage.setItem("flixAdSeen", "false");
-        console.log('flixAdSeen set to false');
+        //console.log('flixAdSeen set to false');
       }
     };
 
@@ -231,22 +231,22 @@ const hasPredictiveImage = Array.isArray(mediaData)
         status: apiStatus,
         //showFlix10KAd: showFlix10KAd,
       };
-      console.log("Calling subscription API with:", payload);
+      //console.log("Calling subscription API with:", payload);
 
       if (status === 'done') {
         //await AsyncStorage.setItem('flix10kPaymentForAdd', 'done');
         setShowafterAdd(true);
         //dispatch(setPaymentStatusAdd(true))
-        console.log("flix10k payment success");
+        //console.log("flix10k payment success");
 
-        console.log("Calling subscription API with:", payload);
+        //console.log("Calling subscription API with:", payload);
 
         try {
           const response = await axios.post(
             `${EXPO_PUBLIC_API_URL}/api/subscription/subscription`,
             payload
           );
-          console.log("Subscription API response:", response.data);
+          //console.log("Subscription API response:", response.data);
 
           if (subscriptionIsActive) {
             try {
@@ -254,7 +254,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
                 action_type: USERACTIONS.UPDATESUBSCRIPTION,
                 action_description: `Existing user upgrade subscribe for Flix10K`,
               });
-              console.log("Existing user upgrade subscribe for Flix10K");
+              //console.log("Existing user upgrade subscribe for Flix10K");
             } catch (err) {
               console.error("Failed to send user action for existing subscription:", err);
             }
@@ -264,13 +264,13 @@ const hasPredictiveImage = Array.isArray(mediaData)
                 action_type: USERACTIONS.NEWSUBCRIPTION,
                 action_description: `New user subscribe for Flix10K`,
               });
-              console.log("New user subscribe for Flix10K");
+              //console.log("New user subscribe for Flix10K");
             } catch (err) {
               console.error("Failed to send user action for new subscription:", err);
             }
           }
         } catch (error) {
-          console.log("Error calling subscription API:", error);
+          //console.log("Error calling subscription API:", error);
         }
 
         await AsyncStorage.removeItem('flix10k_payment_status');
@@ -283,7 +283,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
       else if (status === 'fail') {
         //await AsyncStorage.setItem('flix10kPaymentForAdd', 'fail');
         setShowafterAdd(true);
-        console.log("flix10k payment failed");
+        //console.log("flix10k payment failed");
         //dispatch(setPaymentStatusAdd(true))
         setTimeout(() => {
           setShowPaymentFailure(true);
@@ -406,11 +406,11 @@ const hasPredictiveImage = Array.isArray(mediaData)
       setSelecting(true);
       setFlix10kSelectionMode(true);
       await AsyncStorage.setItem("flixAdSeen", "true");
-      console.log('flixAdSeen set to true');
+      //console.log('flixAdSeen set to true');
     } else {
       setShowModal(true);
       await AsyncStorage.setItem("flixAdSeen", "false");
-      console.log('flixAdSeen set to false');
+      //console.log('flixAdSeen set to false');
     }
   };
 
@@ -534,21 +534,21 @@ const hasPredictiveImage = Array.isArray(mediaData)
 
     try {
       for (const item of selectedItemsForAi) {
-        console.log('generating for', item)
+        //console.log('generating for', item)
         if (item.object_type !== "image") {
-          console.log("Skipping non-image item:", item.id);
+          //console.log("Skipping non-image item:", item.id);
           continue;
         }
 
         const alreadyExists = flix10kResults.some(result => result.id === item.id);
         if (alreadyExists) {
-          console.log("Skipping item, already exists:", item.id);
+          //console.log("Skipping item, already exists:", item.id);
           continue;
         }
 
         try {
           const response = await generateImage(item.object_url, item.object_type, user, item.id);
-          console.log("API Response for item:", item.id, response);
+          //console.log("API Response for item:", item.id, response);
 
           // const newItem = { ...item, flix10kAiImages: response };
 
@@ -598,11 +598,11 @@ const hasPredictiveImage = Array.isArray(mediaData)
         setSnackbarType("error")
       }
 
-      console.log("🎉 All items processed:", updatedItems);
+      //console.log("🎉 All items processed:", updatedItems);
       cancelFlix10KPress();
 
     } catch (err) {
-      console.error("Error in handleGenerate:", err);
+      //console.error("Error in handleGenerate:", err);
       throw err;
     } finally {
       setFlix10kGenerating(false);
@@ -630,13 +630,13 @@ const hasPredictiveImage = Array.isArray(mediaData)
 
   const handleSubscribe = async () => {
     await AsyncStorage.setItem('flix10KPaying', 'true');
-    console.log("handleSubscribe called");
+    //console.log("handleSubscribe called");
 
     const currentPurchaseToken = null;
 
     //setShowModal(false); 
     if (Platform.OS === 'android') {
-        console.log("calling handlePlaySubscription");
+        //console.log("calling handlePlaySubscription");
         const result = await handlePlaySubscription({
           months,        // 1, 3, 6, 9, 12 months
           autoRenew,     // true or false (based on toggle)
@@ -686,7 +686,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
               action_type: USERACTIONS.UPDATESUBSCRIPTION,
               action_description: `Existing user upgrade subscribe for Flix10K`,
             });
-            console.log("Existing user upgrade subscribe for Flix10K");
+            //console.log("Existing user upgrade subscribe for Flix10K");
           } catch (err) {
             console.error("Failed to send user action for existing subscription:", err);
           }
@@ -696,7 +696,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
               action_type: USERACTIONS.NEWSUBCRIPTION,
               action_description: `New user subscribe for Flix10K`,
             });
-            console.log("New user subscribe for Flix10K");
+            //console.log("New user subscribe for Flix10K");
           } catch (err) {
             console.error("Failed to send user action for new subscription:", err);
           }
@@ -710,7 +710,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
         // ❌ Android payment failure
         console.error("Android payment failed:", result.error);
         setShowafterAdd(true);
-        console.log("flix10k payment failed");
+        //console.log("flix10k payment failed");
 
         setTimeout(() => {
           setShowPaymentFailure(true);
@@ -729,7 +729,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
         await AsyncStorage.removeItem("flix10k_payment_status");
       }
     } else {
-      console.log("calling for ios")
+      //console.log("calling for ios")
       await handleAppleFlix10KPayment({
       months,
       user,
@@ -815,7 +815,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
   }
 };
 
-  console.log("showAfterAdd", showAfterAdd)
+  //console.log("showAfterAdd", showAfterAdd)
   return (
     <View style={styles.container}>
 

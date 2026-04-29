@@ -7,7 +7,7 @@ const looksLikeSpanish = (text) => {
   return spanishChars.test(text);
 };
 
-export const useDynamicTranslate = async (text) => {
+export const dynamicTranslate = async (text) => {
   if (!text) return text;
 
   try {

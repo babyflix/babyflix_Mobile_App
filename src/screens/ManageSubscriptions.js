@@ -204,7 +204,7 @@ const ManageSubscriptions = () => {
 
   const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  console.log(`Remaining days: ${remainingDays > 0 ? remainingDays : 0}`);
+  //console.log(`Remaining days: ${remainingDays > 0 ? remainingDays : 0}`);
 
   const verifyAutoRenewStatus = async (uuid) => {
     try {
@@ -213,7 +213,7 @@ const ManageSubscriptions = () => {
 
       const sub = purchases.find(p => p.productId === "flix10k_subscription");
       if (!sub) {
-        console.log("No subscription found for user.");
+        //console.log("No subscription found for user.");
         return;
       }
 
@@ -229,7 +229,7 @@ const ManageSubscriptions = () => {
         : null;
 
 
-      console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
+      //console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
 
       // Sync with backend only if changed
       await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal-app`, {
@@ -239,7 +239,7 @@ const ManageSubscriptions = () => {
         currentPurchaseToken: sub.purchaseToken, // Android token
       });
 
-      console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
+      //console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
 
       await RNIap.endConnection();
     } catch (err) {
@@ -256,15 +256,15 @@ const ManageSubscriptions = () => {
     setUpgradeModal(false);
 
     if (Platform.OS === 'android') {
-      console.log('in play billing');
+      //console.log('in play billing');
 
       if (isAutoRenewToggleOnly) {
-        console.log("User only toggled auto-renew — opening Play Store...");
+        //console.log("User only toggled auto-renew — opening Play Store...");
         await Linking.openURL(PLAY_STORE_SUBS_URL);
 
         const subscriptionListener = AppState.addEventListener("change", async (state) => {
           if (state === "active") {
-            console.log("Returned from Play Store — verifying auto-renewal...");
+            //console.log("Returned from Play Store — verifying auto-renewal...");
             await verifyAutoRenewStatus(user.uuid);
             subscriptionListener.remove();
           }
@@ -289,7 +289,7 @@ const ManageSubscriptions = () => {
         result = { success: false, error: err.message };
       }
       // ✅ If successful — show success modal and send subscription API call
-      console.log("subscription result", result.success);
+      //console.log("subscription result", result.success);
 
       if (result.success) {
 
@@ -333,7 +333,7 @@ const ManageSubscriptions = () => {
               action_type: USERACTIONS.UPDATESUBSCRIPTION,
               action_description: `Existing user upgrade subscribe for Flix10K`,
             });
-            console.log("Existing user upgrade subscribe for Flix10K");
+            //console.log("Existing user upgrade subscribe for Flix10K");
           } catch (err) {
             console.error("Failed to send user action for existing subscription:", err);
           }
@@ -343,13 +343,13 @@ const ManageSubscriptions = () => {
               action_type: USERACTIONS.NEWSUBCRIPTION,
               action_description: `New user subscribe for Flix10K`,
             });
-            console.log("New user subscribe for Flix10K");
+            //console.log("New user subscribe for Flix10K");
           } catch (err) {
             console.error("Failed to send user action for new subscription:", err);
           }
         }
 
-        console.log("After userActionsend")
+        //console.log("After userActionsend")
 
         // Delay success modal for smoother UX
         setTimeout(() => {
@@ -360,7 +360,7 @@ const ManageSubscriptions = () => {
         // ❌ Android payment failure
         console.error("Android payment failed:", result.error);
         // setShowafterAdd(true);
-        console.log("flix10k payment failed");
+        //console.log("flix10k payment failed");
 
         setShowPaymentFailure(true);
 
@@ -508,7 +508,7 @@ const ManageSubscriptions = () => {
       ? months - subscription.subscribedMonths
       : 0);
 
-  console.log('additionalMonths', additionalMonths)
+  //console.log('additionalMonths', additionalMonths)
 
   //const amountToPay = (months * planData.amount).toFixed(2);
 
@@ -538,7 +538,7 @@ const ManageSubscriptions = () => {
     newExpiryDate = new Date();
     if (additionalMonths > 0) {
       newExpiryDate.setMonth(newExpiryDate.getMonth() + months);
-      console.log('newExpiryDate.', months)
+      //console.log('newExpiryDate.', months)
     }
   }
 

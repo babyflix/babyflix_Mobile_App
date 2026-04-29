@@ -67,7 +67,7 @@ export default async function sendDeviceUserInfo({
     action_description,
   };
 
-  console.log("Payload to Send:", userActionPayload);
+  //console.log("Payload to Send:", userActionPayload);
   try {
 
     const response = await axios.post(

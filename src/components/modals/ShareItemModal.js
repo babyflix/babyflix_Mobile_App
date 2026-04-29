@@ -23,7 +23,7 @@ import { EXPO_PUBLIC_API_URL } from '@env';
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-import { useDynamicTranslate } from '../../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../../constants/useDynamicTranslate';
 import sendDeviceUserInfo, { USERACTIONS } from '../deviceInfo';
 const screenWidth = Dimensions.get('window').width;
 
@@ -96,10 +96,10 @@ const ShareItemModal = ({
   useEffect(() => {
     const handleSelectedItems = async () => {
       const convertedTitle = await Promise.all(
-        titles.map(title => useDynamicTranslate(title))
+        titles.map(title => dynamicTranslate(title))
       );
       const convertedType = await Promise.all(
-        types.map(type => useDynamicTranslate(type))
+        types.map(type => dynamicTranslate(type))
       );
 
       setMediaData({ convertedTitle, convertedType });
@@ -190,14 +190,14 @@ const ShareItemModal = ({
         mediaItem: selectedItems[0],
       };
 
-      console.log('invitePayload', invitePayload)
+      //console.log('invitePayload', invitePayload)
 
       const { status, data } = await axios.post(
         `${EXPO_PUBLIC_API_URL}/api/gallery/sendSms`,
         invitePayload
       );
 
-      console.log('SMS response:', data);
+      //console.log('SMS response:', data);
 
       setSnackbarMessage(t("shareModel.success.smsSent"));
       setSnackbarType(status === 200 ? "success" : "error");

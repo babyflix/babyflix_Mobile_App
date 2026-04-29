@@ -22,7 +22,7 @@ export async function registerForPushNotificationsAsync(userId) {
     }
 
     token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log('Expo Push Token:', token);
+    //console.log('Expo Push Token:', token);
 
     if (userId && token) {
       try {

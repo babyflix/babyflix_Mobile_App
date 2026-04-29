@@ -41,7 +41,7 @@ import ShareItemModal from '../components/modals/ShareItemModal.js';
 import FloatingDownloadBar from '../components/FloatingDownloadBar.js';
 import i18n from '../constants/i18n.js';
 import LanguageModal from '../constants/LanguageModal.js';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate.js';
+import { dynamicTranslate } from '../constants/useDynamicTranslate.js';
 
 import MediaTabs from './MediaTabs';
 import MediaPreviewModal from './MediaPreviewModal';
@@ -63,6 +63,7 @@ import PhoneNumberModal from '../constants/PhoneNumberModal.js';
 import { checkIOSFlix10KRenewal } from '../constants/checkIOSFlix10KRenewal.js';
 import { checkIOSStorageRenewal } from '../constants/checkIOSStorageRenewal.js';
 import { sendLog } from '../constants/logger.js';
+import CompleteProfileModal from '../constants/CompleteProfileModal.js';
 
 SplashScreen.preventAutoHideAsync();
 let upgradeModalShown = false;
@@ -82,6 +83,7 @@ const GalleryScreen = () => {
   UPGRADE: 'UPGRADE',
   RATE: 'RATE',
   STORAGE: 'STORAGE',
+  PROFILE: 'PROFILE',
 };
 
   const [isLoading, setIsLoading] = useState(true);
@@ -141,11 +143,14 @@ const GalleryScreen = () => {
     plan: null,
     rate: null,
     storage: null,
+    profile: null,
   });
   const [storageFlowActive, setStorageFlowActive] = useState(true);
   const [modalLock, setModalLock] = useState(true);
   const [hasGalleryContent, setHasGalleryContent] = useState(false);
   const [forceOpenFlixBanner, setForceOpenFlixBanner] = useState(false);
+  const [directIdentifiers, setDirectIdentifiers] = useState([]);
+  const [showProfileRequired, setShowProfileRequired] = useState(false);
 
   const user = useSelector(state => state.auth);
   const stream = useSelector(state => state.stream);
@@ -167,7 +172,7 @@ const GalleryScreen = () => {
       (state) => state.auth
     );
 
-  console.log("storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays",{storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays})
+  //console.log("storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays",{storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays})
 
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
@@ -187,8 +192,51 @@ const GalleryScreen = () => {
 
   useEffect(() => {
     setModalLock(false);
+    //console.log('user info',user)
   }, []);
 
+  const getEmailDomainName = (email) => {
+    const match = email?.match(/@([^\.]+)/);
+    return match ? match[1].toLowerCase() : "";
+  };
+
+  useEffect(() => {
+  getDirectLoginConfig();
+}, []);
+
+const getDirectLoginConfig = async () => {
+  try {
+    const res = await axios.get(
+      `${EXPO_PUBLIC_API_URL}/api/auth/direct-login-config`
+    );
+
+    if (res.data?.identifiers) {
+      setDirectIdentifiers(res.data.identifiers);
+    }
+  } catch (error) {
+    //console.log(error);
+  }
+};
+
+useEffect(() => {
+  if (!user?.email || directIdentifiers.length === 0) return;
+
+  const domain = getEmailDomainName(user.email);
+
+  if (directIdentifiers.includes(domain)) {
+    setShowProfileRequired(true);
+
+    // stop storage opening first
+    setStorageFlowActive(false);
+    setStorageModelStart(false);
+    setShouldShowStorageModal(false);
+
+    setModalChecks((p) => ({
+      ...p,
+      profile: "NEEDED",
+    }));
+  }
+}, [user, directIdentifiers]);
 //   useEffect(() => {
 //   const setupIAP = async () => {
 //     await initAppleIAP();
@@ -265,7 +313,7 @@ useEffect(() => {
   // ❌ still valid
   if (expiry > today) return;
 
-  console.log('Flix expired & date passed → checking Apple');
+  //console.log('Flix expired & date passed → checking Apple');
 
   checkIOSFlix10KRenewal({
     userId: user.uuid,
@@ -295,7 +343,7 @@ useEffect(() => {
   // ❌ still valid
   if (expiry > today) return;
 
-  console.log('Storage expired & date passed → checking Apple');
+  //console.log('Storage expired & date passed → checking Apple');
 
   checkIOSStorageRenewal({
     userId: user.uuid,
@@ -380,7 +428,7 @@ useEffect(() => {
 
    useEffect(() => {
   // Show rate modal only after update modal or when user opens app multiple times
-  console.log("modalLock",modalLock)
+  //console.log("modalLock",modalLock)
   if (modalLock) return;
   if (!hasGalleryContent) return;
   const timer = setTimeout(async () => {
@@ -398,7 +446,7 @@ useEffect(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
-          console.log('Back button pressed');
+          //console.log('Back button pressed');
           return true;
         }
       );
@@ -445,14 +493,14 @@ useEffect(() => {
 
   useEffect(() => {
     const checkLanguage = async () => {
-      console.log('innnnnnnnnnnnnnnnnnnnnnnn')
+      //console.log('innnnnnnnnnnnnnnnnnnnnnnn')
       const result = await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
       uuid: user.uuid,
       autoRenewal: false,
       expiryDate: "2027-03-08T11:12:41.000Z",
     });
 
-    console.log("Auto-renewal synced with backend:", result);
+    //console.log("Auto-renewal synced with backend:", result);
     };
     checkLanguage();
   }, []);
@@ -477,7 +525,7 @@ useEffect(() => {
             ? storedDateMoment.isSame(today, 'day')
             : false;
 
-            console.log('isSameDay',isSameDay)
+            //console.log('isSameDay',isSameDay)
 
           if (isSameDay) {
             setShouldShowStorageModal(false);
@@ -531,7 +579,7 @@ useEffect(() => {
   //         const today = moment();
   //         const daysSince = today.diff(planStartDate, 'days');
 
-  //         const translatedPlanName = await useDynamicTranslate(`${storagePlanName}`);
+  //         const translatedPlanName = await dynamicTranslate(`${storagePlanName}`);
 
   //         if (daysSince >= 31) {
   //           const remainingDays = 30 - daysSince;
@@ -723,24 +771,24 @@ useEffect(() => {
           setDisableMenuAndSelection(false);
         }
 
-        const translatedPlanName = await useDynamicTranslate(`${storagePlanName}`);
+        const translatedPlanName = await dynamicTranslate(`${storagePlanName}`);
 
         if (storagePlanPrice === '0.00' && storagePlanDate) {
           //const planStartDate = moment(storagePlanDate, 'MM-DD-YYYY HH:mm:ss', true);
           //const today = moment();
           //const daysSince = today.diff(planStartDate, 'days');
 
-          console.log("storagePlanExpired",storagePlanExpired)
+          //console.log("storagePlanExpired",storagePlanExpired)
 
           if (storagePlanExpired) {
             //const remainingDays = 30 - daysSince;
             //dispatch(setRemainingDays(remainingDays));
-            console.log("showing model of expiry")
+            //console.log("showing model of expiry")
             dispatch(setPlanExpired(true));
             setMediaData({ images: [], videos: [], babyProfile: [], predictiveBabyImages: [] });
             setShowUpgradeReminderModal(false);
             if(!expiredModalShown){
-              console.log("showing model of expiry")
+              //console.log("showing model of expiry")
             setTimeout(() => {
               setShowPlanExpiredModal(true);
             }, 200);
@@ -900,11 +948,11 @@ useEffect(() => {
       setStatus(storedStatus);
       setStatus1(storedPaying);
 
-      console.log("storedStatus, storedPaying",{storedStatus, storedPaying})
+      //console.log("storedStatus, storedPaying",{storedStatus, storedPaying})
       if (!storedStatus && storedPaying === 'true') {
         dispatch(clearOpenStorage2());
         await AsyncStorage.setItem('storage_modal_triggered', 'false');
-        console.log("innnnn1")
+        //console.log("innnnn1")
         setStorageModelStart(true);
         setStorageFlowActive(true);
         triggeredRef.current = false;
@@ -944,7 +992,7 @@ useEffect(() => {
         const shouldOpenFromRedux = openStorage2Directly && hasTriggered !== 'true' && !triggeredRef.current;
 
         if (shouldOpenFromParam || shouldOpenFromRedux) {
-          console.log("innnnn2")
+          //console.log("innnnn2")
           setStorageModelStart(true);
           setStorageFlowActive(true);
           setStorageModalKey(true);
@@ -977,7 +1025,7 @@ useEffect(() => {
 
         if ((status === 'done' || status === 'fail') && paying !== 'false') {
           if (!hasHandledPaymentStatusRef.current) { 
-          console.log("innnnn3")
+          //console.log("innnnn3")
           setStorageModelStart(true);
           setStorageFlowActive(true);
           setStorageModalKey(true);
@@ -1027,7 +1075,12 @@ useEffect(() => {
   if (storageFlowActive) return;
   if (activeModal) return;
 
-  console.log("modalChecks",modalChecks)
+  //console.log("modalChecks",modalChecks)
+
+  if (modalChecks.profile === "NEEDED") {
+    setActiveModal(MODALS.PROFILE);
+    return;
+  }
 
   if (modalChecks.language === 'NEEDED') {
     setActiveModal(MODALS.LANGUAGE);
@@ -1257,6 +1310,28 @@ useEffect(() => {
         insets={insets}
       />
 
+      <CompleteProfileModal
+        visible={activeModal === MODALS.PROFILE}
+        onClose={() => {
+          setActiveModal(null);
+        }}
+        onSkip={() => {
+          setModalChecks((prev) => ({
+            ...prev,
+            profile: "DONE",
+            phone: "DONE",
+            storage: "DONE",
+          }));
+
+          setStorageFlowActive(false);
+          setStorageModelStart(false);
+          setShouldShowStorageModal(false);
+
+
+          setActiveModal(null);
+        }}
+      />
+
        <PhoneNumberModal
         visible={activeModal === MODALS.PHONE}
         onClose={() => {
@@ -1268,8 +1343,6 @@ useEffect(() => {
         setRefreshData={setRefreshData}
       />
 
-      {console.log("flix10KAD && showAfterAdd 1",{flix10KAD, showAfterAdd })}
-      {/* {flix10KAD && showAfterAdd && */}
       {/* {flix10KAD && showAfterAdd && */}
       <UpgradeReminderModal
         //visible={showUpgradeReminderModal}
@@ -1283,8 +1356,6 @@ useEffect(() => {
       />
       {/* } */}
 
-      {console.log("flix10KAD && showAfterAdd 2",{flix10KAD, showAfterAdd, expiredModalShown })}
-      {/* {flix10KAD && showAfterAdd && */}
       {/* {flix10KAD && showAfterAdd && */}
       <PlanExpiredModal
         //visible={showPlanExpiredModal}
@@ -1370,8 +1441,6 @@ useEffect(() => {
           setActiveModal(null);
         }}
       />
-
-      {console.log("flix10KAD && showAfterAdd 3",{flix10KAD, showAfterAdd, hasGalleryContent,storageModelStart,shouldShowStorageModal})}
 
       {hasGalleryContent && (storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
         <StorageModals

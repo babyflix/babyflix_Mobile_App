@@ -67,7 +67,7 @@ const AiMediaGrid = memo(
         const currentItem = regenerationQueue[0];
 
         try {
-          console.log("Regenerating sequentially:", currentItem);
+          //console.log("Regenerating sequentially:", currentItem);
 
           await callImageAction({
             object_name: currentItem?.flix10kAiImages?.output_path?.object_name,
@@ -121,7 +121,7 @@ const AiMediaGrid = memo(
     const handleKeep = async (item) => {
       setKeptItems((prev) => [...prev, item.id]);
 
-      console.log("Keeping item:", item);
+      //console.log("Keeping item:", item);
 
       try {
         await callImageAction({

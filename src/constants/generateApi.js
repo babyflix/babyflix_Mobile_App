@@ -7,11 +7,11 @@ const BASE_URL = NEXT_PUBLIC_BUCKET_URL;
 export async function generateImage(imageUrl, objectType, user, imageId) {
   const MAX_RETRIES = 20;
   let lastError = null;
-  console.log('imageUrl, objectType, user, imageId',{imageUrl, objectType, imageId})
+  //console.log('imageUrl, objectType, user, imageId',{imageUrl, objectType, imageId})
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-       console.log("`${BASE_URL}/generate`",`${BASE_URL}/generate`) 
+       //console.log("`${BASE_URL}/generate`",`${BASE_URL}/generate`) 
       const response = await axios.get(`${BASE_URL}/generate`, {
         params: {
           user_id: user.uuid,
@@ -21,7 +21,7 @@ export async function generateImage(imageUrl, objectType, user, imageId) {
         },
       });
 
-      console.log("response of generate",response.data)
+      //console.log("response of generate",response.data)
       return response.data;
     } catch (error) {
       lastError = error;

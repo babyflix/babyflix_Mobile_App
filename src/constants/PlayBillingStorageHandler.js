@@ -17,7 +17,7 @@ export const handlePlayStorageSubscription = async ({
   try {
     await AsyncStorage.setItem('storagePaying', 'true');
     //log.info("Storage Starting Play Billing flow for months and planType:", months, planType);
-    console.log("Storage Starting Play Billing flow for months and planType:", months, planType);
+    //console.log("Storage Starting Play Billing flow for months and planType:", months, planType);
 
     let productId = '';
     let basePlanIdMap = {};
@@ -56,7 +56,7 @@ export const handlePlayStorageSubscription = async ({
     //const basePlanId = 'storage-basic-monthly';
      if (!basePlanId) throw new Error('Invalid subscription duration selected.');
     //log.info("Storage Base plan selected:", basePlanId);
-    console.log("Storage Base plan selected:", basePlanId, productId);
+    //console.log("Storage Base plan selected:", basePlanId, productId);
     //Alert.alert('Debug', 'Step 1: Storage Init connection');
 
     //log.info("Step 1: Storage flush pending purchases");
@@ -70,21 +70,21 @@ export const handlePlayStorageSubscription = async ({
         if (!connected) throw new Error('Billing connection failed.');
 
     //log.debug("Storage IAP connection initialized");
-    console.log("Storage IAP connection initialized", connected);
+    //console.log("Storage IAP connection initialized", connected);
     //Alert.alert('Debug', 'Step 2: Storage Getting subscriptions');
 
     //const subs = await RNIap.getSubscriptions([productId]);
 
     const subs = await RNIap.getSubscriptions({ skus: [productId] });
     if (!subs || subs.length === 0) {
-      console.log(`Storage Subscription ${productId} not found in Play Store.`);
+      //console.log(`Storage Subscription ${productId} not found in Play Store.`);
       throw new Error(`Storage Subscription ${productId} not found in Play Store.`);
     }
 
     //const allSubs = await RNIap.getSubscriptions();
 
     //log.debug("Storage Subscriptions fetched:", subs);
-    console.log("Storage Subscriptions fetched:", subs);
+    //console.log("Storage Subscriptions fetched:", subs);
 
 // const sub = allSubs.find((item) => item.productId === productId);
 
@@ -92,7 +92,7 @@ export const handlePlayStorageSubscription = async ({
 
     const sub = subs?.[0];
     if (!sub) throw new Error(`Storage Subscription ${productId} not found in Play Store.`);
-    console.log("First subscription:", sub);
+    //console.log("First subscription:", sub);
 
     const offer = sub.subscriptionOfferDetails.find(
       o => o.basePlanId === basePlanId
@@ -100,17 +100,17 @@ export const handlePlayStorageSubscription = async ({
     if (!offer) throw new Error('Offer not found for base plan: ' + basePlanId);
     //Alert.alert('Debug', 'Step 3: Storage Found subscriptions');
 
-    console.log('Selected Offer:', offer);
+    //console.log('Selected Offer:', offer);
     //log.info("Storage Offer selected:", offer);
 
     await new Promise(res => setTimeout(res, 500));
 
     const oldToken = currentPurchaseToken || null;
     //log.debug("Storage Old token:", oldToken);
-    console.log("Storage Old token:", oldToken);
+    //console.log("Storage Old token:", oldToken);
 
-    console.log('sub.productId:', sub.productId);
-    console.log('offerToken:', offer?.offerToken);
+    //console.log('sub.productId:', sub.productId);
+    //console.log('offerToken:', offer?.offerToken);
 
     // Request subscription purchase
     // const purchase = await RNIap.requestSubscription({
@@ -130,7 +130,7 @@ export const handlePlayStorageSubscription = async ({
         : {}),
     });
 
-    console.log('Purchase result:', purchase);
+    //console.log('Purchase result:', purchase);
     //log.info("Storage Purchase result:", purchase);
 
     const purchaseItem = Array.isArray(purchase) ? purchase[0] : purchase;
@@ -139,8 +139,8 @@ export const handlePlayStorageSubscription = async ({
     
     if (!token) throw new Error("No purchase token");
 
-    console.log("Sending token:", token);
-    console.log("Sending product:", purchaseItem.productId);
+    //console.log("Sending token:", token);
+    //console.log("Sending product:", purchaseItem.productId);
 
     //Alert.alert('Debug', 'Step 4: Storage Purchase verification');
 
@@ -157,7 +157,7 @@ export const handlePlayStorageSubscription = async ({
       { headers: { 'Content-Type': 'application/json' } }
     );
 
-    console.log('Backend verified:', response.data);
+    //console.log('Backend verified:', response.data);
     //log.info("Storage Backend verification response:", response.data);
 
     if (!response?.data?.success) {
@@ -167,11 +167,11 @@ export const handlePlayStorageSubscription = async ({
      // ✅ Step 5: Acknowledge purchase
     if (!purchaseItem?.isAcknowledgedAndroid) {
       try {
-        console.log("token",token)
+        //console.log("token",token)
         await RNIap.acknowledgePurchaseAndroid({
           token: token,
         });
-        console.log('✅ Purchase acknowledged successfully');
+        //console.log('✅ Purchase acknowledged successfully');
         //log.info('Purchase acknowledged successfully');
       } catch (ackErr) {
         console.warn('⚠️ Acknowledge failed:', ackErr);

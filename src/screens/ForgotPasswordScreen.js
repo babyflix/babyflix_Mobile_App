@@ -21,7 +21,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logError } from '../components/logError';
 import { useTranslation } from 'react-i18next';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../constants/useDynamicTranslate';
 import sendDeviceUserInfo, { USERACTIONS } from '../components/deviceInfo';
 
 const ForgotPasswordScreen = ({ navigation }) => {
@@ -35,7 +35,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const [svgColor, setSvgColor] = useState(Colors.primary);
   const { t } = useTranslation();
 
-  const translateMessage = useDynamicTranslate;
+  const translateMessage = dynamicTranslate;
 
   const handleSubmit = async () => {
     if (!email) {

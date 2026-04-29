@@ -22,7 +22,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { EXPO_PUBLIC_API_URL } from "@env";
 import Colors from "../constants/Colors";
 import Snackbar from "../components/Snackbar";
-import { useDynamicTranslate } from "../constants/useDynamicTranslate";
+import { dynamicTranslate } from "../constants/useDynamicTranslate";
 import GlobalStyles from "../styles/GlobalStyles";
 import { useTranslation } from "react-i18next";
 import i18n from "./i18n";
@@ -151,7 +151,7 @@ useEffect(() => {
     const format = async () => {
       const list = await Promise.all(
         countries.map(async (c) => ({
-          label: `+${c.phonecode} ${await useDynamicTranslate(c.country_name)}`,
+          label: `+${c.phonecode} ${await dynamicTranslate(c.country_name)}`,
           value: `${c.phonecode}_${c.country_name}`,
         }))
       );
@@ -243,7 +243,7 @@ useEffect(() => {
 
       const result = res.data;
 
-      console.log("getPatientByEmail Result",result);
+      //console.log("getPatientByEmail Result",result);
 
       const response = await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update`,
         {
@@ -270,7 +270,7 @@ useEffect(() => {
         }
       );
 
-      console.log("Update Api result",response.data)
+      //console.log("Update Api result",response.data)
 
       if (response.status === 200) {
       // SUCCESS MESSAGES BASED ON MODE
@@ -326,7 +326,7 @@ useEffect(() => {
     } else {
       setSnackbarMessage(t("phoneDobModal.errors.updateDatesFailed"));
       setErrorMessageDates(t("phoneDobModal.errors.updateDatesFailed"));
-      console.log("Error in dates", error);
+      //console.log("Error in dates", error);
     }
 
     setSnackbarType("error");

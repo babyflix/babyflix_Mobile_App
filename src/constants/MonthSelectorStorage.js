@@ -15,7 +15,7 @@ import moment from "moment";
 
 const MonthSelectorStorage = ({ months, setMonths, autoRenew, mode = "dropdown" }) => {
 
-  console.log('months, setMonths, autoRenew, mode', months, autoRenew, mode)
+  //console.log('months, setMonths, autoRenew, mode', months, autoRenew, mode)
   const { isPlanExpired, storagePlan } = useSelector((state) => state.auth);
   const [showDropdown, setShowDropdown] = useState(false);
   const [subscribedMonths, setSubscribedMonths] = useState(0);
@@ -49,9 +49,9 @@ const MonthSelectorStorage = ({ months, setMonths, autoRenew, mode = "dropdown" 
 
     //setSubscribedMonths(calculatedSubscribedMonths);
   
-    console.log("Start (formatted):", formatDateToDDMMYYYY(start));
-    console.log("End   (formatted):", formatDateToDDMMYYYY(end));
-    console.log("Months Diff:", calculatedSubscribedMonths);
+    //console.log("Start (formatted):", formatDateToDDMMYYYY(start));
+    //console.log("End   (formatted):", formatDateToDDMMYYYY(end));
+    //console.log("Months Diff:", calculatedSubscribedMonths);
   }
 
   const increase = () => setMonths((prev) => (prev ? prev + 1 : 1));

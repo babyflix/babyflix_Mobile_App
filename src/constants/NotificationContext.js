@@ -17,9 +17,9 @@ export const NotificationProvider = ({ children }) => {
   const loadNotifications = async () => {
   try {
     const json = await AsyncStorage.getItem(NOTIFICATIONS_KEY);
-    console.log('[NotificationContext] Raw data:', json);
+    //console.log('[NotificationContext] Raw data:', json);
     const stored = json ? JSON.parse(json) : [];
-    console.log('[NotificationContext] Parsed notifications:', stored);
+    //console.log('[NotificationContext] Parsed notifications:', stored);
     setNotifications(stored);
     const unread = stored.filter(n => !n.read || n.read === 'false').length;
     setUnreadCount(unread);

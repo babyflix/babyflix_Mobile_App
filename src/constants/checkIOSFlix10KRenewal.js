@@ -21,7 +21,7 @@ export const checkIOSFlix10KRenewal = async ({
     );
 
     if (!flixPurchase?.transactionReceipt) {
-      console.log('No Flix10K purchase found in Apple');
+      //console.log('No Flix10K purchase found in Apple');
       return;
     }
 
@@ -38,7 +38,7 @@ export const checkIOSFlix10KRenewal = async ({
     const verifyData = verifyRes.data;
 
     if (verifyData?.status !== 'active') {
-      console.log('Still expired from Apple');
+      //console.log('Still expired from Apple');
       return;
     }
 
@@ -57,8 +57,8 @@ export const checkIOSFlix10KRenewal = async ({
     // refresh redux
     await getFlix10KPlanApi(userEmail, dispatch);
 
-    console.log('Flix10K renewed → DB updated');
+    //console.log('Flix10K renewed → DB updated');
   } catch (err) {
-    console.log('Flix10K renewal check failed', err);
+    //console.log('Flix10K renewal check failed', err);
   }
 };

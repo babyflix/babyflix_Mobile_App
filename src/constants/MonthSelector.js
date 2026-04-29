@@ -14,7 +14,7 @@ import { useSelector } from "react-redux";
 
 const MonthSelector = ({ months, setMonths, autoRenew, mode = "dropdown" }) => {
 
-  console.log('months, setMonths, autoRenew, mode', months, autoRenew, mode)
+  //console.log('months, setMonths, autoRenew, mode', months, autoRenew, mode)
   const { subscriptionExpired, subscription } = useSelector((state) => state.auth);
   const [showDropdown, setShowDropdown] = useState(false);
   const { t } = useTranslation();

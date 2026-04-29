@@ -1153,7 +1153,7 @@ import Snackbar from '../components/Snackbar';
 import { logError } from '../components/logError';
 import { useTranslation } from 'react-i18next';
 import i18n from '../constants/i18n';
-import { useDynamicTranslate } from '../constants/useDynamicTranslate';
+import { dynamicTranslate } from '../constants/useDynamicTranslate';
 
 const IconInput = ({
   iconName,
@@ -1266,7 +1266,7 @@ const RegisterScreen = () => {
       try {
         const formatted = await Promise.all(
           countries.map(async (country) => {
-            const translatedName = await useDynamicTranslate(country.country_name);
+            const translatedName = await dynamicTranslate(country.country_name);
             return {
               label: `+${country.phonecode} ${translatedName}`,
               value: `${country.phonecode}_${country.country_name}`,
@@ -1434,7 +1434,7 @@ const RegisterScreen = () => {
         setSnackbarVisible(true);
         setTimeout(() => router.replace('/login'), 3000);
       } else {
-        console.log("response.data?.error",response.data)
+        //console.log("response.data?.error",response.data)
         setSnackbarMessage(response.data?.message || t('registration.registrationFailed'));
         setSnackbarType('error');
         setSnackbarVisible(true);

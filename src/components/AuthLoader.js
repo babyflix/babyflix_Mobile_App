@@ -46,7 +46,7 @@ const AuthLoader = ({ children }) => {
         const updatedData = {
           ...res.data,
         };
-        console.log('updatedData', updatedData);
+        //console.log('updatedData', updatedData);
 
         await AsyncStorage.setItem('token', updatedData.token);
         await AsyncStorage.setItem('userData', JSON.stringify(updatedData));

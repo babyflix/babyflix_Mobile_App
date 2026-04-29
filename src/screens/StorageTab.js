@@ -35,6 +35,7 @@ import { setPlanExpired, setUpgradeReminder } from "../state/slices/expiredPlanS
 import * as RNIap from 'react-native-iap';
 import { handleIOSStorageSubscription } from "../constants/iosStorageIAP";
 import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
+import { dynamicTranslate } from "../constants/useDynamicTranslate";
 //import { restoreIOSStoragePurchase } from "../constants/iosRestoreStorageIAP";
 
 const StorageTab = () => {
@@ -80,9 +81,9 @@ const StorageTab = () => {
     // at least 1 month
     calculatedSubscribedMonths = Math.max(1, monthsDiff);
 
-    console.log("Start (formatted):", formatDateToDDMMYYYY(start));
-    console.log("End   (formatted):", formatDateToDDMMYYYY(end));
-    console.log("Months Diff:", calculatedSubscribedMonths);
+    //console.log("Start (formatted):", formatDateToDDMMYYYY(start));
+    //console.log("End   (formatted):", formatDateToDDMMYYYY(end));
+    //console.log("Months Diff:", calculatedSubscribedMonths);
   }
   const storageActive = storagePlanPayment;
   const [isUnsubscribed, setIsUnsubscribed] = useState(false);
@@ -150,7 +151,7 @@ const StorageTab = () => {
   useEffect(() => {
     const translateDynamicTexts = async () => {
       if (storagePlanName) {
-        const translatedPlan = await useDynamicTranslate(storagePlanName);
+        const translatedPlan = await dynamicTranslate(storagePlanName);
         setTranslatedCurrentPlan(translatedPlan);
       }
     };
@@ -310,7 +311,7 @@ const StorageTab = () => {
 
     const sub = purchases.find(p => p.productId === "storage_pro");
     if (!sub) {
-      console.log("No subscription found for user.");
+      //console.log("No subscription found for user.");
       return;
     }
 
@@ -326,7 +327,7 @@ const StorageTab = () => {
     ? new Date(Number(expiryTimestamp)).toISOString()
     : null;
 
-    console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
+    //console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
 
     // Sync with backend only if changed
     await axios.post(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
@@ -336,7 +337,7 @@ const StorageTab = () => {
       currentPurchaseToken: sub.purchaseToken, // Android token
     });
 
-    console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
+    //console.log("✅ Auto-renewal synced with backend:", { newStatus, expiryDate });
 
     await RNIap.endConnection();
   } catch (err) {
@@ -367,12 +368,12 @@ const StorageTab = () => {
       if (Platform.OS === 'android') {
         // Use Google Play Billing for Android
         if (isAutoRenewToggleOnly) {
-            console.log("User only toggled auto-renew — opening Play Store...");
+            //console.log("User only toggled auto-renew — opening Play Store...");
             await Linking.openURL(PLAY_STORE_SUBS_URL);
         
             const subscriptionListener = AppState.addEventListener("change", async (state) => {
               if (state === "active") {
-                console.log("Returned from Play Store — verifying auto-renewal...");
+                //console.log("Returned from Play Store — verifying auto-renewal...");
                 await verifyAutoRenewStatus(user.uuid);
                 subscriptionListener.remove();
               }
@@ -391,7 +392,7 @@ const StorageTab = () => {
             //hasPurchasedBasic: false,
           });
 
-          console.log('result', result);
+          //console.log('result', result);
 
           if (result.success) {
 
@@ -427,7 +428,7 @@ const StorageTab = () => {
           // });
 
           try {
-          console.log("📤 Calling updatePlan API with payload:", payload);
+          //console.log("📤 Calling updatePlan API with payload:", payload);
 
           const response = await fetch(
             `${EXPO_PUBLIC_API_URL}/api/patients/updatePlan`,
@@ -443,8 +444,8 @@ const StorageTab = () => {
           // Parse JSON safely
           const data = await response.json();
 
-          console.log("✅ updatePlan API response status:", response.status);
-          console.log("✅ updatePlan API response body:", data);
+          //console.log("✅ updatePlan API response status:", response.status);
+          //console.log("✅ updatePlan API response body:", data);
 
           if (!response.ok) {
             throw new Error(
@@ -454,7 +455,7 @@ const StorageTab = () => {
             );
           }
 
-          console.log("🎉 Storage plan updated successfully:", data);
+          //console.log("🎉 Storage plan updated successfully:", data);
 
         } catch (err) {
           console.error("❌ updatePlan API ERROR:");
@@ -712,7 +713,6 @@ const StorageTab = () => {
             {error && <Text style={styles.error}>{error}</Text>}
 
             <MonthSelectorStorage months={months} setMonths={setMonths} autoRenew={autoRenew} mode={"dropdown"} />
-            {console.log('additionalMonths', additionalMonths)}
             {/* { additionalMonths > 0 && (
                 <View style={{ marginTop: 10 }}>
                 <Text style={{ fontFamily: "Nunito400", fontSize: 12, color: "#333", marginBottom: 4 }}>
