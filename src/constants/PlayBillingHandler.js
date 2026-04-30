@@ -14,7 +14,7 @@ export const handlePlaySubscription = async ({
 }) => {
   try {
     //log.info("Starting Play Billing flow for months:", months);
-    //console.log("Starting Play Billing flow for months:", months);
+    console.log("Starting Play Billing flow for months:", months);
     await AsyncStorage.setItem('flix10KPaying', 'true');
 
     const productId = 'flix10k_subscription'; // ✅ must match Play Console
@@ -31,7 +31,7 @@ export const handlePlaySubscription = async ({
     //const basePlanId = 'storage-recovery-monthly';
     if (!basePlanId) throw new Error('Invalid subscription duration selected.');
 
-    //console.log("Base plan selected:", basePlanId, productId);
+    console.log("Base plan selected:", basePlanId, productId);
     //log.info("Base plan selected:", basePlanId);
     //Alert.alert('Debug', 'Step 1: Init connection');
 
@@ -43,23 +43,23 @@ export const handlePlaySubscription = async ({
     const connected = await RNIap.initConnection();
     if (!connected) throw new Error('Billing connection failed.');
 
-    //console.log("IAP connection initialized", connected);
+    console.log("IAP connection initialized", connected);
      //log.debug("IAP connection initialized");
      //Alert.alert('Debug', 'Step 2: Getting subscriptions');
 
     // ✅ Get available subscriptions
     const subs = await RNIap.getSubscriptions({ skus: [productId] });
     if (!subs || subs.length === 0) {
-      //console.log(`Subscription ${productId} not found in Play Store.`);
+      console.log(`Subscription ${productId} not found in Play Store.`);
       throw new Error(`Subscription ${productId} not found in Play Store.`);
     }
-    //console.log('Available subscriptions:', JSON.stringify(subs, null, 2));
+    console.log('Available subscriptions:', JSON.stringify(subs, null, 2));
     //log.debug("Subscriptions fetched:", subs);
-    //console.log("Subscriptions fetched:", subs)
+    console.log("Subscriptions fetched:", subs)
     //  const allSubs = await RNIap.getSubscriptions();
 
     // log.debug("Subscriptions fetched:", allSubs);
-    // console.log("Subscriptions fetched:", allSubs);
+    console.log("Subscriptions fetched:", allSubs);
 
     // const sub = allSubs.find((item) => item.productId === productId);
 
@@ -67,7 +67,7 @@ export const handlePlaySubscription = async ({
 
     const sub = subs?.[0];
     if (!sub) throw new Error('Subscription not found in Play Store.');
-    //console.log("First subscription:", sub);
+    console.log("First subscription:", sub);
 
     // ✅ Find correct offer
     const offer = sub.subscriptionOfferDetails?.find(
@@ -77,7 +77,7 @@ export const handlePlaySubscription = async ({
 
     //Alert.alert('Debug', 'Step 3: Found subscriptions');
 
-    //console.log('Selected Offer:', offer);
+    console.log('Selected Offer:', offer);
     //log.info("Offer selected:", offer);
 
      await new Promise(res => setTimeout(res, 500));
@@ -85,10 +85,10 @@ export const handlePlaySubscription = async ({
     // ✅ Purchase flow
     const oldToken = currentPurchaseToken || null;
     //log.debug("Old token:", oldToken);
-    //console.log("Old token:", oldToken)
+    console.log("Old token:", oldToken)
 
-    //console.log('sub.productId:', sub.productId);
-    //console.log('offerToken:', offer?.offerToken);
+    console.log('sub.productId:', sub.productId);
+    console.log('offerToken:', offer?.offerToken);
 
     // const purchaseOptions = {
     //     sku: sub.productId,
@@ -110,7 +110,7 @@ export const handlePlaySubscription = async ({
         }),
       }
 
-      //console.log("Requesting subscription with options:", purchaseOptions)
+      console.log("Requesting subscription with options:", purchaseOptions)
 
     // const purchase = await RNIap.requestSubscription({
     //   sku: sub.productId,
@@ -124,7 +124,7 @@ export const handlePlaySubscription = async ({
     //   ...(oldToken && { oldSkuAndroid: oldToken }),
     // });
 
-    //console.log('Purchase result:', purchase);
+    console.log('Purchase result:', purchase);
     //log.info("Purchase result:", purchase);
 
     const purchaseItem = Array.isArray(purchase) ? purchase[0] : purchase;
@@ -133,8 +133,8 @@ export const handlePlaySubscription = async ({
 
     if (!token) throw new Error("No purchase token");
 
-    //console.log("Sending token:", token);
-    //console.log("Sending product:", purchaseItem.productId);
+    console.log("Sending token:", token);
+    console.log("Sending product:", purchaseItem.productId);
 
     //Alert.alert('Debug', 'Step 4: Purchase verification');
 
@@ -150,7 +150,7 @@ export const handlePlaySubscription = async ({
       { headers: { 'Content-Type': 'application/json' } }
     );
 
-    //console.log('Backend verified:', response.data);
+    console.log('Backend verified:', response.data);
     //log.info("Backend verification response:", response.data);
 
     if (!response?.data?.success) {
@@ -160,11 +160,11 @@ export const handlePlaySubscription = async ({
      // ✅ Step 5: Acknowledge purchase
     if (!purchaseItem?.isAcknowledgedAndroid) {
       try {
-        //console.log("Acknowledging token:", token);
+        console.log("Acknowledging token:", token);
         await RNIap.acknowledgePurchaseAndroid({
           token: token,
         });
-        //console.log("✅ Purchase acknowledged successfully");
+        console.log("✅ Purchase acknowledged successfully");
       } catch (ackErr) {
         console.warn("⚠️ Acknowledge failed:", ackErr);
         await AsyncStorage.setItem("pendingAckToken", token);
@@ -190,7 +190,7 @@ export const handlePlaySubscription = async ({
     //   subscriptionPayload
     // );
 
-    // console.log("Subscription API saved successfully");
+    console.log("Subscription API saved successfully");
 
     try {
       const subscriptionResponse = await axios.post(
