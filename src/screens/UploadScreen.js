@@ -19,7 +19,7 @@ import GlobalStyles from '../styles/GlobalStyles';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { Video } from 'expo-av';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { EXPO_PUBLIC_API_URL, EXPO_PUBLIC_CLOUD_API_URL } from '@env';
