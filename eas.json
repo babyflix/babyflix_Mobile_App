@@ -18,7 +18,10 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "ios": {
+        "image": "macos-15-xcode-26"
+      }
     },
     "play": {
       "autoIncrement": true,

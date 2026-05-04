@@ -144,6 +144,8 @@ const CompleteProfileModal = ({ visible, onClose, onSkip, }) => {
       if (res.status === 200) {
         const data = res.data;
 
+        //console.log("UserData",data)
+
         setUserData(data);
 
         //setEmail(data.email || "");
@@ -363,43 +365,232 @@ const CompleteProfileModal = ({ visible, onClose, onSkip, }) => {
       //console.log("updateCredentialsRes",updateCredentialsRes.data)
 
       // update email
-      try {
-        await axios.patch(
-          `${EXPO_PUBLIC_API_URL}/update-email`,
-          {
-            firstName:
-              userData.firstname,
-            lastName:
-              userData.lastname,
-            machineId:
-              userData.machineId,
-            emailId: email,
-            oldEmail:
-              userData.email,
-          }
-        );
-      } catch (error2) {
-        //console.log("error in update-email",error2);
-        const notifyRes = await axios.post(
-          `${EXPO_PUBLIC_API_URL}/api/notify/upload-email-failed`,
-          {
-            firstName:
-              userData.firstname,
-            lastName:
-              userData.lastname,
-            machineId:
-              userData.machineId,
-            oldEmailId:
-              userData.email,
-            emailId: email,
-            error:
-              error2?.message ||
-              "Network Error",
-            source:
-              "Patient credential update (gallery)",
-          }
-        );
-        //console.log("notifyRes",notifyRes)
+      // try {
+      //   await axios.patch(
+      //     `${EXPO_PUBLIC_API_URL}/update-email`,
+      //     {
+      //       firstName:
+      //         userData.firstname,
+      //       lastName:
+      //         userData.lastname,
+      //       machineId:
+      //         userData.machineId,
+      //       emailId: email,
+      //       oldEmail:
+      //         userData.email,
+      //     }
+      //   );
+      // } catch (error2) {
+      //   //console.log("error in update-email",error2);
+      //   const notifyRes = await axios.post(
+      //     `${EXPO_PUBLIC_API_URL}/api/notify/upload-email-failed`,
+      //     {
+      //       firstName:
+      //         userData.firstname,
+      //       lastName:
+      //         userData.lastname,
+      //       machineId:
+      //         userData.machineId,
+      //       oldEmailId:
+      //         userData.email,
+      //       emailId: email,
+      //       error:
+      //         error2?.message ||
+      //         "Network Error",
+      //       source:
+      //         "Patient credential update (gallery)",
+      //     }
+      //   );
+      //   //console.log("notifyRes",notifyRes)
+      // }
+
+      // const logPrefix = "[UPDATE-EMAIL]";
+
+      // try {
+      //   console.log(`${logPrefix} 🚀 First attempt started`);
+
+      //   const res1 = await axios.patch(
+      //     `${EXPO_PUBLIC_API_URL}/update-email`,
+      //     {
+      //       firstName: userData.firstname,
+      //       lastName: userData.lastname,
+      //       machineId: userData.machineId,
+      //       emailId: email,
+      //       oldEmail: userData.email,
+      //     }
+      //   );
+
+      //   console.log(`${logPrefix} ✅ First attempt SUCCESS`, res1?.data);
+
+      // } catch (error1) {
+      //   console.log(
+      //     `${logPrefix} ❌ First attempt FAILED`,
+      //     error1?.response?.data || error1?.message
+      //   );
+
+      //   try {
+      //     console.log(`${logPrefix} 🔁 Second attempt (swap names) started`);
+
+      //     const res2 = await axios.patch(
+      //       `${EXPO_PUBLIC_API_URL}/update-email`,
+      //       {
+      //         firstName: userData.lastname,   // swapped
+      //         lastName: userData.firstname,   // swapped
+      //         machineId: userData.machineId,
+      //         emailId: email,
+      //         oldEmail: userData.email,
+      //       }
+      //     );
+
+      //     console.log(`${logPrefix} ✅ Second attempt SUCCESS`, res2?.data);
+
+      //   } catch (error2) {
+      //     console.log(
+      //       `${logPrefix} ❌ Second attempt FAILED`,
+      //       error2?.response?.data || error2?.message
+      //     );
+
+      //     console.log(`${logPrefix} 🚨 Calling failure API`);
+
+      //     try {
+      //       const notifyRes = await axios.post(
+      //         `${EXPO_PUBLIC_API_URL}/api/notify/upload-email-failed`,
+      //         {
+      //           firstName: userData.firstname,
+      //           lastName: userData.lastname,
+      //           machineId: userData.machineId,
+      //           oldEmailId: userData.email,
+      //           emailId: email,
+      //           error:
+      //             error2?.response?.data ||
+      //             error2?.message ||
+      //             error1?.message ||
+      //             "Network Error",
+      //           source: "Patient credential update (gallery)",
+      //         }
+      //       );
+
+      //       console.log(
+      //         `${logPrefix} 📩 Failure API SUCCESS`,
+      //         notifyRes?.data
+      //       );
+
+      //     } catch (notifyError) {
+      //       console.log(
+      //         `${logPrefix} ❌ Failure API ALSO FAILED`,
+      //         notifyError?.response?.data || notifyError?.message
+      //       );
+      //     }
+      //   }
+      // }
+
+
+      const logPrefix = "[UPDATE-EMAIL]";
+
+      const capitalize = (str = "") =>
+        str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+      const originalFirst = userData.firstname || "";
+      const originalLast = userData.lastname || "";
+
+      // 🔥 All variations (in order)
+      const attempts = [
+        // 1️⃣ Normal
+        { firstName: originalFirst, lastName: originalLast, label: "NORMAL" },
+
+        // 2️⃣ Swap
+        { firstName: originalLast, lastName: originalFirst, label: "SWAP" },
+
+        // 3️⃣ Lowercase
+        { firstName: originalFirst.toLowerCase(), lastName: originalLast.toLowerCase(), label: "LOWERCASE" },
+
+        // 4️⃣ Lowercase Swap
+        { firstName: originalLast.toLowerCase(), lastName: originalFirst.toLowerCase(), label: "LOWERCASE_SWAP" },
+
+        // 5️⃣ Uppercase
+        { firstName: originalFirst.toUpperCase(), lastName: originalLast.toUpperCase(), label: "UPPERCASE" },
+
+        // 6️⃣ Uppercase Swap
+        { firstName: originalLast.toUpperCase(), lastName: originalFirst.toUpperCase(), label: "UPPERCASE_SWAP" },
+
+        // 7️⃣ Capitalize
+        { firstName: capitalize(originalFirst), lastName: capitalize(originalLast), label: "CAPITALIZE" },
+
+        // 8️⃣ Capitalize Swap
+        { firstName: capitalize(originalLast), lastName: capitalize(originalFirst), label: "CAPITALIZE_SWAP" },
+      ];
+
+      let success = false;
+      let lastError = null;
+
+      for (let i = 0; i < attempts.length; i++) {
+        const attempt = attempts[i];
+
+        try {
+          // ✅ START (current values)
+          console.log(
+            `${logPrefix} 🚀 Attempt ${i + 1} (${attempt.label}) START | firstName=${attempt.firstName}, lastName=${attempt.lastName}`
+          );
+
+          const res = await axios.patch(
+            `${EXPO_PUBLIC_API_URL}/update-email`,
+            {
+              firstName: attempt.firstName,
+              lastName: attempt.lastName,
+              machineId: userData.machineId,
+              emailId: email,
+              oldEmail: userData.email,
+            }
+          );
+
+          // ✅ SUCCESS (current values)
+          console.log(
+            `${logPrefix} ✅ SUCCESS Attempt ${i + 1} (${attempt.label}) | firstName=${attempt.firstName}, lastName=${attempt.lastName}`
+          );
+
+          success = true;
+          break;
+
+        } catch (error) {
+          lastError = error;
+
+          // ✅ FAILED (current values + error)
+          console.log(
+            `${logPrefix} ❌ FAILED Attempt ${i + 1} (${attempt.label}) | firstName=${attempt.firstName}, lastName=${attempt.lastName}`,
+            error?.response?.data || error?.message
+          );
+        }
+      }
+
+      // 🔴 If all attempts failed → call failure API
+      if (!success) {
+        console.log(`${logPrefix} 🚨 All attempts failed. Calling failure API`);
+
+        try {
+          const notifyRes = await axios.post(
+            `${EXPO_PUBLIC_API_URL}/api/notify/upload-email-failed`,
+            {
+              firstName: originalFirst,
+              lastName: originalLast,
+              machineId: userData.machineId,
+              oldEmailId: userData.email,
+              emailId: email,
+              error:
+                lastError?.response?.data ||
+                lastError?.message ||
+                "All attempts failed",
+              source: "Patient credential update (gallery)",
+            }
+          );
+
+          console.log(`${logPrefix} 📩 Failure API SUCCESS`, notifyRes?.data);
+
+        } catch (notifyError) {
+          console.log(
+            `${logPrefix} ❌ Failure API ALSO FAILED`,
+            notifyError?.response?.data || notifyError?.message
+          );
+        }
       }
 
       // login
