@@ -20,7 +20,7 @@
     "production": {
       "autoIncrement": true,
       "ios": {
-        "image": "macos-15-xcode-26"
+        "image": "macos-sequoia-15.6-xcode-26.2"
       }
     },
     "play": {
