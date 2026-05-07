@@ -84,6 +84,8 @@ const CompleteProfileModal = ({ visible, onClose, onSkip, }) => {
     setConfirmPasswordError] =
     useState("");
 
+    const [hideMainModal, setHideMainModal] = useState(false);
+
     const dispatch = useDispatch();
 
   // =========================
@@ -96,6 +98,8 @@ const CompleteProfileModal = ({ visible, onClose, onSkip, }) => {
   }, [visible]);
 
   const initialize = async () => {
+
+    setHideMainModal(false);
     setStep(1);
 
     setPassword("");
@@ -624,7 +628,13 @@ const CompleteProfileModal = ({ visible, onClose, onSkip, }) => {
         dispatch(setCredentials(loginRes.data));
       }
 
-      setSuccessModal(true);
+      //onClose?.();
+      setHideMainModal(true);
+
+      //setSuccessModal(true);
+      setTimeout(() => {
+        setSuccessModal(true);
+      }, 500);
     } catch (error) {
       setPasswordError(
         "Something went wrong"
@@ -635,7 +645,13 @@ const CompleteProfileModal = ({ visible, onClose, onSkip, }) => {
   };
 
   const restartApp = async () => {
-    await Updates.reloadAsync();
+    //await Updates.reloadAsync();
+    setSuccessModal(false);
+
+    setTimeout(async () => {
+      await Updates.reloadAsync();
+    }, 800);
+
   };
 
   // =========================
@@ -644,7 +660,7 @@ const CompleteProfileModal = ({ visible, onClose, onSkip, }) => {
   return (
     <>
       <Modal
-        visible={visible}
+        visible={visible && !hideMainModal}
         transparent
         animationType="fade"
       >
@@ -1284,7 +1300,7 @@ const CompleteProfileModal = ({ visible, onClose, onSkip, }) => {
           successModal
         }
         transparent
-        animationType="fade"
+        animationType="slide"
       >
         <View
           style={
