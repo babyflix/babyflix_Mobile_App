@@ -1,10 +1,13 @@
 import React, { useCallback, useRef } from 'react';
 import { FlatList, Text, StyleSheet, View, TouchableOpacity } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import GalleryItem from './GalleryItem';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const MediaGrid = React.memo(({
   data = [],
@@ -33,10 +36,24 @@ const MediaGrid = React.memo(({
   setFlix10kResults,
   selectedType,
   onRequireSubscription,
+  scrollY,
 }) => {
   const { t } = useTranslation();
   const flatListRef = useRef();
   const router = useRouter();
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      'worklet';
+      if (scrollY) scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      if (scrollY) scrollY.value = 0;
+    }, [scrollY])
+  );
 
   const filteredData = type === 'all' ? data : data.filter(item => item.object_type === type);
   const aiFilteredData = type === 'aiImages' ? data : data.filter(item => item.object_type === type);
@@ -117,7 +134,7 @@ const MediaGrid = React.memo(({
         </View>
       }
 
-      <FlatList
+      <AnimatedFlatList
         ref={flatListRef}
         data={filteredData}
         renderItem={renderItem}
@@ -135,6 +152,8 @@ const MediaGrid = React.memo(({
         initialNumToRender={12}
         maxToRenderPerBatch={12}
         windowSize={15}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       />
     </>
   );

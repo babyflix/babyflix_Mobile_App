@@ -41,7 +41,8 @@ const MediaTabs = ({
   flix10kAiImages,
   setFlix10kAiImages,
   setSelectedType,
-  onRequireSubscription
+  onRequireSubscription,
+  scrollY,
 }) => {
   const { t } = useTranslation();
 
@@ -71,7 +72,8 @@ const MediaTabs = ({
     toggleItemSelection,
     selectedType,
     setSelectedType,
-    onRequireSubscription
+    onRequireSubscription,
+    scrollY,
   };
 
   return (

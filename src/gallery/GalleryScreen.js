@@ -6,6 +6,12 @@ import {
   AppState,
   BackHandler,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  Extrapolation,
+  interpolate,
+} from 'react-native-reanimated';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,6 +56,7 @@ import PlanBanner from './PlanBanner';
 import UpgradeReminderModal from './UpgradeReminderModal.js';
 import PlanExpiredModal from './PlanExpiredModal.js';
 import Flix10kBanner from './Flix10kBanner.js';
+import DonationBanner from './DonationBanner.js';
 import RateUsModal, { checkAndShowRateModal } from '../components/RateAppModal.js';
 import PhoneNumberModal from '../constants/PhoneNumberModal.js';
 // import {
@@ -147,6 +154,7 @@ const GalleryScreen = () => {
   });
   const [storageFlowActive, setStorageFlowActive] = useState(true);
   const [modalLock, setModalLock] = useState(true);
+  const donationModalOpenRef = useRef(false);
   const [hasGalleryContent, setHasGalleryContent] = useState(false);
   const [forceOpenFlixBanner, setForceOpenFlixBanner] = useState(false);
   const [directIdentifiers, setDirectIdentifiers] = useState([]);
@@ -178,6 +186,18 @@ const GalleryScreen = () => {
   const insets = useSafeAreaInsets();
   const triggeredRef = useRef(false);
   const hasHandledPaymentStatusRef = useRef(false);
+  const scrollY = useSharedValue(0);
+  const bannerHeight = useSharedValue(0);
+
+  const flix10kBannerStyle = useAnimatedStyle(() => {
+    const h = bannerHeight.value;
+    if (h === 0) return {};
+    const offset = interpolate(scrollY.value, [0, h], [0, h], Extrapolation.CLAMP);
+    return {
+      transform: [{ translateY: -offset }],
+      marginBottom: -offset,
+    };
+  });
   const params = useLocalSearchParams();
   const { handleChooseClick } = useHeaderAction();
   const hasHiddenModalRef = useRef(false);
@@ -1074,6 +1094,7 @@ useEffect(() => {
   if (modalLock) return;
   if (storageFlowActive) return;
   if (activeModal) return;
+  if (donationModalOpenRef.current) return;
 
   //console.log("modalChecks",modalChecks)
 
@@ -1224,6 +1245,17 @@ useEffect(() => {
       <LiveStreamStatus />
       <Header title={t("gallery.header")} />
 
+      <View style={{ zIndex: 10 }}>
+        <DonationBanner donationModalOpenRef={donationModalOpenRef} />
+      </View>
+
+      <Animated.View
+        style={flix10kBannerStyle}
+        onLayout={e => {
+          const h = e.nativeEvent.layout.height;
+          if (h > bannerHeight.value) bannerHeight.value = h;
+        }}
+      >
       <Flix10kBanner
         mediaData={mediaData}
         setFlix10kSelectionMode={setFlix10kSelectionMode}
@@ -1247,6 +1279,7 @@ useEffect(() => {
         forceOpenFromOutside={forceOpenFlixBanner}
         clearForceOpen={() => setForceOpenFlixBanner(false)}
       />
+      </Animated.View>
 
       {isLoading ? (
         <Loader loading={true} />
@@ -1280,6 +1313,7 @@ useEffect(() => {
           setFlix10kAiImages={setFlix10kAiImages}
           setSelectedType={setSelectedType}
           onRequireSubscription={handleRequireSubscription}
+          scrollY={scrollY}
         />
       )}
 
