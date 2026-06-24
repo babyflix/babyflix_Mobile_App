@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import * as WebBrowser from 'expo-web-browser';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { useFocusEffect } from 'expo-router';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -52,6 +53,15 @@ const DonationBanner = ({ donationModalOpenRef }) => {
   const tickerX = useRef(new Animated.Value(SCREEN_WIDTH)).current;
   const [videoRatio, setVideoRatio] = useState(16 / 9);
   const [isMuted, setIsMuted] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      videoRef.current?.playAsync().catch(() => {});
+      return () => {
+        videoRef.current?.pauseAsync().catch(() => {});
+      };
+    }, [])
+  );
 
   const user = useSelector((state) => state.auth);
 
