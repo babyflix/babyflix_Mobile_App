@@ -1,13 +1,10 @@
 import React, { useCallback, useRef } from 'react';
 import { FlatList, Text, StyleSheet, View, TouchableOpacity } from 'react-native';
-import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import GalleryItem from './GalleryItem';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const MediaGrid = React.memo(({
   data = [],
@@ -41,13 +38,6 @@ const MediaGrid = React.memo(({
   const { t } = useTranslation();
   const flatListRef = useRef();
   const router = useRouter();
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      'worklet';
-      if (scrollY) scrollY.value = event.contentOffset.y;
-    },
-  });
 
   useFocusEffect(
     useCallback(() => {
@@ -134,7 +124,7 @@ const MediaGrid = React.memo(({
         </View>
       }
 
-      <AnimatedFlatList
+      <FlatList
         ref={flatListRef}
         data={filteredData}
         renderItem={renderItem}
@@ -152,7 +142,7 @@ const MediaGrid = React.memo(({
         initialNumToRender={12}
         maxToRenderPerBatch={12}
         windowSize={15}
-        onScroll={scrollHandler}
+        onScroll={(e) => { if (scrollY) scrollY.value = e.nativeEvent.contentOffset.y; }}
         scrollEventThrottle={16}
       />
     </>

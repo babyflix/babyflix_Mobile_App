@@ -38,6 +38,7 @@ const AiMediaGrid = memo(
     disableMenuAndSelection,
     setFlix10kAiImages,
     setSelectedType,
+    scrollY,
   }) => {
     const { t } = useTranslation();
 
@@ -437,6 +438,8 @@ const originalUrl =
         contentContainerStyle={styles.gridContainer}
         showsVerticalScrollIndicator={false}
         extraData={[selectedItems, selectedItemsForAi, regeneratingIds, keptItems]}
+        onScroll={(e) => { if (scrollY) scrollY.value = e.nativeEvent.contentOffset.y; }}
+        scrollEventThrottle={16}
       />
     );
   }

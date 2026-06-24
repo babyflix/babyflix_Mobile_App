@@ -605,4 +605,4 @@ disabledCardSoft: {
 },
 });
 
-export default GalleryItem;
+export default React.memo(GalleryItem);

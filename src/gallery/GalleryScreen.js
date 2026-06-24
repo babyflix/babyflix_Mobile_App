@@ -9,8 +9,8 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  Extrapolation,
-  interpolate,
+  useAnimatedReaction,
+  withTiming,
 } from 'react-native-reanimated';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -188,14 +188,28 @@ const GalleryScreen = () => {
   const hasHandledPaymentStatusRef = useRef(false);
   const scrollY = useSharedValue(0);
   const bannerHeight = useSharedValue(0);
+  const animatedBannerHeight = useSharedValue(0);
+
+  useAnimatedReaction(
+    () => scrollY.value,
+    (current, previous) => {
+      const h = bannerHeight.value;
+      if (h === 0) return;
+      if (current > 30 && (previous === null || previous <= 30)) {
+        animatedBannerHeight.value = withTiming(0, { duration: 200 });
+      } else if (current <= 30 && (previous === null || previous > 30)) {
+        animatedBannerHeight.value = withTiming(h, { duration: 150 });
+      }
+    }
+  );
 
   const flix10kBannerStyle = useAnimatedStyle(() => {
-    const h = bannerHeight.value;
-    if (h === 0) return {};
-    const offset = interpolate(scrollY.value, [0, h], [0, h], Extrapolation.CLAMP);
+    if (bannerHeight.value === 0) {
+      return { overflow: 'hidden' };
+    }
     return {
-      transform: [{ translateY: -offset }],
-      marginBottom: -offset,
+      height: animatedBannerHeight.value,
+      overflow: 'hidden',
     };
   });
   const params = useLocalSearchParams();
@@ -1245,15 +1259,19 @@ useEffect(() => {
       <LiveStreamStatus />
       <Header title={t("gallery.header")} />
 
-      <View style={{ zIndex: 10 }}>
+      <View style={{ zIndex: 10 }} pointerEvents="box-none">
         <DonationBanner donationModalOpenRef={donationModalOpenRef} />
       </View>
 
       <Animated.View
         style={flix10kBannerStyle}
+        pointerEvents="box-none"
         onLayout={e => {
           const h = e.nativeEvent.layout.height;
-          if (h > bannerHeight.value) bannerHeight.value = h;
+          if (h > bannerHeight.value) {
+            bannerHeight.value = h;
+            animatedBannerHeight.value = h;
+          }
         }}
       >
       <Flix10kBanner

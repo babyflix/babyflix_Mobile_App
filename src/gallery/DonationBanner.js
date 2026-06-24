@@ -62,6 +62,7 @@ const DonationBanner = ({ donationModalOpenRef }) => {
 
   const [showOneTimeModal, setShowOneTimeModal] = useState(false);
   const [customOneTimeInput, setCustomOneTimeInput] = useState('10');
+  const [videoAvailable, setVideoAvailable] = useState(null);
 
   useEffect(() => {
     Audio.setAudioModeAsync({
@@ -86,6 +87,12 @@ const DonationBanner = ({ donationModalOpenRef }) => {
   const videoUri = isJuly4Phase
     ? `${EXPO_PUBLIC_API_URL}/donation-1.mp4`
     : `${EXPO_PUBLIC_API_URL}/donation-2.mp4`;
+
+  useEffect(() => {
+    fetch(videoUri, { method: 'HEAD' })
+      .then(res => setVideoAvailable(res.ok))
+      .catch(() => setVideoAvailable(false));
+  }, [videoUri]);
 
   // const tickerGradient = isJuly4Phase
   //   ? ['#3C3B6E', '#B22234', '#3C3B6E']
@@ -165,6 +172,8 @@ const DonationBanner = ({ donationModalOpenRef }) => {
     closeMonthlyModal();
     await openDonationUrl(buildDonationUrl(finalAmount, 'monthly'));
   };
+
+  if (!videoAvailable) return null;
 
   return (
     <View style={styles.outerWrapper}>
