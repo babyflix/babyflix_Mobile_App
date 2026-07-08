@@ -112,7 +112,8 @@ const hasPredictiveImage = Array.isArray(mediaData)
   // 🔐 subscription status
   const isSubscribed = subscriptionIsActive && subscriptionId;
   const isFreeUser = !isSubscribed;
-  const canUseFreeCredit = isFreeUser && !freeCreditUsed && !hasPredictiveImage;
+  //const canUseFreeCredit = isFreeUser && !freeCreditUsed && !hasPredictiveImage;
+  const canUseFreeCredit = false; // free trial closed
 
   const selectionCount = selectedItemsForAi.length || 0;
 

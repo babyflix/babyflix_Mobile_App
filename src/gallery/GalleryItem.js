@@ -63,7 +63,8 @@ const hasPredictiveImage = Array.isArray(mediaData)
   // ✅ MUST BE HERE (top-level)
   const isSubscribed = !!subscriptionIsActive && !!subscriptionId;
   const isFreeUser = !isSubscribed;
-  const freeCreditAvailable = isFreeUser && !freeCreditUsed && !hasPredictiveImage;
+  //const freeCreditAvailable = isFreeUser && !freeCreditUsed && !hasPredictiveImage;
+  const freeCreditAvailable = false; // free trial closed
 
   //console.log("isSubscribed, isFreeUser, freeCreditAvailable", isSubscribed, isFreeUser, freeCreditAvailable)
 
@@ -125,7 +126,8 @@ const hasPredictiveImage = Array.isArray(mediaData)
   const handleConvertPress = (e) => {
     e?.stopPropagation?.(); // ⭐⭐⭐ VERY IMPORTANT
 
-    if (isFreeUser && (freeCreditUsed || hasPredictiveImage)) {
+    //if (isFreeUser && (freeCreditUsed || hasPredictiveImage)) {
+    if (isFreeUser) {
       setShowSubscribeModal(true); // we will add this
       return;
     }
