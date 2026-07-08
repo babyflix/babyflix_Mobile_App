@@ -68,7 +68,7 @@ export const sendLog = async ({
         log_type,
         user_id,
         device: Device.modelName,
-        app_version: "1.2.1",
+        app_version: "1.2.5",
       }),
     });
 
