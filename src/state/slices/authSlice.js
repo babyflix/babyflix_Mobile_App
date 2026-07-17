@@ -37,6 +37,15 @@ const initialState = {
   storagePlanWarning: false,
   storagePlanDeleted: 0,
   storagePlanAutoRenewal: 0,
+
+  // 🔹 One-Time Payment
+  requiresPay: false,
+  fullAccessUnlocked: false,
+  payAmount: null,
+  payBaseAmount: null,
+  payDiscountAmount: null,
+  payModalContent: null,
+  paymentJustCompleted: false,
 };
 
 
@@ -138,6 +147,14 @@ const authSlice = createSlice({
       state.storagePlanWarning = false;
       state.storagePlanDeleted = 0;
       state.storagePlanAutoRenewal = 0;
+      // 🔹 Reset one-time payment
+      state.requiresPay = false;
+      state.fullAccessUnlocked = false;
+      state.payAmount = null;
+      state.payBaseAmount = null;
+      state.payDiscountAmount = null;
+      state.payModalContent = null;
+      state.paymentJustCompleted = false;
     },
     updateActionStatus: (state, action) => {
       state.actionStatus = action.payload;
@@ -148,8 +165,23 @@ const authSlice = createSlice({
     setSubscriptionActive: (state, action) => {
   state.subscriptionIsActive = action.payload;
 },
+    setPaymentDetails: (state, action) => {
+      const { requiresPay, fullAccessUnlocked, payAmount, payBaseAmount, payDiscountAmount, payModalContent } = action.payload;
+      state.requiresPay = !!requiresPay;
+      state.fullAccessUnlocked = !!fullAccessUnlocked;
+      state.payAmount = payAmount ?? null;
+      state.payBaseAmount = payBaseAmount ?? null;
+      state.payDiscountAmount = payDiscountAmount ?? null;
+      state.payModalContent = payModalContent ?? null;
+      if (!requiresPay || fullAccessUnlocked) {
+        state.paymentJustCompleted = false;
+      }
+    },
+    setPaymentJustCompleted: (state, action) => {
+      state.paymentJustCompleted = action.payload;
+    },
   },
 });
 
-export const { setCredentials, logout, updateActionStatus, setLoggingOut, setSubscriptionActive  } = authSlice.actions;
+export const { setCredentials, logout, updateActionStatus, setLoggingOut, setSubscriptionActive, setPaymentDetails, setPaymentJustCompleted } = authSlice.actions;
 export default authSlice.reducer;

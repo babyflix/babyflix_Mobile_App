@@ -465,6 +465,7 @@ import {
 
 import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials } from '../state/slices/authSlice';
+import { getPatientPaymentDetails } from '../components/getPatientPaymentDetails';
 
 import GlobalStyles from '../styles/GlobalStyles';
 import Colors from '../constants/Colors';
@@ -762,6 +763,7 @@ const LoginScreen = () => {
         await AsyncStorage.setItem('tokenExpiry', res.data.expiresIn);
 
         dispatch(setCredentials(res.data));
+        getPatientPaymentDetails(email, dispatch);
 
         setSnackbarMessage(t('loginPage.messages.loginSuccess'));
         setSnackbarType('success');

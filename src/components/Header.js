@@ -71,6 +71,12 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   );
   const subscriptionActive = subscriptionIsActive
 
+  const requiresPay = useSelector((state) => state.auth.requiresPay);
+  const fullAccessUnlocked = useSelector((state) => state.auth.fullAccessUnlocked);
+  const paymentJustCompleted = useSelector((state) => state.auth.paymentJustCompleted);
+  const isOneTimePayUser = requiresPay === true;
+  const hasFullAccess = fullAccessUnlocked === true || paymentJustCompleted;
+
   const storagePlanPrice = useSelector((state) => state.auth.storagePlanPrice);
     const storagePlanDate = useSelector((state) => state.auth.storagePlan?.planDate);
     const storagePlanName = useSelector((state) => state.auth.storagePlanName);
@@ -424,7 +430,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 </View>
               )} */}
 
-              {(subscriptionActive && subscriptionId) && (
+              {!isOneTimePayUser && (subscriptionActive && subscriptionId) && (
                 <View
                   style={[
                     styles.subscriptionStatus,
@@ -450,6 +456,20 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 </View>
               )}
 
+              {isOneTimePayUser && (
+                <View style={[styles.subscriptionStatus, styles.activeStatus]}>
+                  <Ionicons
+                    name={hasFullAccess ? 'checkmark-circle-outline' : 'lock-closed-outline'}
+                    size={17}
+                    color={hasFullAccess ? 'green' : Colors.primary}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.subscriptionText}>
+                    {hasFullAccess ? t('oneTimePayment.fullAccessBadge', 'Full Access — all BabyFlix premium services unlocked') : t('oneTimePayment.unlockPrompt', 'Complete your one-time payment to unlock full access')}
+                  </Text>
+                </View>
+              )}
+
 
               <TouchableOpacity
                 style={styles.dropdownItem}
@@ -462,29 +482,31 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>{t('header.profileSettings')}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => {
-                  closeDropdownHandler();
-                  dispatch(clearOpenStorage2());
-                  dispatch(setForceOpenStorageModals(true));
-                  setPlanModalVisible(true);
-                }}
-              >
-                <Ionicons name="cloud-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
-                {storagePlan?.storagePlanId === 1 || storagePlan?.storagePlanId === 2 ? (
-                  <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
-                    {t('header.storagePlan')}
-                  </Text>
-                ) : (
-                  <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
-                    {t('header.noPlanSelected')}
-                  </Text>
-                )}
+              {!isOneTimePayUser && (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    closeDropdownHandler();
+                    dispatch(clearOpenStorage2());
+                    dispatch(setForceOpenStorageModals(true));
+                    setPlanModalVisible(true);
+                  }}
+                >
+                  <Ionicons name="cloud-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
+                  {storagePlan?.storagePlanId === 1 || storagePlan?.storagePlanId === 2 ? (
+                    <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
+                      {t('header.storagePlan')}
+                    </Text>
+                  ) : (
+                    <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
+                      {t('header.noPlanSelected')}
+                    </Text>
+                  )}
 
-              </TouchableOpacity>
+                </TouchableOpacity>
+              )}
 
-              {(storagePlan?.storagePlanId === 1 || storagePlan?.storagePlanId === 2) && (
+              {!isOneTimePayUser && (storagePlan?.storagePlanId === 1 || storagePlan?.storagePlanId === 2) && (
                 <TouchableOpacity
                   style={[styles.dropdownItem]}
                   onPress={() => {
@@ -501,7 +523,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 </TouchableOpacity>
               )}
 
-              {(subscriptionActive && subscriptionId) && (
+              {!isOneTimePayUser && (subscriptionActive && subscriptionId) && (
                 <TouchableOpacity
                   style={[styles.dropdownItem]}
                   onPress={() => {

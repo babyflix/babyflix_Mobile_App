@@ -59,6 +59,7 @@ import Flix10kBanner from './Flix10kBanner.js';
 import DonationBanner from './DonationBanner.js';
 import RateUsModal, { checkAndShowRateModal } from '../components/RateAppModal.js';
 import PhoneNumberModal from '../constants/PhoneNumberModal.js';
+import OneTimePaymentModal from '../constants/OneTimePaymentModal.js';
 // import {
 //   initAppleIAP,
 //   setupApplePurchaseListener,
@@ -179,6 +180,13 @@ const GalleryScreen = () => {
   const { subscriptionAmount, subscriptionId, subscriptionIsActive, subscriptionExpired } = useSelector(
       (state) => state.auth
     );
+
+  const requiresPay = useSelector((state) => state.auth.requiresPay);
+  const fullAccessUnlocked = useSelector((state) => state.auth.fullAccessUnlocked);
+  const paymentJustCompleted = useSelector((state) => state.auth.paymentJustCompleted);
+  const isOneTimePayUser = requiresPay === true;
+  const hasFullAccess = fullAccessUnlocked === true || paymentJustCompleted;
+  const blockGalleryForPayment = isOneTimePayUser && !hasFullAccess;
 
   //console.log("storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays",{storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays})
 
@@ -1274,7 +1282,7 @@ useEffect(() => {
           }
         }}
       >
-      <Flix10kBanner
+      {!isOneTimePayUser && <Flix10kBanner
         mediaData={mediaData}
         setFlix10kSelectionMode={setFlix10kSelectionMode}
         selectedItemsForAi={selectedItemsForAi}
@@ -1296,11 +1304,13 @@ useEffect(() => {
         hasGalleryContent ={hasGalleryContent}
         forceOpenFromOutside={forceOpenFlixBanner}
         clearForceOpen={() => setForceOpenFlixBanner(false)}
-      />
+      />}
       </Animated.View>
 
       {isLoading ? (
         <Loader loading={true} />
+      ) : blockGalleryForPayment ? (
+        <OneTimePaymentModal visible blocking />
       ) : (
         <MediaTabs
           mediaData={mediaData}
@@ -1344,13 +1354,15 @@ useEffect(() => {
         flix10kSelectionMode={flix10kSelectionMode}
       />
 
-      <PlanBanner
-        message={bannerMessage}
-        onClose={() => setBannerMessage('')}
-        onUpgrade={handleChooseClick}
-        storagePlanPrice={storagePlanPrice}
-        storagePlanExpired={storagePlanExpired}
-      />
+      {!isOneTimePayUser && (
+        <PlanBanner
+          message={bannerMessage}
+          onClose={() => setBannerMessage('')}
+          onUpgrade={handleChooseClick}
+          storagePlanPrice={storagePlanPrice}
+          storagePlanExpired={storagePlanExpired}
+        />
+      )}
 
       <MediaPreviewModal
         visible={modalVisible}
@@ -1398,7 +1410,7 @@ useEffect(() => {
       {/* {flix10KAD && showAfterAdd && */}
       <UpgradeReminderModal
         //visible={showUpgradeReminderModal}
-         visible={flix10KAD && showAfterAdd && showUpgradeReminderModal}
+         visible={!isOneTimePayUser && flix10KAD && showAfterAdd && showUpgradeReminderModal}
         message={upgradeReminderMessage}
         onClose={() => {
           setShowUpgradeReminderModal(false);
@@ -1411,7 +1423,7 @@ useEffect(() => {
       {/* {flix10KAD && showAfterAdd && */}
       <PlanExpiredModal
         //visible={showPlanExpiredModal}
-        visible={flix10KAD && showAfterAdd && showPlanExpiredModal}
+        visible={!isOneTimePayUser && flix10KAD && showAfterAdd && showPlanExpiredModal}
         expiredPlanName={expiredPlanName}
         onClose={() => {
           setShowPlanExpiredModal(false);
@@ -1494,7 +1506,7 @@ useEffect(() => {
         }}
       />
 
-      {hasGalleryContent && (storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
+      {!isOneTimePayUser && hasGalleryContent && (storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
         <StorageModals
           onClose={() => {
             setStorageModelStart(false); 

@@ -14,6 +14,8 @@ import ProfileTab from './ProfileTab.js';
 import { useFocusEffect, useRouter } from 'expo-router';
 import StorageTab from './StorageTab.js';
 import { setStorageTab } from '../state/slices/subscriptionSlice.js';
+import FullAccessBadge from '../components/FullAccessBadge.js';
+import OneTimePaymentModal from '../constants/OneTimePaymentModal.js';
 
 
 const ProfileSettingsScreen = ({ route }) => {
@@ -27,6 +29,13 @@ const ProfileSettingsScreen = ({ route }) => {
   const storagePlanPrice = useSelector((state) => state.auth.storagePlanPrice);
   const storagePlanId = useSelector((state) => state.auth.storagePlanId);
   const storagePlanExpired = useSelector((state) => state.auth.storagePlanExpired);
+
+  const requiresPay = useSelector((state) => state.auth.requiresPay);
+  const fullAccessUnlocked = useSelector((state) => state.auth.fullAccessUnlocked);
+  const paymentJustCompleted = useSelector((state) => state.auth.paymentJustCompleted);
+  const isOneTimePayUser = requiresPay === true;
+  const hasFullAccess = fullAccessUnlocked === true || paymentJustCompleted;
+  const [showOneTimePaymentModal, setShowOneTimePaymentModal] = useState(false);
 
   const expired = useSelector((state) => state.subscription.expired);
   const storageTab = useSelector((state) => state.subscription.storageTab);
@@ -53,10 +62,24 @@ const ProfileSettingsScreen = ({ route }) => {
 );
 
   const tabs = [
-    { label: t("flix10k.profile"), icon: "person-circle", component: <ProfileTab /> },
+    {
+      label: t("flix10k.profile"),
+      icon: "person-circle",
+      component: (
+        <>
+          {isOneTimePayUser && (
+            <FullAccessBadge
+              hasFullAccess={hasFullAccess}
+              onPressUnlock={() => setShowOneTimePaymentModal(true)}
+            />
+          )}
+          <ProfileTab />
+        </>
+      ),
+    },
   ];
 
-if (subscriptionActive && subscriptionId) {
+if (!isOneTimePayUser && subscriptionActive && subscriptionId) {
   tabs.push({
     label: t("flix10k.subscriptions"),
     icon: "card-outline",
@@ -64,7 +87,7 @@ if (subscriptionActive && subscriptionId) {
   });
 }
 
-if (storagePlanPrice && storagePlanId) {
+if (!isOneTimePayUser && storagePlanPrice && storagePlanId) {
 tabs.push({
   label: t("Storage"),
   icon: "cloud-outline",
@@ -130,6 +153,13 @@ const swipeTabsKey = storageTab ? "storage-tab" : expired ? "subscription-tab" :
       </Tab.Navigator> */}
 
       <CustomSwipeTabs  key={swipeTabsKey}  tabs={tabs} initialIndex={initialIndex} />
+
+      {isOneTimePayUser && (
+        <OneTimePaymentModal
+          visible={showOneTimePaymentModal}
+          onClose={() => setShowOneTimePaymentModal(false)}
+        />
+      )}
 
     </View>
   );

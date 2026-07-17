@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCredentials, logout } from '../state/slices/authSlice';
+import { getPatientPaymentDetails } from './getPatientPaymentDetails';
 import { EXPO_PUBLIC_API_URL } from '@env';
 
 const AuthLoader = ({ children }) => {
@@ -51,6 +52,9 @@ const AuthLoader = ({ children }) => {
         await AsyncStorage.setItem('token', updatedData.token);
         await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
         dispatch(setCredentials(updatedData));
+        if (updatedData.email) {
+          getPatientPaymentDetails(updatedData.email, dispatch);
+        }
       } else {
         throw new Error('Token refresh failed');
       }
