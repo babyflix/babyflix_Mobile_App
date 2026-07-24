@@ -48,7 +48,7 @@ export const restoreIOSStoragePurchase = async ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          receipt: storagePurchase.transactionReceipt,
+          receipt: storagePurchase.purchaseToken,
           productId: storagePurchase.productId,
         }),
       }

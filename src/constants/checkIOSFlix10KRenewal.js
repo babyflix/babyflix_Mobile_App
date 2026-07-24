@@ -20,7 +20,7 @@ export const checkIOSFlix10KRenewal = async ({
       p => p.productId && p.productId.startsWith('flix10k_')
     );
 
-    if (!flixPurchase?.transactionReceipt) {
+    if (!flixPurchase?.purchaseToken) {
       //console.log('No Flix10K purchase found in Apple');
       return;
     }
@@ -30,7 +30,7 @@ export const checkIOSFlix10KRenewal = async ({
       `${EXPO_PUBLIC_API_URL}/api/subscription/verify-ios-flix10k-subscription`,
       {
         uuid: userId,
-        receipt: flixPurchase.transactionReceipt,
+        receipt: flixPurchase.purchaseToken,
         productId: flixPurchase.productId,
       }
     );
@@ -49,7 +49,7 @@ export const checkIOSFlix10KRenewal = async ({
         uuid: userId,
         autoRenewal: verifyData.autoRenewal,
         expiryDate: verifyData.expiryDate,
-        currentPurchaseToken: flixPurchase.originalTransactionId,
+        currentPurchaseToken: flixPurchase.originalTransactionIdentifierIOS,
         source: 'system',
       }
     );

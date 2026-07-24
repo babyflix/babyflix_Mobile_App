@@ -315,12 +315,12 @@ const StorageTab = () => {
       return;
     }
 
-    const newStatus = sub.autoRenewing;
+    const newStatus = sub.isAutoRenewing;
 
     const expiryTimestamp =
       sub.expirationDate ||      // Android (some versions return this)
       sub.expirationDateAndroid || // Some builds define this
-      sub.expirationDateIos ||   // iOS field
+      sub.expirationDateIOS ||   // iOS field
       null;
 
     const expiryDate = expiryTimestamp

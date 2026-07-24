@@ -20,7 +20,7 @@ export const checkIOSStorageRenewal = async ({
       p => p.productId && p.productId.startsWith('storage_')
     );
 
-    if (!storagePurchase?.transactionReceipt) {
+    if (!storagePurchase?.purchaseToken) {
       //console.log('No Storage purchase found in Apple');
       return;
     }
@@ -29,7 +29,7 @@ export const checkIOSStorageRenewal = async ({
       `${EXPO_PUBLIC_API_URL}/api/patients/verify-ios-storage-subscription`,
       {
         userId,
-        receipt: storagePurchase.transactionReceipt,
+        receipt: storagePurchase.purchaseToken,
         productId: storagePurchase.productId,
       }
     );
@@ -47,7 +47,7 @@ export const checkIOSStorageRenewal = async ({
         uuid: userId,
         autoRenewal: verifyData.autoRenewal,
         expiryDate: verifyData.expiryDate,
-        currentPurchaseToken: storagePurchase.originalTransactionId,
+        currentPurchaseToken: storagePurchase.originalTransactionIdentifierIOS,
         source: 'system',
       }
     );

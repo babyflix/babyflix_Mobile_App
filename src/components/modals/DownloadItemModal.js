@@ -4,7 +4,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { modalStyles as styles } from '../../styles/GlobalStyles';
 import * as Progress from 'react-native-progress';
 import Colors from '../../constants/Colors';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';

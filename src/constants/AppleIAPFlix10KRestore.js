@@ -33,7 +33,7 @@ export const restoreIOSFlix10KPurchase = async ({
     }
 
     // ✅ Receipt check
-    if (!flixPurchase?.transactionReceipt) {
+    if (!flixPurchase?.purchaseToken) {
       Alert.alert('No valid subscription found to restore.');
       return;
     }
@@ -46,7 +46,7 @@ export const restoreIOSFlix10KPurchase = async ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          receipt: flixPurchase.transactionReceipt,
+          receipt: flixPurchase.purchaseToken,
           productId: flixPurchase.productId,
         }),
       }

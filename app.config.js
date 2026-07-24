@@ -91,6 +91,7 @@ export default ({ config }) => ({
   },
   plugins: [
     "expo-router",
+    "@react-native-community/datetimepicker",
      [
       "expo-media-library",
       {

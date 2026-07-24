@@ -30,7 +30,7 @@ export const setupApplePurchaseListener = ({ onSuccess, onFailure }) => {
 
     purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(async (purchase) => {
       try {
-        if (purchase?.transactionReceipt) {
+        if (purchase?.purchaseToken) {
           onSuccess?.(purchase);
         }
       } catch (e) {
