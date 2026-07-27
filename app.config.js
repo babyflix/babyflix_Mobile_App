@@ -112,8 +112,7 @@ export default ({ config }) => ({
       "expo-build-properties",
       {
         ios: {
-          jsEngine: "jsc",
-          turboModules: false,  // Disable TurboModules for iOS
+          jsEngine: "hermes",
         },
         android: {
           jsEngine: "hermes",

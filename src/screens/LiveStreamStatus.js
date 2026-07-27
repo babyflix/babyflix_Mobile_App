@@ -60,11 +60,11 @@ const getEventsData = async (user, dispatch, stream, intervalId, eventEndTime,) 
           }
         } else {
           console.error('Missing start or end time for event:', firstEvent);
-          await logError({
-            error: response.data,
-            data: response.data.massege,
-            details: "Error in get-channel-details API call on LiveStreamStatus Missing start or end time for event"
-          });
+          // await logError({
+          //   error: response.data,
+          //   data: response.data.massege,
+          //   details: "Error in get-channel-details API call on LiveStreamStatus Missing start or end time for event"
+          // });
         }
       }
     }
