@@ -156,7 +156,7 @@ export const handlePlaySubscription = async ({
       subscriptionId: 1,
       autoRenewal: autoRenew,
       subscribedMonths: months,
-      stripeSessionId: "play_billing_" + Date.now(),
+      stripeSessionId: "play_billing_" + (purchase.transactionId || Date.now()),
       status: "SUCCESS",
       provider: "play_billing",
       currentPurchaseToken: token,

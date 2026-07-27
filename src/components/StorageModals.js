@@ -543,7 +543,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
             storagePlanPayment: 1,
             autoRenewal: true,
             months: 1,
-            session_id: "play_billing_" + Date.now(),
+            session_id: "play_billing_" + (purchaseItem.transactionId || Date.now()),
             status: "SUCCESS",
             provider: "play_billing",
             currentPurchaseToken,

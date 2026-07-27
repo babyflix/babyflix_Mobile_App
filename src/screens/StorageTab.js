@@ -413,7 +413,7 @@ const StorageTab = () => {
             storagePlanPayment: 1,
             autoRenewal: autoRenew,
             months: monthsToSend,
-            session_id: "play_billing_" + Date.now(),
+            session_id: "play_billing_" + (purchaseItem.transactionId || Date.now()),
             status: "SUCCESS",
             provider: "play_billing",
             currentPurchaseToken,

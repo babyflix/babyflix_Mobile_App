@@ -148,7 +148,7 @@ export const handleAppleFlix10KPayment = async ({
       subscriptionId: 1,
       autoRenewal: verifyData.autoRenewal, // real Apple value
       subscribedMonths: months,
-      stripeSessionId: `ios_iap_${Date.now()}`,
+      stripeSessionId: `ios_iap_${purchase.originalTransactionIdentifierIOS || Date.now()}`,
       status: 'SUCCESS',
       provider: 'ios_iap',
     };
