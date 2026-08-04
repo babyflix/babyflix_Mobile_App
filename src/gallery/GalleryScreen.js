@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
   Platform,
   AppState,
   BackHandler,
+  Dimensions,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -58,6 +59,7 @@ import PlanExpiredModal from './PlanExpiredModal.js';
 import Flix10kBanner from './Flix10kBanner.js';
 import DonationBanner from './DonationBanner.js';
 import RateUsModal, { checkAndShowRateModal } from '../components/RateAppModal.js';
+import { useScreenTour, useTourTarget, useTour } from '../tour/TourContext.js';
 import PhoneNumberModal from '../constants/PhoneNumberModal.js';
 // import {
 //   initAppleIAP,
@@ -155,7 +157,144 @@ const GalleryScreen = () => {
   const [storageFlowActive, setStorageFlowActive] = useState(true);
   const [modalLock, setModalLock] = useState(true);
   const donationModalOpenRef = useRef(false);
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [hasGalleryContent, setHasGalleryContent] = useState(false);
+
+  // First-open guided tour for this screen.
+  // Confirmed by on-device testing: nudging the highlight down by exactly
+  // insets.top (the device's own status bar/notch height, no multiplier)
+  // fixes the Android positioning gap — and scales correctly to any
+  // device's actual inset instead of being tied to one device's number.
+  // iosOffsetY mirrors the same insets.top approach as a starting guess —
+  // UNVERIFIED. This whole positioning bug was only ever diagnosed and
+  // tested on Android; iOS's Modal/safe-area behavior differs under the
+  // hood, so this is not confirmed to fix the same gap there. Test on a
+  // real iOS device/simulator and adjust (or remove) before shipping.
+  const androidOffsetY = insets.top;
+  const iosOffsetY = insets.top;
+  const tourOffsetY = Platform.OS === 'android' ? androidOffsetY : iosOffsetY;
+
+  const headerTourTarget = useTourTarget('gallery', 'header');
+  const flix10kTourTarget = useTourTarget('gallery', 'flix10k');
+  // 'tabs' and 'items' both measure the SAME underlying MediaTabs wrapper
+  // (attached via a combined ref below) — each then isolates its own slice
+  // of it (top strip vs. everything below) using maxHeight/offsetY.
+  const tabsTourTarget = useTourTarget('gallery', 'tabs');
+  const itemsTourTarget = useTourTarget('gallery', 'items');
+  const mediaTabsCombinedRef = (node) => {
+    tabsTourTarget.current = node;
+    itemsTourTarget.current = node;
+  };
+  const itemActionsTourTarget = useTourTarget('gallery', 'itemActions');
+  const itemConvertTourTarget = useTourTarget('gallery', 'itemConvert');
+  // While the first-open tour is running on this screen, hold off on every
+  // other popup (storage, phone/DOB, rate-us, app update) — showing two
+  // modals/overlays at once is exactly what breaks on iOS.
+  const { activeScreenId: tourActiveScreenId } = useTour();
+  const isTourActive = tourActiveScreenId === 'gallery';
+  // useScreenTour decides (async) whether to start the tour ~500ms after
+  // focus. Without this grace period, a fast-resolving popup (e.g. missing
+  // phone/DOB) could win the race and show before the tour claims the
+  // screen, since the two systems don't otherwise know about each other.
+  const [tourGracePeriodOver, setTourGracePeriodOver] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setTourGracePeriodOver(true), 700);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Starting guess for the Material Top Tabs bar's own height (icon + label
+  // + its marginTop:8 gap, per MediaTabs.js's styles.tabBar) — used to split
+  // the "tabs" highlight (just the tab row) from "items" (everything below
+  // it). Tune the same way the safe-area offsets were tuned: adjust, reload,
+  // check on-device.
+  const tabBarHeightEstimate = 64;
+  // Bottom tab bar is a fixed-position, fixed-height (65) element rendered
+  // by a completely separate file (app/(app)/_layout.js) via Expo Router's
+  // <Tabs>, which doesn't expose a ref through its own JSX the way a plain
+  // View does — so its highlight is computed directly from known screen
+  // dimensions instead of measured.
+  const bottomNavRect = () => {
+    const { width, height } = Dimensions.get('window');
+    // Must match the tab bar's real rendered height in app/(app)/_layout.js.
+    // On Android, that file now explicitly adds insets.bottom to clear the
+    // classic 3-button system nav bar (a no-op in gesture-nav mode, where
+    // insets.bottom ≈ 0). On iOS, @react-navigation/bottom-tabs is
+    // documented to auto-add insets.bottom to a fixed tabBarStyle.height
+    // for iPhones with a home indicator — unverified on a real device, but
+    // the formula should already match either way.
+    const barHeight = 65 + insets.bottom;
+    return { x: 0, y: height - barHeight, width, height: barHeight };
+  };
+
+  const galleryTourSteps = useMemo(() => [
+    {
+      id: 'header',
+      title: t('tour.gallery.header.title'),
+      description: t('tour.gallery.header.description'),
+      offsetX: 0,
+      offsetY: tourOffsetY,
+      offsetWidth: 0,
+      offsetHeight: 0,
+    },
+    {
+      id: 'flix10k',
+      title: t('tour.gallery.flix10k.title'),
+      description: t('tour.gallery.flix10k.description'),
+      offsetX: 0,
+      offsetY: tourOffsetY,
+      offsetWidth: 0,
+      offsetHeight: 0,
+    },
+    {
+      id: 'tabs',
+      title: t('tour.gallery.tabs.title'),
+      description: t('tour.gallery.tabs.description'),
+      offsetX: 0,
+      // Small extra nudge on top of tourOffsetY — was sitting a little too
+      // high compared to the real tab row. Adjust further if still off.
+      offsetY: tourOffsetY + 12,
+      offsetWidth: 0,
+      offsetHeight: 0,
+      maxHeight: tabBarHeightEstimate,
+    },
+    {
+      id: 'items',
+      title: t('tour.gallery.items.title'),
+      description: t('tour.gallery.items.description'),
+      offsetX: 0,
+      offsetY: tourOffsetY + tabBarHeightEstimate,
+      offsetWidth: 0,
+      offsetHeight: -tabBarHeightEstimate,
+    },
+    {
+      id: 'itemActions',
+      title: t('tour.gallery.itemActions.title'),
+      description: t('tour.gallery.itemActions.description'),
+      offsetX: 0,
+      offsetY: tourOffsetY,
+      offsetWidth: 0,
+      offsetHeight: 0,
+    },
+    {
+      id: 'itemConvert',
+      title: t('tour.gallery.itemConvert.title'),
+      description: t('tour.gallery.itemConvert.description'),
+      offsetX: 0,
+      offsetY: tourOffsetY,
+      offsetWidth: 0,
+      offsetHeight: 0,
+    },
+    {
+      id: 'bottomNav',
+      title: t('tour.gallery.bottomNav.title'),
+      description: t('tour.gallery.bottomNav.description'),
+      manualRect: bottomNavRect,
+      isFinal: true,
+    },
+  ], [tourOffsetY, tabBarHeightEstimate, i18n.language, t]);
+  useScreenTour('gallery', galleryTourSteps);
+
   const [forceOpenFlixBanner, setForceOpenFlixBanner] = useState(false);
   const [directIdentifiers, setDirectIdentifiers] = useState([]);
   const [showProfileRequired, setShowProfileRequired] = useState(false);
@@ -183,7 +322,6 @@ const GalleryScreen = () => {
   //console.log("storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays",{storagePlanPrice, storagePlanDate, storagePlanName, storagePlanId, storagePlanExpired, storagePlanRemainingDays})
 
   const dispatch = useDispatch();
-  const insets = useSafeAreaInsets();
   const triggeredRef = useRef(false);
   const hasHandledPaymentStatusRef = useRef(false);
   const scrollY = useSharedValue(0);
@@ -216,7 +354,6 @@ const GalleryScreen = () => {
   const { handleChooseClick } = useHeaderAction();
   const hasHiddenModalRef = useRef(false);
   const router = useRouter();
-  const { t } = useTranslation();
   const upgradeShownRef = useRef(false);
   const expiredShownRef = useRef(false);
   const hasAutoRestoredRef = useRef(false);
@@ -527,14 +664,18 @@ useEffect(() => {
 
   useEffect(() => {
     const checkLanguage = async () => {
-      //console.log('innnnnnnnnnnnnnnnnnnnnnnn')
-      const result = await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
-      uuid: user.uuid,
-      autoRenewal: false,
-      expiryDate: "2027-03-08T11:12:41.000Z",
-    });
+      try {
+        //console.log('innnnnnnnnnnnnnnnnnnnnnnn')
+        const result = await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
+          uuid: user.uuid,
+          autoRenewal: false,
+          expiryDate: "2027-03-08T11:12:41.000Z",
+        });
 
-    //console.log("Auto-renewal synced with backend:", result);
+        //console.log("Auto-renewal synced with backend:", result);
+      } catch (err) {
+        console.log('Error syncing flix10k auto-renewal:');
+      }
     };
     checkLanguage();
   }, []);
@@ -1106,6 +1247,8 @@ useEffect(() => {
 
   useEffect(() => {
   if (modalLock) return;
+  if (!tourGracePeriodOver) return;
+  if (isTourActive) return;
   if (storageFlowActive) return;
   if (activeModal) return;
   if (donationModalOpenRef.current) return;
@@ -1136,7 +1279,7 @@ useEffect(() => {
     setActiveModal(MODALS.RATE);
     return;
   }
-}, [modalChecks, activeModal, storageFlowActive, modalLock, galleryRefreshKey]);
+}, [modalChecks, activeModal, storageFlowActive, modalLock, galleryRefreshKey, isTourActive, tourGracePeriodOver]);
 
   // const handlePreview = (item) => {
   //   if (!item.object_url) {
@@ -1257,12 +1400,15 @@ useEffect(() => {
       Platform.OS === 'android' ? { paddingTop: insets.top } : null
     ]}>
       <LiveStreamStatus />
-      <Header title={t("gallery.header")} />
+      <View ref={headerTourTarget} collapsable={false} style={{ zIndex: 999, elevation: 999 }}>
+        <Header title={t("gallery.header")} />
+      </View>
 
       <View style={{ zIndex: 10 }} pointerEvents="box-none">
         <DonationBanner donationModalOpenRef={donationModalOpenRef} />
       </View>
 
+      <View ref={flix10kTourTarget} collapsable={false}>
       <Animated.View
         style={flix10kBannerStyle}
         pointerEvents="box-none"
@@ -1298,10 +1444,12 @@ useEffect(() => {
         clearForceOpen={() => setForceOpenFlixBanner(false)}
       />
       </Animated.View>
+      </View>
 
       {isLoading ? (
         <Loader loading={true} />
       ) : (
+        <View ref={mediaTabsCombinedRef} collapsable={false} style={{ flex: 1 }}>
         <MediaTabs
           mediaData={mediaData}
           onPreview={handlePreview}
@@ -1332,7 +1480,10 @@ useEffect(() => {
           setSelectedType={setSelectedType}
           onRequireSubscription={handleRequireSubscription}
           scrollY={scrollY}
+          itemActionsTourTarget={itemActionsTourTarget}
+          itemConvertTourTarget={itemConvertTourTarget}
         />
+        </View>
       )}
 
       <SelectionBar
@@ -1398,7 +1549,7 @@ useEffect(() => {
       {/* {flix10KAD && showAfterAdd && */}
       <UpgradeReminderModal
         //visible={showUpgradeReminderModal}
-         visible={flix10KAD && showAfterAdd && showUpgradeReminderModal}
+         visible={tourGracePeriodOver && !isTourActive && flix10KAD && showAfterAdd && showUpgradeReminderModal}
         message={upgradeReminderMessage}
         onClose={() => {
           setShowUpgradeReminderModal(false);
@@ -1411,7 +1562,7 @@ useEffect(() => {
       {/* {flix10KAD && showAfterAdd && */}
       <PlanExpiredModal
         //visible={showPlanExpiredModal}
-        visible={flix10KAD && showAfterAdd && showPlanExpiredModal}
+        visible={tourGracePeriodOver && !isTourActive && flix10KAD && showAfterAdd && showPlanExpiredModal}
         expiredPlanName={expiredPlanName}
         onClose={() => {
           setShowPlanExpiredModal(false);
@@ -1494,7 +1645,7 @@ useEffect(() => {
         }}
       />
 
-      {hasGalleryContent && (storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
+      {tourGracePeriodOver && !isTourActive && hasGalleryContent && (storageModelStart || shouldShowStorageModal) && flix10KAD && showAfterAdd && (
         <StorageModals
           onClose={() => {
             setStorageModelStart(false); 

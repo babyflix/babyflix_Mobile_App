@@ -279,6 +279,8 @@
     "storagePlan": "Storage Plan",
     "noPlanSelected": "No plan selected",
     "language": "Language",
+    "replayTour": "Replay Tour",
+    "replayTourSuccess": "App tour reset. Please restart the app.",
     "today": "Today",
     "yesterday": "Yesterday",
     "expiringInDays": "Expiring in {{days}} days",
@@ -533,5 +535,43 @@
     "phoneUpdated": "Phone number updated successfully",
     "datesUpdated": "Dates updated successfully"
   }
-}
+  },
+  "tour": {
+    "common": {
+      "skip": "Skip",
+      "back": "Back",
+      "next": "Next",
+      "done": "Done"
+    },
+    "gallery": {
+      "header": {
+        "title": "Your Gallery Header",
+        "description": "Tap the bell for your latest notifications, the message icon to check your chats, and the profile menu to access some important things from here."
+      },
+      "flix10k": {
+        "title": "The Flix10K Magic",
+        "description": "Just tap the Flix10K Designer button. Flix10K turns your baby's ultrasound scans into realistic AI-generated baby photos — see what your little one might look like before they arrive."
+      },
+      "tabs": {
+        "title": "Gallery Tabs",
+        "description": "Images and Videos hold everything uploaded by the clinic and you. The Flix10K tab holds your realistic AI-generated baby images made from ultrasounds."
+      },
+      "items": {
+        "title": "Your Gallery",
+        "description": "All your uploaded photos and videos show up here, newest first."
+      },
+      "itemActions": {
+        "title": "Quick Actions",
+        "description": "Use these buttons on any item to download it in HD quality, share it with family or friends, or delete it instantly from your gallery if you no longer need it."
+      },
+      "itemConvert": {
+        "title": "Convert to Flix10K",
+        "description": "Tap Convert on any photo to turn it into a realistic AI-generated baby image with Flix10K."
+      },
+      "bottomNav": {
+        "title": "Get Around the App",
+        "description": "Gallery, Upload, Events, Live, Messages, and Profile — everything is one tap away from this bar."
+      }
+    }
+  }
 }

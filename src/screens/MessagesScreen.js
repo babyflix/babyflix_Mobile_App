@@ -16,6 +16,7 @@ import calendar from 'dayjs/plugin/calendar';
 import 'dayjs/locale/es';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useAndroidNavBarHeight from '../hooks/useAndroidNavBarHeight';
 import useKeyboardTabBarEffect from '../hooks/useKeyboardTabBarEffect';
 import { logError } from '../components/logError';
 import { useTranslation } from 'react-i18next';
@@ -63,7 +64,6 @@ const markMessageRead = async (message_uuid) => {
 };
 
 const MessagesScreen = () => {
-  useKeyboardTabBarEffect();
   const [selectedMessageId, setSelectedMessageId] = useState();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -82,8 +82,10 @@ const MessagesScreen = () => {
   const [online, setOnline] = useState(false);
   const [isReceiverTyping, setIsReceiverTyping] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [inputMarginBottom, setInputMarginBottom] = useState(15);
   const [selectedChat, setSelectedChat] = useState(null);
+  useKeyboardTabBarEffect(!!selectedChat);
 
   const { t, i18n } = useTranslation();
 
@@ -99,6 +101,7 @@ const MessagesScreen = () => {
   const unreadMessages = useSelector((state) => state.header.unreadMessages);
   const user = useSelector((state) => state.auth);
   const insets = useSafeAreaInsets();
+  const androidNavBarExtra = useAndroidNavBarHeight();
   const translate = dynamicTranslate;
   const lang = (AsyncStorage.getItem('appLanguage')) || 'en';
 
@@ -121,33 +124,77 @@ const MessagesScreen = () => {
   );
 
   useEffect(() => {
-    navigation.setOptions({
+    // Must match app/(app)/_layout.js's tab bar sizing exactly. This is a
+    // THIRD independent place (besides useKeyboardTabBarEffect and the
+    // default navigator config) that was calling setOptions({tabBarStyle})
+    // with its own hardcoded, un-fixed values — firing on every chat
+    // open/close, which is why the nav-bar-overlap bug kept coming back
+    // regardless of the other fixes. Also dropped position: 'absolute',
+    // which pulls the bar out of normal safe-area-aware layout.
+    const tabBarOptions = {
+      // The navigator's default screenOptions has tabBarHideOnKeyboard:
+      // true — a built-in React Navigation behavior that shows/hides the
+      // tab bar based on keyboard visibility alone, completely unaware of
+      // selectedChat. It was overriding our display:'none' the moment the
+      // keyboard closed inside an open chat, re-showing the tab bar (with
+      // its default grey background) below the chat. Disabling it here
+      // while a chat is open hands full control to our own effects; it's
+      // untouched everywhere else since this only applies to this screen.
+      tabBarHideOnKeyboard: !selectedChat,
       tabBarStyle: selectedChat
         ? { display: 'none' }
         : {
           display: 'flex',
-          position: 'absolute',
           borderTopColor: Colors.border,
           paddingTop: 5,
-          paddingBottom: 5,
-          height: 65,
+          paddingBottom: 5 + androidNavBarExtra,
+          height: 65 + androidNavBarExtra,
           backgroundColor: 'white'
         },
-    });
-  }, [selectedChat]);
+    };
+    // Applying this from within a leaf screen should target this screen's
+    // own tab options directly, but it's not certain that's how this
+    // screen sits in the navigator tree here — so set it on both this
+    // navigation object and its parent (if different) rather than bet on
+    // one being correct.
+    navigation.setOptions(tabBarOptions);
+    const parentNav = navigation.getParent();
+    if (parentNav && parentNav !== navigation) {
+      parentNav.setOptions(tabBarOptions);
+    }
+  }, [selectedChat, androidNavBarExtra]);
 
   useEffect(() => {
     getChatMembers();
   }, [unreadMessagesCount]);
 
   useEffect(() => {
-    const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
+    const keyboardDidShow = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardVisible(true);
+      // Drives the container's paddingBottom directly on Android instead
+      // of KeyboardAvoidingView's own behavior="padding"/"height" — both
+      // had the same bug where the internal height/padding state didn't
+      // reliably reset to 0 once the keyboard closed, leaving a stale
+      // leftover gap. Our own state (set here and explicitly zeroed in
+      // keyboardDidHide below) doesn't have that problem.
+      setKeyboardHeight(e?.endCoordinates?.height || 0);
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     });
+    // isKeyboardVisible was declared but never actually updated anywhere —
+    // needed so the message input's bottom margin can tell whether the
+    // keyboard (which already clears the nav bar itself) is open, instead
+    // of always adding extra safe-area margin on top of it.
+    const keyboardDidHide = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+      setKeyboardHeight(0);
+    });
 
-    return () => keyboardDidShow.remove();
+    return () => {
+      keyboardDidShow.remove();
+      keyboardDidHide.remove();
+    };
   }, []);
 
 
@@ -619,10 +666,26 @@ const MessagesScreen = () => {
     return (
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        // On iOS, KeyboardAvoidingView's own "padding" behavior is fine —
+        // this bug is Android-only. On Android it's turned off (undefined)
+        // because both "height" and "padding" have the same underlying
+        // issue: their internally-tracked keyboard height doesn't reliably
+        // reset to 0 once the keyboard closes, leaving a stale leftover
+        // gap. windowSoftInputMode="adjustResize" is set natively, but
+        // this screen is hosted in its own react-native-screens fragment
+        // and doesn't get resized by it either (confirmed: with no
+        // compensation at all, the input stayed hidden behind the
+        // keyboard). So on Android the container's own paddingBottom is
+        // driven directly from our own keyboardHeight state below, which
+        // resets reliably because we explicitly zero it ourselves.
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* <SafeAreaView edges={['top']} style={{flex: 1, backgroundColor: Colors.white, paddingTop: Platform.OS === 'ios' ? 10 : 10,}}> */}
-        <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={[
+          styles.container,
+          { paddingTop: insets.top },
+          Platform.OS === 'android' && { paddingBottom: keyboardHeight },
+        ]}>
           <View style={[styles.headerRow]}>
             <View style={[styles.avatar2, { justifyContent: 'center', alignItems: 'center' }]}>
               <Text style={styles.avatarText}>{senderInitials}</Text>
@@ -718,7 +781,16 @@ const MessagesScreen = () => {
 
           </ScrollView>
 
-          <View style={[styles.messageBox]}>
+          <View style={[
+            styles.messageBox,
+            // Only add the extra safe-area margin when the keyboard is
+            // closed. When it's open, KeyboardAvoidingView already shifts
+            // the input to sit right above the keyboard — adding this
+            // margin on top of that just creates a dead gap between
+            // the input and the keyboard itself. No extra buffer beyond
+            // the real inset — that's what was making this look oversized.
+            Platform.OS === 'android' && !isKeyboardVisible && { marginBottom: androidNavBarExtra },
+          ]}>
             <TextInput
               ref={inputRef}
               style={styles.input}

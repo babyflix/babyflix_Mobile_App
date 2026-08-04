@@ -44,6 +44,13 @@ import CustomSwipeTabs from '../constants/CustomSwipeTabs.js';
 import { setSubscriptionExpired } from '../state/slices/subscriptionSlice.js';
 
 
+const formatDisplayDate = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
 const ProfileTab = ({ route }) => {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -490,12 +497,12 @@ const ProfileTab = ({ route }) => {
         <View style={styles.infoRow}>
           <MaterialIcons name="event" size={20} color={Colors.error} style={styles.infoIcon} />
           <Text style={styles.infoLabel}>{t('profileSettings.dueDate')}:</Text>
-          <Text style={styles.infoValue}>{result.dueDate || 'N/A'}</Text>
+          <Text style={styles.infoValue}>{formatDisplayDate(result.dueDate) || 'N/A'}</Text>
         </View>
         <View style={styles.infoRow}>
           <MaterialIcons name="cake" size={20} color='blue' style={styles.infoIcon} />
           <Text style={styles.infoLabel}>{t('profileSettings.dob')}:</Text>
-          <Text style={styles.infoValue}>{result.dob || 'N/A'}</Text>
+          <Text style={styles.infoValue}>{formatDisplayDate(result.dob) || 'N/A'}</Text>
         </View>
 
 

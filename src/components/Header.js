@@ -20,6 +20,8 @@ import * as Notifications from 'expo-notifications';
 import { useNotifications } from '../constants/NotificationContext';
 import i18n from '../constants/i18n';
 import LanguageModal from '../constants/LanguageModal';
+import { resetTour, TOUR_SCREEN_IDS } from '../tour/TourContext';
+import { showSnackbar } from '../state/slices/uiSlice';
 import { useTranslation } from 'react-i18next';
 import { dynamicTranslate } from '../constants/useDynamicTranslate';
 import 'moment/locale/es';
@@ -207,6 +209,22 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
 
   const closeDropdownHandler = () => {
     dispatch(closeDropdown());
+  };
+
+  const handleReplayTour = async () => {
+    try {
+      if (user?.uuid) {
+        await Promise.all(TOUR_SCREEN_IDS.map((screenId) => resetTour(screenId, user.uuid)));
+      }
+      closeDropdownHandler();
+      dispatch(showSnackbar({
+        visible: true,
+        message: t('header.replayTourSuccess'),
+        type: 'success',
+      }));
+    } catch (err) {
+      console.log('Error resetting tour:', err);
+    }
   };
 
   useEffect(() => {
@@ -528,6 +546,16 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
                 <Ionicons name="language-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
                 <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
                   {t('header.language')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.dropdownItem}
+                onPress={handleReplayTour}
+              >
+                <Ionicons name="compass-outline" size={20} color={Colors.textPrimary} style={styles.icon} />
+                <Text style={{ fontFamily: 'Nunito400', marginTop: 4 }}>
+                  {t('header.replayTour')}
                 </Text>
               </TouchableOpacity>
 

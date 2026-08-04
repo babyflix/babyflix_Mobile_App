@@ -43,6 +43,8 @@ const MediaTabs = ({
   setSelectedType,
   onRequireSubscription,
   scrollY,
+  itemActionsTourTarget,
+  itemConvertTourTarget,
 }) => {
   const { t } = useTranslation();
 
@@ -74,6 +76,8 @@ const MediaTabs = ({
     setSelectedType,
     onRequireSubscription,
     scrollY,
+    itemActionsTourTarget,
+    itemConvertTourTarget,
   };
 
   return (

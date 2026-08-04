@@ -40,6 +40,8 @@ const GalleryItem = ({
   selectedItemsForAi,
   toggleItemSelection,
   onRequireSubscription,
+  itemActionsTourTarget,
+  itemConvertTourTarget,
 }) => {
   const dispatch = useDispatch();
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -172,6 +174,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
           >
             {item.object_type === 'image' && (
             <TouchableOpacity
+              ref={itemConvertTourTarget}
               style={styles.convertBtn}
               onPress={(e) => handleConvertPress(e)}
               activeOpacity={0.8}
@@ -231,7 +234,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
         </View>
 
         {!disableMenuAndSelection &&
-          <View style={styles.actions}>
+          <View ref={itemActionsTourTarget} collapsable={false} style={styles.actions}>
             <TouchableOpacity
               style={[styles.actionBtnDownload, !isSubscribed && { marginRight: 12,marginLeft: 20,}]}
               onPress={() => {

@@ -12,6 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '../constants/Colors';
 import { useTranslation } from 'react-i18next';
+import useAndroidNavBarHeight from '../hooks/useAndroidNavBarHeight';
 
 const APP_OPEN_KEY = 'APP_OPEN_COUNT';
 const RATED_KEY = 'ALREADY_RATED';
@@ -23,6 +24,7 @@ const APP_STORE_URL = 'https://apps.apple.com/app/idXXXXXXXXX';
 
 const RateUsModal = ({ visible, onClose }) => {
   const { t } = useTranslation();
+  const androidNavBarExtra = useAndroidNavBarHeight();
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
@@ -48,7 +50,7 @@ const RateUsModal = ({ visible, onClose }) => {
 
   return (
     <Modal transparent visible={visible} animationType="fade" >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingBottom: 20 + androidNavBarExtra }]}>
         <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
           <Text style={styles.title}>{t("rateUs.title")}</Text>
           <Text style={styles.subtitle}>{t("rateUs.message")} 💖</Text>

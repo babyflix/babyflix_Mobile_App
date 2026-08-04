@@ -34,6 +34,8 @@ const MediaGrid = React.memo(({
   selectedType,
   onRequireSubscription,
   scrollY,
+  itemActionsTourTarget,
+  itemConvertTourTarget,
 }) => {
   const { t } = useTranslation();
   const flatListRef = useRef();
@@ -86,9 +88,11 @@ const MediaGrid = React.memo(({
         selectedItemsForAi={selectedItemsForAi}
         toggleItemSelection={toggleItemSelection}
         onRequireSubscription={onRequireSubscription}
+        itemActionsTourTarget={index === 0 && type === 'image' ? itemActionsTourTarget : undefined}
+        itemConvertTourTarget={index === 0 && type === 'image' ? itemConvertTourTarget : undefined}
       />
     </>
-  ), [selectedItems, activeMenuId, selectionMode, disableMenuAndSelection, selectedItemsForAi]);
+  ), [selectedItems, activeMenuId, selectionMode, disableMenuAndSelection, selectedItemsForAi, type, itemActionsTourTarget, itemConvertTourTarget]);
 
   return (
     <>

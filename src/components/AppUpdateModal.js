@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Constants from 'expo-constants';
 import Colors from '../constants/Colors';
+import useAndroidNavBarHeight from '../hooks/useAndroidNavBarHeight';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import { dynamicTranslate } from '../constants/useDynamicTranslate';
@@ -24,6 +25,7 @@ const AppUpdateModal = ({ serverUrl, visible, onClose, onUpdateRequired }) => {
   const [storeLinks, setStoreLinks] = useState({ android: '', ios: '' });
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
+  const androidNavBarExtra = useAndroidNavBarHeight();
 
   useEffect(() => {
     const checkForUpdate = async () => {
@@ -74,7 +76,7 @@ const AppUpdateModal = ({ serverUrl, visible, onClose, onUpdateRequired }) => {
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingBottom: 40 + androidNavBarExtra }]}>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>{forceUpdate ? t('appUpdate.title.force') : t('appUpdate.title.optional')}</Text>
           <Text style={styles.message}>{updateMessage}</Text>

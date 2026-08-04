@@ -7,10 +7,11 @@ import Snackbar from '../src/components/Snackbar';
 import Loader from '../src/components/Loader';
 import AuthLoader from '../src/components/AuthLoader';
 import NetInfo from '@react-native-community/netinfo';
-import { showSnackbar } from '../src/state/slices/uiSlice';
+import { showSnackbar, hideSnackbar } from '../src/state/slices/uiSlice';
 import { Alert, Linking, Platform, Text, TextInput } from 'react-native';
 import { HeaderActionProvider } from '../src/components/HeaderActionContext';
 import { NotificationProvider } from '../src/constants/NotificationContext';
+import TourProvider from '../src/tour/TourProvider';
 
 import { useFonts } from 'expo-font';
 import {
@@ -225,7 +226,7 @@ useEffect(() => {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
       </Stack>
-      <Snackbar {...snackbar} />
+      <Snackbar {...snackbar} onDismiss={() => dispatch(hideSnackbar())} />
       <Loader loading={loading} />
       {/* <LanguageModal visible={showLangModal} onClose={() => setShowLangModal(false)} /> */}
     </>
@@ -262,7 +263,9 @@ export default function RootLayout() {
         <HeaderActionProvider>
         <AuthLoader>
           <GestureHandlerRootView style={{ flex: 1 }}>
+          <TourProvider>
           <LayoutContent />
+          </TourProvider>
           </GestureHandlerRootView>
         </AuthLoader>
         </HeaderActionProvider>

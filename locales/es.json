@@ -279,6 +279,8 @@
     "storagePlan": "Plan de almacenamiento",
     "noPlanSelected": "No plan seleccionado",
     "language": "Idioma",
+    "replayTour": "Repetir guía",
+    "replayTourSuccess": "Guía de la aplicación reiniciada. Por favor, reinicia la aplicación.",
     "today": "Hoy",
     "yesterday": "Ayer",
     "expiringInDays": "Expira en {{days}} días",
@@ -533,5 +535,43 @@
     "phoneUpdated": "Número de teléfono actualizado correctamente",
     "datesUpdated": "Fechas actualizadas correctamente"
   }
-}
+  },
+  "tour": {
+    "common": {
+      "skip": "Omitir",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "done": "Listo"
+    },
+    "gallery": {
+      "header": {
+        "title": "El Encabezado de tu Galería",
+        "description": "Toca la campana para ver tus notificaciones, el ícono de mensajes para revisar tus chats, y el menú de perfil para acceder a algunas cosas importantes desde aquí."
+      },
+      "flix10k": {
+        "title": "La Magia de Flix10K",
+        "description": "Solo toca el botón Flix10K Designer. Flix10K convierte las ecografías de tu bebé en fotos realistas generadas por IA — mira cómo podría lucir tu pequeño antes de que llegue."
+      },
+      "tabs": {
+        "title": "Pestañas de la Galería",
+        "description": "Imágenes y Videos contienen todo lo subido por la clínica y por ti. La pestaña Flix10K contiene tus imágenes realistas de bebé generadas por IA a partir de ecografías."
+      },
+      "items": {
+        "title": "Tu Galería",
+        "description": "Todas tus fotos y videos subidos aparecen aquí, los más recientes primero."
+      },
+      "itemActions": {
+        "title": "Acciones Rápidas",
+        "description": "Usa estos botones en cualquier elemento para descargarlo en calidad HD, compartirlo con familiares o amigos, o eliminarlo al instante de tu galería si ya no lo necesitas."
+      },
+      "itemConvert": {
+        "title": "Convertir a Flix10K",
+        "description": "Toca Convertir en cualquier foto para transformarla en una imagen realista de bebé generada por IA con Flix10K."
+      },
+      "bottomNav": {
+        "title": "Navega por la App",
+        "description": "Galería, Subir, Eventos, En Vivo, Mensajes y Perfil — todo a un toque de distancia desde esta barra."
+      }
+    }
+  }
 }

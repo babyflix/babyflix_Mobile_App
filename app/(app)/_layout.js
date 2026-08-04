@@ -130,13 +130,21 @@ import { Tabs } from 'expo-router';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import Colors from '../../src/constants/Colors';
-import { TouchableOpacity, Animated, View } from 'react-native';
+import { TouchableOpacity, Animated, View, Platform } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import useAndroidNavBarHeight from '../../src/hooks/useAndroidNavBarHeight';
 
 export default function AppLayout() {
   const { isStreamStarted, streamState } = useSelector((state) => state.stream);
   const { t } = useTranslation();
+  // On Android, the classic 3-button system navigation bar takes up real
+  // screen space at the bottom (unlike gesture navigation, where it's
+  // ~0). A fixed tab bar height doesn't account for that, so the system
+  // nav bar was covering/hiding the app's own tab bar when 3-button mode
+  // is enabled. Growing the bar by this fixes both cases: it's a no-op
+  // in gesture mode and correctly clears the system bar when it's present.
+  const androidNavBarExtra = useAndroidNavBarHeight();
 
   // Animated value for smooth pulsing effect on live tab
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -164,8 +172,8 @@ export default function AppLayout() {
         tabBarStyle: {
           borderTopColor: Colors.border,
           paddingTop: 5,
-          paddingBottom: 5,
-          height: 65,
+          paddingBottom: 5 + androidNavBarExtra,
+          height: 65 + androidNavBarExtra,
           backgroundColor: '#f9f9f9', // Light grey background
         },
         tabBarLabelStyle: {

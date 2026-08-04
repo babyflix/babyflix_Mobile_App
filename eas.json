@@ -8,13 +8,13 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "gradleCommand": ":app:assemblePlayDebug"
+        "gradleCommand": ":app:assembleDebug"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
-        "gradleCommand": ":app:assemblePlayRelease"
+        "gradleCommand": ":app:assembleRelease"
       }
     },
     "production": {
