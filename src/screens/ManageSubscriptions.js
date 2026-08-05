@@ -232,7 +232,7 @@ const ManageSubscriptions = () => {
       //console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
 
       // Sync with backend only if changed
-      await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal-app`, {
+      await axios.put(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal-app`, {
         uuid,
         autoRenewal: newStatus,
         expiryDate,

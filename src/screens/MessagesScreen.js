@@ -787,9 +787,10 @@ const MessagesScreen = () => {
             // closed. When it's open, KeyboardAvoidingView already shifts
             // the input to sit right above the keyboard — adding this
             // margin on top of that just creates a dead gap between
-            // the input and the keyboard itself. No extra buffer beyond
-            // the real inset — that's what was making this look oversized.
+            // the input and the keyboard itself. Real inset value per
+            // platform, not a guessed fixed number.
             Platform.OS === 'android' && !isKeyboardVisible && { marginBottom: androidNavBarExtra },
+            Platform.OS === 'ios' && !isKeyboardVisible && { marginBottom: insets.bottom },
           ]}>
             <TextInput
               ref={inputRef}

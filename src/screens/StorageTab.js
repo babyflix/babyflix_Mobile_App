@@ -330,7 +330,7 @@ const StorageTab = () => {
     //console.log("Play Store autoRenew:", newStatus, "Expiry:", expiryDate);
 
     // Sync with backend only if changed
-    await axios.post(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
+    await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
       uuid,
       autoRenewal: newStatus,
       expiryDate,

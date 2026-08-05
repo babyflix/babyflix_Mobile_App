@@ -71,7 +71,7 @@ export const checkAndroidStorageRenewal = async ({
       return;
     }
 
-    await axios.post(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
+    await axios.put(`${EXPO_PUBLIC_API_URL}/api/patients/update-storage-autorenewal-app`, {
       uuid: userId,
       autoRenewal: verifyData.autoRenew,
       expiryDate: verifyData.expiryDate || null,

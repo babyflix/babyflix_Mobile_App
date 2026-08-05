@@ -69,7 +69,7 @@ export const checkAndroidFlix10KRenewal = async ({
       return;
     }
 
-    await axios.post(
+    await axios.put(
       `${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal-app`,
       {
         uuid: userId,
