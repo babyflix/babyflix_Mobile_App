@@ -2,6 +2,7 @@ import * as RNIap from 'react-native-iap';
 import { Platform } from 'react-native';
 import axios from 'axios';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { sendLog } from './logger';
 
 export const checkIOSFlix10KRenewal = async ({
   userId,
@@ -10,6 +11,14 @@ export const checkIOSFlix10KRenewal = async ({
   getFlix10KPlanApi,
 }) => {
   if (Platform.OS !== 'ios') return;
+
+  const log = (msg, type = 'INFO') =>
+    sendLog({
+      message: msg,
+      screen: 'Flix10KRenewalCheck',
+      log_type: type,
+      user_id: userId,
+    });
 
   try {
     await RNIap.initConnection();
@@ -21,7 +30,7 @@ export const checkIOSFlix10KRenewal = async ({
     );
 
     if (!flixPurchase?.purchaseToken) {
-      //console.log('No Flix10K purchase found in Apple');
+      log('No Flix10K purchase found in Apple');
       return;
     }
 
@@ -37,8 +46,10 @@ export const checkIOSFlix10KRenewal = async ({
 
     const verifyData = verifyRes.data;
 
+    log(`Verify response: ${verifyData.expiryDate}, ${verifyData.isActive}`);
+
     if (verifyData?.status !== 'active') {
-      //console.log('Still expired from Apple');
+      log('Still expired from Apple');
       return;
     }
 
@@ -54,11 +65,11 @@ export const checkIOSFlix10KRenewal = async ({
       }
     );
 
+    log('Flix10K renewed → DB updated');
+
     // refresh redux
     await getFlix10KPlanApi(userEmail, dispatch);
-
-    //console.log('Flix10K renewed → DB updated');
   } catch (err) {
-    //console.log('Flix10K renewal check failed', err);
+    log(`Flix10K renewal check failed: ${err?.message || JSON.stringify(err)}`, 'ERROR');
   }
 };

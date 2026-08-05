@@ -2,6 +2,7 @@ import * as RNIap from 'react-native-iap';
 import { Platform } from 'react-native';
 import axios from 'axios';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { sendLog } from './logger';
 
 export const checkIOSStorageRenewal = async ({
   userId,
@@ -10,6 +11,14 @@ export const checkIOSStorageRenewal = async ({
   getStoragePlanDetails,
 }) => {
   if (Platform.OS !== 'ios') return;
+
+  const log = (msg, type = 'INFO') =>
+    sendLog({
+      message: msg,
+      screen: 'StorageRenewalCheck',
+      log_type: type,
+      user_id: userId,
+    });
 
   try {
     await RNIap.initConnection();
@@ -21,7 +30,7 @@ export const checkIOSStorageRenewal = async ({
     );
 
     if (!storagePurchase?.purchaseToken) {
-      //console.log('No Storage purchase found in Apple');
+      log('No Storage purchase found in Apple');
       return;
     }
 
@@ -36,8 +45,10 @@ export const checkIOSStorageRenewal = async ({
 
     const verifyData = verifyRes.data;
 
+    log(`Verify response: ${verifyData.expiryDate}, ${verifyData.isActive}`);
+
     if (verifyData?.status !== 'active') {
-      //console.log('Still expired from Apple');
+      log('Still expired from Apple');
       return;
     }
 
@@ -52,10 +63,10 @@ export const checkIOSStorageRenewal = async ({
       }
     );
 
-    await getStoragePlanDetails(userEmail, dispatch);
+    log('Storage renewed → DB updated');
 
-    //console.log('Storage renewed → DB updated');
+    await getStoragePlanDetails(userEmail, dispatch);
   } catch (err) {
-    //console.log('Storage renewal check failed', err);
+    log(`Storage renewal check failed: ${err?.message || JSON.stringify(err)}`, 'ERROR');
   }
 };

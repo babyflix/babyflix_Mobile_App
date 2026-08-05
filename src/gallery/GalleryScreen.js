@@ -71,6 +71,8 @@ import PhoneNumberModal from '../constants/PhoneNumberModal.js';
  import { getStoragePlanDetails } from '../components/getStoragePlanDetails.js';
 import { checkIOSFlix10KRenewal } from '../constants/checkIOSFlix10KRenewal.js';
 import { checkIOSStorageRenewal } from '../constants/checkIOSStorageRenewal.js';
+import { checkAndroidFlix10KRenewal } from '../constants/checkAndroidFlix10KRenewal.js';
+import { checkAndroidStorageRenewal } from '../constants/checkAndroidStorageRenewal.js';
 import { sendLog } from '../constants/logger.js';
 import CompleteProfileModal from '../constants/CompleteProfileModal.js';
 
@@ -484,9 +486,16 @@ useEffect(() => {
   // ❌ still valid
   if (expiry > today) return;
 
-  //console.log('Flix expired & date passed → checking Apple');
+  //console.log('Flix expired & date passed → checking store');
 
   checkIOSFlix10KRenewal({
+    userId: user.uuid,
+    userEmail: user.email,
+    dispatch,
+    getFlix10KPlanApi,
+  });
+
+  checkAndroidFlix10KRenewal({
     userId: user.uuid,
     userEmail: user.email,
     dispatch,
@@ -514,9 +523,16 @@ useEffect(() => {
   // ❌ still valid
   if (expiry > today) return;
 
-  //console.log('Storage expired & date passed → checking Apple');
+  //console.log('Storage expired & date passed → checking store');
 
   checkIOSStorageRenewal({
+    userId: user.uuid,
+    userEmail: user.email,
+    dispatch,
+    getStoragePlanDetails,
+  });
+
+  checkAndroidStorageRenewal({
     userId: user.uuid,
     userEmail: user.email,
     dispatch,
@@ -662,23 +678,23 @@ useEffect(() => {
     checkLanguage();
   }, [modalLock,galleryRefreshKey]);
 
-  useEffect(() => {
-    const checkLanguage = async () => {
-      try {
-        //console.log('innnnnnnnnnnnnnnnnnnnnnnn')
-        const result = await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
-          uuid: user.uuid,
-          autoRenewal: false,
-          expiryDate: "2027-03-08T11:12:41.000Z",
-        });
+  // useEffect(() => {
+  //   const checkLanguage = async () => {
+  //     try {
+  //       //console.log('innnnnnnnnnnnnnnnnnnnnnnn')
+  //       const result = await axios.post(`${EXPO_PUBLIC_API_URL}/api/subscription/update-flix10k-autorenewal`, {
+  //         uuid: user.uuid,
+  //         autoRenewal: false,
+  //         expiryDate: "2027-03-08T11:12:41.000Z",
+  //       });
 
-        //console.log("Auto-renewal synced with backend:", result);
-      } catch (err) {
-        console.log('Error syncing flix10k auto-renewal:');
-      }
-    };
-    checkLanguage();
-  }, []);
+  //       //console.log("Auto-renewal synced with backend:", result);
+  //     } catch (err) {
+  //       console.log('Error syncing flix10k auto-renewal:');
+  //     }
+  //   };
+  //   checkLanguage();
+  // }, []);
 
   useEffect(() => {
     const checkSkipDate = async () => {

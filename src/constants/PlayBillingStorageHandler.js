@@ -3,6 +3,7 @@ import * as RNIap from 'react-native-iap';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { sendLog } from './logger';
 
 const waitForSubscriptionPurchase = (productId, androidExtra = {}) =>
   new Promise((resolve, reject) => {
@@ -48,9 +49,17 @@ export const handlePlayStorageSubscription = async ({
   setShowModal,
   currentPurchaseToken, // for Pro upgrades
 }) => {
+  const log = (msg, type = 'INFO') =>
+    sendLog({
+      message: msg,
+      screen: 'StoragePurchase',
+      log_type: type,
+    });
+
   try {
     await AsyncStorage.setItem('storagePaying', 'true');
     console.log("Storage Starting Play Billing flow for months and planType:", months, planType);
+    log(`Purchase flow started: planType=${planType}, months=${months}, autoRenew=${autoRenew}`);
 
     let productId = '';
     let basePlanIdMap = {};
@@ -132,6 +141,7 @@ export const handlePlayStorageSubscription = async ({
     });
 
     console.log('Purchase result:', purchase);
+    log(`Purchase completed: productId=${purchase?.productId}`);
 
     const token = purchase?.purchaseToken;
 
@@ -154,6 +164,7 @@ export const handlePlayStorageSubscription = async ({
     );
 
     console.log('Backend verified:', response.data);
+    log(`Backend verification response: ${JSON.stringify(response.data)}`);
 
     if (!response?.data?.success) {
       throw new Error("Server verification failed");
@@ -165,6 +176,7 @@ export const handlePlayStorageSubscription = async ({
         console.log("token", token);
         await RNIap.finishTransaction({ purchase, isConsumable: false });
         console.log('✅ Purchase acknowledged successfully');
+        log('Purchase acknowledged');
       } catch (ackErr) {
         console.warn('⚠️ Acknowledge failed:', ackErr);
         await AsyncStorage.setItem("pendingAckToken", token);
@@ -181,6 +193,7 @@ export const handlePlayStorageSubscription = async ({
     };
   } catch (err) {
     console.error('Storage Play Billing Subscription Error:', err);
+    log(`Purchase flow failed: ${err?.message || JSON.stringify(err)}`, 'ERROR');
     return {
       success: false,
       error: err.message || 'Payment failed',

@@ -2,6 +2,7 @@ import * as RNIap from 'react-native-iap';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { EXPO_PUBLIC_API_URL } from '@env';
+import { sendLog } from './logger';
 
 const waitForSubscriptionPurchase = (productId, androidExtra = {}) =>
   new Promise((resolve, reject) => {
@@ -47,8 +48,17 @@ export const handlePlaySubscription = async ({
   currentPurchaseToken,
   userUuid,
 }) => {
+  const log = (msg, type = 'INFO') =>
+    sendLog({
+      message: msg,
+      screen: 'Flix10KPurchase',
+      log_type: type,
+      user_id: userUuid,
+    });
+
   try {
     console.log("Starting Play Billing flow for months:", months);
+    log(`Purchase flow started: months=${months}, autoRenew=${autoRenew}`);
     await AsyncStorage.setItem('flix10KPaying', 'true');
 
     const productId = 'flix10k_subscription'; // ✅ must match Play Console
@@ -112,6 +122,7 @@ export const handlePlaySubscription = async ({
     });
 
     console.log('Purchase result:', purchase);
+    log(`Purchase completed: productId=${purchase?.productId}`);
 
     const token = purchase?.purchaseToken;
 
@@ -133,6 +144,7 @@ export const handlePlaySubscription = async ({
     );
 
     console.log('Backend verified:', response.data);
+    log(`Backend verification response: ${JSON.stringify(response.data)}`);
 
     if (!response?.data?.success) {
       throw new Error("Server verification failed");
@@ -168,6 +180,7 @@ export const handlePlaySubscription = async ({
         subscriptionPayload
       );
       console.log("Subscription API saved successfully");
+      log('Subscription saved to DB');
     } catch (apiErr) {
       throw apiErr;
     }
@@ -182,6 +195,7 @@ export const handlePlaySubscription = async ({
     };
   } catch (err) {
     console.error('Play Billing Subscription Error:', err);
+    log(`Purchase flow failed: ${err?.message || JSON.stringify(err)}`, 'ERROR');
     return {
       success: false,
       error: err.message || 'Payment failed',
