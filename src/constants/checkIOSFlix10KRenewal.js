@@ -68,7 +68,7 @@ export const checkIOSFlix10KRenewal = async ({
     log('Flix10K renewed → DB updated');
 
     // refresh redux
-    await getFlix10KPlanApi(userEmail, dispatch);
+    await getFlix10KPlanApi(dispatch);
   } catch (err) {
     log(`Flix10K renewal check failed: ${err?.message || JSON.stringify(err)}`, 'ERROR');
   }

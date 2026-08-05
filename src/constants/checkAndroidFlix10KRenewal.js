@@ -82,7 +82,7 @@ export const checkAndroidFlix10KRenewal = async ({
 
     log('Flix10K renewal synced to DB');
 
-    await getFlix10KPlanApi(userEmail, dispatch);
+    await getFlix10KPlanApi(dispatch);
   } catch (err) {
     log(`Android Flix10K renewal check failed: ${err?.message || JSON.stringify(err)}`, 'ERROR');
   } finally {
