@@ -268,6 +268,10 @@ const GalleryScreen = () => {
       offsetY: tourOffsetY + tabBarHeightEstimate,
       offsetWidth: 0,
       offsetHeight: -tabBarHeightEstimate,
+      // Highlight extends tall (shares its rect with 'tabs'), which left
+      // little room below for the automatic space-based placement to work
+      // with — forcing it above the highlight instead of relying on that.
+      forceBelow: false,
     },
     {
       id: 'itemActions',

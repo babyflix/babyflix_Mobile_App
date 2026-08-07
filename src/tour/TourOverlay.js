@@ -1,13 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions, Easing, Platform } from 'react-native';
+import Svg, { Path, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import Colors from '../constants/Colors';
 import { useTour } from './TourContext';
 
+// Single-blob "thought bubble" outline (6 rounded lobes), matching the
+// reference shape — a plain filled <Path>, not the <Mask> feature that had
+// the real Fabric/Android rendering gap earlier in this file's history, so
+// it's a much lower-risk use of react-native-svg. Fixed viewBox stretched
+// with preserveAspectRatio="none" to exactly match the content's natural
+// (variable, per-step) size — organic blob shapes tolerate non-uniform
+// stretching far better than a precise geometric shape would.
+const CLOUD_BLOB_PATH =
+  'M150,10 C210,-5 260,20 270,60 C295,85 290,130 260,150 C270,180 210,205 150,195 C90,205 45,175 40,150 C10,130 5,85 30,55 C35,20 90,-5 150,10 Z';
+
+// Flashy touch lives on the outline itself (animated strokeWidth), not a
+// separate glow shape — a rounded-rect shadow behind an organic blob was
+// visibly showing as an unwanted pink box outside the bubble's true edges.
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
 const SPOTLIGHT_PADDING = 8;
 const TOOLTIP_MARGIN = 16;
-const TOOLTIP_WIDTH_RATIO = 0.86;
+const TOOLTIP_WIDTH_RATIO = 0.92;
 const MIN_SPACE_BELOW = 170;
 const ESTIMATED_TOOLTIP_HEIGHT = 190;
 const SAFE_ZONE_TOP = 100;
@@ -186,7 +202,12 @@ export default function TourOverlay() {
 
   const spaceBelow = screenH - (holeY + holeH);
   const spaceAbove = holeY;
-  const placeBelow = spaceBelow >= MIN_SPACE_BELOW || spaceBelow >= spaceAbove;
+  // step.forceBelow lets a step override the automatic space-based
+  // placement outright — set explicitly rather than trusting the
+  // above/below space math for that step.
+  const placeBelow = typeof step.forceBelow === 'boolean'
+    ? step.forceBelow
+    : spaceBelow >= MIN_SPACE_BELOW || spaceBelow >= spaceAbove;
 
   const tooltipWidth = screenW * TOOLTIP_WIDTH_RATIO;
   let tooltipLeft = rect.x + rect.width / 2 - tooltipWidth / 2;
@@ -195,7 +216,12 @@ export default function TourOverlay() {
   const measuredHeight = tooltipHeight || ESTIMATED_TOOLTIP_HEIGHT;
   const minTop = insets.top + TOOLTIP_MARGIN;
   const maxTop = screenH - insets.bottom - TOOLTIP_MARGIN - measuredHeight;
-  let tooltipTop = placeBelow ? holeY + holeH + 14 : holeY - 14 - measuredHeight;
+  // Gap between the highlighted area and the bubble — large enough to clear
+  // the tail dots too (they protrude up to 26px beyond the bubble's own
+  // edge), so there's visible breathing room, not just clearance for the
+  // bubble outline itself.
+  const TARGET_GAP = 34;
+  let tooltipTop = placeBelow ? holeY + holeH + TARGET_GAP : holeY - TARGET_GAP - measuredHeight;
   tooltipTop = Math.max(minTop, Math.min(tooltipTop, maxTop));
 
   const isFirst = activeStepIndex === 0;
@@ -204,6 +230,17 @@ export default function TourOverlay() {
   const glowOpacity = glowPulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.8] });
   const glowScale = glowPulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] });
   const glowBorderRadius = shape === 'circle' ? (holeW + 12) / 2 : holeRadius + 6;
+  // "Flashy" pulses the blob's own outline (strokeWidth), reusing the
+  // same glowPulse driver as the spotlight ring — no separate glow shape
+  // that could show as a box outside the organic bubble edges.
+  const tooltipStrokeWidth = glowPulse.interpolate({ inputRange: [0, 1], outputRange: [3, 6] });
+
+  // Tail dots point toward whichever side the target is on: if the bubble
+  // sits BELOW the target, the tail needs to point UP (dots at the top of
+  // the bubble); if the bubble is ABOVE the target, the tail points DOWN
+  // (dots at the bottom) — matches the reference shape's tail direction
+  // instead of a fixed position regardless of layout.
+  const tailSide = placeBelow ? 'top' : 'bottom';
 
   return (
     <Modal visible transparent animationType="none" presentationStyle="overFullScreen">
@@ -237,9 +274,8 @@ export default function TourOverlay() {
         />
 
         <Animated.View
-          onLayout={(e) => setTooltipHeight(e.nativeEvent.layout.height)}
           style={[
-            styles.tooltip,
+            styles.tooltipWrapper,
             {
               width: tooltipWidth,
               left: tooltipLeft,
@@ -249,36 +285,81 @@ export default function TourOverlay() {
             },
           ]}
         >
-          <View style={styles.dotsRow}>
-            {activeSteps.map((s, i) => (
-              <View key={s.id} style={[styles.dot, i === activeStepIndex && styles.dotActive]} />
-            ))}
-          </View>
+          {/* Two trailing "thinking" dots, on whichever side the tail
+              needs to point toward the target. */}
+          <View pointerEvents="none" style={[styles.tailDotBig, styles[`tailDotBig_${tailSide}`]]} />
+          <View pointerEvents="none" style={[styles.tailDotSmall, styles[`tailDotSmall_${tailSide}`]]} />
 
-          <Text style={styles.title}>{step.title}</Text>
-          <Text style={styles.description}>{step.description}</Text>
+          <View style={styles.tooltipBody}>
+            {/* Blob background, sized via percentage to exactly match
+                whatever height tooltipContent below naturally ends up —
+                no dependency on the onLayout-measured height for this. */}
+            <Svg
+              pointerEvents="none"
+              width="100%"
+              height="100%"
+              viewBox="0 0 300 200"
+              preserveAspectRatio="none"
+              style={StyleSheet.absoluteFill}
+            >
+              <Defs>
+                {/* Soft, light fill — stays subtle so title/description text
+                    keeps good contrast against it. */}
+                <SvgGradient id="cloudFill" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <Stop offset="0%" stopColor="#ffffff" />
+                  <Stop offset="100%" stopColor="#fbe4f1" />
+                </SvgGradient>
+                {/* Vivid brand-matching outline — same two colors as the
+                    Next button's gradient, for a cohesive, punchier look. */}
+                <SvgGradient id="cloudStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <Stop offset="0%" stopColor="#c85fb0" />
+                  <Stop offset="100%" stopColor={Colors.primary} />
+                </SvgGradient>
+              </Defs>
+              <AnimatedPath
+                d={CLOUD_BLOB_PATH}
+                fill="url(#cloudFill)"
+                stroke="url(#cloudStroke)"
+                strokeWidth={tooltipStrokeWidth}
+              />
+            </Svg>
 
-          <View style={styles.actionsRow}>
-            <TouchableOpacity onPress={skip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Text style={styles.skipText}>{t('tour.common.skip')}</Text>
-            </TouchableOpacity>
+            <View
+              onLayout={(e) => setTooltipHeight(e.nativeEvent.layout.height)}
+              style={styles.tooltipContent}
+            >
+              {/*<View style={styles.dotsRow}>
+                {activeSteps.map((s, i) => (
+                  <View key={s.id} style={[styles.dot, i === activeStepIndex && styles.dotActive]} />
+                ))}
+              </View>*/}
 
-            <View style={styles.navBtns}>
-              {!isFirst && (
-                <TouchableOpacity onPress={previous} style={styles.navBtnGhost} activeOpacity={0.7}>
-                  <Text style={styles.navBtnGhostText}>{t('tour.common.back')}</Text>
+              <Text style={styles.title}>{step.title}</Text>
+              <Text style={styles.description}>{step.description}</Text>
+
+              <View style={styles.actionsRow}>
+                <TouchableOpacity onPress={skip} style={styles.skipBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Text style={styles.skipText}>{t('tour.common.skip')}</Text>
                 </TouchableOpacity>
-              )}
-              <TouchableOpacity onPress={next} activeOpacity={0.85}>
-                <LinearGradient
-                  colors={GRADIENT_PRIMARY}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.navBtnPrimary}
-                >
-                  <Text style={styles.navBtnPrimaryText}>{isLast ? t('tour.common.done') : t('tour.common.next')}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+
+                <View style={styles.navBtns}>
+                  {!isFirst && (
+                    <TouchableOpacity onPress={previous} style={styles.navBtnGhost} activeOpacity={0.7}>
+                      <Text style={styles.navBtnGhostText}>{t('tour.common.back')}</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity onPress={next} style={styles.nextBtn} activeOpacity={0.85}>
+                    <LinearGradient
+                      colors={GRADIENT_PRIMARY}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.navBtnPrimary}
+                    >
+                      <Text style={styles.navBtnPrimaryText}>{isLast ? t('tour.common.done') : t('tour.common.next')}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           </View>
         </Animated.View>
@@ -302,25 +383,62 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 10,
   },
-  tooltip: {
+  tooltipWrapper: {
     position: 'absolute',
+  },
+  // The two small trailing "thinking" dots. Anchored with a negative
+  // bottom/top (relative to tooltipWrapper, whose own height is whatever
+  // tooltipBody/tooltipContent naturally end up being) so they hang
+  // correctly regardless of how tall a given step's text makes the
+  // bubble, without needing to know that height in advance. Which side
+  // they're on is picked at render time (tailSide) based on whether the
+  // bubble is placed above or below its target.
+  tailDotBig: {
+    position: 'absolute',
+    left: 46,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: '#fdf2f8',
-    borderRadius: 20,
-    padding: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 15,
-      },
-    }),
+    borderWidth: 2,
+    borderColor: '#c85fb0',
+  },
+  tailDotBig_bottom: { bottom: -14 },
+  tailDotBig_top: { top: -14 },
+  tailDotSmall: {
+    position: 'absolute',
+    left: 28,
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    backgroundColor: '#fdf2f8',
+    borderWidth: 2,
+    borderColor: '#c85fb0',
+  },
+  tailDotSmall_bottom: { bottom: -26 },
+  tailDotSmall_top: { top: -26 },
+  // No background/shadow of its own — sized purely by tooltipContent
+  // below, and the Svg blob (absoluteFill sibling of tooltipContent, see
+  // render) stretches to match whatever size that resolves to. Deliberately
+  // no View-level drop shadow here — shadow/elevation follows the View's
+  // rectangular bounds, not the organic blob's actual silhouette inside
+  // it, which would show as a boxy shadow poking out past the bumpy
+  // outline (the same class of issue as the earlier rejected glow shape).
+  tooltipBody: {
+    position: 'relative',
+  },
+  // Extra padding (vs. the old plain-box version) to keep text clear of
+  // the blob's bumpy waist, where the outline dips inward between lobes.
+  // Bottom gets more than the rest so the Skip/Back/Next row — the parts
+  // that were spilling outside the bubble's lower edge — sit well clear
+  // of the bottom lobes.
+  tooltipContent: {
+    padding: 32,
+    paddingBottom: 40,
   },
   dotsRow: {
     flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 8,
   },
   dot: {
@@ -335,23 +453,31 @@ const styles = StyleSheet.create({
     width: 18,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Nunito700',
     color: Colors.primary,
     fontWeight: '800',
     marginBottom: 4,
+    textAlign: 'center',
+    paddingHorizontal: 12,
   },
   description: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Nunito400',
     color: '#555',
-    lineHeight: 19,
+    lineHeight: 18,
     marginBottom: 16,
+    textAlign: 'center',
+    paddingHorizontal: 12,
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  // Nudges Skip in from the very left edge, staying on the same side.
+  skipBtn: {
+    marginLeft: 40,
   },
   skipText: {
     fontSize: 14,
@@ -381,5 +507,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Nunito700',
     color: '#fff',
+  },
+   nextBtn: {
+    marginRight: 35,
   },
 });
