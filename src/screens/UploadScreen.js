@@ -80,10 +80,13 @@ const UploadScreen = () => {
 
   const pickMedia = async () => {
     setPreviewLoad(true);
-    const granted = await requestMediaLibraryPermission();
-    if (!granted) {
-      setPreviewLoad(false);
-      return;
+
+    if (Platform.OS !== 'android') {
+      const granted = await requestMediaLibraryPermission();
+      if (!granted) {
+        setPreviewLoad(false);
+        return;
+      }
     }
 
     try {

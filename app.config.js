@@ -81,19 +81,10 @@ export default ({ config }) => ({
       }
     ],
     permissions: [
-      "android.permission.READ_MEDIA_IMAGES",
-      "android.permission.READ_MEDIA_VIDEO",
-      "android.permission.READ_EXTERNAL_STORAGE", 
+      "android.permission.READ_EXTERNAL_STORAGE",
       "android.permission.WRITE_EXTERNAL_STORAGE"
     ]
   },
-  // Expo/RN default to edge-to-edge on Android — the system's 3-button nav
-  // bar draws as a translucent overlay on top of app content instead of
-  // reserving its own space, which is why the tab bar was showing behind
-  // it regardless of padding/height changes. Giving it an opaque
-  // background (matching the tab bar) stops it from visually compositing
-  // over your content. REQUIRES A NATIVE REBUILD to test — this cannot be
-  // verified with a JS-only reload.
   androidNavigationBar: {
     barStyle: "dark-content",
     backgroundColor: "#f9f9f9"
