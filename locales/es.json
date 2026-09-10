@@ -573,5 +573,19 @@
         "description": "Galería, Subir, Eventos, En Vivo, Mensajes y Perfil — todo a un toque de distancia desde esta barra."
       }
     }
+  },
+  "babyflixGives": {
+    "tabLabel": "Printify",
+    "title": "BabyFlix Regala",
+    "headline": "Lleva el Amor. Da Vida.",
+    "subhead": "Cada compra ayuda a impulsar la misión de BabyFlix y apoya a madres y bebés a través de la Fundación BabyFlix.",
+    "shopNow": "Comprar ahora",
+    "benefits": {
+      "quality": "Productos premium y de fabricación ética",
+      "impact": "Financia la Fundación BabyFlix"
+    },
+    "missionStrip": "Cada compra apoya a la Fundación BabyFlix, ayudando a madres y bebés.",
+    "browseAll": "Ver la colección completa",
+    "note": "Te llevaremos a la tienda de BabyFlix para completar tu compra."
   }
 }

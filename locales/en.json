@@ -573,5 +573,19 @@
         "description": "Gallery, Upload, Events, Live, Messages, and Profile — everything is one tap away from this bar."
       }
     }
+  },
+  "babyflixGives": {
+    "tabLabel": "Printify",
+    "title": "BabyFlix Gives",
+    "headline": "Wear the Love. Give Life.",
+    "subhead": "Every purchase helps advance the BabyFlix mission and supports mothers and babies through the BabyFlix Foundation.",
+    "shopNow": "Shop Now",
+    "benefits": {
+      "quality": "Premium, ethically made products",
+      "impact": "Funds the BabyFlix Foundation"
+    },
+    "missionStrip": "Every purchase supports the BabyFlix Foundation — helping mothers and babies.",
+    "browseAll": "Browse the full collection",
+    "note": "You'll be taken to the BabyFlix storefront to complete your purchase."
   }
 }

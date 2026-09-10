@@ -240,6 +240,15 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="gives"
+        options={{
+          title: t('babyflixGives.tabLabel'),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="gift" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: t('profileSettings.label'),

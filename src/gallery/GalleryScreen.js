@@ -58,6 +58,7 @@ import UpgradeReminderModal from './UpgradeReminderModal.js';
 import PlanExpiredModal from './PlanExpiredModal.js';
 import Flix10kBanner from './Flix10kBanner.js';
 import DonationBanner from './DonationBanner.js';
+import AmiyoBanner from './AmiyoBanner.js';
 import RateUsModal, { checkAndShowRateModal } from '../components/RateAppModal.js';
 import { useScreenTour, useTourTarget, useTour } from '../tour/TourContext.js';
 import PhoneNumberModal from '../constants/PhoneNumberModal.js';
@@ -1427,6 +1428,8 @@ useEffect(() => {
       <View style={{ zIndex: 10 }} pointerEvents="box-none">
         <DonationBanner donationModalOpenRef={donationModalOpenRef} />
       </View>
+
+      <AmiyoBanner />
 
       <View ref={flix10kTourTarget} collapsable={false}>
       <Animated.View
