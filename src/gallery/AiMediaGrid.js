@@ -1,14 +1,14 @@
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FlatList,
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
   ActivityIndicator,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import Colors from "../constants/Colors";
 import { useTranslation } from "react-i18next";
@@ -19,6 +19,19 @@ import sendDeviceUserInfo, { USERACTIONS } from "../components/deviceInfo";
 
 const { width } = Dimensions.get("window");
 const ITEM_SIZE = width / 2 - 16;
+
+// expo-image with memory + disk caching and view recycling; drop-in for the
+// <Image source={{ uri }} style={...} /> usages below.
+const Image = ({ source, ...rest }) => (
+  <ExpoImage
+    source={source}
+    contentFit="cover"
+    cachePolicy="memory-disk"
+    recyclingKey={source?.uri}
+    transition={150}
+    {...rest}
+  />
+);
 
 const AiMediaGrid = memo(
   ({
@@ -47,12 +60,20 @@ const AiMediaGrid = memo(
     const [isProcessing, setIsProcessing] = useState(false);
     const [keptItems, setKeptItems] = useState([]);
     const user = useSelector((state) => state.auth);
-    const { subscriptionId, subscriptionIsActive } = useSelector(
-        (state) => state.auth
-      );
+    const isSubscribed = useSelector(
+      (state) => !!state.auth.subscriptionIsActive && !!state.auth.subscriptionId
+    );
 
-    const filteredData = (data || []).filter(item => item && item.id);
-    const isSubscribed = !!subscriptionIsActive && !!subscriptionId;
+    const filteredData = useMemo(
+      () => (data || []).filter(item => item && item.id),
+      [data]
+    );
+
+    const scrollHandler = useAnimatedScrollHandler({
+      onScroll: (event) => {
+        if (scrollY) scrollY.value = event.contentOffset.y;
+      },
+    });
 
     //console.log("filteredData", filteredData);
 
@@ -426,19 +447,19 @@ const originalUrl =
           </TouchableOpacity>
         );
       },
-      [selectedItems, selectedItemsForAi, regeneratingIds, keptItems]
+      [selectedItems, selectedItemsForAi, regeneratingIds, keptItems, filteredData, onPreview, isSubscribed, disableMenuAndSelection]
     );
 
     return (
-      <FlatList
+      <Animated.FlatList
         // data={data}
         data={filteredData}
         renderItem={renderItem}
         numColumns={2}
         contentContainerStyle={styles.gridContainer}
         showsVerticalScrollIndicator={false}
-        extraData={[selectedItems, selectedItemsForAi, regeneratingIds, keptItems]}
-        onScroll={(e) => { if (scrollY) scrollY.value = e.nativeEvent.contentOffset.y; }}
+        extraData={regeneratingIds}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
       />
     );

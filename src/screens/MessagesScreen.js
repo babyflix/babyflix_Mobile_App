@@ -52,6 +52,44 @@ const buildTimedFeed = (msgs = [], t, lang = 'en') => {
   return feed;
 };
 
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
+const timelineKeyExtractor = (item) =>
+  item._type === 'separator' ? item.id : `${item.id || item.message_uuid}`;
+
+const DaySeparator = React.memo(({ label }) => (
+  <View style={styles.dayChip}>
+    <Text style={styles.dayChipText}>{label}</Text>
+  </View>
+));
+
+const ChatBubble = React.memo(({ content, date, sender, status }) => (
+  <View
+    style={[
+      styles.messageBubble,
+      sender === 'You' ? styles.sentMessage : styles.receivedMessage,
+    ]}
+  >
+    <Text style={styles.messageText2}>{String(content)}</Text>
+    <View style={styles.metaContainer}>
+      <Text style={styles.messageTime2}>{formatDate(date)}</Text>
+      {sender === 'You' && (
+        <Ionicons
+          name="checkmark-done"
+          size={14}
+          color={status === 'read' ? 'blue' : 'black'}
+          style={{ marginLeft: 2 }}
+        />
+      )}
+    </View>
+  </View>
+));
+
 const markMessageRead = async (message_uuid) => {
   try {
     await axios.put(`${EXPO_PUBLIC_API_URL}/api/chats/update-message-status`, {
@@ -305,7 +343,10 @@ const MessagesScreen = () => {
 
   useEffect(() => {
     const backAction = () => {
-      if (selectedMessageId !== null) {
+      // Only when a chat is actually open on this (focused) screen. The
+      // initial value is undefined, so `!== null` used to swallow the back
+      // button app-wide until a chat had been opened and closed once.
+      if (selectedMessageId != null && navigation.isFocused()) {
         setSelectedMessageId(null);
         getChatMembers();
         setSelectedChat(null)
@@ -651,12 +692,19 @@ const MessagesScreen = () => {
 
   const selectedMessage = chatMembers.find((msg) => msg.uuid === selectedMessageId);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
+  const renderTimelineItem = useCallback(({ item }) => {
+    if (item._type === 'separator') {
+      return <DaySeparator label={item.label} />;
+    }
+    return (
+      <ChatBubble
+        content={item.content}
+        date={item.date}
+        sender={item.sender}
+        status={item.status}
+      />
+    );
+  }, []);
 
   if (selectedMessageId && selectedChat) {
     const senderInitials = selectedMessage.name ? selectedMessage?.name?.split(' ')[0]?.substring(0, 2)?.toUpperCase() : '';
@@ -717,10 +765,25 @@ const MessagesScreen = () => {
           </View>
 
 
-          <ScrollView
+          {/* Same scroll behaviour as the previous ScrollView (opens at the
+              top of the loaded messages, loads older ones near the top,
+              scrollToEnd on send/receive/keyboard), but rows are virtualized
+              and memoized, so typing indicators and new messages no longer
+              re-render every bubble. */}
+          <FlatList
             style={styles.chatContainer}
             contentContainerStyle={{ paddingBottom: 15 }}
             ref={scrollViewRef}
+            data={timeline}
+            renderItem={renderTimelineItem}
+            keyExtractor={timelineKeyExtractor}
+            ListHeaderComponent={
+              isFetchingMore ? (
+                <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+                  <Text style={{ color: Colors.textPrimary, fontFamily: 'Nunito400', }}>{t('messagesScreen.loadingMessages')}</Text>
+                </View>
+              ) : null
+            }
             onScroll={({ nativeEvent }) => {
               const { contentOffset } = nativeEvent;
               if (contentOffset.y <= 5 && !isFetchingMore) {
@@ -735,51 +798,10 @@ const MessagesScreen = () => {
             }}
             scrollEventThrottle={16}
             keyboardShouldPersistTaps="handled"
-          >
-
-            {isFetchingMore && (
-              <View style={{ alignItems: 'center', paddingVertical: 10 }}>
-                <Text style={{ color: Colors.textPrimary, fontFamily: 'Nunito400', }}>{t('messagesScreen.loadingMessages')}</Text>
-              </View>
-            )}
-
-            {timeline.map((item) => {
-              if (item._type === 'separator') {
-                return (
-                  <View key={item.id} style={styles.dayChip}>
-                    <Text style={styles.dayChipText}>{item.label}</Text>
-                  </View>
-                );
-              }
-
-              const messageContent = String(item.content);
-              const messageDate = formatDate(item.date);
-
-              return (
-                <View
-                  key={`${item.id || item.message_uuid}`}
-                  style={[
-                    styles.messageBubble,
-                    item.sender === 'You' ? styles.sentMessage : styles.receivedMessage,
-                  ]}
-                >
-                  <Text style={styles.messageText2}>{messageContent}</Text>
-                  <View style={styles.metaContainer}>
-                    <Text style={styles.messageTime2}>{messageDate}</Text>
-                    {item.sender === 'You' && (
-                      <Ionicons
-                        name="checkmark-done"
-                        size={14}
-                        color={item.status === 'read' ? 'blue' : 'black'}
-                        style={{ marginLeft: 2 }}
-                      />
-                    )}
-                  </View>
-                </View>
-              );
-            })}
-
-          </ScrollView>
+            initialNumToRender={30}
+            maxToRenderPerBatch={20}
+            windowSize={11}
+          />
 
           <View style={[
             styles.messageBox,

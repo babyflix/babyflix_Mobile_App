@@ -48,20 +48,38 @@ const parseSegments = (text) => {
   return result;
 };
 
-const DonationBanner = ({ donationModalOpenRef }) => {
+const DonationBanner = ({ donationModalOpenRef, paused = false }) => {
   const videoRef = useRef(null);
   const tickerX = useRef(new Animated.Value(SCREEN_WIDTH)).current;
   const [videoRatio, setVideoRatio] = useState(16 / 9);
   const [isMuted, setIsMuted] = useState(false);
+  const isFocusedRef = useRef(false);
+  const pausedRef = useRef(paused);
 
   useFocusEffect(
     useCallback(() => {
-      videoRef.current?.playAsync().catch(() => {});
+      isFocusedRef.current = true;
+      if (!pausedRef.current) {
+        videoRef.current?.playAsync().catch(() => {});
+      }
       return () => {
+        isFocusedRef.current = false;
         videoRef.current?.pauseAsync().catch(() => {});
       };
     }, [])
   );
+
+  // Pause while something else (e.g. the gallery media preview) is on top,
+  // so two videos aren't decoding/playing sound at once. Resumes from the
+  // same position afterwards.
+  useEffect(() => {
+    pausedRef.current = paused;
+    if (paused) {
+      videoRef.current?.pauseAsync().catch(() => {});
+    } else if (isFocusedRef.current) {
+      videoRef.current?.playAsync().catch(() => {});
+    }
+  }, [paused]);
 
   const user = useSelector((state) => state.auth);
 
@@ -900,4 +918,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DonationBanner;
+export default React.memo(DonationBanner);

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useTranslation } from 'react-i18next';
@@ -8,10 +8,6 @@ import Flix10KTab from './Flix10KTab';
 import { Ionicons } from '@expo/vector-icons';
 
 const Tab = createMaterialTopTabNavigator();
-
-const AllTab = React.memo((props) => <MediaGrid {...props} />);
-const ImagesTab = React.memo((props) => <MediaGrid {...props} />);
-const VideosTab = React.memo((props) => <MediaGrid {...props} />);
 
 const MediaTabs = ({
   mediaData,
@@ -48,11 +44,7 @@ const MediaTabs = ({
 }) => {
   const { t } = useTranslation();
 
-  const sortedAllData = [...mediaData.images, ...mediaData.videos].sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-  );
-
-  const tabProps = {
+  const tabProps = useMemo(() => ({
     mediaData,
     onPreview,
     refreshing,
@@ -78,16 +70,75 @@ const MediaTabs = ({
     scrollY,
     itemActionsTourTarget,
     itemConvertTourTarget,
+  }), [
+    mediaData,
+    onPreview,
+    refreshing,
+    onRefresh,
+    selectedItems,
+    setSelectedItems,
+    selectionMode,
+    setSelectionMode,
+    setActiveMenuId,
+    activeMenuId,
+    setShowDeleteModal,
+    setShowDownloadModal,
+    setShowShareModal,
+    setSelectedItem,
+    disableMenuAndSelection,
+    tL,
+    flix10kSelectionMode,
+    selectedItemsForAi,
+    toggleItemSelection,
+    selectedType,
+    setSelectedType,
+    onRequireSubscription,
+    scrollY,
+    itemActionsTourTarget,
+    itemConvertTourTarget,
+  ]);
+
+  const flix10kData = useMemo(
+    () => [...mediaData.babyProfile, ...mediaData.predictiveBabyImages, ...mediaData.images],
+    [mediaData]
+  );
+
+  const imagesRouteName = t("gallery.tabs.images");
+  const flix10kRouteName = t("gallery.tabs.flix10k");
+  const targetRouteName =
+    (selectedType === "babyProfile" || selectedType === "predictiveBaby")
+      ? flix10kRouteName
+      : imagesRouteName;
+
+  // Previously the whole tab navigator was torn down and rebuilt on every
+  // media re-fetch, which reset it to initialRouteName. Flix10K flows relied
+  // on that whenever selection mode toggled (Images tab while picking photos,
+  // Flix10K tab once generation finishes). The grid is no longer rebuilt, so
+  // switch tabs explicitly at that same moment instead.
+  const tabNavigationRef = useRef(null);
+  const targetRouteNameRef = useRef(targetRouteName);
+  targetRouteNameRef.current = targetRouteName;
+  const isFirstSelectionModeRunRef = useRef(true);
+  useEffect(() => {
+    if (isFirstSelectionModeRunRef.current) {
+      isFirstSelectionModeRunRef.current = false;
+      return;
+    }
+    tabNavigationRef.current?.navigate(targetRouteNameRef.current);
+  }, [flix10kSelectionMode]);
+
+  const captureTabNavigation = ({ navigation }) => {
+    tabNavigationRef.current = navigation;
+    return {};
   };
 
   return (
     <Tab.Navigator
-      initialRouteName={
-        (selectedType === "babyProfile" || selectedType === "predictiveBaby")
-          ? t("gallery.tabs.flix10k")
-          : t("gallery.tabs.images")
-      }
+      initialRouteName={targetRouteName}
+      screenListeners={captureTabNavigation}
       screenOptions={{
+        // Build each tab the first time it is opened instead of all at once.
+        lazy: true,
         tabBarLabelStyle: styles.tabLabel,
         tabBarIconStyle: { marginTop: 12 },
         tabBarStyle: styles.tabBar,
@@ -98,27 +149,6 @@ const MediaTabs = ({
         tabBarShowIcon: true,
       }}
     >
-      {/* <Tab.Screen
-        name={t("gallery.tabs.all")}
-        options={{
-          tabBarLabel: ({ color }) => (
-            <View style={styles.tabItem}>
-              <Ionicons name="albums-outline" size={20} color={color} />
-              <View style={styles.tabRow}>
-                <Text style={[styles.tabLabel, { color }]}>{t("gallery.tabs.all")}</Text>
-                {sortedAllData.length > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{sortedAllData.length}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          ),
-        }}
-        children={() => (
-          <MediaGrid {...tabProps} data={sortedAllData} type="all" />
-        )}
-      /> */}
       <Tab.Screen
         name={t("gallery.tabs.images")}
         options={{
@@ -183,8 +213,7 @@ const MediaTabs = ({
         children={() => (
           <Flix10KTab
             tabProps={tabProps}
-            //data={[...mediaData.babyProfile, ...mediaData.predictiveBabyImages]}
-            data={[...mediaData.babyProfile, ...mediaData.predictiveBabyImages, ...mediaData.images]}
+            data={flix10kData}
             flix10kGenerating={flix10kGenerating}
             flix10kResults={flix10kResults}
             flix10kAiImages={flix10kAiImages}
@@ -251,4 +280,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MediaTabs;
+export default React.memo(MediaTabs);

@@ -54,7 +54,7 @@ const AmiyoBanner = () => {
   );
 };
 
-export default AmiyoBanner;
+export default React.memo(AmiyoBanner);
 
 const styles = StyleSheet.create({
   wrapper: {

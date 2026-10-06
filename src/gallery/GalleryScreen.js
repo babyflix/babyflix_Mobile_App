@@ -46,6 +46,13 @@ import DeleteItemModal from '../components/modals/DeleteItemModal.js';
 import DownloadItemModal from '../components/modals/DownloadItemModal.js';
 import ShareItemModal from '../components/modals/ShareItemModal.js';
 import FloatingDownloadBar from '../components/FloatingDownloadBar.js';
+import {
+  setDownloadVisible,
+  setDownloadProgress,
+  setDownloadTitle,
+  setActiveDownloads,
+} from '../components/downloadProgressStore.js';
+import { img } from '../../assets/images/Pause_video.js';
 import i18n from '../constants/i18n.js';
 import LanguageModal from '../constants/LanguageModal.js';
 import { dynamicTranslate } from '../constants/useDynamicTranslate.js';
@@ -78,6 +85,9 @@ import { sendLog } from '../constants/logger.js';
 import CompleteProfileModal from '../constants/CompleteProfileModal.js';
 
 SplashScreen.preventAutoHideAsync();
+// How often the Header's unread-messages badge is refreshed. The Messages
+// screen itself is live via socket and doesn't depend on this.
+const UNREAD_CHATS_POLL_MS = 15000;
 let upgradeModalShown = false;
 let expiredModalShown = false;
 
@@ -126,10 +136,8 @@ const GalleryScreen = () => {
   const [showUpgradeReminderModal, setShowUpgradeReminderModal] = useState(false);
   const [upgradeReminderMessage, setUpgradeReminderMessage] = useState('');
   const [activeMenuId, setActiveMenuId] = useState(null);
-  const [downloadVisible, setDownloadVisible] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [downloadTitle, setDownloadTitle] = useState('');
-  const [activeDownloads, setActiveDownloads] = useState(0);
+  // Download progress state lives in downloadProgressStore (see imports) so
+  // progress ticks don't re-render this whole screen.
   const [disableMenuAndSelection, setDisableMenuAndSelection] = useState(false);
   const [bannerMessage, setBannerMessage] = useState('');
   const [tL, setT] = useState(null);
@@ -616,7 +624,7 @@ useEffect(() => {
     }
     };
     checkPhone();
-  }, [user,refreshData,modalLock,galleryRefreshKey]);
+  }, [user?.email,refreshData,modalLock,galleryRefreshKey]);
 
    useEffect(() => {
   // Show rate modal only after update modal or when user opens app multiple times
@@ -633,8 +641,13 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [modalLock,galleryRefreshKey,hasGalleryContent]);
 
-  useEffect(() => {
-    if (Platform.OS === 'android') {
+  // Gallery is the home screen, so the Android back button does nothing here
+  // (same as before). It is only active while Gallery is the focused tab;
+  // previously it stayed registered while other tabs were open and blocked
+  // the back button on every screen in the app.
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'android') return undefined;
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
@@ -644,15 +657,15 @@ useEffect(() => {
       );
 
       return () => backHandler.remove();
-    }
-  }, []);
+    }, [])
+  );
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchMediaData();
     setRefreshing(false);
     setSelectedType(null);
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -745,9 +758,18 @@ useEffect(() => {
     checkSkipDate();
   }, [storagePlanPayment]);
 
+  // hasGalleryContent is only ever set by fetchMediaData itself, so
+  // re-fetching when it flips just downloaded the same list a second time.
+  // The initial load is done by the account effect below, so this one only
+  // re-fetches when Flix10K selection mode actually toggles.
+  const isFirstSelectionModeRunRef = useRef(true);
   useEffect(() => {
+    if (isFirstSelectionModeRunRef.current) {
+      isFirstSelectionModeRunRef.current = false;
+      return;
+    }
     fetchMediaData();
-  }, [flix10kSelectionMode, hasGalleryContent]);
+  }, [flix10kSelectionMode]);
 
   // const fetchMediaData = async () => {
   //   setIsLoading(true);
@@ -946,8 +968,39 @@ useEffect(() => {
   //   testLog();
   //    }, []);
 
-    const fetchMediaData = async () => {
-    setIsLoading(true);
+  // The full-screen loader replaces (unmounts) the whole grid, so it is only
+  // shown until the first load completes. Later refreshes update in place,
+  // keeping scroll position and already-loaded images.
+  const hasLoadedOnceRef = useRef(false);
+  // Only one get-images request runs at a time. Requests that arrive while
+  // one is in flight are collapsed into a single follow-up fetch, so callers
+  // (e.g. after a delete) still end up with fresh data.
+  const fetchQueueRef = useRef({ running: null, pending: false });
+  const fetchMediaDataOnceRef = useRef(null);
+
+  const fetchMediaData = useCallback(() => {
+    const queue = fetchQueueRef.current;
+    if (queue.running) {
+      queue.pending = true;
+      return queue.running;
+    }
+    queue.running = (async () => {
+      try {
+        do {
+          queue.pending = false;
+          await fetchMediaDataOnceRef.current();
+        } while (queue.pending);
+      } finally {
+        queue.running = null;
+      }
+    })();
+    return queue.running;
+  }, []);
+
+    const fetchMediaDataOnce = async () => {
+    if (!hasLoadedOnceRef.current) {
+      setIsLoading(true);
+    }
 
     try {
       if (!user.email) return;
@@ -1132,9 +1185,15 @@ useEffect(() => {
       // });
       setIsLoading(false);
     } finally {
+      if (user.email) {
+        hasLoadedOnceRef.current = true;
+      }
       setIsLoading(false);
     }
   };
+  // Always run the latest render's version, so the fetch sees current
+  // user / plan values even though fetchMediaData itself is stable.
+  fetchMediaDataOnceRef.current = fetchMediaDataOnce;
 
   useEffect(() => {
     const fetchStatusFromStorage = async () => {
@@ -1162,13 +1221,26 @@ useEffect(() => {
     fetchStatusFromStorage();
   }, [user]);
 
+  // Re-fetch when the account or its storage plan changes (those are the
+  // values fetchMediaData reads). Depending on the whole auth object, plus
+  // wasTriggered flipping right after, caused several duplicate fetches.
   useEffect(() => {
     if (user) {
       fetchMediaData();
       dispatch(updateActionStatus(''));
       setWasTriggered(true);
     }
-  }, [user, wasTriggered]);
+  }, [
+    user?.email,
+    user?.uuid,
+    user?.machineId,
+    storagePlanId,
+    storagePlanPrice,
+    storagePlanDate,
+    storagePlanName,
+    storagePlanExpired,
+    storagePlanRemainingDays,
+  ]);
 
   useEffect(() => {
     if ((status === 'done' || status1 === 'true') && !hasHiddenModalRef.current) {
@@ -1249,9 +1321,17 @@ useEffect(() => {
   );
 
   useEffect(() => {
+    let lastResponseKey = null;
+    let intervalId = null;
+
     const fetchUnreadChats = async () => {
       try {
         const response = await axios.get(`${EXPO_PUBLIC_API_URL}/api/chats/get-unread-chat-members`);
+        // Skip the Redux update (and the Header re-render it causes) when
+        // nothing changed since the last poll.
+        const responseKey = JSON.stringify(response.data);
+        if (responseKey === lastResponseKey) return;
+        lastResponseKey = responseKey;
         dispatch(setUnreadMessagesData(response.data));
         dispatch(setUnreadMessagesCount(response.data.unread_messages?.[0]?.unread_count || 0));
       } catch (error) {
@@ -1259,11 +1339,35 @@ useEffect(() => {
       }
     };
 
-    fetchUnreadChats();
+    const startPolling = () => {
+      if (intervalId) return;
+      fetchUnreadChats();
+      intervalId = setInterval(fetchUnreadChats, UNREAD_CHATS_POLL_MS);
+    };
 
-    const intervalId = setInterval(fetchUnreadChats, 5000);
+    const stopPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
 
-    return () => clearInterval(intervalId);
+    startPolling();
+
+    // No point polling while the app is in the background; refresh
+    // immediately when it comes back.
+    const appStateSub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        startPolling();
+      } else if (nextState === 'background') {
+        stopPolling();
+      }
+    });
+
+    return () => {
+      stopPolling();
+      appStateSub.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -1310,7 +1414,7 @@ useEffect(() => {
   //   setModalVisible(true);
   // };
 
-  const handlePreview = (item, index, list) => {
+  const handlePreview = useCallback((item, index, list) => {
     if (!item.object_url) {
       item.object_url = img;
     }
@@ -1319,14 +1423,14 @@ useEffect(() => {
     setPreviewIndex(index);
     setPreviewList(list || []);
     setModalVisible(true);
-  };
+  }, []);
 
-  const handleCancelSelection = () => {
+  const handleCancelSelection = useCallback(() => {
     setSelectionMode(false);
     setSelectedItems([]);
     setFlix10kSelectionMode(false);
     setSelectedItemsForAi([]);
-  };
+  }, []);
 
   const handleDeleteSelected = () => {
     if (selectedItems.length > 0) {
@@ -1369,9 +1473,15 @@ useEffect(() => {
     setShowShareModal(false);
   };
 
-  const handleRequireSubscription = () => {
+  const handleRequireSubscription = useCallback(() => {
     setForceOpenFlixBanner(true);
-  };
+  }, []);
+
+  const clearForceOpenFlixBanner = useCallback(() => {
+    setForceOpenFlixBanner(false);
+  }, []);
+
+  const closePreview = useCallback(() => setModalVisible(false), []);
 
   // const toggleItemSelection = (id) => {
   //   setSelectedItemsForAi((prev) =>
@@ -1379,7 +1489,7 @@ useEffect(() => {
   //   );
   // };
 
-  const toggleItemSelection = (itemOrId, options = {}) => {
+  const toggleItemSelection = useCallback((itemOrId, options = {}) => {
     const id = itemOrId;
 
     // 🚨 BLOCK: free user already used credit
@@ -1407,7 +1517,7 @@ useEffect(() => {
         ? prev.filter((item) => item !== id)
         : [...prev, id];
     });
-  };
+  }, []);
 
   const handleFlix10KPress = () => {
     setFlix10kSelectionMode(true);
@@ -1426,7 +1536,7 @@ useEffect(() => {
       </View>
 
       <View style={{ zIndex: 10 }} pointerEvents="box-none">
-        <DonationBanner donationModalOpenRef={donationModalOpenRef} />
+        <DonationBanner donationModalOpenRef={donationModalOpenRef} paused={modalVisible} />
       </View>
 
       <AmiyoBanner />
@@ -1464,7 +1574,7 @@ useEffect(() => {
         setModalLock={setModalLock}
         hasGalleryContent ={hasGalleryContent}
         forceOpenFromOutside={forceOpenFlixBanner}
-        clearForceOpen={() => setForceOpenFlixBanner(false)}
+        clearForceOpen={clearForceOpenFlixBanner}
       />
       </Animated.View>
       </View>
@@ -1532,7 +1642,7 @@ useEffect(() => {
         items={previewList}
         currentIndex={previewIndex}
         setCurrentIndex={setPreviewIndex}
-        onClose={() => setModalVisible(false)}
+        onClose={closePreview}
         insets={insets}
       />
 
@@ -1633,12 +1743,7 @@ useEffect(() => {
         setSnackbarType={setSnackbarType}
       />
 
-      <FloatingDownloadBar
-        visible={downloadVisible}
-        progress={downloadProgress}
-        title={downloadTitle}
-        activeDownloads={activeDownloads}
-      />
+      <FloatingDownloadBar />
 
       <LanguageModal visible={activeModal === MODALS.LANGUAGE} 
         onClose={() => {

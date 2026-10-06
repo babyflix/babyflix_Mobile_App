@@ -1,30 +1,76 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
-  Dimensions,
-  TouchableWithoutFeedback,
   Animated,
+  Modal,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/Colors.js';
-import MediaMenu from './MediaMenu';
 import { defaultThumbnail } from '../../assets/images/Pause_video.js';
 import moment from 'moment-timezone';
-import { useDispatch, useSelector } from 'react-redux';
-import { Modal } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSelector } from 'react-redux';
 
-const { width } = Dimensions.get('window');
-const itemSize = (width - 40) / 2.2;
+const formatCreatedAtToIST = (created_at) => {
+  const istDate = moment.utc(created_at).tz('Asia/Kolkata');
+  const date = istDate.format('DD/MM/YYYY');
+  const time = istDate.format('HH:mm');
+  return `${date} | ${time}`;
+};
+
+// One shared instance per grid instead of one hidden <Modal> per card.
+export const SubscribePaywallModal = ({ visible, onClose, onProceed }) => (
+  <Modal
+    transparent
+    visible={visible}
+    animationType="fade"
+    onRequestClose={onClose}
+  >
+    <View style={styles.modalOverlay}>
+      <View style={styles.paywallBox}>
+
+        {/* ⭐ Title */}
+        <Text style={styles.paywallTitle}>
+          Subscribe Flix10K
+        </Text>
+
+        {/* ⭐ Subtitle */}
+        <Text style={styles.paywallText}>
+          To continue generating AI images, please subscribe to Flix10K and unlock unlimited baby predictions.
+        </Text>
+
+        {/* ⭐ Buttons */}
+        <View style={styles.paywallActions}>
+          <TouchableOpacity
+            style={styles.cancelBtn}
+            onPress={onClose}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.cancelBtnText}>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.proceedBtn}
+            onPress={onProceed}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.proceedText}>Proceed</Text>
+          </TouchableOpacity>
+        </View>
+
+      </View>
+    </View>
+  </Modal>
+);
 
 const GalleryItem = ({
-  mediaData,
   item,
   isSelected,
+  isAiSelected,
+  hasAiSelection,
   isMenuVisible,
   onPreview,
   onToggleSelection,
@@ -37,67 +83,35 @@ const GalleryItem = ({
   setShowDownloadModal,
   setShowShareModal,
   flix10kSelectionMode,
-  selectedItemsForAi,
   toggleItemSelection,
-  onRequireSubscription,
+  onRequestSubscribe,
+  onSubscriptionExpired,
   itemActionsTourTarget,
   itemConvertTourTarget,
 }) => {
-  const dispatch = useDispatch();
   const scaleAnim = useRef(new Animated.Value(1)).current;
-   const [freeCreditUsed, setFreeCreditUsed] = useState(false);
-  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
-  // ✅ selector
-  const { subscriptionId, subscriptionIsActive } = useSelector(
-    (state) => state.auth
+  // Select only the derived boolean, so cards re-render only when the
+  // subscription state actually flips, not on every auth-state change.
+  const isSubscribed = useSelector(
+    (state) => !!state.auth.subscriptionIsActive && !!state.auth.subscriptionId
   );
-
-  // 🔍 check if user already has predictive image in gallery
-const hasPredictiveImage = Array.isArray(mediaData)
-  ? mediaData.some(m => m?.object_type === "predictiveBabyImage")
-  : (
-      mediaData?.predictiveBabyImages &&
-      mediaData.predictiveBabyImages.length > 0
-    );
-
-  //console.log("subscriptionId, subscriptionIsActive", subscriptionId, subscriptionIsActive)
-  // ✅ MUST BE HERE (top-level)
-  const isSubscribed = !!subscriptionIsActive && !!subscriptionId;
   const isFreeUser = !isSubscribed;
+  // Same flag the Flix10K banner button checks before allowing generation.
+  const isSubscriptionExpired = useSelector(
+    (state) => !!state.auth.subscriptionExpired
+  );
   //const freeCreditAvailable = isFreeUser && !freeCreditUsed && !hasPredictiveImage;
   const freeCreditAvailable = false; // free trial closed
 
-  //console.log("isSubscribed, isFreeUser, freeCreditAvailable", isSubscribed, isFreeUser, freeCreditAvailable)
-
-  useEffect(() => {
-    const loadCredit = async () => {
-      const used = await AsyncStorage.getItem('freeFlixCreditUsed');
-      setFreeCreditUsed(used === 'true');
-    };
-
-    loadCredit();
-  }, []);
-
- const isAiSelected =
-    Array.isArray(selectedItemsForAi) &&
-    selectedItemsForAi.includes(item.id || item);
-
-  const selectedCount = Array.isArray(selectedItemsForAi)
-      ? selectedItemsForAi.length
-      : 0;
-
-      //console.log("isAiSelected",isAiSelected,selectedItemsForAi)
     // ⭐ free user single-select rule
     const isOtherItemDisabled  =
-      freeCreditAvailable && selectedCount >= 1 && !isAiSelected;
+      freeCreditAvailable && hasAiSelection && !isAiSelected;
 
-  const formatCreatedAtToIST = (created_at) => {
-    const istDate = moment.utc(created_at).tz('Asia/Kolkata');
-    const date = istDate.format('DD/MM/YYYY');
-    const time = istDate.format('HH:mm');
-    return `${date} | ${time}`;
-  };
+  const createdAtLabel = useMemo(
+    () => formatCreatedAtToIST(item.created_at),
+    [item.created_at]
+  );
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
@@ -128,16 +142,20 @@ const hasPredictiveImage = Array.isArray(mediaData)
   const handleConvertPress = (e) => {
     e?.stopPropagation?.(); // ⭐⭐⭐ VERY IMPORTANT
 
-    //if (isFreeUser && (freeCreditUsed || hasPredictiveImage)) {
-    if (isFreeUser) {
-      setShowSubscribeModal(true); // we will add this
+    // Expired Flix10K subscription → Profile → Subscriptions, exactly like
+    // the Flix10K banner button.
+    if (isSubscriptionExpired) {
+      onSubscriptionExpired?.();
       return;
     }
 
-    //console.log("isOtherItemDisabled",isOtherItemDisabled)
+    //if (isFreeUser && (freeCreditUsed || hasPredictiveImage)) {
+    if (isFreeUser) {
+      onRequestSubscribe?.();
+      return;
+    }
 
     if (isOtherItemDisabled) {
-      //console.log("here")
       return;
     }
 
@@ -145,31 +163,22 @@ const hasPredictiveImage = Array.isArray(mediaData)
     onToggleSelection(item);
   };
 
-  // const handleLongPress = () => {
-  //   if (!disableMenuAndSelection && !flix10kSelectionMode) {
-  //     onToggleSelection(item);
-  //   }
-  // };
-
   return (
     <>
       <TouchableOpacity style={[styles.card, (isSelected || isAiSelected) && styles.selectedMediaItem,]}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={handlePress}
-        //onLongPress={handleLongPress}
         activeOpacity={0.8}
       >
         <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
           <TouchableOpacity
             style={[
               styles.mediaItem,
-              //(isSelected || selectedItemsForAi) && styles.selectedMediaItem,
             ]}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
             onPress={handlePress}
-            //onLongPress={handleLongPress}
             activeOpacity={0.8}
           >
             {item.object_type === 'image' && (
@@ -192,7 +201,10 @@ const hasPredictiveImage = Array.isArray(mediaData)
                     : item.object_url,
               }}
               style={styles.mediaImage}
-              resizeMode="cover"
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={item.id?.toString()}
+              transition={150}
             />
 
             {item.object_type === 'video' && (
@@ -203,24 +215,10 @@ const hasPredictiveImage = Array.isArray(mediaData)
                   color="white"
                 />
                 <Text style={styles.videoDuration}>
-                  {formatCreatedAtToIST(item.created_at)}
+                  {createdAtLabel}
                 </Text>
               </View>
             )}
-
-            {/* {(isSelected || flix10kSelectionMode || selectedItemsForAi) && (
-            <View style={styles.selectionOverlay}>
-              <MaterialIcons
-                name={
-                  isSelected || selectedItemsForAi
-                    ? 'check-circle'
-                    : 'radio-button-unchecked'
-                }
-                size={24}
-                color={isSelected || selectedItemsForAi ? Colors.primary : '#ccc'}
-              />
-            </View>
-          )} */}
           </TouchableOpacity>
         </Animated.View>
 
@@ -229,7 +227,7 @@ const hasPredictiveImage = Array.isArray(mediaData)
             {item.title || "Untitled"}
           </Text>
           <Text style={styles.date}>
-            {item.created_at ? formatCreatedAtToIST(item.created_at) : "-"}
+            {item.created_at ? createdAtLabel : "-"}
           </Text>
         </View>
 
@@ -322,50 +320,6 @@ const hasPredictiveImage = Array.isArray(mediaData)
         )}
       </TouchableOpacity>
 
-      <Modal
-        transparent
-        visible={showSubscribeModal}
-        animationType="fade"
-        onRequestClose={() => setShowSubscribeModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.paywallBox}>
-
-            {/* ⭐ Title */}
-            <Text style={styles.paywallTitle}>
-              Subscribe Flix10K
-            </Text>
-
-            {/* ⭐ Subtitle */}
-            <Text style={styles.paywallText}>
-              To continue generating AI images, please subscribe to Flix10K and unlock unlimited baby predictions.
-            </Text>
-
-            {/* ⭐ Buttons */}
-            <View style={styles.paywallActions}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => setShowSubscribeModal(false)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.proceedBtn}
-                onPress={() => {
-                  setShowSubscribeModal(false);
-                  onRequireSubscription?.();
-                }}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.proceedText}>Proceed</Text>
-              </TouchableOpacity>
-            </View>
-
-          </View>
-        </View>
-      </Modal>
     </>
   );
 };

@@ -40,7 +40,10 @@ export const saveNotificationsToStorage = async (notifications) => {
 
 const Header = ({ title, showMenu = true, showProfile = true }) => {
   const [isPlanModalVisible, setPlanModalVisible] = useState(false);
-  const [plans, setPlan] = useState([]);
+  // Every tab has its own Header; reuse the plans list once any of them has
+  // fetched it instead of calling getAllPlans again for each one.
+  const cachedPlans = useSelector((state) => state.subscription.plans);
+  const [plans, setPlan] = useState(() => (cachedPlans?.length ? cachedPlans : []));
   const [currentPlan, setCurrentPlan] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -105,6 +108,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
   };
 
   useEffect(() => {
+    if (cachedPlans?.length) return;
     fetchPlans();
   }, []);
 
@@ -388,7 +392,7 @@ const Header = ({ title, showMenu = true, showProfile = true }) => {
     };
 
     translateDynamicTexts();
-  }, [user, currentPlan, snackbarMessage]);
+  }, [user?.firstName, user?.lastName, storagePlanName, storagePlanDescription, currentPlan, snackbarMessage]);
 
   return (
     <View style={styles.header}>

@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useMemo } from 'react';
 import { View, Text, Modal, ActivityIndicator, StyleSheet } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import Colors from '../constants/Colors';
@@ -68,10 +68,10 @@ const FlixTab = createMaterialTopTabNavigator();
 const ImageInfoTab = memo(({ data, flix10kGenerating, flix10kAiImages, setFlix10kAiImages, ...props }) => {
   const { t } = useTranslation();
 
-  const combinedResults = [
+  const combinedResults = useMemo(() => [
     ...(flix10kAiImages || []),
     ...(data || []),
-  ];
+  ], [flix10kAiImages, data]);
   const hasResults = (combinedResults?.length || 0) > 0;
 
   //console.log("ImageInfoTab flix10kAiImages:", flix10kAiImages);
@@ -97,22 +97,20 @@ const ImageInfoTab = memo(({ data, flix10kGenerating, flix10kAiImages, setFlix10
 
 const Flix10KTab = ({ tabProps, data, flix10kGenerating, flix10kResults, flix10kAiImages, setFlix10kAiImages }) => {
   const { t } = useTranslation();
-  const [aiData, setAiData] = useState({ babyProfile: [], predictiveBabyImages: [], images: [] });
+  // Derived directly from data (instead of effect + state), so it is ready
+  // on the first render and doesn't cause an extra render pass.
+  const aiData = useMemo(() => {
+    const babyProfile = [];
+    const predictiveBabyImages = [];
+    const images = [];
 
-  useEffect(() => {
-    if (data?.length > 0) {
-      const babyProfile = [];
-      const predictiveBabyImages = [];
-      const images = [];
+    (data || []).forEach(item => {
+      if (item.object_type === "babyProfile") babyProfile.push(item);
+      else if (item.object_type === "predictiveBabyImage") predictiveBabyImages.push(item);
+      else if (item.object_type === "image") images.push(item);
+    });
 
-      data.forEach(item => {
-        if (item.object_type === "babyProfile") babyProfile.push(item);
-        else if (item.object_type === "predictiveBabyImage") predictiveBabyImages.push(item);
-        else if (item.object_type === "image") images.push(item);
-      });
-
-      setAiData({ babyProfile, predictiveBabyImages, images });
-    }
+    return { babyProfile, predictiveBabyImages, images };
   }, [data]);
 
   return (

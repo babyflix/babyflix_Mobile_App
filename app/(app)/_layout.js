@@ -164,6 +164,9 @@ export default function AppLayout() {
 
   return (
     <Tabs
+      // Android back button returns to the previously visited tab, instead
+      // of always jumping to the first tab.
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,

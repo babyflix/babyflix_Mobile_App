@@ -1841,4 +1841,4 @@ freeBadgeText: {
 },
 });
 
-export default Flix10kBanner;
+export default React.memo(Flix10kBanner);

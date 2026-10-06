@@ -3,9 +3,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import * as Progress from 'react-native-progress';
 import Colors from '../constants/Colors';
 import { useTranslation } from 'react-i18next';
+import { useDownloadProgress } from './downloadProgressStore';
 
-const FloatingDownloadBar = ({ visible, progress, title, activeDownloads }) => {
+const FloatingDownloadBar = () => {
   const { t } = useTranslation();
+  const { visible, progress, activeDownloads } = useDownloadProgress();
   if (!visible) return null;
   if (activeDownloads == 0) return null;
 

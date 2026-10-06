@@ -3,7 +3,6 @@ import {
   Modal,
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
@@ -11,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Video } from 'expo-av';
+import { Image } from 'expo-image';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Animated, { 
@@ -54,6 +54,31 @@ const MediaPreviewModal = ({
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
   }));
+
+  // Warm the cache for the previous/next items so stepping through the
+  // preview shows them immediately.
+  useEffect(() => {
+    if (!visible || !items?.length) return;
+    const urls = [];
+    [currentIndex - 1, currentIndex + 1].forEach((i) => {
+      const neighbour = items[i];
+      if (!neighbour || neighbour.object_type === 'video') return;
+      const mainUrl =
+        neighbour?.flix10kAiImages?.output_path?.gcs_url || neighbour?.object_url;
+      if (mainUrl) urls.push(mainUrl);
+      if (neighbour?.flix10kAiImages) {
+        if (neighbour.object_url) urls.push(neighbour.object_url);
+      } else if (
+        neighbour?.object_type === 'predictiveBabyImage' &&
+        neighbour?.thumbnail_url?.trim()
+      ) {
+        urls.push(neighbour.thumbnail_url);
+      }
+    });
+    if (urls.length) {
+      Image.prefetch(urls, 'memory-disk').catch(() => {});
+    }
+  }, [visible, currentIndex, items]);
 
   useEffect(() => {
     if (!visible) {
@@ -178,14 +203,16 @@ ObjectTitle =
               <Image
                 source={{ uri: originalUrl }}
                 style={styles.comparePreviewImage}
-                resizeMode="contain"
+                contentFit="contain"
+                cachePolicy="memory-disk"
               />
 
               {/* RIGHT — GENERATED */}
               <Image
                 source={{ uri: objectUrl }}
                 style={styles.comparePreviewImage}
-                resizeMode="contain"
+                contentFit="contain"
+                cachePolicy="memory-disk"
               />
 
             </View>
@@ -200,7 +227,8 @@ ObjectTitle =
                   height: "82%",
                 }
               ]}
-              resizeMode="contain"
+              contentFit="contain"
+              cachePolicy="memory-disk"
             />
           )}
 

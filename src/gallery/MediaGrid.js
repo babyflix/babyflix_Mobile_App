@@ -1,15 +1,19 @@
-import React, { useCallback, useRef } from 'react';
-import { FlatList, Text, StyleSheet, View, TouchableOpacity } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Text, StyleSheet, View, TouchableOpacity, Platform } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-import GalleryItem from './GalleryItem';
+import GalleryItem, { SubscribePaywallModal } from './GalleryItem';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useDispatch } from 'react-redux';
+import { setSubscriptionExpired } from '../state/slices/subscriptionSlice';
+
+const keyExtractor = (item) => item.id?.toString();
 
 const MediaGrid = React.memo(({
   data = [],
   type = 'all',
-  mediaData,
   onPreview,
   refreshing,
   onRefresh,
@@ -27,11 +31,6 @@ const MediaGrid = React.memo(({
   flix10kSelectionMode,
   selectedItemsForAi,
   toggleItemSelection,
-  flix10kGenerating,
-  setFlix10kGenerating,
-  flix10kResults,
-  setFlix10kResults,
-  selectedType,
   onRequireSubscription,
   scrollY,
   itemActionsTourTarget,
@@ -40,6 +39,7 @@ const MediaGrid = React.memo(({
   const { t } = useTranslation();
   const flatListRef = useRef();
   const router = useRouter();
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -47,10 +47,32 @@ const MediaGrid = React.memo(({
     }, [scrollY])
   );
 
-  const filteredData = type === 'all' ? data : data.filter(item => item.object_type === type);
-  const aiFilteredData = type === 'aiImages' ? data : data.filter(item => item.object_type === type);
+  // Runs on the UI thread, so tracking scroll position for the banner
+  // collapse no longer competes with JS work while scrolling.
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      if (scrollY) scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const filteredData = useMemo(
+    () => (type === 'all' ? data : data.filter(item => item.object_type === type)),
+    [data, type]
+  );
+
+  // Latest values for the stable callbacks below, so passing them to every
+  // card doesn't force all cards to re-render when one selection changes.
+  const latestRef = useRef({});
+  latestRef.current = {
+    filteredData,
+    selectionMode,
+    selectedItems,
+    disableMenuAndSelection,
+    onPreview,
+  };
 
   const toggleSelection = useCallback((item) => {
+    const { disableMenuAndSelection, selectionMode, selectedItems } = latestRef.current;
     if (disableMenuAndSelection) return;
     if (!selectionMode) {
       setSelectionMode(true);
@@ -65,34 +87,84 @@ const MediaGrid = React.memo(({
         setSelectedItems(prev => [...prev, item]);
       }
     }
-  }, [disableMenuAndSelection, selectionMode, selectedItems]);
+  }, [setSelectionMode, setSelectedItems]);
+
+  const handleItemPreview = useCallback((item) => {
+    const { filteredData, onPreview } = latestRef.current;
+    const index = filteredData.findIndex(i => i.id === item.id);
+    onPreview?.(item, index === -1 ? 0 : index, filteredData);
+  }, []);
+
+  const handleRequestSubscribe = useCallback(() => {
+    setShowSubscribeModal(true);
+  }, []);
+
+  // Same as the Flix10K banner button when the subscription has expired:
+  // send the user to Profile → Subscriptions to renew.
+  const dispatch = useDispatch();
+  const handleSubscriptionExpired = useCallback(() => {
+    dispatch(setSubscriptionExpired(true));
+    router.push({
+      pathname: "/profile",
+      params: { screen: "Subscriptions" },
+    });
+  }, [dispatch, router]);
+
+  const selectedIds = useMemo(
+    () => new Set((selectedItems || []).map(i => i.id)),
+    [selectedItems]
+  );
+
+  const aiSelectionList = Array.isArray(selectedItemsForAi) ? selectedItemsForAi : null;
+  const hasAiSelection = !!aiSelectionList && aiSelectionList.length >= 1;
 
   const renderItem = useCallback(({ item, index }) => (
-    <>
-      <GalleryItem
-        mediaData={mediaData}
-        item={item}
-        isSelected={selectedItems.some(i => i.id === item.id)}
-        isMenuVisible={activeMenuId === item.id}
-        onPreview={(it) => onPreview?.(it, index, filteredData)} // ⭐ MAGIC LINE
-        onToggleSelection={toggleSelection}
-        selectionMode={selectionMode}
-        disableMenuAndSelection={disableMenuAndSelection}
-        setActiveMenuId={setActiveMenuId}
-        setSelectedItem={setSelectedItem}
-        setSelectedItems={setSelectedItems}
-        setShowDeleteModal={setShowDeleteModal}
-        setShowDownloadModal={setShowDownloadModal}
-        setShowShareModal={setShowShareModal}
-        flix10kSelectionMode={flix10kSelectionMode}
-        selectedItemsForAi={selectedItemsForAi}
-        toggleItemSelection={toggleItemSelection}
-        onRequireSubscription={onRequireSubscription}
-        itemActionsTourTarget={index === 0 && type === 'image' ? itemActionsTourTarget : undefined}
-        itemConvertTourTarget={index === 0 && type === 'image' ? itemConvertTourTarget : undefined}
-      />
-    </>
-  ), [selectedItems, activeMenuId, selectionMode, disableMenuAndSelection, selectedItemsForAi, type, itemActionsTourTarget, itemConvertTourTarget]);
+    <GalleryItem
+      item={item}
+      isSelected={selectedIds.has(item.id)}
+      isAiSelected={!!aiSelectionList && aiSelectionList.includes(item.id || item)}
+      hasAiSelection={hasAiSelection}
+      isMenuVisible={activeMenuId === item.id}
+      onPreview={handleItemPreview}
+      onToggleSelection={toggleSelection}
+      selectionMode={selectionMode}
+      disableMenuAndSelection={disableMenuAndSelection}
+      setActiveMenuId={setActiveMenuId}
+      setSelectedItem={setSelectedItem}
+      setSelectedItems={setSelectedItems}
+      setShowDeleteModal={setShowDeleteModal}
+      setShowDownloadModal={setShowDownloadModal}
+      setShowShareModal={setShowShareModal}
+      flix10kSelectionMode={flix10kSelectionMode}
+      toggleItemSelection={toggleItemSelection}
+      onRequestSubscribe={handleRequestSubscribe}
+      onSubscriptionExpired={handleSubscriptionExpired}
+      itemActionsTourTarget={index === 0 && type === 'image' ? itemActionsTourTarget : undefined}
+      itemConvertTourTarget={index === 0 && type === 'image' ? itemConvertTourTarget : undefined}
+    />
+  ), [
+    selectedIds,
+    aiSelectionList,
+    hasAiSelection,
+    activeMenuId,
+    handleItemPreview,
+    toggleSelection,
+    selectionMode,
+    disableMenuAndSelection,
+    setActiveMenuId,
+    setSelectedItem,
+    setSelectedItems,
+    setShowDeleteModal,
+    setShowDownloadModal,
+    setShowShareModal,
+    flix10kSelectionMode,
+    toggleItemSelection,
+    handleRequestSubscribe,
+    handleSubscriptionExpired,
+    type,
+    itemActionsTourTarget,
+    itemConvertTourTarget,
+  ]);
 
   return (
     <>
@@ -128,12 +200,12 @@ const MediaGrid = React.memo(({
         </View>
       }
 
-      <FlatList
+      <Animated.FlatList
         ref={flatListRef}
         data={filteredData}
         renderItem={renderItem}
         numColumns={2}
-        keyExtractor={(item) => item.id?.toString()}
+        keyExtractor={keyExtractor}
         contentContainerStyle={styles.gridContainer}
         ListEmptyComponent={
           <Text style={styles.emptyText}>{t('gallery.noMedia')}</Text>
@@ -141,13 +213,24 @@ const MediaGrid = React.memo(({
         refreshing={refreshing}
         onRefresh={onRefresh}
         showsVerticalScrollIndicator={false}
-        extraData={[selectedItems, selectedItemsForAi]}
-        removeClippedSubviews={true}
-        initialNumToRender={12}
-        maxToRenderPerBatch={12}
-        windowSize={15}
-        onScroll={(e) => { if (scrollY) scrollY.value = e.nativeEvent.contentOffset.y; }}
+        // removeClippedSubviews can leave cells blank on iOS; it only pays
+        // off on Android.
+        removeClippedSubviews={Platform.OS === 'android'}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        updateCellsBatchingPeriod={50}
+        windowSize={9}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
+      />
+
+      <SubscribePaywallModal
+        visible={showSubscribeModal}
+        onClose={() => setShowSubscribeModal(false)}
+        onProceed={() => {
+          setShowSubscribeModal(false);
+          onRequireSubscription?.();
+        }}
       />
     </>
   );

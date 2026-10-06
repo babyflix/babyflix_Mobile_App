@@ -128,8 +128,14 @@ const StorageModals = ({ onClose, storageModalKey }) => {
     catch (e) { console.error("Failed to reload app:", e); }
   };
 
+  // Block the Android back button while a storage-plan popup is showing (as
+  // before). This component can stay mounted with every popup hidden (e.g.
+  // after "skip"), which used to block the back button across the app.
+  const isAnyStorageModalVisible =
+    showStorage1 || showStorage2 || showPaymentSuccess || showPaymentFailure || isVisible;
+
   useEffect(() => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && isAnyStorageModalVisible) {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         () => {
@@ -140,7 +146,7 @@ const StorageModals = ({ onClose, storageModalKey }) => {
 
       return () => backHandler.remove();
     }
-  }, []);
+  }, [isAnyStorageModalVisible]);
 
   useEffect(() => {
     const fetchStatusFromStorage = async () => {

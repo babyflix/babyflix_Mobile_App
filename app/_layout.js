@@ -7,6 +7,8 @@ import Snackbar from '../src/components/Snackbar';
 import Loader from '../src/components/Loader';
 import AuthLoader from '../src/components/AuthLoader';
 import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as IntentLauncher from 'expo-intent-launcher';
 import { showSnackbar, hideSnackbar } from '../src/state/slices/uiSlice';
 import { Alert, Linking, Platform, Text, TextInput } from 'react-native';
 import { HeaderActionProvider } from '../src/components/HeaderActionContext';
@@ -53,19 +55,24 @@ const LayoutContent = () => {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const deepLinkHandled = useSelector((state) => state.storageUI.deepLinkHandled);
   const [isConnected, setIsConnected] = useState(null);
+  // Mirrors isConnected so the listener below can read the previous value
+  // without having to re-subscribe every time connectivity changes.
+  const isConnectedRef = useRef(null);
 
   const router = useRouter();
 
   useEffect(() => {
     const checkConnection = async () => {
-      const state = await NetInfo.fetch(); 
+      const state = await NetInfo.fetch();
+      isConnectedRef.current = state.isConnected;
       setIsConnected(state.isConnected);
     };
 
-    checkConnection(); 
+    checkConnection();
 
     const unsubscribe = NetInfo.addEventListener(state => {
       const isNowConnected = state.isConnected;
+      const isConnected = isConnectedRef.current;
 
       if (isConnected === null) {
         if (!isNowConnected) {
@@ -89,11 +96,12 @@ const LayoutContent = () => {
         }
       }
 
+      isConnectedRef.current = isNowConnected;
       setIsConnected(isNowConnected);
     });
 
     return () => unsubscribe();
-  }, [isConnected, dispatch]);
+  }, [dispatch]);
 
 useEffect(() => {
   const requestPermissions = async () => {

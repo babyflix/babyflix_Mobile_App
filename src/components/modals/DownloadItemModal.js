@@ -149,12 +149,13 @@ const DownloadItemModal = ({
 
         try {
           const result = await resumed.resumeAsync();
-          const asset = await MediaLibrary.createAssetAsync(result.uri);
-          await MediaLibrary.createAlbumAsync('Download', asset, false);
+          // Save like the normal download paths do. createAlbumAsync needs
+          // full media read access, which the app no longer requests.
+          await MediaLibrary.createAssetAsync(result.uri);
 
           await AsyncStorage.removeItem('pausedDownload');
 
-          setSnackbarMessage(t('downloadModal.snackbar.downloadResume', { title: await dynamicTranslate(`${item.title}`) }));
+          setSnackbarMessage(t('downloadModal.snackbar.downloadResume', { title: await dynamicTranslate(`${title}`) }));
           setSnackbarType('success');
           setSnackbarVisible(true);
           setDownloadingProgress(false);
@@ -195,9 +196,9 @@ const DownloadItemModal = ({
           imageUrl,
         })
       );
-      const { status: existingStatus } = await MediaLibrary.getPermissionsAsync(false, ["photo", "video"]);
+      const { status: existingStatus } = await MediaLibrary.getPermissionsAsync(true);
       if (existingStatus !== 'granted') {
-        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync(false, ["photo", "video"]);
+        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync(true);
         if (newStatus !== 'granted') {
           Alert.alert(t('downloadModal.permissionRequired'), t('downloadModal.allowAccess'));
           setDownloadingProgress(false);
@@ -368,9 +369,9 @@ const DownloadItemModal = ({
 
       await AsyncStorage.removeItem('pendingConversion');
 
-      const { status: existingStatus } = await MediaLibrary.getPermissionsAsync(false, ["photo", "video"]);
+      const { status: existingStatus } = await MediaLibrary.getPermissionsAsync(true);
       if (existingStatus !== 'granted') {
-        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync(false, ["photo", "video"]);
+        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync(true);
         if (newStatus !== 'granted') throw new Error(t('downloadModal.permissionDenied'));
       }
 

@@ -137,7 +137,9 @@ const LiveStreamStatus = () => {
       setIntervalId(newIntervalId);
       return () => clearInterval(newIntervalId);
     }
-  }, [stream]);
+    // Only the fields used above; other stream updates (e.g. reStart,
+    // isStreamStarted) no longer tear down and rebuild the 2s interval.
+  }, [stream.eventStartTime, stream.eventEndTime, stream.streamUrl, stream.streamState]);
   return (
     <></>
   );
